@@ -1,0 +1,51 @@
+#template-hints-box {
+    position: fixed;
+    bottom: 150px;
+    right: 20px;
+    background: #f7f7f7;
+    border: 1px solid #ccc;
+    padding: 15px 20px;
+    max-width: 300px;
+    font-size: 14px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    z-index: 1000;
+}
+#template-hints-box strong {
+    display: block;
+    margin-bottom: 10px;
+}
+#template-hints-box ul {
+    padding-left: 18px;
+    margin: 0;
+}
+#template-hints-box li {
+    list-style-type: disc;
+    margin-bottom: 5px;
+}
+#template-hints-list li {
+    position: relative;
+}
+
+#template-hints-list li::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    background: #333;
+    color: white;
+    font-size: 12px;
+    padding: 5px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateY(-5px);
+    pointer-events: none;
+    transition: opacity 0.1s ease-in-out, transform 0.1s ease-in-out;
+    z-index: 100;
+}
+
+#template-hints-list li:hover::after {
+    opacity: 1;
+    transform: translateY(-8px);
+}

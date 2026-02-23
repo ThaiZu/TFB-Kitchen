@@ -1,0 +1,29 @@
+{
+  "supplier_about_title": "O mnie",
+  "supplier_about_heading": "O mnie",
+  "supplier_about_subtitle": "Podstawowe dane dostawcy i informacje kontaktowe (tylko do odczytu).",
+
+  "supplier_about_help_title": "Informacje o koncie dostawcy",
+  "supplier_about_help_body": "Poniżej znajdują się dane identyfikacyjne, adresowe i kontaktowe. Jeśli coś się nie zgadza, skontaktuj się z administratorem sieci.",
+
+  "supplier_about_details_title": "Szczegóły",
+  "supplier_about_details_hint": "Dane adresowe i kontaktowe powiązane z Twoim kontem.",
+
+  "supplier_address_section": "Adres",
+  "supplier_contact_section": "Kontakt",
+
+  "supplier_id_label": "ID",
+  "supplier_tax_number_label": "NIP",
+  "supplier_id_type_label": "Typ identyfikatora",
+  "supplier_country_code_label": "Kod kraju",
+
+  "supplier_street_label": "Ulica i numer",
+  "supplier_city_zip_label": "Kod pocztowy i miasto",
+
+  "supplier_phone_label": "Telefon",
+  "supplier_email_label": "E-mail",
+
+  "not_provided": "Brak danych",
+  "read_only_hint": "To jest widok informacyjny (bez edycji).",
+  "contact_hint": "Dane kontaktowe są używane do komunikacji w ramach integracji z siecią franczyzową."
+}

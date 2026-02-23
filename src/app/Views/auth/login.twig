@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ translations.supplier_portal_login_title }}</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ ROOT }}/assets/css/bootstrap.css">
+    <link rel="stylesheet" href="{{ ROOT }}/assets/vendors/bootstrap-icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ ROOT }}/assets/css/app.css">
+    <link rel="stylesheet" href="{{ ROOT }}/assets/css/pages/auth.css">
+
+    <style>
+        /* Desktop-first (bez PWA/mobile tuning) */
+        html, body { height: 100%; }
+        #auth { min-height: 100vh; }
+
+        /* Lewa kolumna: branding */
+        .supplier-brand {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 48px;
+            background:
+                    radial-gradient(1200px 600px at 10% 20%, rgba(0,0,0,.08), transparent 60%),
+                    radial-gradient(900px 500px at 90% 70%, rgba(0,0,0,.06), transparent 55%),
+                    linear-gradient(135deg, #111827 0%, #0b1220 55%, #111827 100%);
+            color: #fff;
+        }
+
+        .brand-card{
+            max-width: 520px;
+        }
+
+        .brand-badge{
+            display:inline-flex;
+            align-items:center;
+            gap:.5rem;
+            padding: .45rem .75rem;
+            border-radius: 999px;
+            background: rgba(255,255,255,.10);
+            border: 1px solid rgba(255,255,255,.18);
+            font-weight: 700;
+            letter-spacing: .02em;
+        }
+
+        .brand-title{
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin: 18px 0 10px;
+            font-size: 2.25rem;
+            line-height: 1.15;
+        }
+
+        .brand-subtitle{
+            margin: 0 0 22px;
+            color: rgba(255,255,255,.78);
+            font-size: 1.05rem;
+        }
+
+        .brand-points{
+            margin-top: 22px;
+            padding-left: 0;
+            list-style: none;
+            color: rgba(255,255,255,.78);
+        }
+        .brand-points li{
+            display:flex;
+            gap:.65rem;
+            align-items:flex-start;
+            margin-bottom: 10px;
+        }
+        .brand-points i{ color: rgba(255,255,255,.9); }
+
+        /* Prawa kolumna: login */
+        .supplier-auth {
+            min-height: 100vh;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding: 48px 24px;
+            background: #f5f7fb;
+        }
+
+        .auth-card{
+            width: 100%;
+            max-width: 430px;
+            border-radius: 18px;
+            overflow: hidden;
+        }
+
+        .auth-card .card-body{
+            padding: 26px;
+        }
+
+        .auth-header{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .auth-appmark{
+            display:flex;
+            align-items:center;
+            gap: 10px;
+        }
+
+        .auth-logo{
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            object-fit: cover;
+            box-shadow: 0 10px 24px rgba(0,0,0,.10);
+            background: #fff;
+        }
+
+        .auth-title{
+            margin: 0;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            font-size: 1.35rem;
+        }
+        .auth-subtitle{
+            margin: 4px 0 0;
+            color: #6c757d;
+            font-size: .95rem;
+        }
+
+        .context-chip{
+            display:inline-flex;
+            align-items:center;
+            gap:.5rem;
+            padding: .35rem .65rem;
+            border-radius: 999px;
+            background: #eef2ff;
+            border: 1px solid rgba(99,102,241,.25);
+            color: #3730a3;
+            font-weight: 700;
+            font-size: .85rem;
+            white-space: nowrap;
+        }
+
+        .invalid-feedback{ display:block; } /* zawsze widoczne */
+
+        /* Przyciski i inputy w stylu Mazer, ale “bardziej desktop” */
+        .form-control-xl{
+            padding-top: .9rem;
+            padding-bottom: .9rem;
+            border-radius: 14px;
+        }
+        .btn-xl{
+            border-radius: 14px;
+            padding: .9rem 1rem;
+        }
+
+        /* Na bardzo małych ekranach (gdyby jednak ktoś otworzył) – tylko kosmetyka */
+        @media (max-width: 991.98px){
+            .supplier-brand{ display:none; }
+            .supplier-auth{ background:#fff; }
+        }
+    </style>
+</head>
+
+<body>
+<div id="auth">
+    <div class="container-fluid p-0">
+        <div class="row g-0">
+
+            {# LEFT: Branding / Context #}
+            <div class="col-lg-6 supplier-brand">
+                <div class="brand-card">
+                    <div class="brand-badge">
+                        <i class="bi bi-truck"></i>
+                        {{ translations.supplier_app_external }}
+                    </div>
+
+                    <h1 class="brand-title">{{ translations.supplier_panel }}</h1>
+                    <p class="brand-subtitle">
+                        {{ translations.supplier_panel_subtitle }}
+                    </p>
+
+                    <ul class="brand-points">
+                        <li>
+                            <i class="bi bi-shield-lock"></i>
+                            <span>{{ translations.supplier_point_separate_auth }}</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-box-seam"></i>
+                            <span>{{ translations.supplier_point_catalog }}</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-tags"></i>
+                            <span>{{ translations.supplier_point_price_lists }}</span>
+                        </li>
+                    </ul>
+
+                    <div class="mt-4 small" style="color: rgba(255,255,255,.65);">
+                        {{ translations.supplier_no_access_hint }}
+                    </div>
+                </div>
+            </div>
+
+            {# RIGHT: Login form #}
+            <div class="col-lg-6 supplier-auth">
+                <div class="card shadow-sm auth-card border border-light-secondary">
+                    <div class="card-body">
+                        <div class="auth-header">
+                            <div class="auth-appmark">
+                                {# Podmień ścieżkę na Twoje logo, np. /assets/images/logo/supplier.png #}
+                                <img class="auth-logo" src="{{ ROOT }}/assets/images/logo/logo.png" alt="Logo">
+                                <div>
+                                    <h2 class="auth-title">{{ translations.login }}</h2>
+                                    <p class="auth-subtitle">{{ translations.login_to_supplier_panel }}</p>
+                                </div>
+                            </div>
+
+                            <span class="context-chip">
+                                <i class="bi bi-grid-1x2-fill"></i>
+                                {{ translations.supplier_portal_label }}
+                            </span>
+                        </div>
+
+                        <hr class="my-3">
+
+                        {% if errors.invalid_credentials is not empty %}
+                            <div class="alert alert-danger py-2 mb-3">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                {{ errors.invalid_credentials }}
+                            </div>
+                        {% endif %}
+
+                        <form method="POST" autocomplete="on" class="mt-2">
+                            <div class="form-group position-relative has-icon-left mb-3">
+                                <input
+                                        type="text"
+                                        class="form-control form-control-xl {{ errors.login is not empty ? 'is-invalid' : '' }}"
+                                        name="login"
+                                        placeholder="{{ translations.login_placeholder }}"
+                                        inputmode="text"
+                                        autocomplete="username"
+                                        autocapitalize="none"
+                                        spellcheck="false"
+                                        value="{{ old('login') }}"
+                                >
+                                <div class="form-control-icon">
+                                    <i class="bi bi-person"></i>
+                                </div>
+                                {% if errors.login is not empty %}
+                                    <div class="invalid-feedback mt-1">{{ errors.login }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group position-relative has-icon-left mb-2">
+                                <input
+                                        type="password"
+                                        class="form-control form-control-xl {{ errors.password is not empty ? 'is-invalid' : '' }}"
+                                        name="password"
+                                        placeholder="{{ translations.password_placeholder }}"
+                                        autocomplete="current-password"
+                                >
+                                <div class="form-control-icon">
+                                    <i class="bi bi-shield-lock"></i>
+                                </div>
+                                {% if errors.password is not empty %}
+                                    <div class="invalid-feedback mt-1">{{ errors.password }}</div>
+                                {% endif %}
+                            </div>
+
+                            <button class="btn btn-dark btn-xl w-100 mt-3">
+                                <i class="bi bi-box-arrow-in-right me-1"></i>
+                                {{ translations.login_button }}
+                            </button>
+
+                            <div class="text-center mt-3 small text-muted">
+                                {{ translations.login_help_hint }}
+                            </div>
+                        </form>
+
+                        <div class="text-center mt-4 small text-muted">
+                            © {{ "now"|date("Y") }} • {{ translations.franchise_ecosystem }} • {{ translations.supplier_panel }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+</body>
+</html>

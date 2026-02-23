@@ -1,0 +1,30 @@
+{
+  "supplier_portal": "Supplier Portal",
+  "supplier_app_external_short": "Dostawca (zewn.)",
+  "franchise_ecosystem": "Ekosystem sieci franczyzowej",
+
+  "menu": "Menu",
+  "account": "Konto",
+  "logout": "Wyloguj",
+  "my_profile": "Mój profil",
+
+  "supplier_dashboard": "Dashboard",
+  "supplier_dashboard_subtitle": "Szybki podgląd najważniejszych informacji i skróty do pracy.",
+
+  "quick_actions": "Szybkie akcje",
+  "manage_catalog": "Katalog produktów",
+  "manage_catalog_subtitle": "Dodawaj i aktualizuj produkty dostępne do zamówienia.",
+  "manage_price_lists": "Cenniki per sklep",
+  "manage_price_lists_subtitle": "Ustal ceny dla konkretnych odbiorców/sklepów.",
+  "view_profile": "Mój profil",
+  "view_profile_subtitle": "Sprawdź dane konta i informacje o dostawcy.",
+
+  "products_in_catalog": "Produkty w katalogu",
+  "active_price_lists": "Aktywne cenniki",
+  "last_update": "Ostatnia aktualizacja",
+  "not_available": "Brak danych",
+
+  "catalog": "Katalog",
+  "price_lists": "Cenniki",
+  "client" : "Klient"
+}

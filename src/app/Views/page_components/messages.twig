@@ -1,0 +1,48 @@
+{% if warnings %}
+    <div class="row">
+        <div class="col-3"></div>
+        <div class="col-6">
+            <div class="alert alert-warning text-center">
+                {{ warnings|join('<br>')|raw }}
+            </div>
+        </div>
+        <div class="col-3"></div>
+    </div>
+{% endif %}
+
+{% if errors %}
+    <div class="row">
+        <div class="col-3"></div>
+        <div class="col-6">
+            <div class="alert alert-danger text-center">
+                {{ errors|join('<br>')|raw }}
+            </div>
+        </div>
+        <div class="col-3"></div>
+    </div>
+{% endif %}
+
+{% if successes %}
+    <div class="row">
+        <div class="col-3"></div>
+        <div class="col-6">
+            <div class="alert alert-success text-center">
+                {{ successes|join('<br>')|raw }}
+            </div>
+        </div>
+        <div class="col-3"></div>
+    </div>
+
+{% endif %}
+
+{% if information %}
+    <div class="row">
+        <div class="col-3"></div>
+        <div class="col-6">
+            <div class="alert alert-info text-center">
+                {{ information|join('<br>')|raw }}
+            </div>
+        </div>
+        <div class="col-3"></div>
+    </div>
+{% endif %}

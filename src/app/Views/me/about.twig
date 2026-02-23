@@ -1,0 +1,178 @@
+{% extends "layouts/base.twig" %}
+
+{% block title %}{{ translations.supplier_about_title }}{% endblock %}
+
+{% block page_heading %}
+    <div class="page-heading">
+        <h3>{{ translations.supplier_about_heading }}</h3>
+        <p class="text-subtitle text-muted">{{ translations.supplier_about_subtitle }}</p>
+    </div>
+{% endblock %}
+
+{% block content %}
+
+    {% include "page_components/alerts.twig" %}
+
+    <div class="row">
+        <div class="col-12">
+
+            {# QUICK HELP #}
+            <div class="alert alert-light-primary d-flex align-items-start gap-2">
+                <i class="bi bi-person-badge mt-1"></i>
+                <div>
+                    <div class="fw-bold">{{ translations.supplier_about_help_title }}</div>
+                    <div class="small">
+                        {{ translations.supplier_about_help_body }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3">
+
+                {# SUMMARY CARD #}
+                <div class="col-12 col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="avatar avatar-lg bg-light-primary">
+                                    <i class="bi bi-building fs-4 text-primary"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold fs-5">
+                                        {{ supplier.getName() ?? supplier.name ?? translations.not_provided }}
+                                    </div>
+                                    <div class="text-muted small">
+                                        {{ translations.supplier_id_label }}:
+                                        <span class="fw-semibold">{{ supplier.getId() ?? supplier.id ?? translations.not_provided }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="my-3">
+
+                            <div class="d-flex flex-column gap-2">
+                                <div class="d-flex justify-content-between gap-3">
+                                    <div class="text-muted small">{{ translations.supplier_tax_number_label }}</div>
+                                    <div class="fw-semibold text-end">
+                                        {{ supplier.getTaxNumber() ?? supplier.tax_number ?? translations.not_provided }}
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-between gap-3">
+                                    <div class="text-muted small">{{ translations.supplier_country_code_label }}</div>
+                                    <div class="fw-semibold text-end">
+                                        {{ supplier.getCountryCode() ?? supplier.country_code ?? translations.not_provided }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-3 small text-muted">
+                                <i class="bi bi-lock me-1"></i>{{ translations.read_only_hint }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {# DETAILS #}
+                <div class="col-12 col-lg-8">
+                    <div class="card h-100">
+                        <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <div>
+                                <h4 class="card-title mb-0">{{ translations.supplier_about_details_title }}</h4>
+                                <div class="text-muted small">{{ translations.supplier_about_details_hint }}</div>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="row g-3">
+
+                                {# Address #}
+                                <div class="col-12">
+                                    <div class="p-3 border rounded-3">
+                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                            <i class="bi bi-geo-alt text-muted"></i>
+                                            <div class="fw-bold">{{ translations.supplier_address_section }}</div>
+                                        </div>
+
+                                        <div class="row g-2">
+                                            <div class="col-12 col-md-6">
+                                                <div class="text-muted small">{{ translations.supplier_street_label }}</div>
+                                                <div class="fw-semibold">
+                                                    {% set street = supplier.getStreet() ?? supplier.street ?? '' %}
+                                                    {% set streetNo = supplier.getStreetNumber() ?? supplier.street_number ?? '' %}
+                                                    {% if street or streetNo %}
+                                                        {{ street }} {{ streetNo }}
+                                                    {% else %}
+                                                        {{ translations.not_provided }}
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+
+                                            <div class="col-12 col-md-6">
+                                                <div class="text-muted small">{{ translations.supplier_city_zip_label }}</div>
+                                                <div class="fw-semibold">
+                                                    {% set city = supplier.getCity() ?? supplier.city ?? '' %}
+                                                    {% set zip = supplier.getZip() ?? supplier.zip ?? '' %}
+                                                    {% if city or zip %}
+                                                        {{ zip }} {{ city }}
+                                                    {% else %}
+                                                        {{ translations.not_provided }}
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {# Contact #}
+                                <div class="col-12">
+                                    <div class="p-3 border rounded-3">
+                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                            <i class="bi bi-envelope text-muted"></i>
+                                            <div class="fw-bold">{{ translations.supplier_contact_section }}</div>
+                                        </div>
+
+                                        <div class="row g-2">
+                                            <div class="col-12 col-md-6">
+                                                <div class="text-muted small">{{ translations.supplier_phone_label }}</div>
+                                                <div class="fw-semibold">
+                                                    {% set phone = supplier.getPhone() ?? supplier.phone ?? '' %}
+                                                    {% if phone %}
+                                                        <a href="tel:{{ phone }}" class="text-decoration-none">{{ phone }}</a>
+                                                    {% else %}
+                                                        {{ translations.not_provided }}
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+
+                                            <div class="col-12 col-md-6">
+                                                <div class="text-muted small">{{ translations.supplier_email_label }}</div>
+                                                <div class="fw-semibold">
+                                                    {% set email = supplier.getEmail() ?? supplier.email ?? '' %}
+                                                    {% if email %}
+                                                        <a href="mailto:{{ email }}" class="text-decoration-none">{{ email }}</a>
+                                                    {% else %}
+                                                        {{ translations.not_provided }}
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-2 small text-muted">
+                                            {{ translations.contact_hint }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+{% endblock %}

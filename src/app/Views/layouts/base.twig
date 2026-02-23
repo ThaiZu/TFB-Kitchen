@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}{{ pageTitle|default('Default Title') }}{% endblock %}</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ ROOT }}/assets/css/bootstrap.css">
+    <link rel="stylesheet" href="{{ ROOT }}/assets/vendors/perfect-scrollbar/perfect-scrollbar.css">
+    <link rel="stylesheet" href="{{ ROOT }}/assets/vendors/bootstrap-icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ ROOT }}/assets/css/app.css">
+    <link rel="shortcut icon" href="{{ ROOT }}/assets/images/favicon.svg" type="image/x-icon">
+    <link rel="stylesheet" href="{{ ROOT }}/assets/css/snackbarStyle.css">
+    <link rel="stylesheet" href="{{ ROOT }}/assets/css/custom.css">
+    <link rel="stylesheet" href="{{ ROOT }}/assets/vendors/dripicons/webfont.css">
+    <link rel="stylesheet" href="{{ ROOT }}/assets/css/pages/dripicons.css">
+    <link rel="stylesheet" href="{{ ROOT }}/assets/vendors/choices.js/choices.min.css" />
+
+    <link rel="stylesheet" href="{{ ROOT }}/assets/css/filepond.css">
+    <link rel="stylesheet" href="{{ ROOT }}/assets/css/filepond-plugin-image-preview.css">
+    <link rel="stylesheet" href="{{ ROOT }}/assets/css/cropper/cropper.css">
+
+
+    <style>
+        /* Przykład: Upewnij się, że nie ma limitów w CSS */
+        .choices__list--multiple {
+            max-height: none;
+        }
+    </style>
+
+
+    <!-- DISABLE ENTER ON EVERY PAGE -->
+    <script>
+        window.addEventListener('keydown',function(e) {
+            if (e.keyIdentifier=='U+000A' || e.keyIdentifier=='Enter' || e.keyCode==13) {
+                if (e.target.nodeName=='INPUT' && e.target.type=='text') {
+                    e.preventDefault();
+
+                    return false;
+                }
+            }
+        }, true);
+    </script>
+    
+    {% block head %}{% endblock %}
+</head>
+
+<body>
+<div id="app">
+    {% include "page_components/sidebar.twig" %}
+
+
+    <div id="main" class='layout-navbar'>
+        <header class='mb-3'>
+            {% include "page_components/navbar.twig" %}
+        </header>
+        <div id="main-content">
+            {% block page_heading %}{% endblock %}
+            <div class="page-content">
+                <div class="section">
+
+                    {% include "page_components/alerts.twig" %}
+
+
+                    {% if gate and errs is not empty %}
+                        {% block error_only %}
+                            <div class="row mt-4">
+                                <div class="col-12 text-center">
+                                    <a href="{{ error_back_url|default(ROOT ~ '/Dashboard') }}" class="btn btn-secondary">
+                                        ← {{ translations.back|default('back') }}
+                                    </a>
+                                </div>
+                            </div>
+                        {% endblock %}
+                    {% else %}
+                        {% block content %}{% endblock %}
+                    {% endif %}
+
+                </div>
+            </div>
+
+            <div id="snackbar"></div>
+            <footer></footer>
+        </div>
+    </div>
+</div>
+
+<script src="{{ ROOT }}/assets/vendors/perfect-scrollbar/perfect-scrollbar.min.js"></script>
+<script src="{{ ROOT }}/assets/js/bootstrap.bundle.min.js"></script>
+<script src="{{ ROOT }}/assets/js/main.js"></script>
+<script src="{{ ROOT }}/assets/js/functions.js"></script>
+<script type="module" src="{{ ROOT }}/assets/js/modules.js"></script>
+<script src="{{ ROOT }}/assets/vendors/sweetalert2/sweetalert2.all.min.js"></script>
+<script src="{{ ROOT }}/assets/vendors/choices.js/choices.min.js"></script>
+<script src="{{ ROOT }}/assets/js/cropper/cropper.min.js"></script>
+
+<script>
+    function showSnack(resp, message = "") {
+
+        var x = document.getElementById("snackbar");
+
+        if(resp){
+            x.innerText = message ?? "success";
+            x.style.backgroundColor = '#4cd038';
+        } else {
+            x.innerText = message;
+            x.style.backgroundColor = '#ff6666';
+        }
+        x.className = "show";
+
+        // After 3 seconds, remove the show class from DIV
+        setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    }, false);
+
+</script>
+
+
+{% block scripts %}{% endblock %}
+
+</body>
+</html>

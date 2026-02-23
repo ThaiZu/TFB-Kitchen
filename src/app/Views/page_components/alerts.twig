@@ -1,0 +1,53 @@
+{% set information = information is iterable ? information : (information is empty ? [] : [information]) %}
+{% set messages    = messages    is iterable ? messages    : (messages    is empty ? [] : [messages]) %}
+{% set warnings    = warnings    is iterable ? warnings    : (warnings    is empty ? [] : [warnings]) %}
+{% set errors      = errors      is iterable ? errors      : (errors      is empty ? [] : [errors]) %}
+
+{% set info  = information|default([]) %}
+{% set msgs  = messages|default([]) %}
+{% set warns = warnings|default([]) %}
+{% set errs  = errors|default([]) %}
+
+{# INFO #}
+{% if info is iterable and info|length %}
+    <div class="row justify-content-center mb-2">
+        <div class="col-12 col-md-6">
+            {% for it in info %}
+                <div class="alert alert-info text-center" role="alert">{{ it }}</div>
+            {% endfor %}
+        </div>
+    </div>
+{% endif %}
+
+{# SUCCESS #}
+{% if msgs is iterable and msgs|length %}
+    <div class="row justify-content-center mb-2">
+        <div class="col-12 col-md-6">
+            {% for m in msgs %}
+                <div class="alert alert-success text-center" role="alert">{{ m }}</div>
+            {% endfor %}
+        </div>
+    </div>
+{% endif %}
+
+{# WARNINGS #}
+{% if warns is iterable and warns|length %}
+    <div class="row justify-content-center mb-2">
+        <div class="col-12 col-md-6">
+            {% for w in warns %}
+                <div class="alert alert-warning text-center" role="alert">{{ w }}</div>
+            {% endfor %}
+        </div>
+    </div>
+{% endif %}
+
+{# ERRORS #}
+{% if errs is iterable and errs|length %}
+    <div class="row justify-content-center mb-2">
+        <div class="col-12 col-md-6">
+            {% for e in errs %}
+                <div class="alert alert-danger text-center" role="alert">{{ e }}</div>
+            {% endfor %}
+        </div>
+    </div>
+{% endif %}

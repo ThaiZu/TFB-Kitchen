@@ -1,0 +1,78 @@
+{
+  "clients": "Klienci",
+  "clients_subtitle": "Przeglądaj listę klientów i przejdź do ich cenników.",
+  "clients_table": "Lista klientów",
+  "clients_table_hint": "Wybierz klienta, aby otworzyć jego cennik.",
+  "name": "Nazwa",
+  "actions": "Akcje",
+  "price_list": "Cennik",
+  "no_clients": "Brak klientów do wyświetlenia.",
+  "client_price_list": "Cennik klienta",
+  "client_price_list_subtitle": "Zarządzaj cenami produktów dla wybranego klienta",
+
+  "price_list_help_title": "Jak działa cennik klienta?",
+  "price_list_help_body": "Wpisz cenę i włącz przełącznik, aby użyć ceny indywidualnej dla klienta. Gdy przełącznik jest wyłączony, produkt nie ma ceny klienta (może korzystać z domyślnej ceny, jeśli ją masz w systemie).",
+
+  "price_schedule_help_title": "Cennik – harmonogram",
+  "price_schedule_help_body": "Widzisz aktualnie obowiązującą cenę oraz zaplanowane (przyszłe) zmiany. Nową pozycję dodasz z modala. Istniejących rekordów nie edytujemy – przyszłe można usunąć.",
+
+  "price_list_table": "Pozycje cennika",
+  "price_list_table_hint": "Ustaw cenę dla produktu i zdecyduj, czy ma obowiązywać dla tego klienta",
+
+  "price_schedule_table": "Harmonogram cennika",
+  "price_schedule_table_hint": "Aktualna cena + przyszłe zmiany",
+
+  "back_to_clients": "Wróć do klientów",
+  "save_changes": "Zapisz zmiany",
+
+  "filter_and_search": "Filtruj i wyszukuj",
+  "all_categories": "Wszystkie kategorie",
+  "search_placeholder": "Szukaj produktu...",
+  "clear_filters": "Wyczyść",
+  "filter_category_hint": "Filtruj po kategorii",
+  "search_hint": "Wyszukuj po nazwie produktu",
+
+  "product": "Produkt",
+  "category": "Kategoria",
+  "client_price": "Cena klienta",
+  "active": "Aktywne",
+
+  "sku": "SKU",
+  "current_price": "Aktualna cena",
+  "schedule": "Harmonogram (przyszłe)",
+  "package": "Opakowanie",
+  "vat_rate": "VAT",
+  "net": "Netto",
+  "gross": "Brutto",
+  "valid_from": "Obowiązuje od",
+  "price_net": "Cena netto",
+  "price_gross": "Cena brutto",
+
+  "add_price": "Dodaj pozycję",
+  "add_price_for": "Dodaj",
+  "select_product": "Wybierz produkt...",
+  "product_select_hint": "Wybór ustawia VAT dla przeliczeń",
+  "price_modal_hint": "Wybierz produkt, ustaw datę obowiązywania i wpisz cenę netto lub brutto. Druga wartość przeliczy się automatycznie wg VAT%.",
+
+  "missing_prices_title": "Uwaga: niekompletny cennik",
+  "missing_prices_body": "Niektóre produkty nie mają aktualnie obowiązującej ceny (brak rekordu z datą ≤ dziś) albo cena wynosi 0. Uzupełnij je, żeby uniknąć błędów w wycenie/produkcji.",
+  "missing_price_short": "Brak",
+
+  "select_product_required": "Wybierz produkt.",
+  "valid_from_required": "Uzupełnij datę obowiązywania.",
+  "price_required": "Wpisz cenę większą od zera.",
+
+  "delete_future_price_confirm": "Usunąć zaplanowaną cenę?",
+
+  "price_placeholder": "np. 12,50",
+  "price_hint_short": "Cena brutto",
+  "use_client_price": "Użyj",
+  "no_products": "Brak produktów do wyświetlenia.",
+  "price_list_meta_default": "0 / 0",
+  "price_list_footer_hint": "Pamiętaj o zapisaniu zmian.",
+
+  "ajax_hint": "Zmiany zapisują się automatycznie (AJAX).",
+
+  "delete_only_future": "Usunięcie możliwe tylko dla cen z przyszłą datą (dzisiaj < * Obowiązuje od *).",
+  "valid_from_must_be_future": "Data * Obowiązuje od * musi być późniejsza niż dzisiaj (wybierz datę z przyszłości)."
+}

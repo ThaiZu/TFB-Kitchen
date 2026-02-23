@@ -1,0 +1,58 @@
+{% set p = current_path|default('') %}
+
+<div id="sidebar" class="active">
+    <div class="sidebar-wrapper active">
+        <div class="sidebar-header">
+            <div class="d-flex justify-content-center">
+                <div class="logo">
+                    <a href="{{ ROOT }}/dashboard" class="d-flex align-items-center gap-2 text-decoration-none">
+                        <img src="{{ ROOT }}/assets/images/logo/logo.png" alt="Logo" style="height:40px;">
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar-menu">
+            <ul class="menu">
+                <li class="sidebar-title">{{ translations.menu }}</li>
+
+                <li class="sidebar-item {{ p starts with '/dashboard' ? 'active' : '' }}">
+                    <a href="{{ ROOT }}/dashboard" class="sidebar-link">
+                        <i class="bi bi-grid-1x2-fill"></i>
+                        <span>{{ translations.supplier_dashboard }}</span>
+                    </a>
+                </li>
+
+                <li class="sidebar-item {{ p starts with '/catalog' ? 'active' : '' }}">
+                    <a href="{{ ROOT }}/catalog" class="sidebar-link">
+                        <i class="bi bi-box-seam"></i>
+                        <span>{{ translations.catalog }}</span>
+                    </a>
+                </li>
+
+                <li class="sidebar-item {{ p starts with '/clients' ? 'active' : '' }}">
+                    <a href="{{ ROOT }}/clients" class="sidebar-link">
+                        <i class="bi bi-people"></i>
+                        <span>{{ translations.client }}</span>
+                    </a>
+                </li>
+
+                <li class="sidebar-item {{ p starts with '/me' ? 'active' : '' }}">
+                    <a href="{{ ROOT }}/me" class="sidebar-link">
+                        <i class="bi bi-person"></i>
+                        <span>{{ translations.my_profile }}</span>
+                    </a>
+                </li>
+
+
+                <li class="sidebar-item">
+                    <a href="{{ ROOT }}/logout" class="sidebar-link">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>{{ translations.logout }}</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <button class="sidebar-toggler btn x"><i data-feather="x"></i></button>
+    </div>
+</div>
