@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Supplier\app\Http\Controllers;
+namespace App\Kitchen\app\Http\Controllers;
 
 
-use App\Supplier\core\Exceptions\DataNotFoundException;
-use App\Supplier\core\Exceptions\ProtectedResourceException;
-use App\Supplier\core\Support\GlobalRegistry;
-use App\Supplier\core\Twig\AppExtension;
+use App\Kitchen\core\Exceptions\DataNotFoundException;
+use App\Kitchen\core\Exceptions\ProtectedResourceException;
+use App\Kitchen\core\Support\GlobalRegistry;
+use App\Kitchen\core\Twig\AppExtension;
 use Exception;
 use ReflectionClass;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -58,7 +58,7 @@ class Controller
         $namespace = $reflector->getNamespaceName();
 
         $baseViewPath =  __DIR__ . "/../../../app/";
-        if (strpos($namespace, 'App\\Supplier\\app\\Http\\Controllers') !== false) {
+        if (strpos($namespace, 'App\\Kitchen\\app\\Http\\Controllers') !== false) {
             $baseViewPath .= "Views/";
         }
 
@@ -83,6 +83,7 @@ class Controller
 
         $data['ROOT'] = ROOT;
         $data['shared_files_url'] = SHARED_FILES_URL;
+        $data['current_path'] = '/' . trim($_GET['url'] ?? '', '/');
 
         // Jeśli istnieje plik .twig, renderuj przez Twig
         $twigTemplate = $name . ".twig";

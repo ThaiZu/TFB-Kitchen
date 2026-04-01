@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Supplier\core\Support;
+namespace App\Kitchen\core\Support;
 
 #[\Attribute(\Attribute::TARGET_METHOD)]
 class Route

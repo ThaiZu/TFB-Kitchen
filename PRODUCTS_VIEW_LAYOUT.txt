@@ -1,0 +1,68 @@
+┌─────────────────────────────────────────────────────────────────────┐
+│                    KNOWLEDGE → PRODUCTS OVERVIEW                     │
+│                                                                      │
+│  Breadcrumb: Home → Knowledge → Products                            │
+│  Nagłówek: "Produkty"                                               │
+│  Opis: "Znajdź produkt i przeglądaj jego kartę techniczną"         │
+└─────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────┐
+│  🔍  SEARCH & FILTERS CARD                                          │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  ┌──────────────────────────────────┐  ┌────────────────────────┐  │
+│  │ 🔍 Wyszukaj produkt po nazwie... │  │ 🔻 Filtruj po kategor..│  │
+│  │                                  │  │                        │  │
+│  │ [LARGE SEARCH INPUT]             │  │ [CATEGORY SELECT]      │  │
+│  └──────────────────────────────────┘  └────────────────────────┘  │
+│  ℹ️ Wpisz nazwę produktu aby szybko go odnaleźć                    │
+│                                                                      │
+└─────────────────────────────────────────────────────────────────────┘
+
+┌───────────────────────────���─────────────────────────────────────────┐
+│  PRODUCTS LIST                                    📊 [125 produktów]│
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐          │
+│  │ 📦       │  │ 📦       │  │ 📦   🌱  │  │ 📦       │          │
+│  │          │  │          │  │          │  │          │          │
+│  │ Hamburg..│  │ Hotdog - │  │ Gateaux..│  │ Fraise & │          │
+│  │          │  │          │  │          │  │          │          │
+│  │ 🏷️ Petit.│  │ 🏷️ Petit.│  │ 🏷️ Tart..│  │ 🏷️ Tart..│          │
+│  │          │  │          │  │          │  │          │          │
+│  │ 🌡️ Compt.│  │ 🌡️ Compt.│  │ 🌡️ -     │  │ 🌡️ -     │          │
+│  │ ⏰ 24 god│  │ ⏰ 24 god│  │ ⏰ 24 god│  │ ⏰ 24 god│          │
+│  │─────────│  │─────────│  │─────────│  │─────────│          │
+│  │ Zobacz k.→│  │ Zobacz k.→│  │ Zobacz k.→│  │ Zobacz k.→│          │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘          │
+│                                                                      │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐          │
+│  │ 📦   ⏰  │  │ 📦       │  │ 📦   🌱  │  │ 📦       │          │
+│  │ ...      │  │ ...      │  │ ...      │  │ ...      │          │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘          │
+│                                                                      │
+│  [więcej kart produktów...]                                         │
+│                                                                      │
+└─────────────────────────────────────────────────────────────────────┘
+
+LEGENDA:
+  📦 - ikona produktu (box-seam)
+  🌱 - badge "wegetariańskie" (leaf)
+  ⏰ - badge "przygotowane wcześniej" (clock)
+  🏷️ - ikona kategorii (tag)
+  🌡️ - ikona miejsca przechowywania (thermometer)
+  ⏰ - ikona czasu przydatności (clock)
+  → - strzałka "przejdź dalej"
+
+INTERAKCJE:
+  [wpisanie w search] → live filtrowanie produktów
+  [wybór kategorii]   → live filtrowanie po kategorii
+  [hover na karcie]   → karta podnosi się (transform + shadow)
+  [klik na kartę]     → przejście do /knowledge/recipes/{id}
+
+RESPONSYWNOŚĆ:
+  Desktop (lg+): 4 kolumny
+  Tablet (md):   3 kolumny
+  Mobile (sm):   2 kolumny
+  Mobile small:  1 kolumna
+

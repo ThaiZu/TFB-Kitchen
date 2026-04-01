@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Supplier\app\Models\Auth;
+namespace App\Kitchen\app\Models\Auth;
 
 class JWTModel{
     private $token;

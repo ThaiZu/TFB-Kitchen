@@ -1,0 +1,141 @@
+
+═══════════════════════════════════════════════════════════════════════════════
+                         PRODUCT DETAIL MODEL STRUCTURE
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          ProductDetailModel                                  │
+│                         (Main Aggregate Root)                                │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                ┌─────────────────────┼─────────────────────┐
+                │                     │                     │
+                ▼                     ▼                     ▼
+         ┌─────────────┐       ┌─────────────┐      ┌─────────────┐
+         │   object    │       │   photos    │      │   recipe    │
+         │ProductModel │       │ProductPhoto │      │RecipeModel  │
+         └─────────────┘       │   Model     │      └─────────────┘
+                │              └─────────────┘             │
+                │                     │                    │
+                │                     │                    │
+         ┌──────┴────────┐           │            ┌───────┴────────┐
+         │               │           │            │                │
+         ▼               ▼           ▼            ▼                ▼
+    Basic Info    Required      4 Photo     elements[]      yield_quantity
+    - id          Competences    Paths       (Array)         id_unit
+    - name        Array          - main      ┌────┴────┐
+    - category                   - photo_1   │         │
+    - storage                    - photo_2   ▼         ▼
+    - shelf_life                 - photo_3   │         │
+    - price                                  │         │
+                                        ┌────┴────┐    │
+                                        │         │    │
+                                        ▼         ▼    ▼
+                              ┌─────────────────────────────────┐
+                              │   RecipeIngredientModel         │
+                              │   - ingredient_id               │
+                              │   - name                        │
+                              │   - quantity                    │
+                              │   - unit_name                   │
+                              │   - allergens[]                 │
+                              └─────────────────────────────────┘
+
+                              ┌─────────────────────────────────┐
+                              │   RecipeSubrecipeModel          │
+                              │   - recipe_id                   │
+                              │   - name                        │
+                              │   - elements[] ◄───┐            │
+                              │     (RECURSIVE)    │            │
+                              └────────────────────┼────────────┘
+                                                   │
+                                            ┌──────┘
+                                            │ Can contain more
+                                            │ ingredients AND
+                                            └─► sub-recipes
+
+
+                ┌────────────────────┼─────────────────────┐
+                │                    │                     │
+                ▼                    ▼                     ▼
+         ┌─────────────┐      ┌─────────────┐     ┌─────────────┐
+         │  package    │      │ competences │     │ preparation │
+         │PackageModel │      │   Array     │     │Preparation  │
+         └─────────────┘      │<Competence  │     │   Model     │
+                │             │   Model>    │     └─────────────┘
+                │             └─────────────┘            │
+                │                    │                   │
+                ▼                    ▼                   ▼
+         materials[]            ┌─────────┐     ┌───────┴────────┐
+         (Array)                │ id      │     │                │
+         │                      │ name    │     ▼                ▼
+         │                      │ desc    │   types[]         steps[]
+         │                      └─────────┘   (Array)         (Array)
+         │                                       │                │
+         ▼                                       ▼                ▼
+┌──────────────────────┐              ┌──────────────┐  ┌──────────────┐
+│PackageMaterialModel  │              │Preparation   │  │Preparation   │
+│- id, name            │              │  TypeModel   │  │  StepModel   │
+│- quantity            │              │- id          │  │- step_number │
+│- price_net           │              │- name        │  │- description │
+│- price_gross         │              │- duration_s  │  └──────────────┘
+│- unit_name           │              └──────────────┘
+│- is_part_of_package  │
+└──────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                              KEY RELATIONSHIPS
+═══════════════════════════════════════════════════════════════════════════════
+
+ProductDetailModel [1]───[1] ProductModel
+                   [1]───[0..1] ProductPhotoModel
+                   [1]───[0..1] RecipeModel
+                   [1]───[0..1] PackageModel
+                   [1]───[0..*] CompetenceModel
+                   [1]───[0..1] PreparationModel
+
+RecipeModel [1]───[0..*] RecipeIngredientModel
+            [1]───[0..*] RecipeSubrecipeModel
+
+RecipeSubrecipeModel [1]───[0..*] RecipeIngredientModel (recursive)
+                     [1]───[0..*] RecipeSubrecipeModel (recursive)
+
+PackageModel [1]───[0..*] PackageMaterialModel
+
+PreparationModel [1]───[0..*] PreparationTypeModel
+                 [1]───[0..*] PreparationStepModel
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                            DATA FLOW EXAMPLE
+═══════════════════════════════════════════════════════════════════════════════
+
+API Response (productRaw)
+    │
+    ├─► object {...}  ─────────► ProductModel
+    │
+    ├─► photos {...}  ─────────► ProductPhotoModel
+    │
+    ├─► recipe {
+    │      elements: [
+    │        {type: 'sub-recipe', elements: [
+    │           {type: 'ingredient', ...},  ──► RecipeIngredientModel
+    │           {type: 'ingredient', ...}   ──► RecipeIngredientModel
+    │        ]},  ───────────────────────────► RecipeSubrecipeModel
+    │        {type: 'ingredient', ...}  ─────► RecipeIngredientModel
+    │      ]
+    │   }  ──────────────────────────────────► RecipeModel
+    │
+    ├─► package {
+    │      materials: [...]  ────────────────► PackageMaterialModel[]
+    │   }  ──────────────────────────────────► PackageModel
+    │
+    ├─► competences [...]  ─────────────────► CompetenceModel[]
+    │
+    └─► preparation {
+           types: [...],  ───────────────────► PreparationTypeModel[]
+           steps: [...]   ───────────────────► PreparationStepModel[]
+        }  ────────────────────────────────► PreparationModel
+
+═══════════════════════════════════════════════════════════════════════════════
+

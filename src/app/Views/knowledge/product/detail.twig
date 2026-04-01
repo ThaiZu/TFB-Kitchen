@@ -1,0 +1,716 @@
+{% extends "layouts/base.twig" %}
+
+{% block title %}{{ product.getName() }} – {{ translations.technical_sheet|default('Karta techniczna') }}{% endblock %}
+
+{% block head %}
+<style>
+    /* ===== KARTA TECHNICZNA PRODUKTU ===== */
+    .fiche-wrap {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #fff;
+    }
+
+    /* --- HEADER --- */
+    .fiche-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 20px 24px;
+        border-bottom: 1px solid #dee2e6;
+        gap: 20px;
+    }
+    .fiche-header-left { flex: 1; }
+    .fiche-category-label {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #6c757d;
+        margin-bottom: 4px;
+    }
+    .fiche-product-name {
+        font-size: 1.9rem;
+        font-weight: 700;
+        color: #212529;
+        margin-bottom: 4px;
+        line-height: 1.2;
+    }
+    .fiche-product-desc {
+        color: #6c757d;
+        font-size: 0.88rem;
+        margin-bottom: 10px;
+    }
+    .fiche-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+    .fiche-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border-radius: 4px;
+    }
+    .fiche-badge-dlc  { background: #fff3cd; color: #856404; }
+    .fiche-badge-price { background: #d1e7dd; color: #0f5132; }
+    .fiche-badge-veg   { background: #d1e7dd; color: #0f5132; }
+    .fiche-badge-prep  { background: #fff3cd; color: #856404; }
+    .fiche-badge-nutri { background: #e7f1ff; color: #0a58ca; }
+    .fiche-badge-label { background: #f0f0f0; color: #333; }
+
+    .fiche-header-photo {
+        width: 180px;
+        min-width: 180px;
+        height: 130px;
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #adb5bd;
+        font-size: 0.8rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .fiche-header-photo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 6px;
+    }
+    .fiche-photo-label {
+        position: absolute;
+        bottom: 6px;
+        left: 6px;
+        background: rgba(0,0,0,0.55);
+        color: #fff;
+        padding: 2px 7px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        border-radius: 3px;
+        letter-spacing: 0.04em;
+    }
+
+    /* --- MAIN 2-KOLUMNY --- */
+    .fiche-main {
+        display: flex;
+        min-height: 400px;
+    }
+    .fiche-col {
+        flex: 1;
+        padding: 20px 24px;
+    }
+    .fiche-col-left {
+        border-right: 1px solid #dee2e6;
+    }
+
+    /* --- SECTION TITLE --- */
+    .fiche-section-title {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #6c757d;
+        margin-bottom: 10px;
+        padding-bottom: 5px;
+        border-bottom: 1px solid #e9ecef;
+        margin-top: 18px;
+    }
+    .fiche-section-title:first-child { margin-top: 0; }
+
+    /* --- SKŁAD – chipy --- */
+    .ingredient-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .ingredient-chip {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        padding: 3px 10px;
+        font-size: 0.78rem;
+        border-radius: 4px;
+        color: #212529;
+    }
+    .ingredient-chip.subrecipe {
+        background: #fff8e1;
+        border-color: #ffe082;
+        font-weight: 600;
+    }
+    .ingredient-chip.has-allergen {
+        background: #fdeaea;
+        border-color: #f5c2c7;
+        color: #842029;
+    }
+
+    /* --- ALERGENY --- */
+    .allergen-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+    .allergen-chip {
+        padding: 3px 10px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border-radius: 4px;
+        background: #fdeaea;
+        color: #842029;
+        border: 1px solid #f5c2c7;
+    }
+    .allergen-note {
+        font-size: 0.78rem;
+        color: #6c757d;
+        font-style: italic;
+    }
+
+    /* --- NOTATKA STORAGE/PODGRZEWANIE --- */
+    .fiche-note-box {
+        background: #fff3cd;
+        border-left: 3px solid #ffc107;
+        padding: 10px 14px;
+        border-radius: 0 4px 4px 0;
+    }
+    .fiche-note-box p { font-size: 0.82rem; color: #664d03; line-height: 1.5; margin: 0; }
+    .fiche-info-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 0;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 0.83rem;
+    }
+    .fiche-info-row:last-child { border-bottom: none; }
+    .fiche-info-label { color: #6c757d; min-width: 160px; }
+    .fiche-info-value { font-weight: 600; color: #212529; }
+
+    /* --- KROKI PRZYGOTOWANIA --- */
+    .fiche-step {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 10px 0;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 0.86rem;
+        color: #212529;
+        line-height: 1.5;
+    }
+    .fiche-step:last-child { border-bottom: none; }
+    .fiche-step-num {
+        width: 26px;
+        height: 26px;
+        min-width: 26px;
+        background: #495057;
+        color: #fff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.72rem;
+        font-weight: 700;
+    }
+
+    /* --- TYPY PRZYGOTOWANIA (czas) --- */
+    .prep-types { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .prep-type-chip {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: #e8f5e9;
+        border: 1px solid #a5d6a7;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.78rem;
+        color: #1b5e20;
+        font-weight: 600;
+    }
+
+    /* --- KOMPETENCJE --- */
+    .competence-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 10px 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .competence-item:last-child { border-bottom: none; }
+    .competence-icon {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        background: #6c757d;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .competence-icon i { color: #fff; font-size: 0.85rem; }
+    .competence-name { font-size: 0.85rem; font-weight: 700; color: #212529; }
+    .competence-desc { font-size: 0.77rem; color: #6c757d; margin-top: 2px; }
+
+    /* --- PLANOGRAMME (dół full-width) --- */
+    .fiche-plano {
+        border-top: 1px solid #dee2e6;
+        padding: 20px 24px;
+    }
+    .fiche-plano-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+    }
+    .fiche-plano-title {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #6c757d;
+    }
+    .plano-photos { display: flex; gap: 16px; }
+    .plano-photo {
+        flex: 1;
+        height: 160px;
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #adb5bd;
+        font-size: 0.8rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .plano-photo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 6px;
+    }
+
+    /* --- OPAKOWANIE (w plano) --- */
+    .package-materials-table td, .package-materials-table th {
+        font-size: 0.8rem;
+        padding: 6px 10px;
+    }
+
+    @media (max-width: 768px) {
+        .fiche-main { flex-direction: column; }
+        .fiche-col-left { border-right: none; border-bottom: 1px solid #dee2e6; }
+        .fiche-header { flex-direction: column; }
+        .fiche-header-photo { width: 100%; min-width: unset; height: 200px; }
+        .plano-photos { flex-direction: column; }
+    }
+</style>
+{% endblock %}
+
+{% block page_heading %}
+    <div class="page-heading">
+        <h3>{{ translations.technical_sheet|default('Karta techniczna') }}</h3>
+        <p class="text-subtitle text-muted">{{ product.getName() }}</p>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ ROOT }}">{{ translations.home|default('Home') }}</a></li>
+                <li class="breadcrumb-item"><a href="{{ ROOT }}/knowledge">{{ translations.knowledge|default('Wiedza') }}</a></li>
+                <li class="breadcrumb-item"><a href="{{ ROOT }}/knowledge/products">{{ translations.products|default('Produkty') }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ product.getName() }}</li>
+            </ol>
+        </nav>
+    </div>
+{% endblock %}
+
+{% block content %}
+
+    {% include "page_components/alerts.twig" %}
+
+    {% set obj = product.getObject() %}
+    {% set photos = product.getPhotos() %}
+    {% set recipe = product.getRecipe() %}
+    {% set preparation = product.getPreparation() %}
+    {% set package = product.getPackage() %}
+    {% set allAllergens = product.getAllAllergens() %}
+
+    {# ====================================================== #}
+    {# KARTA TECHNICZNA                                       #}
+    {# ====================================================== #}
+    <div class="fiche-wrap mb-4">
+
+        {# ---- HEADER ---- #}
+        <div class="fiche-header">
+            <div class="fiche-header-left">
+                {% if obj %}
+                    <div class="fiche-category-label">
+                        {{ obj.getCategoryName() ?: translations.no_category|default('Brak kategorii') }}
+                    </div>
+                {% endif %}
+                <h1 class="fiche-product-name">{{ product.getName() }}</h1>
+
+                {# Opis – pozycjonowanie lub przechowywanie jako podtytuł #}
+                {% if obj and obj.getStorageDescription() %}
+                    <p class="fiche-product-desc">
+                        <i class="bi bi-thermometer-half me-1"></i>{{ obj.getStorageDescription() }}
+                        {% if obj.getPositioningDescription() %}
+                            &nbsp;·&nbsp;{{ obj.getPositioningDescription() }}
+                        {% endif %}
+                    </p>
+                {% elseif obj and obj.getPositioningName() %}
+                    <p class="fiche-product-desc">{{ obj.getPositioningName() }}</p>
+                {% endif %}
+
+                {# Odznaki #}
+                <div class="fiche-badges">
+                    {% if obj %}
+                        {% if obj.getShelfLifeMinutes() %}
+                            {% set h = (obj.getShelfLifeMinutes() / 60)|round(0, 'floor') %}
+                            {% set m = obj.getShelfLifeMinutes() % 60 %}
+                            <span class="fiche-badge fiche-badge-dlc">
+                                <i class="bi bi-clock me-1"></i>DLC
+                                {% if h > 0 %}{{ h }}{{ translations.hours|default('h') }}{% endif %}{% if m > 0 %} {{ m }}min{% endif %}
+                                {% if obj.getShelfLifeCategory() %} · {{ obj.getShelfLifeCategory() }}{% endif %}
+                            </span>
+                        {% endif %}
+                        {% if obj.getSuggestedSalePrice() %}
+                            <span class="fiche-badge fiche-badge-price">
+                                <i class="bi bi-tag me-1"></i>{{ obj.getSuggestedSalePrice() }} €
+                            </span>
+                        {% endif %}
+                        {% if obj.getIsVegetarian() %}
+                            <span class="fiche-badge fiche-badge-veg">
+                                <i class="bi bi-leaf me-1"></i>{{ translations.vegetarian|default('Wegetariańskie') }}
+                            </span>
+                        {% endif %}
+                        {% if obj.getIsPreparedBeforeSales() %}
+                            <span class="fiche-badge fiche-badge-prep">
+                                <i class="bi bi-clock-history me-1"></i>{{ translations.prepared_before|default('Przygotowane wcześniej') }}
+                            </span>
+                        {% endif %}
+                        {% if obj.getNutriscore() %}
+                            <span class="fiche-badge fiche-badge-nutri">Nutri-Score {{ obj.getNutriscore()|upper }}</span>
+                        {% endif %}
+                        {% if obj.getLabelSize() %}
+                            <span class="fiche-badge fiche-badge-label">
+                                <i class="bi bi-upc me-1"></i>{{ obj.getLabelSize() }}
+                            </span>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
+            {# Zdjęcie główne w nagłówku #}
+            <div class="fiche-header-photo">
+                {% if photos and photos.hasPhoto1() %}
+                    <img src="{{ photos.getPhoto1Url() }}"
+                         alt="{{ product.getName() }}"
+                         onerror="ficheImgError(this)">
+                    <span class="fiche-photo-label">{{ translations.photo_product|default('Zdjęcie produktu') }}</span>
+                {% else %}
+                    <i class="bi bi-box-seam" style="font-size:2.5rem; color:#ced4da"></i>
+                    <span style="margin-top:8px; font-size:0.78rem">{{ translations.no_photo|default('Brak zdjęcia') }}</span>
+                {% endif %}
+            </div>
+        </div>
+
+        {# ---- MAIN 2 KOLUMNY ---- #}
+        <div class="fiche-main">
+
+            {# =========== LEWA KOLUMNA =========== #}
+            <div class="fiche-col fiche-col-left">
+
+                {# SKŁAD (składniki jako chipy) #}
+                <h4 class="fiche-section-title">
+                    <i class="bi bi-journal-text me-1"></i>{{ translations.composition|default('Skład') }}
+                </h4>
+                {% if recipe and recipe.hasElements() %}
+                    <div class="ingredient-chips">
+                        {% for element in recipe.getElements() %}
+                            {% if element.getType() == 'ingredient' %}
+                                <span class="ingredient-chip {% if element.hasAllergens() and element.getAllergens()|length > 0 %}has-allergen{% endif %}">
+                                    {{ element.getName() }}
+                                </span>
+                            {% elseif element.getType() == 'sub-recipe' %}
+                                <span class="ingredient-chip subrecipe">
+                                    <i class="bi bi-layers" style="font-size:0.7rem"></i> {{ element.getName() }}
+                                </span>
+                                {# Składniki podreceptury jako indywidualne chipy #}
+                                {% if element.hasElements() %}
+                                    {% for sub in element.getElements() %}
+                                        {% if sub.getType() == 'ingredient' %}
+                                            <span class="ingredient-chip {% if sub.hasAllergens() and sub.getAllergens()|length > 0 %}has-allergen{% endif %}"
+                                                  style="opacity:0.8; font-size:0.73rem">
+                                                {{ sub.getName() }}
+                                            </span>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted small">—</p>
+                {% endif %}
+
+                {# ALERGENY #}
+                <h4 class="fiche-section-title">
+                    <i class="bi bi-exclamation-triangle me-1"></i>{{ translations.allergens|default('Alergeny') }}
+                </h4>
+                {% if allAllergens is not empty %}
+                    <div class="allergen-chips">
+                        {% for allergen in allAllergens %}
+                            <span class="allergen-chip">{{ allergen }}</span>
+                        {% endfor %}
+                    </div>
+                    <p class="allergen-note">→ {{ translations.allergens_check|default('Sprawdź skład przed podaniem osobom uczulonym') }}</p>
+                {% else %}
+                    <p class="text-muted small">{{ translations.no_allergens|default('Brak zidentyfikowanych alergenów') }}</p>
+                {% endif %}
+
+                {# PRZECHOWYWANIE #}
+                {% if obj %}
+                <h4 class="fiche-section-title">
+                    <i class="bi bi-thermometer-half me-1"></i>{{ translations.storage_conditions|default('Warunki przechowywania i serwowania') }}
+                </h4>
+                <div class="fiche-note-box">
+                    <p>
+                        {% if obj.getStorageName() %}
+                            <strong>{{ obj.getStorageName() }}</strong>
+                            {% if obj.getStorageDescription() %} — {{ obj.getStorageDescription() }}{% endif %}
+                        {% endif %}
+                        {% if obj.getStorageTemperature() %}
+                            <br>🌡️ {{ translations.storage_temperature|default('Temperatura') }}: <strong>{{ obj.getStorageTemperature() }}°C</strong>
+                        {% endif %}
+                        {% if obj.getReheatingTimeMinutes() and obj.getReheatingTimeMinutes() > 0 %}
+                            <br>🔥 {{ translations.reheating|default('Podgrzewanie') }}: <strong>{{ obj.getReheatingTimeMinutes() }} min</strong>
+                            {% if obj.getReheatingTemperatureCelsius() and obj.getReheatingTemperatureCelsius() > 0 %}
+                                / <strong>{{ obj.getReheatingTemperatureCelsius() }}°C</strong>
+                            {% endif %}
+                        {% endif %}
+                        {% if obj.getPositioningName() %}
+                            <br>📍 {{ translations.positioning|default('Pozycjonowanie') }}: <strong>{{ obj.getPositioningName() }}</strong>
+                            {% if obj.getPositioningDescription() %} — {{ obj.getPositioningDescription() }}{% endif %}
+                        {% endif %}
+                    </p>
+                </div>
+
+                {# INFORMACJE DODATKOWE #}
+                <h4 class="fiche-section-title mt-3">
+                    <i class="bi bi-info-circle me-1"></i>{{ translations.product_details|default('Szczegóły produktu') }}
+                </h4>
+                {% if obj.getSingleWeight() %}
+                    <div class="fiche-info-row">
+                        <span class="fiche-info-label">{{ translations.single_weight|default('Waga jednostkowa') }}</span>
+                        <span class="fiche-info-value">{{ obj.getSingleWeight() }} g</span>
+                    </div>
+                {% endif %}
+                {% if recipe and recipe.getYieldQuantity() %}
+                    <div class="fiche-info-row">
+                        <span class="fiche-info-label">{{ translations.yield|default('Wydajność receptury') }}</span>
+                        <span class="fiche-info-value">{{ recipe.getYieldQuantity() }} pcs</span>
+                    </div>
+                {% endif %}
+                {% if obj.getQuantityPerLabel() %}
+                    <div class="fiche-info-row">
+                        <span class="fiche-info-label">{{ translations.quantity_per_label|default('Ilość na etykiecie') }}</span>
+                        <span class="fiche-info-value">{{ obj.getQuantityPerLabel() }}</span>
+                    </div>
+                {% endif %}
+                {% if obj.getTaxValPerc() %}
+                    <div class="fiche-info-row">
+                        <span class="fiche-info-label">{{ translations.tax|default('Stawka VAT') }}</span>
+                        <span class="fiche-info-value">{{ obj.getTaxValPerc() }}%</span>
+                    </div>
+                {% endif %}
+                {% endif %}{# /if obj #}
+
+            </div>{# /fiche-col-left #}
+
+            {# =========== PRAWA KOLUMNA =========== #}
+            <div class="fiche-col">
+
+                {# PRZYGOTOWANIE – typy #}
+                {% if preparation and preparation.hasTypes() %}
+                    <div class="prep-types">
+                        {% for type in preparation.getTypes() %}
+                            <span class="prep-type-chip">
+                                <i class="bi bi-stopwatch"></i>
+                                {{ type.getName() }}
+                                {% if type.getDurationMinutes() %}
+                                    <strong>{{ type.getDurationMinutes() }} min</strong>
+                                {% endif %}
+                            </span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                {# KROKI PRZYGOTOWANIA #}
+                {% if preparation and preparation.hasSteps() %}
+                    <h4 class="fiche-section-title" style="margin-top:{% if preparation.hasTypes() %}0{% else %}0{% endif %}">
+                        <i class="bi bi-list-ol me-1"></i>{{ translations.preparation|default('Przygotowanie') }}
+                    </h4>
+                    {% for step in preparation.getSteps() %}
+                        <div class="fiche-step">
+                            <div class="fiche-step-num">{{ step.getStepNumber() }}</div>
+                            <div>{{ step.getStepDescription() }}</div>
+                        </div>
+                    {% endfor %}
+                {% elseif not preparation or not preparation.hasTypes() %}
+                    <h4 class="fiche-section-title" style="margin-top:0">
+                        <i class="bi bi-list-ol me-1"></i>{{ translations.preparation|default('Przygotowanie') }}
+                    </h4>
+                    <p class="text-muted small">—</p>
+                {% endif %}
+
+                {# RECEPTURA SZCZEGÓŁOWA (drzewo składników z ilościami) #}
+                {% if recipe and recipe.hasElements() %}
+                    <h4 class="fiche-section-title">
+                        <i class="bi bi-diagram-3 me-1"></i>{{ translations.recipe_quantities|default('Ilości składników') }}
+                    </h4>
+                    {% for element in recipe.getElements() %}
+                        {% if element.getType() == 'ingredient' %}
+                            <div class="fiche-info-row">
+                                <span class="fiche-info-label">{{ element.getName() }}</span>
+                                <span class="fiche-info-value">{{ element.getRecipeQuantity() }} {{ element.getUnitName() }}</span>
+                            </div>
+                        {% elseif element.getType() == 'sub-recipe' %}
+                            <div class="fiche-info-row" style="background:#fff8e1; border-radius:4px; padding:6px 8px;">
+                                <span class="fiche-info-label fw-bold">
+                                    <i class="bi bi-layers me-1 text-warning"></i>{{ element.getName() }}
+                                </span>
+                                <span class="fiche-info-value">{{ element.getRecipeQuantity() }} {{ element.getUnitName() }}</span>
+                            </div>
+                            {% if element.hasElements() %}
+                                {% for sub in element.getElements() %}
+                                    <div class="fiche-info-row" style="padding-left:20px; font-size:0.8rem;">
+                                        <span class="fiche-info-label text-muted">↳ {{ sub.getName() }}</span>
+                                        <span class="fiche-info-value text-muted">{{ sub.getRecipeQuantity() }} {{ sub.getUnitName() }}</span>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+
+                {# WYMAGANE KOMPETENCJE #}
+                {% if product.hasCompetences() %}
+                    <h4 class="fiche-section-title">
+                        <i class="bi bi-mortarboard me-1"></i>{{ translations.required_competences|default('Wymagane kompetencje') }}
+                    </h4>
+                    {% for competence in product.getCompetences() %}
+                        <div class="competence-item">
+                            <div class="competence-icon">
+                                <i class="bi bi-award"></i>
+                            </div>
+                            <div>
+                                <div class="competence-name">{{ competence.getName() }}</div>
+                                {% if competence.getDescription() %}
+                                    <div class="competence-desc">{{ competence.getDescription() }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+            </div>{# /fiche-col-right #}
+
+        </div>{# /fiche-main #}
+
+        {# ---- PLANOGRAMME – pełna szerokość (zdjęcia + opakowanie) ---- #}
+        <div class="fiche-plano">
+            <div class="fiche-plano-header">
+                <span class="fiche-plano-title">
+                    <i class="bi bi-images me-1"></i>{{ translations.planogram|default('Prezentacja & Opakowanie') }}
+                </span>
+                {% if package %}
+                    <span class="text-muted" style="font-size:0.8rem">
+                        <i class="bi bi-box me-1"></i>{{ package.getName() }}
+                        {% if package.getDescription() %} — {{ package.getDescription() }}{% endif %}
+                    </span>
+                {% endif %}
+            </div>
+
+            <div class="row g-3">
+
+                {# Zdjęcia planogramu #}
+                {% set hasPhoto2 = photos and photos.hasPhoto2() %}
+                {% set hasPhoto3 = photos and photos.hasPhoto3() %}
+                {% if hasPhoto2 or hasPhoto3 %}
+                    <div class="col-12 col-md-{{ package and package.hasMaterials() ? '5' : '12' }}">
+                        <div class="plano-photos">
+                            {% if hasPhoto2 %}
+                                <div class="plano-photo">
+                                    <img src="{{ photos.getPhoto2Url() }}"
+                                         alt="{{ product.getName() }} – 2"
+                                         onerror="ficheImgErrorSmall(this)">
+                                    <span class="fiche-photo-label">{{ translations.photo_presentation|default('Prezentacja') }}</span>
+                                </div>
+                            {% endif %}
+                            {% if hasPhoto3 %}
+                                <div class="plano-photo">
+                                    <img src="{{ photos.getPhoto3Url() }}"
+                                         alt="{{ product.getName() }} – 3"
+                                         onerror="ficheImgErrorSmall(this)">
+                                    <span class="fiche-photo-label">{{ translations.photo_display|default('Ekspozycja') }}</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                {# Opakowanie – tabela materiałów #}
+                {% if package and package.hasMaterials() %}
+                    <div class="col-12 col-md-{{ (hasPhoto2 or hasPhoto3) ? '7' : '12' }}">
+                        <h6 class="fiche-section-title mb-2" style="margin-top:0">
+                            <i class="bi bi-box me-1"></i>{{ translations.packaging_materials|default('Materiały opakowaniowe') }}
+                        </h6>
+                        <table class="table table-sm table-hover package-materials-table mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{{ translations.material_name|default('Materiał') }}</th>
+                                    <th class="text-center">{{ translations.quantity|default('Ilość') }}</th>
+                                    <th class="text-center">{{ translations.unit|default('Jedn.') }}</th>
+                                    <th class="text-end">{{ translations.price_gross|default('Cena brutto') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for material in package.getMaterials() %}
+                                    <tr>
+                                        <td>{{ material.getName() }}</td>
+                                        <td class="text-center">{{ material.getQuantity() }}</td>
+                                        <td class="text-center">{{ material.getUnitName() }}</td>
+                                        <td class="text-end">{{ material.getBaseUnitPriceGross()|number_format(3, ',', ' ') }} €</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+
+                {# Fallback – brak zdjęć i opakowania #}
+                {% if not hasPhoto2 and not hasPhoto3 and (not package or not package.hasMaterials()) %}
+                    <div class="col-12 text-center text-muted py-3">
+                        <i class="bi bi-image" style="font-size:2rem"></i>
+                        <p class="mt-2 small">{{ translations.no_media|default('Brak zdjęć i materiałów opakowaniowych') }}</p>
+                    </div>
+                {% endif %}
+
+            </div>
+        </div>
+
+    </div>{# /fiche-wrap #}
+
+    {# Przycisk powrotu #}
+    <div class="mb-4">
+        <a href="{{ ROOT }}/knowledge/products" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>{{ translations.back_to_products|default('Wróć do listy produktów') }}
+        </a>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function ficheImgError(img) {
+    var p = img.parentElement;
+    img.remove();
+    p.innerHTML = '<i class="bi bi-box-seam" style="font-size:2.5rem;color:#ced4da"></i>'
+                + '<span style="margin-top:8px;font-size:0.78rem">{{ translations.no_photo|default("Brak zdj\u0119cia") }}</span>';
+}
+function ficheImgErrorSmall(img) {
+    var p = img.parentElement;
+    img.remove();
+    p.innerHTML = '<i class="bi bi-image" style="font-size:2rem;color:#ced4da"></i>';
+}
+</script>
+{% endblock %}

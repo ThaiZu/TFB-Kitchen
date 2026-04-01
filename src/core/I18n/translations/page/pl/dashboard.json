@@ -1,6 +1,6 @@
 {
-  "supplier_portal": "Supplier Portal",
-  "supplier_app_external_short": "Dostawca (zewn.)",
+  "kitchen_portal": "Kitchen Portal",
+  "kitchen_app_short": "Kuchnia",
   "franchise_ecosystem": "Ekosystem sieci franczyzowej",
 
   "menu": "Menu",
@@ -8,22 +8,27 @@
   "logout": "Wyloguj",
   "my_profile": "Mój profil",
 
-  "supplier_dashboard": "Dashboard",
-  "supplier_dashboard_subtitle": "Szybki podgląd najważniejszych informacji i skróty do pracy.",
+  "kitchen_dashboard": "Pulpit kuchni",
+  "kitchen_dashboard_subtitle": "Szybki podgląd dzisiejszej produkcji i najważniejszych zadań.",
 
   "quick_actions": "Szybkie akcje",
-  "manage_catalog": "Katalog produktów",
-  "manage_catalog_subtitle": "Dodawaj i aktualizuj produkty dostępne do zamówienia.",
-  "manage_price_lists": "Cenniki per sklep",
-  "manage_price_lists_subtitle": "Ustal ceny dla konkretnych odbiorców/sklepów.",
-  "view_profile": "Mój profil",
-  "view_profile_subtitle": "Sprawdź dane konta i informacje o dostawcy.",
+  "todays_production": "Dzisiejsza produkcja",
+  "todays_production_subtitle": "Zobacz co dziś robić, priorytety i statusy.",
+  "production_cards": "Karty produkcyjne",
+  "production_cards_subtitle": "Przeglądaj receptury, składniki i instrukcje krok po kroku.",
+  "checklists": "Checklisty",
+  "checklists_subtitle": "Odhaczaj zadania dzienne: otwarcie, porządek, zamknięcie.",
+  "my_orders": "Moje zamówienia",
+  "my_orders_subtitle": "Składaj zamówienia składników do dostawców.",
 
-  "products_in_catalog": "Produkty w katalogu",
-  "active_price_lists": "Aktywne cenniki",
+  "tasks_todo": "Zadania do zrobienia",
+  "tasks_in_progress": "W trakcie",
+  "tasks_completed": "Ukończone dzisiaj",
   "last_update": "Ostatnia aktualizacja",
   "not_available": "Brak danych",
 
-  "catalog": "Katalog",
-  "price_lists": "Cenniki"
+  "production": "Produkcja",
+  "knowledge": "Wiedza",
+  "cards": "Karty",
+  "orders": "Zamówienia"
 }

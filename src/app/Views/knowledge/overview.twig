@@ -1,0 +1,88 @@
+{% extends "layouts/base.twig" %}
+
+{% block title %}{{ translations.knowledge_overview|default('Knowledge') }}{% endblock %}
+
+{% block page_heading %}
+    <div class="page-heading">
+        <h3>{{ translations.knowledge_overview|default('Knowledge') }}</h3>
+        <p class="text-subtitle text-muted">{{ translations.knowledge_overview_subtitle|default('Przegląd dostępnych zasobów wiedzy w firmie') }}</p>
+
+        {# Breadcrumb to show user's location #}
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ ROOT }}">{{ translations.home|default('Home') }}</a></li>
+                <li class="breadcrumb-item">{{ translations.knowledge|default('Knowledge') }}</li>
+                <li class="breadcrumb-item active" aria-current="page">{{ translations.knowledge_overview|default('Overview') }}</li>
+            </ol>
+        </nav>
+    </div>
+{% endblock %}
+
+{% block content %}
+
+    {# alerty globalne (wg Twojego wzorca) #}
+    {% include "page_components/alerts.twig" %}
+
+    <div class="row">
+
+        {# KNOWLEDGE NAVIGATION - główny panel nawigacyjny do zasobów wiedzy #}
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">{{ translations.knowledge_navigation }}</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+
+                        <div class="col-12 col-lg-6">
+                            <a href="{{ ROOT }}/knowledge/recipes" class="card border-2 border-primary shadow-sm h-100 text-decoration-none hover-lift">
+                                <div class="card-body p-4">
+                                    <div class="d-flex gap-3 align-items-start mb-3">
+                                        <div class="avatar avatar-xl">
+                                            <span class="avatar-content bg-primary">
+                                                <i class="bi bi-book fs-3 text-white"></i>
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <h4 class="mb-2 text-dark">{{ translations.subrecipes }}</h4>
+                                            <p class="text-muted mb-0">{{ translations.subrecipes_subtitle }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center text-primary">
+                                        <span class="fw-semibold">Przejdź do podreceptur</span>
+                                        <i class="bi bi-arrow-right ms-2"></i>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="col-12 col-lg-6">
+                            <a href="{{ ROOT }}/knowledge/products" class="card border-2 border-success shadow-sm h-100 text-decoration-none hover-lift">
+                                <div class="card-body p-4">
+                                    <div class="d-flex gap-3 align-items-start mb-3">
+                                        <div class="avatar avatar-xl">
+                                            <span class="avatar-content bg-success">
+                                                <i class="bi bi-box-seam fs-3 text-white"></i>
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <h4 class="mb-2 text-dark">{{ translations.products }}</h4>
+                                            <p class="text-muted mb-0">{{ translations.products_subtitle }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center text-success">
+                                        <span class="fw-semibold">Przejdź do produktów</span>
+                                        <i class="bi bi-arrow-right ms-2"></i>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+{% endblock %}

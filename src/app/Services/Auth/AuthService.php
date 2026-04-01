@@ -1,11 +1,11 @@
 <?php
-namespace App\Supplier\app\Services\Auth;
+namespace App\Kitchen\app\Services\Auth;
 
 
-use App\Supplier\core\Cookie\CookieManager;
-use App\Supplier\app\Models\Auth\JWTModel;
-use App\Supplier\app\Repositories\Auth\LoginRepository;
-use App\Supplier\app\Services\Auth\JwtService;
+use App\Kitchen\core\Cookie\CookieManager;
+use App\Kitchen\app\Models\Auth\JWTModel;
+use App\Kitchen\app\Repositories\Auth\LoginRepository;
+use App\Kitchen\app\Services\Auth\JwtService;
 use DateTime;
 
 class AuthService {
@@ -23,6 +23,7 @@ class AuthService {
     }
 
     public function login($data) {
+        $data['device_type'] = 'kitchen_tablet';
         $response = $this->loginRepository->login($data);
         if(is_null($response)) return false;
 

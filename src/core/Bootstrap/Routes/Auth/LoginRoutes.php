@@ -1,7 +1,7 @@
 <?php
 
 
-use App\Supplier\app\Http\Controllers\Auth\AuthController;
+use App\Kitchen\app\Http\Controllers\Auth\AuthController;
 use FastRoute\RouteCollector;
 
 return function(RouteCollector $r) {

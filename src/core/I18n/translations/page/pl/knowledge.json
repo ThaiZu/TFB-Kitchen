@@ -1,0 +1,79 @@
+{
+  "knowledge": "Wiedza",
+  "knowledge_overview": "Baza wiedzy",
+  "knowledge_overview_subtitle": "Przeglądaj zasoby wiedzy firmowej - produkty i podreceptury.",
+
+  "knowledge_resources": "Zasoby wiedzy",
+  "knowledge_navigation": "Nawigacja",
+
+  "subrecipes": "Podreceptury",
+  "subrecipes_subtitle": "Przeglądaj półprodukty, komponenty i podreceptury używane w produkcji.",
+
+  "products": "Produkty",
+  "products_subtitle": "Przeglądaj katalog produktów końcowych i ich receptury.",
+  "products_overview_subtitle": "Znajdź produkt i przeglądaj jego kartę techniczną",
+  "products_list": "Lista produktów",
+  "products_total": "produktów",
+
+  "search_products": "Wyszukaj produkt po nazwie...",
+  "search_hint": "Wpisz nazwę produktu aby szybko go odnaleźć",
+  "filter_category": "Filtruj po kategorii",
+  "all_categories": "Wszystkie kategorie",
+  "no_category": "Bez kategorii",
+  "no_products_found": "Nie znaleziono produktów pasujących do wyszukiwania",
+
+  "view_card": "Zobacz kartę",
+  "vegetarian": "Wegetariańskie",
+  "prepared_before": "Przygotowane wcześniej",
+  "hours": "godz.",
+  "minutes": "min",
+
+  "home": "Strona główna",
+
+  "technical_sheet": "Karta techniczna",
+  "product_info": "Informacje o produkcie",
+  "category": "Kategoria",
+  "single_weight": "Waga jednostkowa",
+  "storage": "Przechowywanie",
+  "storage_temperature": "Temperatura przechowywania",
+  "shelf_life": "Termin przydatności",
+  "reheating": "Czas podgrzewania",
+  "positioning": "Pozycjonowanie",
+  "suggested_price": "Sugerowana cena sprzedaży",
+  "label_size": "Format etykiety",
+  "allergens": "Alergeny",
+
+  "required_competences": "Wymagane kompetencje",
+
+  "preparation": "Przygotowanie",
+
+  "recipe": "Receptura",
+  "yield": "Wydajność",
+  "subrecipe": "Podreceptura",
+  "no_recipe_elements": "Brak składników receptury.",
+
+  "packaging": "Opakowanie",
+  "material_name": "Materiał",
+  "quantity": "Ilość",
+  "unit": "Jedn.",
+  "price_gross": "Cena brutto",
+
+  "back_to_products": "Wróć do listy produktów",
+
+  "composition": "Skład",
+  "allergens_check": "Sprawdź skład przed podaniem osobom uczulonym",
+  "no_allergens": "Brak zidentyfikowanych alergenów",
+  "storage_conditions": "Warunki przechowywania i serwowania",
+  "product_details": "Szczegóły produktu",
+  "quantity_per_label": "Ilość na etykiecie",
+  "tax": "Stawka VAT",
+  "recipe_quantities": "Ilości składników",
+  "planogram": "Prezentacja & Opakowanie",
+  "packaging_materials": "Materiały opakowaniowe",
+  "photo_product": "Zdjęcie produktu",
+  "photo_presentation": "Prezentacja",
+  "photo_display": "Ekspozycja",
+  "no_photo": "Brak zdjęcia",
+  "no_media": "Brak zdjęć i materiałów opakowaniowych"
+}
+

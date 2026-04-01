@@ -1,5 +1,5 @@
 <?php
-namespace App\Supplier\core\Exceptions;
+namespace App\Kitchen\core\Exceptions;
 
 use Exception;
 

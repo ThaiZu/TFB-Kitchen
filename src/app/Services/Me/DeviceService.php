@@ -1,19 +1,19 @@
 <?php
 namespace App\Kitchen\app\Services\Me;
 
-use App\Kitchen\app\Repositories\Me\KitchenRepository;
+use App\Kitchen\app\Repositories\Me\DeviceRepository;
 use App\Kitchen\core\Support\GlobalRegistry;
 
-class KitchenService
+class DeviceService
 {
     public function __construct(
-        private KitchenRepository $supplierRepository
+        private DeviceRepository $deviceRepository
     )
     {
     }
 
     public function getMe()
     {
-        return $this->supplierRepository->getMe(GlobalRegistry::get('user')['supplier_id']);
+        return $this->deviceRepository->getMe(GlobalRegistry::get('user')['device_id']);
     }
 }

@@ -15,26 +15,26 @@
     let countryCode;   // ustawiamy przy otwarciu
 
     /* ---------- otwarcie modala ---------- */
-    window.runSupplierToShopLink = (materialId, materialName, countryCodeArg) => {
+    window.runKitchenToShopLink = (materialId, materialName, countryCodeArg) => {
         form.reset();
         idMaterial.value = materialId;
         matNameEl.textContent = materialName;
         countryCode = countryCodeArg;
 
-        loadSuppliers(materialId);
+        loadKitchens(materialId);
         modal.show();
     };
 
     /* ---------- pobranie listy dostawców ---------- */
-    async function fetchSuppliers(materialId, cCode) {
+    async function fetchKitchens(materialId, cCode) {
         return api(`/ajax/countries/${cCode}/materials/${materialId}/material-suppliers`,
             { method: 'GET' })
             .then(res => res.data || [])
             .catch(()  => []);
     }
 
-    async function loadSuppliers(materialId) {
-        const data = await fetchSuppliers(materialId, countryCode);
+    async function loadKitchens(materialId) {
+        const data = await fetchKitchens(materialId, countryCode);
 
         // 1. wyczyść <select>
         selectSup.innerHTML = `<option value="">['select_supplier']</option>`;

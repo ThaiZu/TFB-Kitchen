@@ -2,7 +2,7 @@
     "name": "thaizu/supplier",
     "autoload": {
         "psr-4": {
-            "App\\Supplier\\": "src/"
+            "App\\Kitchen\\": "src/"
         }
     },
     "require": {

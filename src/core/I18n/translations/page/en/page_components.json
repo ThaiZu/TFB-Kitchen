@@ -1,0 +1,42 @@
+{
+  "supplier_portal": "Kitchen Portal",
+  "supplier_app_external_short": "Kitchen (ext.)",
+  "franchise_ecosystem": "Franchise Network Ecosystem",
+
+  "menu": "Menu",
+  "account": "Account",
+  "logout": "Logout",
+  "my_profile": "My Profile",
+
+  "supplier_dashboard": "Dashboard",
+  "supplier_dashboard_subtitle": "Quick overview of the most important information and work shortcuts.",
+
+  "quick_actions": "Quick Actions",
+  "manage_catalog": "Product Catalog",
+  "manage_catalog_subtitle": "Add and update products available for ordering.",
+  "manage_price_lists": "Price Lists per Store",
+  "manage_price_lists_subtitle": "Set prices for specific recipients/stores.",
+  "view_profile": "My Profile",
+  "view_profile_subtitle": "Check account data and supplier information.",
+
+  "products_in_catalog": "Products in Catalog",
+  "active_price_lists": "Active Price Lists",
+  "last_update": "Last Update",
+  "not_available": "No Data",
+
+  "catalog": "Catalog",
+  "price_lists": "Price Lists",
+  "client": "Client",
+
+  "notifications": "Notifications",
+  "no_new_notifications": "No new notifications",
+  "hello": "Hello",
+  "settings": "Settings",
+
+  "kitchen_dashboard": "Kitchen Dashboard",
+  "production": "Production",
+  "knowledge": "Knowledge",
+  "checklists": "Checklists",
+  "orders": "Orders"
+}
+

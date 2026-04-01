@@ -1,8 +1,8 @@
 <?php
 
-use App\Supplier\app\Services\Auth\JwtService;
-use App\Supplier\core\Bootstrap\App;
-use App\Supplier\core\Support\GlobalRegistry;
+use App\Kitchen\app\Services\Auth\JwtService;
+use App\Kitchen\core\Bootstrap\App;
+use App\Kitchen\core\Support\GlobalRegistry;
 use Dotenv\Dotenv;
 
 require_once __DIR__ . '/../vendor/autoload.php';

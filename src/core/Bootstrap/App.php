@@ -1,10 +1,10 @@
 <?php
-namespace App\Supplier\core\Bootstrap;
+namespace App\Kitchen\core\Bootstrap;
 
-use App\Supplier\app\Http\Controllers\Auth\AuthController;
+use App\Kitchen\app\Http\Controllers\Auth\AuthController;
 
 //require_once 'vendor/autoload.php';
-use App\Supplier\app\Http\Middleware\AuthMiddleware;
+use App\Kitchen\app\Http\Middleware\AuthMiddleware;
 use Exception;
 use FastRoute;
 use FastRoute\Dispatcher;

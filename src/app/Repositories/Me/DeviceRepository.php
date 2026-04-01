@@ -3,10 +3,10 @@
 namespace App\Kitchen\app\Repositories\Me;
 
 
-use App\Kitchen\app\Models\Me\KitchenModel;
+use App\Kitchen\app\Models\Me\DeviceModel;
 use App\Kitchen\core\Http\ApiClient;
 
-class KitchenRepository
+class DeviceRepository
 {
     public function __construct(
         private ApiClient $apiClient
@@ -16,8 +16,8 @@ class KitchenRepository
 
     public function getMe($id)
     {
-        $resp = $this->apiClient->get('/material-suppliers/' . $id);
-        return new KitchenModel($resp['data']) ?? null;
+        $resp = $this->apiClient->get('/devices/' . $id);
+        return new DeviceModel($resp['data']) ?? null;
     }
 
 }

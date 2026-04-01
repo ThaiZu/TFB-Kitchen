@@ -73,12 +73,12 @@
 
         /* ❶ znajdź paczkę w cache */
         const pack = packsCache.find(p => String(p.id) === packId);
-        const idSupplier = pack ? pack.id_supplier : null;
+        const idKitchen = pack ? pack.id_supplier : null;
 
         /* ❷ payload z id_supplier */
         const payload = {
             id_material : idMaterial.value,
-            id_supplier : idSupplier,          // ← dodane
+            id_supplier : idKitchen,          // ← dodane
             id_pack     : packId,
             id_shop     : idShop.value
         };

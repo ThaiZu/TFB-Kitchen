@@ -12,7 +12,7 @@
 
 
     /* ---------- otwarcie modala ---------- */
-    window.runSupplierAssociationModal = (idMaterialArg, materialNameArg, countryCodeArg) => {
+    window.runKitchenAssociationModal = (idMaterialArg, materialNameArg, countryCodeArg) => {
         form.reset();
         materialName.innerText = materialNameArg;
         idMaterial.value = idMaterialArg;

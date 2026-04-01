@@ -1,11 +1,11 @@
 {% extends "layouts/base.twig" %}
 
-{% block title %}{{ translations.supplier_dashboard }}{% endblock %}
+{% block title %}{{ translations.kitchen_dashboard }}{% endblock %}
 
 {% block page_heading %}
     <div class="page-heading">
-        <h3>{{ translations.supplier_dashboard }}</h3>
-        <p class="text-subtitle text-muted">{{ translations.supplier_dashboard_subtitle }}</p>
+        <h3>{{ translations.kitchen_dashboard }}</h3>
+        <p class="text-subtitle text-muted">{{ translations.kitchen_dashboard_subtitle }}</p>
     </div>
 {% endblock %}
 
@@ -25,49 +25,65 @@
                 <div class="card-body">
                     <div class="row g-3">
 
-                        <div class="col-12 col-md-4">
-                            <a href="{{ ROOT }}/catalog" class="card border shadow-sm h-100 text-decoration-none">
+                        <div class="col-12 col-md-3">
+                            <a href="{{ ROOT }}/production" class="card border shadow-sm h-100 text-decoration-none">
                                 <div class="card-body d-flex gap-3 align-items-start">
                                     <div class="avatar avatar-lg">
                                         <span class="avatar-content bg-light-primary">
-                                            <i class="bi bi-box-seam"></i>
+                                            <i class="bi bi-list-check"></i>
                                         </span>
                                     </div>
                                     <div>
-                                        <h5 class="mb-1 text-dark">{{ translations.manage_catalog }}</h5>
-                                        <div class="text-muted small">{{ translations.manage_catalog_subtitle }}</div>
+                                        <h5 class="mb-1 text-dark">{{ translations.todays_production }}</h5>
+                                        <div class="text-muted small">{{ translations.todays_production_subtitle }}</div>
                                     </div>
                                 </div>
                             </a>
                         </div>
 
-                        <div class="col-12 col-md-4">
-                            <a href="{{ ROOT }}/clients" class="card border shadow-sm h-100 text-decoration-none">
+                        <div class="col-12 col-md-3">
+                            <a href="{{ ROOT }}/cards" class="card border shadow-sm h-100 text-decoration-none">
                                 <div class="card-body d-flex gap-3 align-items-start">
                                     <div class="avatar avatar-lg">
                                         <span class="avatar-content bg-light-success">
-                                            <i class="bi bi-tags"></i>
+                                            <i class="bi bi-journal-text"></i>
                                         </span>
                                     </div>
                                     <div>
-                                        <h5 class="mb-1 text-dark">{{ translations.manage_price_lists }}</h5>
-                                        <div class="text-muted small">{{ translations.manage_price_lists_subtitle }}</div>
+                                        <h5 class="mb-1 text-dark">{{ translations.production_cards }}</h5>
+                                        <div class="text-muted small">{{ translations.production_cards_subtitle }}</div>
                                     </div>
                                 </div>
                             </a>
                         </div>
 
-                        <div class="col-12 col-md-4">
-                            <a href="{{ ROOT }}/me" class="card border shadow-sm h-100 text-decoration-none">
+                        <div class="col-12 col-md-3">
+                            <a href="{{ ROOT }}/checklists" class="card border shadow-sm h-100 text-decoration-none">
                                 <div class="card-body d-flex gap-3 align-items-start">
                                     <div class="avatar avatar-lg">
                                         <span class="avatar-content bg-light-warning">
-                                            <i class="bi bi-person"></i>
+                                            <i class="bi bi-clipboard-check"></i>
                                         </span>
                                     </div>
                                     <div>
-                                        <h5 class="mb-1 text-dark">{{ translations.view_profile }}</h5>
-                                        <div class="text-muted small">{{ translations.view_profile_subtitle }}</div>
+                                        <h5 class="mb-1 text-dark">{{ translations.checklists }}</h5>
+                                        <div class="text-muted small">{{ translations.checklists_subtitle }}</div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="col-12 col-md-3">
+                            <a href="{{ ROOT }}/orders" class="card border shadow-sm h-100 text-decoration-none">
+                                <div class="card-body d-flex gap-3 align-items-start">
+                                    <div class="avatar avatar-lg">
+                                        <span class="avatar-content bg-light-info">
+                                            <i class="bi bi-truck"></i>
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-1 text-dark">{{ translations.my_orders }}</h5>
+                                        <div class="text-muted small">{{ translations.my_orders_subtitle }}</div>
                                     </div>
                                 </div>
                             </a>
@@ -86,10 +102,10 @@
                     <div class="card h-100">
                         <div class="card-body d-flex align-items-center justify-content-between">
                             <div>
-                                <div class="text-muted small">{{ translations.products_in_catalog }}</div>
-                                <div class="fs-3 fw-bold">{{ stats.catalog_products_count|default(0) }}</div>
+                                <div class="text-muted small">{{ translations.tasks_todo }}</div>
+                                <div class="fs-3 fw-bold">{{ stats.tasks_todo|default(0) }}</div>
                             </div>
-                            <i class="bi bi-box-seam fs-2 text-muted"></i>
+                            <i class="bi bi-circle fs-2 text-muted"></i>
                         </div>
                     </div>
                 </div>
@@ -98,10 +114,10 @@
                     <div class="card h-100">
                         <div class="card-body d-flex align-items-center justify-content-between">
                             <div>
-                                <div class="text-muted small">{{ translations.active_price_lists }}</div>
-                                <div class="fs-3 fw-bold">{{ stats.price_lists_count|default(0) }}</div>
+                                <div class="text-muted small">{{ translations.tasks_in_progress }}</div>
+                                <div class="fs-3 fw-bold">{{ stats.tasks_in_progress|default(0) }}</div>
                             </div>
-                            <i class="bi bi-tags fs-2 text-muted"></i>
+                            <i class="bi bi-arrow-repeat fs-2 text-muted"></i>
                         </div>
                     </div>
                 </div>
@@ -110,12 +126,10 @@
                     <div class="card h-100">
                         <div class="card-body d-flex align-items-center justify-content-between">
                             <div>
-                                <div class="text-muted small">{{ translations.last_update }}</div>
-                                <div class="fw-bold">
-                                    {{ stats.last_update|default(translations.not_available) }}
-                                </div>
+                                <div class="text-muted small">{{ translations.tasks_completed }}</div>
+                                <div class="fs-3 fw-bold">{{ stats.tasks_completed|default(0) }}</div>
                             </div>
-                            <i class="bi bi-clock-history fs-2 text-muted"></i>
+                            <i class="bi bi-check-circle fs-2 text-success"></i>
                         </div>
                     </div>
                 </div>

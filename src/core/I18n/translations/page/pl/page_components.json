@@ -1,5 +1,5 @@
 {
-  "supplier_portal": "Supplier Portal",
+  "supplier_portal": "Kitchen Portal",
   "supplier_app_external_short": "Dostawca (zewn.)",
   "franchise_ecosystem": "Ekosystem sieci franczyzowej",
 
@@ -26,5 +26,16 @@
 
   "catalog": "Katalog",
   "price_lists": "Cenniki",
-  "client" : "Klient"
+  "client": "Klient",
+
+  "notifications": "Powiadomienia",
+  "no_new_notifications": "Brak nowych powiadomień",
+  "hello": "Witaj",
+  "settings": "Ustawienia",
+
+  "kitchen_dashboard": "Pulpit kuchni",
+  "production": "Produkcja",
+  "knowledge": "Wiedza",
+  "checklists": "Checklisty",
+  "orders": "Zamówienia"
 }

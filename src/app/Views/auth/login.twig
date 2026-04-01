@@ -4,289 +4,445 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ translations.supplier_portal_login_title }}</title>
-
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ ROOT }}/assets/css/bootstrap.css">
     <link rel="stylesheet" href="{{ ROOT }}/assets/vendors/bootstrap-icons/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ ROOT }}/assets/css/app.css">
-    <link rel="stylesheet" href="{{ ROOT }}/assets/css/pages/auth.css">
-
     <style>
-        /* Desktop-first (bez PWA/mobile tuning) */
-        html, body { height: 100%; }
-        #auth { min-height: 100vh; }
-
-        /* Lewa kolumna: branding */
-        .supplier-brand {
+        html, body { height: 100%; margin: 0; }
+        #auth-root { min-height: 100vh; display: flex; }
+        /* ── LEWA KOLUMNA: kontekst aplikacji ── */
+        .app-brand-col {
+            width: 420px;
+            flex-shrink: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 40px 44px;
+            background:
+                radial-gradient(ellipse 900px 600px at 0% 10%, rgba(255,255,255,.04), transparent 65%),
+                linear-gradient(160deg, #0f1923 0%, #111d2b 50%, #0a1219 100%);
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+        /* dekoracja tła */
+        .app-brand-col::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.025'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            pointer-events: none;
+        }
+        .brand-top { position: relative; }
+        .brand-mid  { position: relative; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .brand-foot { position: relative; }
+        /* identyfikator aplikacji w nagłówku */
+        .app-id-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .38rem .85rem;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,.2);
+            background: rgba(255,255,255,.08);
+            font-size: .8rem;
+            font-weight: 700;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,.9);
+        }
+        .app-id-pill .dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: #34d399;
+            box-shadow: 0 0 6px #34d399;
+            flex-shrink: 0;
+        }
+        /* duży tytuł sekcji kuchni */
+        .kitchen-icon-wrap {
+            width: 64px; height: 64px;
+            border-radius: 18px;
+            background: rgba(255,255,255,.1);
+            border: 1px solid rgba(255,255,255,.18);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+        .brand-headline {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -.03em;
+            line-height: 1.15;
+            margin: 0 0 10px;
+        }
+        .brand-desc {
+            color: rgba(255,255,255,.7);
+            font-size: .97rem;
+            line-height: 1.6;
+            margin: 0 0 28px;
+        }
+        /* lista możliwości */
+        .feature-list {
+            list-style: none;
+            padding: 0; margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .feature-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .feature-list .fi {
+            width: 32px; height: 32px;
+            border-radius: 10px;
+            background: rgba(255,255,255,.1);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            font-size: .95rem;
+        }
+        .feature-list .ft {
+            display: flex; flex-direction: column;
+        }
+        .feature-list .ft strong {
+            font-size: .88rem;
+            font-weight: 700;
+            color: rgba(255,255,255,.95);
+            line-height: 1.2;
+        }
+        .feature-list .ft span {
+            font-size: .78rem;
+            color: rgba(255,255,255,.55);
+            line-height: 1.4;
+        }
+        /* stopka marki */
+        .brand-foot-text {
+            font-size: .78rem;
+            color: rgba(255,255,255,.4);
+        }
+        /* ── PRAWA KOLUMNA: formularz ── */
+        .auth-form-col {
+            flex: 1;
             min-height: 100vh;
             display: flex;
             align-items: center;
-            padding: 48px;
-            background:
-                    radial-gradient(1200px 600px at 10% 20%, rgba(0,0,0,.08), transparent 60%),
-                    radial-gradient(900px 500px at 90% 70%, rgba(0,0,0,.06), transparent 55%),
-                    linear-gradient(135deg, #111827 0%, #0b1220 55%, #111827 100%);
-            color: #fff;
+            justify-content: center;
+            padding: 48px 24px;
+            background: #f0f2f7;
         }
-
-        .brand-card{
-            max-width: 520px;
+        .auth-panel {
+            width: 100%;
+            max-width: 420px;
         }
-
-        .brand-badge{
-            display:inline-flex;
-            align-items:center;
-            gap:.5rem;
-            padding: .45rem .75rem;
+        /* nagłówek formularza */
+        .auth-panel-header {
+            background: #fff;
+            border-radius: 16px 16px 0 0;
+            padding: 22px 26px 18px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .auth-panel-body {
+            background: #fff;
+            border-radius: 0 0 16px 16px;
+            padding: 24px 26px 26px;
+            box-shadow: 0 4px 32px rgba(0,0,0,.09);
+        }
+        .auth-logo-wrap {
+            width: 48px; height: 48px;
+            border-radius: 14px;
+            overflow: hidden;
+            background: #f0f2f7;
+            flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            border: 1px solid #e2e6ef;
+        }
+        .auth-logo-wrap img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .auth-title   { font-size: 1.25rem; font-weight: 800; letter-spacing: -.02em; margin: 0; }
+        .auth-subtitle { font-size: .88rem; color: #6c757d; margin: 2px 0 0; }
+        /* chip kontekstu – wyraźnie identyfikuje gdzie jest user */
+        .context-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+            padding: .32rem .7rem;
             border-radius: 999px;
-            background: rgba(255,255,255,.10);
-            border: 1px solid rgba(255,255,255,.18);
+            font-size: .78rem;
             font-weight: 700;
             letter-spacing: .02em;
-        }
-
-        .brand-title{
-            font-weight: 800;
-            letter-spacing: -0.03em;
-            margin: 18px 0 10px;
-            font-size: 2.25rem;
-            line-height: 1.15;
-        }
-
-        .brand-subtitle{
-            margin: 0 0 22px;
-            color: rgba(255,255,255,.78);
-            font-size: 1.05rem;
-        }
-
-        .brand-points{
-            margin-top: 22px;
-            padding-left: 0;
-            list-style: none;
-            color: rgba(255,255,255,.78);
-        }
-        .brand-points li{
-            display:flex;
-            gap:.65rem;
-            align-items:flex-start;
-            margin-bottom: 10px;
-        }
-        .brand-points i{ color: rgba(255,255,255,.9); }
-
-        /* Prawa kolumna: login */
-        .supplier-auth {
-            min-height: 100vh;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            padding: 48px 24px;
-            background: #f5f7fb;
-        }
-
-        .auth-card{
-            width: 100%;
-            max-width: 430px;
-            border-radius: 18px;
-            overflow: hidden;
-        }
-
-        .auth-card .card-body{
-            padding: 26px;
-        }
-
-        .auth-header{
-            display:flex;
-            align-items:center;
-            justify-content:space-between;
-            gap: 12px;
-            margin-bottom: 10px;
-        }
-
-        .auth-appmark{
-            display:flex;
-            align-items:center;
-            gap: 10px;
-        }
-
-        .auth-logo{
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            object-fit: cover;
-            box-shadow: 0 10px 24px rgba(0,0,0,.10);
-            background: #fff;
-        }
-
-        .auth-title{
-            margin: 0;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-            font-size: 1.35rem;
-        }
-        .auth-subtitle{
-            margin: 4px 0 0;
-            color: #6c757d;
-            font-size: .95rem;
-        }
-
-        .context-chip{
-            display:inline-flex;
-            align-items:center;
-            gap:.5rem;
-            padding: .35rem .65rem;
-            border-radius: 999px;
-            background: #eef2ff;
-            border: 1px solid rgba(99,102,241,.25);
-            color: #3730a3;
-            font-weight: 700;
-            font-size: .85rem;
             white-space: nowrap;
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
         }
-
-        .invalid-feedback{ display:block; } /* zawsze widoczne */
-
-        /* Przyciski i inputy w stylu Mazer, ale “bardziej desktop” */
-        .form-control-xl{
-            padding-top: .9rem;
-            padding-bottom: .9rem;
-            border-radius: 14px;
+        .context-badge .dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: #10b981;
+            flex-shrink: 0;
         }
-        .btn-xl{
-            border-radius: 14px;
-            padding: .9rem 1rem;
+        /* inputy */
+        .input-wrap {
+            position: relative;
+            margin-bottom: 14px;
         }
-
-        /* Na bardzo małych ekranach (gdyby jednak ktoś otworzył) – tylko kosmetyka */
-        @media (max-width: 991.98px){
-            .supplier-brand{ display:none; }
-            .supplier-auth{ background:#fff; }
+        .input-wrap .bi {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1rem;
+            color: #adb5bd;
+            pointer-events: none;
+            z-index: 2;
+        }
+        .input-wrap input,
+        .input-wrap select {
+            padding-left: 40px;
+            border-radius: 12px;
+            border: 1.5px solid #dee2e6;
+            padding-top: .85rem;
+            padding-bottom: .85rem;
+            font-size: .95rem;
+            transition: border-color .15s, box-shadow .15s;
+            width: 100%;
+        }
+        .input-wrap input:focus,
+        .input-wrap select:focus {
+            border-color: #111827;
+            box-shadow: 0 0 0 3px rgba(17,24,39,.1);
+        }
+        .input-wrap input.is-invalid,
+        .input-wrap select.is-invalid {
+            border-color: #dc3545;
+        }
+        .input-wrap select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236c757d' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+            padding-right: 40px;
+            cursor: pointer;
+        }
+        .invalid-msg {
+            font-size: .82rem;
+            color: #dc3545;
+            margin: 4px 0 0 4px;
+        }
+        /* przycisk */
+        .btn-login {
+            width: 100%;
+            padding: .9rem;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: .97rem;
+            background: #111827;
+            color: #fff;
+            border: none;
+            margin-top: 6px;
+            transition: background .15s, transform .1s;
+        }
+        .btn-login:hover { background: #1f2d3d; }
+        .btn-login:active { transform: scale(.985); }
+        /* alert błędu */
+        .auth-alert-danger {
+            background: #fff5f5;
+            border: 1px solid #fecaca;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: .88rem;
+            color: #991b1b;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        /* stopka */
+        .auth-footer-note {
+            font-size: .78rem;
+            color: #9ca3af;
+            text-align: center;
+            margin-top: 20px;
+        }
+        /* Widok mobilny */
+        @media (max-width: 767.98px) {
+            #auth-root { flex-direction: column; }
+            .app-brand-col {
+                width: 100%;
+                min-height: auto;
+                padding: 24px 20px;
+            }
+            .brand-mid { margin: 20px 0; }
+            .auth-form-col { background: #fff; }
         }
     </style>
 </head>
-
 <body>
-<div id="auth">
-    <div class="container-fluid p-0">
-        <div class="row g-0">
-
-            {# LEFT: Branding / Context #}
-            <div class="col-lg-6 supplier-brand">
-                <div class="brand-card">
-                    <div class="brand-badge">
-                        <i class="bi bi-truck"></i>
-                        {{ translations.supplier_app_external }}
-                    </div>
-
-                    <h1 class="brand-title">{{ translations.supplier_panel }}</h1>
-                    <p class="brand-subtitle">
-                        {{ translations.supplier_panel_subtitle }}
-                    </p>
-
-                    <ul class="brand-points">
-                        <li>
-                            <i class="bi bi-shield-lock"></i>
-                            <span>{{ translations.supplier_point_separate_auth }}</span>
-                        </li>
-                        <li>
-                            <i class="bi bi-box-seam"></i>
-                            <span>{{ translations.supplier_point_catalog }}</span>
-                        </li>
-                        <li>
-                            <i class="bi bi-tags"></i>
-                            <span>{{ translations.supplier_point_price_lists }}</span>
-                        </li>
-                    </ul>
-
-                    <div class="mt-4 small" style="color: rgba(255,255,255,.65);">
-                        {{ translations.supplier_no_access_hint }}
-                    </div>
-                </div>
-            </div>
-
-            {# RIGHT: Login form #}
-            <div class="col-lg-6 supplier-auth">
-                <div class="card shadow-sm auth-card border border-light-secondary">
-                    <div class="card-body">
-                        <div class="auth-header">
-                            <div class="auth-appmark">
-                                {# Podmień ścieżkę na Twoje logo, np. /assets/images/logo/supplier.png #}
-                                <img class="auth-logo" src="{{ ROOT }}/assets/images/logo/logo.png" alt="Logo">
-                                <div>
-                                    <h2 class="auth-title">{{ translations.login }}</h2>
-                                    <p class="auth-subtitle">{{ translations.login_to_supplier_panel }}</p>
-                                </div>
-                            </div>
-
-                            <span class="context-chip">
-                                <i class="bi bi-grid-1x2-fill"></i>
-                                {{ translations.supplier_portal_label }}
-                            </span>
-                        </div>
-
-                        <hr class="my-3">
-
-                        {% if errors.invalid_credentials is not empty %}
-                            <div class="alert alert-danger py-2 mb-3">
-                                <i class="bi bi-exclamation-triangle me-1"></i>
-                                {{ errors.invalid_credentials }}
-                            </div>
-                        {% endif %}
-
-                        <form method="POST" autocomplete="on" class="mt-2">
-                            <div class="form-group position-relative has-icon-left mb-3">
-                                <input
-                                        type="text"
-                                        class="form-control form-control-xl {{ errors.login is not empty ? 'is-invalid' : '' }}"
-                                        name="login"
-                                        placeholder="{{ translations.login_placeholder }}"
-                                        inputmode="text"
-                                        autocomplete="username"
-                                        autocapitalize="none"
-                                        spellcheck="false"
-                                        value="{{ old('login') }}"
-                                >
-                                <div class="form-control-icon">
-                                    <i class="bi bi-person"></i>
-                                </div>
-                                {% if errors.login is not empty %}
-                                    <div class="invalid-feedback mt-1">{{ errors.login }}</div>
-                                {% endif %}
-                            </div>
-
-                            <div class="form-group position-relative has-icon-left mb-2">
-                                <input
-                                        type="password"
-                                        class="form-control form-control-xl {{ errors.password is not empty ? 'is-invalid' : '' }}"
-                                        name="password"
-                                        placeholder="{{ translations.password_placeholder }}"
-                                        autocomplete="current-password"
-                                >
-                                <div class="form-control-icon">
-                                    <i class="bi bi-shield-lock"></i>
-                                </div>
-                                {% if errors.password is not empty %}
-                                    <div class="invalid-feedback mt-1">{{ errors.password }}</div>
-                                {% endif %}
-                            </div>
-
-                            <button class="btn btn-dark btn-xl w-100 mt-3">
-                                <i class="bi bi-box-arrow-in-right me-1"></i>
-                                {{ translations.login_button }}
-                            </button>
-
-                            <div class="text-center mt-3 small text-muted">
-                                {{ translations.login_help_hint }}
-                            </div>
-                        </form>
-
-                        <div class="text-center mt-4 small text-muted">
-                            © {{ "now"|date("Y") }} • {{ translations.franchise_ecosystem }} • {{ translations.supplier_panel }}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+<div id="auth-root">
+    {# ════════════════════════════════════════════
+       LEWA KOLUMNA — identyfikacja aplikacji
+       ════════════════════════════════════════════ #}
+    <div class="app-brand-col">
+        {# Nagłówek — identyfikacja systemu #}
+        <div class="brand-top">
+            <span class="app-id-pill">
+                <span class="dot"></span>
+                {{ translations.franchise_ecosystem }}
+            </span>
         </div>
+        {# Główna treść #}
+        <div class="brand-mid">
+            <div class="kitchen-icon-wrap">
+                <i class="bi bi-shop-window"></i>
+            </div>
+            <h1 class="brand-headline">{{ translations.kitchen_brand_headline }}</h1>
+            <p class="brand-desc">{{ translations.kitchen_brand_subtitle }}</p>
+            <ul class="feature-list">
+                <li>
+                    <div class="fi"><i class="bi bi-list-check"></i></div>
+                    <div class="ft">
+                        <strong>{{ translations.kitchen_production }}</strong>
+                        <span>{{ translations.kitchen_production_desc }}</span>
+                    </div>
+                </li>
+                <li>
+                    <div class="fi"><i class="bi bi-journal-text"></i></div>
+                    <div class="ft">
+                        <strong>{{ translations.kitchen_cards }}</strong>
+                        <span>{{ translations.kitchen_cards_desc }}</span>
+                    </div>
+                </li>
+                <li>
+                    <div class="fi"><i class="bi bi-clipboard-check"></i></div>
+                    <div class="ft">
+                        <strong>{{ translations.kitchen_checklists }}</strong>
+                        <span>{{ translations.kitchen_checklists_desc }}</span>
+                    </div>
+                </li>
+                <li>
+                    <div class="fi"><i class="bi bi-cloud-arrow-down"></i></div>
+                    <div class="ft">
+                        <strong>{{ translations.kitchen_offline }}</strong>
+                        <span>{{ translations.kitchen_offline_desc }}</span>
+                    </div>
+                </li>
+            </ul>
+            <p class="mt-4 mb-0" style="font-size:.8rem; color:rgba(255,255,255,.4);">
+                {{ translations.kitchen_no_access_hint }}
+            </p>
+        </div>
+        {# Stopka #}
+        <div class="brand-foot">
+            <p class="brand-foot-text mb-0">
+                © {{ "now"|date("Y") }} • {{ translations.franchise_ecosystem }}
+            </p>
+        </div>
+    </div>
+    {# ════════════════════════════════════════════
+       PRAWA KOLUMNA — formularz logowania
+       ════════════════════════════════════════════ #}
+    <div class="auth-form-col">
+        <div class="auth-panel">
+            {# Nagłówek panelu — user ZAWSZE wie gdzie jest #}
+            <div class="auth-panel-header">
+                <div class="d-flex align-items-center justify-content-between gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="auth-logo-wrap">
+                            <img src="{{ ROOT }}/assets/images/main_logo.jpg" alt="Logo">
+                        </div>
+                        <div>
+                            <h2 class="auth-title">{{ translations.login }}</h2>
+                            <p class="auth-subtitle">{{ translations.login_to_kitchen }}</p>
+                        </div>
+                    </div>
+                    {# Chip identyfikujący kontekst — jasno pokazuje gdzie user się loguje #}
+                    <span class="context-badge">
+                        <span class="dot"></span>
+                        {{ translations.kitchen_portal_label }}
+                    </span>
+                </div>
+            </div>
+            <div class="auth-panel-body">
+                {# Alert błędu logowania #}
+                {% if errors.invalid_credentials is not empty %}
+                    <div class="auth-alert-danger">
+                        <i class="bi bi-exclamation-circle-fill flex-shrink-0"></i>
+                        {{ translations[errors.invalid_credentials] ?? translations.error_invalid_credentials }}
+                    </div>
+                {% endif %}
+                <form method="POST" autocomplete="on">
+                    {# Sklep #}
+                    <div class="input-wrap">
+                        <i class="bi bi-shop-window"></i>
+                        <select
+                            class="form-select {{ errors.shop is not empty ? 'is-invalid' : '' }}"
+                            name="shop_id"
+                            id="shop"
+                            aria-label="{{ translations.shop_label }}"
+                        >
+                            <option value="">{{ translations.shop_placeholder }}</option>
+                            {% for shop in shops %}
+                                <option value="{{ shop.getId() }}" {{ old('shop') == shop.getId() ? 'selected' : '' }}>
+                                    {{ shop.getRepresentativeName() }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        {% if errors.shop is not empty %}
+                            <div class="invalid-msg">{{ translations[errors.shop] ?? errors.shop }}</div>
+                        {% endif %}
+                    </div>
+
+                    {# Login #}
+                    <div class="input-wrap">
+                        <i class="bi bi-person"></i>
+                        <input
+                            type="text"
+                            class="form-control {{ errors.login is not empty ? 'is-invalid' : '' }}"
+                            name="login"
+                            placeholder="{{ translations.login_placeholder }}"
+                            inputmode="text"
+                            autocomplete="username"
+                            autocapitalize="none"
+                            spellcheck="false"
+                            value="{{ old('login') }}"
+                        >
+                        {% if errors.login is not empty %}
+                            <div class="invalid-msg">{{ translations[errors.login] ?? errors.login }}</div>
+                        {% endif %}
+                    </div>
+                    {# Hasło #}
+                    <div class="input-wrap">
+                        <i class="bi bi-lock"></i>
+                        <input
+                            type="password"
+                            class="form-control {{ errors.password is not empty ? 'is-invalid' : '' }}"
+                            name="password"
+                            placeholder="{{ translations.password_placeholder }}"
+                        autocomplete="current-password"
+                    >
+                    {% if errors.password is not empty %}
+                        <div class="invalid-msg">{{ translations[errors.password] ?? errors.password }}</div>
+                    {% endif %}
+                </div>
+                    <button type="submit" class="btn-login">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>{{ translations.login_button }}
+                    </button>
+                </form>
+                <p class="auth-footer-note mb-0 mt-3">
+                    {{ translations.login_help_hint }}
+                </p>
+            </div>{# /auth-panel-body #}
+            <p class="auth-footer-note">
+                © {{ "now"|date("Y") }} • {{ translations.franchise_ecosystem }} • {{ translations.app_system_name }}
+            </p>
+        </div>{# /auth-panel #}
     </div>
 </div>
 </body>

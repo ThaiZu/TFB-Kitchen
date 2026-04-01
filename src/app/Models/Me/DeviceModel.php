@@ -4,7 +4,7 @@ namespace App\Kitchen\app\Models\Me;
 
 use JsonSerializable;
 
-class KitchenModel implements JsonSerializable{
+class DeviceModel implements JsonSerializable{
 
     private $id;
     private $name;

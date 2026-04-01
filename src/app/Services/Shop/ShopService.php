@@ -1,8 +1,8 @@
 <?php
-namespace App\Kitchen\app\Services\Me;
+namespace App\Kitchen\app\Services\Shop;
 
-use App\Kitchen\app\Repositories\Me\DeviceRepository;
-use App\Kitchen\core\Support\GlobalRegistry;
+
+use App\Kitchen\app\Repositories\Shop\ShopRepository;
 
 class ShopService
 {

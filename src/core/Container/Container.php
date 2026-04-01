@@ -1,6 +1,6 @@
 <?php
 
-use App\Supplier\core\Http\ApiClient;
+use App\Kitchen\core\Http\ApiClient;
 use DI\ContainerBuilder;
 use function DI\autowire;
 

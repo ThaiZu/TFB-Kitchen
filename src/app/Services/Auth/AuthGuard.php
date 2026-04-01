@@ -1,10 +1,10 @@
 <?php
-namespace App\Supplier\app\Services\Auth;
+namespace App\Kitchen\app\Services\Auth;
 
 
 
-use App\Supplier\app\Repositories\Auth\LoginRepository;
-use App\Supplier\core\Cookie\CookieManager;
+use App\Kitchen\app\Repositories\Auth\LoginRepository;
+use App\Kitchen\core\Cookie\CookieManager;
 
 class AuthGuard
 {

@@ -1,11 +1,11 @@
 <?php
-namespace App\Supplier\app\Http\Middleware;
+namespace App\Kitchen\app\Http\Middleware;
 
-use App\Supplier\app\Services\Auth\AuthGuard;
-use App\Supplier\app\Services\Auth\AuthService;
-use App\Supplier\app\Services\Auth\JwtService;
-use App\Supplier\core\Cookie\CookieManager;
-use App\Supplier\core\Support\GlobalRegistry;
+use App\Kitchen\app\Services\Auth\AuthGuard;
+use App\Kitchen\app\Services\Auth\AuthService;
+use App\Kitchen\app\Services\Auth\JwtService;
+use App\Kitchen\core\Cookie\CookieManager;
+use App\Kitchen\core\Support\GlobalRegistry;
 use DateTime;
 
 class AuthMiddleware
@@ -34,13 +34,12 @@ class AuthMiddleware
             $claims = $this->jwtService->getClaimsUnsafe($access); // albo jwtService->getClaimsUnsafe
 
             GlobalRegistry::set('user', [
-                'id' => (int)($claims['usr_id'] ?? 0),
-                'supplier_id' => (int)($claims['supplier_id'] ?? 0),
-                'first_name' => (string)($claims['usr_fn'] ?? ''),
-                'last_name' => (string)($claims['usr_ln'] ?? ''),
-                'lang_code' => (string)($claims['usr_lncd'] ?? 'pl')
+                'shop_id' => (int)($claims['shop_id'] ?? 0),
+                'device_id' => (int)($claims['device_id'] ?? 0),
+                'device_name' => (string)($claims['dv_nm'] ?? ''),
+                'lang_code' => (string)($claims['dv_lncd'] ?? 'pl')
             ]);
-            GlobalRegistry::set('lang_code', (string)($claims['usr_lncd'] ?? getUserLanguage()));
+            GlobalRegistry::set('lang_code', (string)($claims['dv_lncd'] ?? getUserLanguage()));
         }
     }
 }

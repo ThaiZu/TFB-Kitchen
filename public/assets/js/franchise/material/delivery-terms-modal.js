@@ -15,25 +15,25 @@
 
     let suppliersCache = [];          // zapamiętujemy listę dostawców
 
-    window.runSupplierDeliveryTerms = (materialId) => {
+    window.runKitchenDeliveryTerms = (materialId) => {
         form.reset();
         deliveryBlock.classList.add('d-none');
         idMaterial.value = materialId;
 
         /* najpierw spróbuj zaliczyć krok – modal pokaż dopiero,
            jeśli będzie faktycznie coś do uzupełnienia */
-        loadSuppliers(materialId);
+        loadKitchens(materialId);
     };
 
     /* ---------- pobranie listy dostawców ---------- */
-    const fetchSuppliers = async (materialId, shopId) =>
+    const fetchKitchens = async (materialId, shopId) =>
         api(`/ajax/shops/${shopId}/materials/${materialId}/material-suppliers`,
             { method: 'GET' })
             .then(res => res.data || [])
             .catch(()  => []);
 
-    async function loadSuppliers(materialId) {
-        suppliersCache = await fetchSuppliers(materialId, idShop.value);
+    async function loadKitchens(materialId) {
+        suppliersCache = await fetchKitchens(materialId, idShop.value);
 
         /* 1. policz dostawców, którzy mają już delivery_days */
         const rejected = suppliersCache.filter(s => {

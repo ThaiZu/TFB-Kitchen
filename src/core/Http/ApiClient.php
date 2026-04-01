@@ -1,9 +1,9 @@
 <?php
-namespace App\Supplier\core\Http;
+namespace App\Kitchen\core\Http;
 
 
-use App\Supplier\core\Cookie\CookieManager;
-use App\Supplier\core\Support\UserHeaderProvider;
+use App\Kitchen\core\Cookie\CookieManager;
+use App\Kitchen\core\Support\UserHeaderProvider;
 use CURLFile;
 
 class ApiClient

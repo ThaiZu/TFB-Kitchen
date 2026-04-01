@@ -1,5 +1,5 @@
 <?php
-namespace App\Supplier\app\Services\Auth;
+namespace App\Kitchen\app\Services\Auth;
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;

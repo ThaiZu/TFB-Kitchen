@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Supplier\app\Http\Controllers\Dashboard;
+namespace App\Kitchen\app\Http\Controllers\Dashboard;
 
 
-use App\Supplier\app\Http\Controllers\Controller;
-use App\Supplier\core\Support\Route;
+use App\Kitchen\app\Http\Controllers\Controller;
+use App\Kitchen\core\Support\Route;
 
 class DashboardController extends Controller
 {

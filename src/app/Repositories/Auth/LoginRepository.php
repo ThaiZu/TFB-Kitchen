@@ -1,9 +1,9 @@
 <?php
-namespace App\Supplier\app\Repositories\Auth;
+namespace App\Kitchen\app\Repositories\Auth;
 
 
-use App\Supplier\app\Models\Auth\JWTModel;
-use App\Supplier\core\Http\ApiClient;
+use App\Kitchen\app\Models\Auth\JWTModel;
+use App\Kitchen\core\Http\ApiClient;
 
 class LoginRepository{
     private $apiClient;
@@ -14,7 +14,7 @@ class LoginRepository{
 
     public function login($data)
     {
-        $response = $this->apiClient->login("/material-suppliers/auth/login", $data);
+        $response = $this->apiClient->login("/devices/auth/login", $data);
 
         if (isset($response['access_token']) && isset($response['refresh_token'])) {
             return $response;

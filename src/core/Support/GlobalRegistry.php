@@ -1,5 +1,5 @@
 <?php
-namespace App\Supplier\core\Support;
+namespace App\Kitchen\core\Support;
 
 class GlobalRegistry {
     private static $storage = [];

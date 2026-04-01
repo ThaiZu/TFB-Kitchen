@@ -1,14 +1,14 @@
 <?php
-namespace App\Supplier\core\Cookie;
+namespace App\Kitchen\core\Cookie;
 
-use App\Supplier\app\Models\Auth\JWTModel;
+use App\Kitchen\app\Models\Auth\JWTModel;
 
 class CookieManager {
 
     public function setAuthCookie($accessToken, $expiryTokenDate)
     {
 
-        $res_access = setcookie('supplier_access_token', $accessToken, [
+        $res_access = setcookie('kitchen_access_token', $accessToken, [
             'expires' => strtotime($expiryTokenDate), // Poprawiony timestamp
             'path' => '/',
             'secure' => true,
@@ -18,7 +18,7 @@ class CookieManager {
 
         if(!$res_access) return false;
 
-        $res_expiry = setcookie('supplier_access_token_expiry', $expiryTokenDate, [
+        $res_expiry = setcookie('kitchen_access_token_expiry', $expiryTokenDate, [
             'expires' => strtotime($expiryTokenDate), // Poprawiony timestamp
             'path' => '/',
             'secure' => true,
@@ -37,7 +37,7 @@ class CookieManager {
 
         $expiresAt = time() + $refreshTtl;
 
-        setcookie('supplier_refresh_token', $refreshToken, [
+        setcookie('kitchen_refresh_token', $refreshToken, [
             'expires' => $expiresAt,
             'path' => '/',
             'secure' => true,
@@ -46,7 +46,7 @@ class CookieManager {
         ]);
 
         // to cookie z datą jest opcjonalne — i tak możesz policzyć time()+TTL
-        setcookie('supplier_refresh_token_expiry', date('Y-m-d H:i:s', $expiresAt), [
+        setcookie('kitchen_refresh_token_expiry', date('Y-m-d H:i:s', $expiresAt), [
             'expires' => $expiresAt,
             'path' => '/',
             'secure' => true,
@@ -59,7 +59,7 @@ class CookieManager {
 
     public function unsetCookies()
     {
-        setcookie('supplier_refresh_token', '', [
+        setcookie('kitchen_refresh_token', '', [
             'expires' => time() - 3600, // Poprawiony timestamp
             'path' => '/',
             'secure' => true,
@@ -67,7 +67,7 @@ class CookieManager {
             'samesite' => 'Strict',
         ]);
 
-        setcookie('supplier_refresh_token_expiry', '', [
+        setcookie('kitchen_refresh_token_expiry', '', [
             'expires' => time() - 3600, // Poprawiony timestamp
             'path' => '/',
             'secure' => true,
@@ -75,7 +75,7 @@ class CookieManager {
             'samesite' => 'Strict',
         ]);
 
-        setcookie('supplier_access_token', '', [
+        setcookie('kitchen_access_token', '', [
             'expires' => time() - 3600, // Poprawiony timestamp
             'path' => '/',
             'secure' => true,
@@ -83,7 +83,7 @@ class CookieManager {
             'samesite' => 'Strict',
         ]);
 
-        setcookie('supplier_access_token_expiry', '', [
+        setcookie('kitchen_access_token_expiry', '', [
             'expires' => time() - 3600, // Poprawiony timestamp
             'path' => '/',
             'secure' => true,
@@ -94,22 +94,22 @@ class CookieManager {
 
     public function getAccessToken()
     {
-        return $_COOKIE['supplier_access_token'] ?? null;
+        return $_COOKIE['kitchen_access_token'] ?? null;
     }
 
     public function getRefreshToken()
     {
-        return $_COOKIE['supplier_refresh_token'] ?? null;
+        return $_COOKIE['kitchen_refresh_token'] ?? null;
     }
 
     public function getAccessTokenExpiryTime()
     {
-        return $_COOKIE['supplier_access_token_expiry'] ?? null;
+        return $_COOKIE['kitchen_access_token_expiry'] ?? null;
     }
 
     public function getRefreshTokenExpiryTime()
     {
-        return $_COOKIE['supplier_refresh_token_expiry'] ?? null;
+        return $_COOKIE['kitchen_refresh_token_expiry'] ?? null;
     }
 
 }
