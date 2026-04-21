@@ -1,0 +1,22 @@
+{
+  "supplier_about_title": "About me",
+  "supplier_about_heading": "About me",
+  "supplier_about_subtitle": "Basic supplier data and contact information (read-only).",
+  "supplier_about_help_title": "Supplier account information",
+  "supplier_about_help_body": "Below you will find identification, address and contact data. If something is incorrect, contact your network administrator.",
+  "supplier_about_details_title": "Details",
+  "supplier_about_details_hint": "Address and contact data linked to your account.",
+  "supplier_address_section": "Address",
+  "supplier_contact_section": "Contact",
+  "supplier_id_label": "ID",
+  "supplier_tax_number_label": "Tax number",
+  "supplier_id_type_label": "ID type",
+  "supplier_country_code_label": "Country code",
+  "supplier_street_label": "Street and number",
+  "supplier_city_zip_label": "Zip code and city",
+  "supplier_phone_label": "Phone",
+  "supplier_email_label": "E-mail",
+  "not_provided": "No data",
+  "read_only_hint": "This is an information view (no editing).",
+  "contact_hint": "Contact data is used for communication within the franchise network integration."
+}

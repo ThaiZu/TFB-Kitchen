@@ -1,0 +1,10 @@
+{
+  "forbidden": "Accesso negato",
+  "forbidden_subtitle": "Non hai il permesso di visualizzare questa pagina.",
+  "not_found": "Pagina non trovata",
+  "not_found_subtitle": "La pagina che stai cercando non esiste o è stata spostata.",
+  "server_error": "Errore del server",
+  "server_error_subtitle": "Si è verificato un errore da parte nostra. Riprova.",
+  "back": "Indietro",
+  "reload": "Ricarica"
+}

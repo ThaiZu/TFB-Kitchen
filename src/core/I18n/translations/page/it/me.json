@@ -1,0 +1,22 @@
+{
+  "supplier_about_title": "Chi siamo",
+  "supplier_about_heading": "Chi siamo",
+  "supplier_about_subtitle": "Dati base del fornitore e informazioni di contatto (sola lettura).",
+  "supplier_about_help_title": "Informazioni sull'account fornitore",
+  "supplier_about_help_body": "Di seguito trovi i dati identificativi, di indirizzo e di contatto. Se qualcosa non è corretto, contatta l'amministratore di rete.",
+  "supplier_about_details_title": "Dettagli",
+  "supplier_about_details_hint": "Dati di indirizzo e contatto associati al tuo account.",
+  "supplier_address_section": "Indirizzo",
+  "supplier_contact_section": "Contatto",
+  "supplier_id_label": "ID",
+  "supplier_tax_number_label": "P.IVA",
+  "supplier_id_type_label": "Tipo identificativo",
+  "supplier_country_code_label": "Codice paese",
+  "supplier_street_label": "Via e numero",
+  "supplier_city_zip_label": "CAP e città",
+  "supplier_phone_label": "Telefono",
+  "supplier_email_label": "E-mail",
+  "not_provided": "Nessun dato",
+  "read_only_hint": "Questa è una vista informativa (senza modifica).",
+  "contact_hint": "I dati di contatto vengono utilizzati per la comunicazione nell'ambito dell'integrazione con la rete in franchising."
+}

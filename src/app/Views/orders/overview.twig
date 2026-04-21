@@ -1,0 +1,260 @@
+{% extends "layouts/base.twig" %}
+
+{% block title %}{{ translations.orders_title | default('Zamówienia klientów') }}{% endblock %}
+
+{% block head %}
+<style>
+    .order-status-badge {
+        display: inline-block;
+        padding: .25rem .65rem;
+        border-radius: 999px;
+        font-size: .75rem;
+        font-weight: 600;
+    }
+    .status-new         { background: #d1e7ff; color: #084298; }
+    .status-in_production { background: #fff3cd; color: #664d03; }
+    .status-completed   { background: #d1e7dd; color: #0f5132; }
+    .status-picked_up   { background: #cfe2ff; color: #084298; }
+    .status-unpicked    { background: #f8d7da; color: #842029; }
+    .status-unknown     { background: #e2e3e5; color: #41464b; }
+
+    .type-badge-b2b        { background: #e2e3e5; color: #41464b; }
+    .type-badge-individual { background: #cfe2ff; color: #084298; }
+
+    .filter-card { border-radius: 12px; }
+    .orders-table th { white-space: nowrap; }
+    .value-col { font-variant-numeric: tabular-nums; }
+    .initials-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        background: #e9ecef;
+        font-size: .72rem;
+        font-weight: 700;
+        color: #495057;
+    }
+</style>
+{% endblock %}
+
+{% block page_heading %}
+    <div class="page-heading">
+        <h3>{{ translations.orders_title | default('Zamówienia klientów') }}</h3>
+        <p class="text-subtitle text-muted">{{ translations.orders_subtitle | default('Przeglądaj zamówienia klientów oczekujące na realizację.') }}</p>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ ROOT }}">{{ translations.home | default('Home') }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ translations.orders | default('Zamówienia') }}</li>
+            </ol>
+        </nav>
+    </div>
+{% endblock %}
+
+{% block content %}
+
+{# ── Formularz filtrów ───────────────────────────────────────────────────── #}
+<div class="card filter-card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ ROOT }}/orders" id="ordersFilterForm" class="row g-3 align-items-end">
+
+            {# Data odbioru #}
+            <div class="col-12 col-md-3">
+                <label class="form-label fw-semibold small" for="filterDate">
+                    <i class="bi bi-calendar3"></i>
+                    {{ translations.filter_date | default('Dzień odbioru') }}
+                </label>
+                <input type="date"
+                       class="form-control"
+                       id="filterDate"
+                       name="date"
+                       value="{{ date }}"
+                >
+            </div>
+
+            {# Nazwa klienta #}
+            <div class="col-12 col-md-4">
+                <label class="form-label fw-semibold small" for="filterClientName">
+                    <i class="bi bi-person-search"></i>
+                    {{ translations.filter_client_name | default('Nazwa klienta') }}
+                </label>
+                <input type="text"
+                       class="form-control"
+                       id="filterClientName"
+                       name="client_name"
+                       value="{{ client_name }}"
+                       placeholder="{{ translations.filter_client_name_placeholder | default('Wpisz fragment nazwy...') }}"
+                       autocomplete="off"
+                >
+            </div>
+
+            {# Tylko oczekujące #}
+            <div class="col-12 col-md-2 d-flex align-items-center gap-2 pt-3">
+                {# Ukryte pole — wartość zmieniana przez JS #}
+                <input type="hidden" id="pendingOnlyInput" name="pending_only" value="{{ pending_only ? '1' : '0' }}">
+                <div class="form-check form-switch mb-0">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           id="filterPendingOnly"
+                           {{ pending_only ? 'checked' : '' }}>
+                    <label class="form-check-label small fw-semibold" for="filterPendingOnly">
+                        {{ translations.filter_pending_only | default('Tylko oczekujące') }}
+                    </label>
+                </div>
+            </div>
+
+            {# Przyciski #}
+            <div class="col-12 col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i>
+                    {{ translations.filter_search | default('Szukaj') }}
+                </button>
+                <a href="{{ ROOT }}/orders" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle"></i>
+                </a>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+{# ── Tabela zamówień ─────────────────────────────────────────────────────── #}
+<div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span class="fw-semibold">
+            <i class="bi bi-list-ul me-1"></i>
+            {{ translations.orders | default('Zamówienia') }}
+            —
+            <span class="text-primary">{{ date | date('d.m.Y') }}</span>
+        </span>
+        <span class="badge bg-primary">
+            {{ orders | length }} {{ translations.orders_count | default('zamówień') }}
+        </span>
+    </div>
+
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover orders-table mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>{{ translations.col_client | default('Klient') }}</th>
+                        <th>{{ translations.col_type | default('Typ') }}</th>
+                        <th>{{ translations.col_pickup | default('Data odbioru') }}</th>
+                        <th class="value-col">{{ translations.col_value | default('Wartość') }}</th>
+                        <th class="text-center">{{ translations.col_accepted_by | default('Przyjął') }}</th>
+                        <th>{{ translations.col_status | default('Status') }}</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if orders is not empty %}
+                        {% for order in orders %}
+                        <tr>
+                            {# Klient #}
+                            <td>
+                                <span class="fw-semibold">
+                                    {{ order.getClientName() ?? translations.not_available | default('—') }}
+                                </span>
+                                {% if order.getClientPhone() %}
+                                    <div class="text-muted small">
+                                        <i class="bi bi-telephone"></i> {{ order.getClientPhone() }}
+                                    </div>
+                                {% endif %}
+                            </td>
+
+                            {# Typ klienta #}
+                            <td>
+                                {% if order.isB2B() %}
+                                    <span class="order-status-badge type-badge-b2b">
+                                        <i class="bi bi-building me-1"></i>{{ translations.type_b2b | default('Firma') }}
+                                    </span>
+                                {% else %}
+                                    <span class="order-status-badge type-badge-individual">
+                                        <i class="bi bi-person me-1"></i>{{ translations.type_individual | default('Indywidualny') }}
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            {# Data i godzina odbioru #}
+                            <td>
+                                {% if order.getPickUpDatetime() %}
+                                    <span class="fw-semibold">{{ order.getPickUpDatetime() | date('H:i') }}</span>
+                                    <div class="text-muted small">{{ order.getPickUpDatetime() | date('d.m.Y') }}</div>
+                                {% else %}
+                                    <span class="text-muted">{{ translations.not_available | default('—') }}</span>
+                                {% endif %}
+                            </td>
+
+                            {# Wartość #}
+                            <td class="value-col">
+                                <span class="fw-semibold">
+                                    {{ order.getTotalValue() | number_format(2, ',', ' ') }}
+                                    {{ constant('APP_CURRENCY_SYMBOL') }}
+                                </span>
+                            </td>
+
+                            {# Inicjały osoby przyjmującej #}
+                            <td class="text-center">
+                                {% if order.getAcceptingEmployeeInitials() %}
+                                    <span class="initials-badge"
+                                          title="{{ order.getAcceptingEmployeeDisplayName() }}">
+                                        {{ order.getAcceptingEmployeeInitials() }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">{{ translations.not_available | default('—') }}</span>
+                                {% endif %}
+                            </td>
+
+                            {# Status #}
+                            <td>
+                                {% set statusKey = order.getOrderStatus() | lower | default('unknown') %}
+                                {% set statusLabel = translations['status_' ~ statusKey] | default(order.getOrderStatus() | capitalize | default('?')) %}
+                                <span class="order-status-badge status-{{ statusKey }}">{{ statusLabel }}</span>
+                            </td>
+
+                            {# Akcja – szczegóły #}
+                            <td>
+                                <a href="{{ ROOT }}/orders/{{ order.getId() }}"
+                                   class="btn btn-sm btn-outline-primary"
+                                   title="{{ translations.view_details | default('Szczegóły') }}">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                {{ translations.no_orders | default('Brak zamówień spełniających kryteria wyszukiwania.') }}
+                                <div class="small mt-1">
+                                    {{ translations.no_orders_hint | default('Zmień dzień odbioru lub usuń filtr nazwy klienta.') }}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const checkbox        = document.getElementById('filterPendingOnly');
+    const hiddenInput     = document.getElementById('pendingOnlyInput');
+
+    checkbox.addEventListener('change', function () {
+        hiddenInput.value = this.checked ? '1' : '0';
+    });
+});
+</script>
+{% endblock %}
+
+
+
+

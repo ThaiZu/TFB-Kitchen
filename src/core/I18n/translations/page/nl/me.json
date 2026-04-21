@@ -1,0 +1,22 @@
+{
+  "supplier_about_title": "Over mij",
+  "supplier_about_heading": "Over mij",
+  "supplier_about_subtitle": "Basisgegevens van de leverancier en contactinformatie (alleen lezen).",
+  "supplier_about_help_title": "Leveranciersaccountinformatie",
+  "supplier_about_help_body": "Hieronder vindt u de identificatie-, adres- en contactgegevens. Als er iets niet klopt, neem dan contact op met de netwerkbeheerder.",
+  "supplier_about_details_title": "Details",
+  "supplier_about_details_hint": "Adres- en contactgegevens gekoppeld aan uw account.",
+  "supplier_address_section": "Adres",
+  "supplier_contact_section": "Contact",
+  "supplier_id_label": "ID",
+  "supplier_tax_number_label": "BTW-nummer",
+  "supplier_id_type_label": "ID-type",
+  "supplier_country_code_label": "Landcode",
+  "supplier_street_label": "Straat en nummer",
+  "supplier_city_zip_label": "Postcode en stad",
+  "supplier_phone_label": "Telefoon",
+  "supplier_email_label": "E-mail",
+  "not_provided": "Geen gegevens",
+  "read_only_hint": "Dit is een informatieweergave (zonder bewerking).",
+  "contact_hint": "Contactgegevens worden gebruikt voor communicatie binnen de integratie met het franchisenetwerk."
+}

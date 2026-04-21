@@ -2,34 +2,27 @@
   "knowledge": "Knowledge",
   "knowledge_overview": "Knowledge Base",
   "knowledge_overview_subtitle": "Browse company knowledge resources - products and subrecipes.",
-
   "knowledge_resources": "Knowledge Resources",
   "knowledge_navigation": "Navigation",
-
   "subrecipes": "Subrecipes",
   "subrecipes_subtitle": "Browse semi-finished products, components and subrecipes used in production.",
-
   "products": "Products",
   "products_subtitle": "Browse the catalog of final products and their recipes.",
   "products_overview_subtitle": "Find a product and browse its technical sheet",
   "products_list": "Products List",
   "products_total": "products",
-
   "search_products": "Search product by name...",
   "search_hint": "Type product name to quickly find it",
   "filter_category": "Filter by category",
   "all_categories": "All categories",
   "no_category": "No category",
   "no_products_found": "No products found matching the search",
-
   "view_card": "View card",
   "vegetarian": "Vegetarian",
   "prepared_before": "Prepared before",
   "hours": "hrs",
   "minutes": "min",
-
   "home": "Home",
-
   "technical_sheet": "Technical Sheet",
   "product_info": "Product Information",
   "category": "Category",
@@ -42,24 +35,18 @@
   "suggested_price": "Suggested sale price",
   "label_size": "Label size",
   "allergens": "Allergens",
-
   "required_competences": "Required competences",
-
   "preparation": "Preparation",
-
   "recipe": "Recipe",
   "yield": "Yield",
   "subrecipe": "Subrecipe",
   "no_recipe_elements": "No recipe elements found.",
-
   "packaging": "Packaging",
   "material_name": "Material",
   "quantity": "Qty",
   "unit": "Unit",
   "price_gross": "Gross price",
-
   "back_to_products": "Back to products list",
-
   "composition": "Composition",
   "allergens_check": "Check ingredients before serving to allergy sufferers",
   "no_allergens": "No identified allergens",
@@ -74,6 +61,7 @@
   "photo_presentation": "Presentation",
   "photo_display": "Display",
   "no_photo": "No photo",
-  "no_media": "No photos or packaging materials available"
+  "no_media": "No photos or packaging materials available",
+  "go_to_subrecipes": "Go to subrecipes",
+  "go_to_products": "Go to products"
 }
-

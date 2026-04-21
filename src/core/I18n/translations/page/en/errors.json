@@ -1,0 +1,10 @@
+{
+  "forbidden": "Access denied",
+  "forbidden_subtitle": "You don't have permission to view this page.",
+  "not_found": "Not found",
+  "not_found_subtitle": "The page you're looking for doesn't exist or has been moved.",
+  "server_error": "Server error",
+  "server_error_subtitle": "Something went wrong on our side. Please try again.",
+  "back": "Back",
+  "reload": "Reload"
+}

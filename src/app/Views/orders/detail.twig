@@ -1,0 +1,402 @@
+{% extends "layouts/base.twig" %}
+
+{% block title %}
+    {{ translations.order_details | default('Szczegóły zamówienia') }}
+    {% if order.getPoHash() %} – #{{ order.getPoHash() }}{% endif %}
+{% endblock %}
+
+{% block head %}
+<style>
+    .order-status-badge {
+        display: inline-block;
+        padding: .3rem .8rem;
+        border-radius: 999px;
+        font-size: .8rem;
+        font-weight: 600;
+    }
+    .status-new           { background: #d1e7ff; color: #084298; }
+    .status-in_production { background: #fff3cd; color: #664d03; }
+    .status-completed     { background: #d1e7dd; color: #0f5132; }
+    .status-picked_up     { background: #cfe2ff; color: #084298; }
+    .status-unpicked      { background: #f8d7da; color: #842029; }
+    .status-unknown       { background: #e2e3e5; color: #41464b; }
+
+    .detail-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; color: #6c757d; }
+    .detail-value { font-size: .95rem; font-weight: 500; color: #212529; }
+
+    .section-card { border-radius: 12px; margin-bottom: 1.25rem; }
+    .section-card .card-header { border-radius: 12px 12px 0 0; }
+
+    .products-table th { font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; }
+    .total-row td { font-weight: 700; font-size: 1rem; border-top: 2px solid #dee2e6; }
+
+    .initials-lg {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 50%;
+        background: #e9ecef;
+        font-size: .85rem;
+        font-weight: 700;
+        color: #495057;
+        flex-shrink: 0;
+    }
+</style>
+{% endblock %}
+
+{% block page_heading %}
+    <div class="page-heading">
+        <div class="d-flex align-items-center gap-3">
+            <a href="{{ ROOT }}/orders{% if order.getPickUpDatetime() %}?date={{ order.getPickUpDatetime() | date('Y-m-d') }}{% endif %}"
+               class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i>
+                {{ translations.back_to_orders | default('Wróć do listy zamówień') }}
+            </a>
+            <div>
+                <h3 class="mb-0">{{ translations.order_details | default('Szczegóły zamówienia') }}</h3>
+                <p class="text-subtitle text-muted mb-0">
+                    {{ translations.order_details_subtitle | default('Pełne informacje o zamówieniu z perspektywy kuchni.') }}
+                </p>
+            </div>
+        </div>
+        <nav aria-label="breadcrumb" class="mt-2">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ ROOT }}">{{ translations.home | default('Home') }}</a></li>
+                <li class="breadcrumb-item"><a href="{{ ROOT }}/orders">{{ translations.orders | default('Zamówienia') }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">#{{ order.getId() }}</li>
+            </ol>
+        </nav>
+    </div>
+{% endblock %}
+
+{% block content %}
+
+{# ── Nagłówek zamówienia (status + termin + wartość) ────────────────────── #}
+<div class="row g-3 mb-4">
+
+    {# Status #}
+    <div class="col-6 col-md-3">
+        <div class="card section-card h-100 p-3 text-center shadow-sm">
+            <div class="detail-label mb-1">{{ translations.order_status | default('Status') }}</div>
+            {% set statusKey = order.getOrderStatus() | lower | default('unknown') %}
+            {% set statusLabel = translations['status_' ~ statusKey] | default(order.getOrderStatus() | capitalize | default('?')) %}
+            <span class="order-status-badge status-{{ statusKey }} mt-1">{{ statusLabel }}</span>
+        </div>
+    </div>
+
+    {# Termin odbioru #}
+    <div class="col-6 col-md-3">
+        <div class="card section-card h-100 p-3 text-center shadow-sm">
+            <div class="detail-label mb-1">{{ translations.order_pickup_datetime | default('Termin odbioru') }}</div>
+            {% if order.getPickUpDatetime() %}
+                <div class="fw-bold fs-5 text-primary">{{ order.getPickUpDatetime() | date('H:i') }}</div>
+                <div class="text-muted small">{{ order.getPickUpDatetime() | date('d.m.Y') }}</div>
+            {% else %}
+                <div class="text-muted">{{ translations.not_available | default('—') }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# Wartość #}
+    <div class="col-6 col-md-3">
+        <div class="card section-card h-100 p-3 text-center shadow-sm">
+            <div class="detail-label mb-1">{{ translations.order_total_value | default('Wartość') }}</div>
+            <div class="fw-bold fs-5 text-success">
+                {{ order.getTotalValue() | number_format(2, ',', ' ') }}
+                {{ constant('APP_CURRENCY_SYMBOL') }}
+            </div>
+        </div>
+    </div>
+
+    {# Nr zamówienia #}
+    <div class="col-6 col-md-3">
+        <div class="card section-card h-100 p-3 text-center shadow-sm">
+            <div class="detail-label mb-1">{{ translations.order_id | default('ID zamówienia') }}</div>
+            <div class="fw-bold fs-5">#{{ order.getId() }}</div>
+            {% if order.getPoHash() %}
+                <div class="text-muted small font-monospace">{{ order.getPoHash() }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+<div class="row g-4">
+
+    {# ── Lewa kolumna: klient + obsługa ────────────────────────────────── #}
+    <div class="col-12 col-lg-4">
+
+        {# Klient #}
+        <div class="card section-card shadow-sm">
+            <div class="card-header bg-light fw-semibold">
+                <i class="bi bi-person-circle me-2"></i>{{ translations.section_client | default('Klient') }}
+            </div>
+            <div class="card-body">
+
+                <div class="mb-3">
+                    <div class="detail-label">{{ translations.client_name | default('Nazwa klienta') }}</div>
+                    <div class="detail-value">{{ order.getClientName() ?? translations.not_available | default('—') }}</div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="detail-label">{{ translations.client_type | default('Typ klienta') }}</div>
+                    <div class="detail-value">
+                        {% if order.isB2B() %}
+                            <i class="bi bi-building me-1 text-secondary"></i>{{ translations.type_b2b | default('Firma (B2B)') }}
+                        {% else %}
+                            <i class="bi bi-person me-1 text-secondary"></i>{{ translations.type_individual | default('Indywidualny') }}
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if order.getClientPhone() %}
+                <div class="mb-3">
+                    <div class="detail-label">{{ translations.client_phone | default('Telefon') }}</div>
+                    <div class="detail-value">
+                        <a href="tel:{{ order.getClientPhone() }}" class="text-decoration-none">
+                            <i class="bi bi-telephone me-1"></i>{{ order.getClientPhone() }}
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if order.getClientEmail() %}
+                <div class="mb-3">
+                    <div class="detail-label">{{ translations.client_email | default('E-mail') }}</div>
+                    <div class="detail-value">
+                        <a href="mailto:{{ order.getClientEmail() }}" class="text-decoration-none">
+                            <i class="bi bi-envelope me-1"></i>{{ order.getClientEmail() }}
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if order.getClientTaxNumber() %}
+                <div class="mb-3">
+                    <div class="detail-label">{{ translations.client_tax_number | default('NIP') }}</div>
+                    <div class="detail-value">{{ order.getClientTaxNumber() }}</div>
+                </div>
+                {% endif %}
+
+                {% if order.getClientCity() %}
+                <div class="mb-3">
+                    <div class="detail-label">{{ translations.client_city | default('Miejscowość') }}</div>
+                    <div class="detail-value">{{ order.getClientCity() }}</div>
+                </div>
+                {% endif %}
+
+                {% if order.getClientPaymentTerms() %}
+                <div class="mb-3">
+                    <div class="detail-label">{{ translations.client_payment_terms | default('Warunki płatności') }}</div>
+                    <div class="detail-value">{{ order.getClientPaymentTerms() }}</div>
+                </div>
+                {% endif %}
+
+                {% if order.getClientPersonalDiscountPercent() is not null and order.getClientPersonalDiscountPercent() > 0 %}
+                <div class="mb-3">
+                    <div class="detail-label">{{ translations.client_discount | default('Rabat indywidualny') }}</div>
+                    <div class="detail-value">{{ order.getClientPersonalDiscountPercent() }}%</div>
+                </div>
+                {% endif %}
+
+                {% if order.getClientComment() %}
+                <div class="mb-0">
+                    <div class="detail-label">{{ translations.client_comment | default('Uwagi o kliencie') }}</div>
+                    <div class="detail-value text-muted fst-italic">{{ order.getClientComment() }}</div>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+
+        {# Obsługa zamówienia #}
+        <div class="card section-card shadow-sm">
+            <div class="card-header bg-light fw-semibold">
+                <i class="bi bi-people me-2"></i>{{ translations.section_employee | default('Obsługa zamówienia') }}
+            </div>
+            <div class="card-body">
+
+                {# Przyjmujący #}
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="initials-lg">{{ order.getAcceptingEmployeeInitials() ?? '?' }}</div>
+                    <div>
+                        <div class="detail-label">{{ translations.accepting_employee | default('Przyjął zamówienie') }}</div>
+                        <div class="detail-value">
+                            {{ order.getAcceptingEmployeeDisplayName() ?? translations.not_available | default('—') }}
+                        </div>
+                        {% if order.getAcceptingTimestamp() %}
+                            <div class="text-muted small">
+                                {{ order.getAcceptingTimestamp() | date('d.m.Y H:i') }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {# Wydający #}
+                {% if order.getIdIssuingEmployee() %}
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="initials-lg bg-success-subtle text-success">{{ order.getIssuingEmployeeInitials() ?? '?' }}</div>
+                    <div>
+                        <div class="detail-label">{{ translations.issuing_employee | default('Wydał zamówienie') }}</div>
+                        <div class="detail-value">
+                            {{ order.getIssuingEmployeeDisplayName() ?? translations.not_available | default('—') }}
+                        </div>
+                        {% if order.getIssuingTimestamp() %}
+                            <div class="text-muted small">
+                                {{ order.getIssuingTimestamp() | date('d.m.Y H:i') }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if order.getCompletionTimestamp() %}
+                <div class="mb-0">
+                    <div class="detail-label">{{ translations.completion_timestamp | default('Data realizacji') }}</div>
+                    <div class="detail-value">{{ order.getCompletionTimestamp() | date('d.m.Y H:i') }}</div>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+
+        {# Komentarz do zamówienia #}
+        {% if order.getComment() %}
+        <div class="card section-card shadow-sm">
+            <div class="card-header bg-light fw-semibold">
+                <i class="bi bi-chat-left-text me-2"></i>{{ translations.order_comment | default('Komentarz') }}
+            </div>
+            <div class="card-body">
+                <p class="mb-0 fst-italic text-muted">{{ order.getComment() }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        {# Powód nieodebrania #}
+        {% if order.getNonCollectionIdReason() or order.getNonCollectionComment() %}
+        <div class="card section-card border-danger shadow-sm">
+            <div class="card-header bg-danger text-white fw-semibold">
+                <i class="bi bi-exclamation-triangle me-2"></i>{{ translations.non_collection_reason | default('Powód nieodebrania') }}
+            </div>
+            <div class="card-body">
+                {% if order.getNonCollectionComment() %}
+                    <p class="mb-0 text-muted">{{ order.getNonCollectionComment() }}</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+
+    {# ── Prawa kolumna: pozycje zamówienia ─────────────────────────────── #}
+    <div class="col-12 col-lg-8">
+        <div class="card section-card shadow-sm">
+            <div class="card-header bg-light fw-semibold d-flex justify-content-between align-items-center">
+                <span>
+                    <i class="bi bi-cart3 me-2"></i>{{ translations.section_products | default('Pozycje zamówienia') }}
+                </span>
+                <span class="badge bg-primary">{{ order.getProducts() | length }}</span>
+            </div>
+            <div class="card-body p-0">
+
+                {% if order.getProducts() is not empty %}
+                <div class="table-responsive">
+                    <table class="table products-table mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{{ translations.product_name | default('Produkt') }}</th>
+                                <th class="text-end">{{ translations.product_quantity | default('Ilość') }}</th>
+                                <th class="text-end">{{ translations.product_unit_price | default('Cena jedn.') }}</th>
+                                <th class="text-end">{{ translations.product_tax | default('VAT') }}</th>
+                                <th class="text-end">{{ translations.product_discount | default('Rabat') }}</th>
+                                <th class="text-end">{{ translations.product_total | default('Razem brutto') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% set orderTotal = 0 %}
+                            {% for product in order.getProducts() %}
+                            {% set orderTotal = orderTotal + (product.getTotalGrossValueAfterDiscount() ?? 0) %}
+                            <tr>
+                                <td>
+                                    <span class="fw-semibold">{{ product.getName() ?? translations.not_available | default('—') }}</span>
+                                    {% if product.getQuantityPerLabel() %}
+                                        <div class="text-muted small">
+                                            {{ product.getQuantityPerLabel() }} {{ translations.unit_pcs_per_label|default('pcs/label') }}
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {{ product.getQuantity() }}
+                                    {% if product.isPieceBased() %}
+                                        <span class="text-muted small">{{ translations.unit_pcs|default('pcs.') }}</span>
+                                    {% else %}
+                                        <span class="text-muted small">{{ translations.unit_kg|default('kg') }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if product.getUnitGrossPrice() is not null %}
+                                        {{ product.getUnitGrossPrice() | number_format(2, ',', ' ') }}
+                                        {{ constant('APP_CURRENCY_SYMBOL') }}
+                                    {% else %}
+                                        {{ translations.not_available | default('—') }}
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if product.getItemTaxPerc() is not null %}
+                                        {{ product.getItemTaxPerc() }}%
+                                    {% else %}
+                                        {{ translations.not_available | default('—') }}
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if product.getItemDiscountValue() is not null and product.getItemDiscountValue() > 0 %}
+                                        <span class="text-danger">
+                                            -{{ product.getItemDiscountValue() | number_format(2, ',', ' ') }}
+                                            {{ constant('APP_CURRENCY_SYMBOL') }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">{{ translations.not_available | default('—') }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end fw-semibold">
+                                    {% if product.getTotalGrossValueAfterDiscount() is not null %}
+                                        {{ product.getTotalGrossValueAfterDiscount() | number_format(2, ',', ' ') }}
+                                        {{ constant('APP_CURRENCY_SYMBOL') }}
+                                    {% else %}
+                                        {{ translations.not_available | default('—') }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td colspan="5" class="text-end">
+                                    {{ translations.order_total_value | default('Wartość zamówienia') }}
+                                </td>
+                                <td class="text-end text-success">
+                                    {{ order.getTotalValue() | number_format(2, ',', ' ') }}
+                                    {{ constant('APP_CURRENCY_SYMBOL') }}
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                {% else %}
+                    <div class="p-4 text-center text-muted">
+                        <i class="bi bi-cart-x fs-3 d-block mb-2"></i>
+                        {{ translations.no_products | default('Brak pozycji w zamówieniu.') }}
+                    </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+
