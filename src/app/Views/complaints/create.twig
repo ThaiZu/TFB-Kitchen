@@ -1,0 +1,498 @@
+{% extends "layouts/base.twig" %}
+{% block title %}{{ translations.new_complaint }}{% endblock %}
+{% block page_heading %}
+    <div class="page-heading">
+        <h3>{{ translations.new_complaint }}</h3>
+        <p class="text-subtitle text-muted">{{ translations.complaints_subtitle }}</p>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ ROOT }}">{{ translations.home }}</a></li>
+                <li class="breadcrumb-item"><a href="{{ ROOT }}/complaints">{{ translations.complaints }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ translations.new_complaint }}</li>
+            </ol>
+        </nav>
+    </div>
+{% endblock %}
+{% block content %}
+{# Dane zamówień inline do obsługi JS #}
+<script>
+const deliveredOrders = {{ delivered_orders|json_encode|raw }};
+</script>
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-10">
+        {% if errors is not empty %}
+            <div class="alert alert-danger">{{ errors|join('<br>')|raw }}</div>
+        {% endif %}
+        {% if warnings is not empty %}
+            <div class="alert alert-warning">{{ warnings|join('<br>')|raw }}</div>
+        {% endif %}
+        {% if delivered_orders is empty %}
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
+                    <p class="text-muted mb-3">{{ translations.no_delivered_orders }}</p>
+                    <a href="{{ ROOT }}/complaints" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>{{ translations.back_to_complaints }}
+                    </a>
+                </div>
+            </div>
+        {% else %}
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">
+                        <i class="bi bi-clipboard2-x me-2"></i>{{ translations.report_complaint }}
+                    </h4>
+                </div>
+                <div class="card-content">
+                    <div class="card-body">
+                        <form method="POST" enctype="multipart/form-data" id="complaintForm">
+                            {# Krok 1: Wybór zamówienia #}
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h6 class="text-muted fw-semibold mb-3 border-bottom pb-2">
+                                        <i class="bi bi-1-circle me-1"></i>
+                                        {{ translations.delivered_order }}
+                                    </h6>
+                                </div>
+                                <div class="col-12 col-md-5">
+                                    <label class="form-label" for="order_select">{{ translations.delivered_order }}</label>
+                                    <select class="form-select" id="order_select" required>
+                                        <option value="">{{ translations.select_order }}</option>
+                                        {% for order in delivered_orders %}
+                                            <option value="{{ order.id }}">
+                                                {{ order.order_key }} — {{ order.delivered_on|default('') }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <input type="hidden" name="id_order" id="id_order">
+                                </div>
+                            </div>
+                            {# Krok 2: Wybór produktu — widoczne po wyborze zamówienia #}
+                            <div class="row mb-4" id="productSection" style="display:none;">
+                                <div class="col-12">
+                                    <h6 class="text-muted fw-semibold mb-3 border-bottom pb-2">
+                                        <i class="bi bi-2-circle me-1"></i>
+                                        {{ translations.product_name }}
+                                    </h6>
+                                </div>
+                                <div class="col-12 col-md-5">
+                                    <label class="form-label" for="material_select">{{ translations.product_name }}</label>
+                                    <select class="form-select" id="material_select">
+                                        <option value="">{{ translations.select_material }}</option>
+                                    </select>
+                                    <input type="hidden" name="id_material"   id="id_material">
+                                    <input type="hidden" name="supplier_sku"  id="supplier_sku">
+                                    <input type="hidden" name="id_unit"       id="id_unit">
+                                </div>
+                                <div class="col-12 col-md-4" id="qtySection" style="display:none;">
+                                    <label class="form-label" for="product_quantity">
+                                        {{ translations.complaint_quantity }}
+                                        <span class="text-muted" id="qtyMaxLabel"></span>
+                                    </label>
+                                    <input type="number" class="form-control" id="product_quantity"
+                                           name="product_quantity" value="1" min="1" step="0.01">
+                                </div>
+                            </div>
+                            {# Krok 3: Powód i opis — widoczne po wyborze produktu #}
+                            <div class="row mb-4" id="reasonSection" style="display:none;">
+                                <div class="col-12">
+                                    <h6 class="text-muted fw-semibold mb-3 border-bottom pb-2">
+                                        <i class="bi bi-3-circle me-1"></i>
+                                        {{ translations.complaint_reason }}
+                                    </h6>
+                                </div>
+                                <div class="col-12 col-md-5">
+                                    <label class="form-label" for="complaint_reason_code">{{ translations.complaint_reason }}</label>
+                                    <select class="form-select" id="complaint_reason_code" name="complaint_reason_code">
+                                        {% for reason in complaint_reasons %}
+                                            <option value="{{ reason.code ?? reason.getCode() }}">
+                                                {{ reason.name ?? reason.getName() }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-12 col-md-7">
+                                    <label class="form-label" for="description">{{ translations.description }}</label>
+                                    <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                                </div>
+                            </div>
+                            {# Krok 4: Załączniki — widoczne po wyborze produktu #}
+                            <div class="row mb-4" id="attachmentSection" style="display:none;">
+                                <div class="col-12">
+                                    <h6 class="text-muted fw-semibold mb-3 border-bottom pb-2">
+                                        <i class="bi bi-4-circle me-1"></i>
+                                        {{ translations.attachments }}
+                                        <small class="text-muted fw-normal">({{ translations.attachment }} 1-2)</small>
+                                    </h6>
+                                </div>
+                                {# Załącznik 1 #}
+                                <div class="col-12 col-md-6 mb-3">
+                                    <label class="form-label" for="attachments_1">{{ translations.attachment }} 1</label>
+                                    <div class="input-group">
+                                        <input class="form-control" type="file" id="attachments_1"
+                                               name="attachments[]" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
+                                        <button type="button" class="btn btn-outline-secondary camera-btn"
+                                                data-slot="1" title="{{ translations.take_photo ?? 'Zrób zdjęcie' }}">
+                                            <i class="bi bi-camera"></i>
+                                        </button>
+                                    </div>
+                                    <div id="cameraPreview_1" class="mt-2" style="display:none;">
+                                        <img id="capturedImg_1" class="img-thumbnail" style="max-height:120px;" alt="">
+                                        <button type="button" class="btn btn-sm btn-outline-danger ms-2 remove-photo-btn" data-slot="1">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                {# Załącznik 2 #}
+                                <div class="col-12 col-md-6 mb-3">
+                                    <label class="form-label" for="attachments_2">{{ translations.attachment }} 2</label>
+                                    <div class="input-group">
+                                        <input class="form-control" type="file" id="attachments_2"
+                                               name="attachments[]" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
+                                        <button type="button" class="btn btn-outline-secondary camera-btn"
+                                                data-slot="2" title="{{ translations.take_photo ?? 'Zrób zdjęcie' }}">
+                                            <i class="bi bi-camera"></i>
+                                        </button>
+                                    </div>
+                                    <div id="cameraPreview_2" class="mt-2" style="display:none;">
+                                        <img id="capturedImg_2" class="img-thumbnail" style="max-height:120px;" alt="">
+                                        <button type="button" class="btn btn-sm btn-outline-danger ms-2 remove-photo-btn" data-slot="2">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {# Modal kamery #}
+                            <div class="modal fade" id="cameraModal" tabindex="-1" aria-labelledby="cameraModalLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="cameraModalLabel">
+                                                <i class="bi bi-camera me-2"></i>{{ translations.take_photo ?? 'Zrób zdjęcie' }}
+                                            </h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body text-center p-2">
+                                            {# Wybór kamery (jeśli dostępnych jest więcej) #}
+                                            <div id="cameraSelectorWrapper" class="mb-2" style="display:none;">
+                                                <select class="form-select form-select-sm" id="cameraDeviceSelect">
+                                                </select>
+                                            </div>
+                                            <video id="cameraVideo" autoplay playsinline
+                                                   style="width:100%;max-height:55vh;border-radius:8px;background:#000;"></video>
+                                            <canvas id="cameraCanvas" style="display:none;"></canvas>
+                                            <div id="cameraError" class="alert alert-danger mt-2" style="display:none;"></div>
+                                        </div>
+                                        <div class="modal-footer justify-content-center">
+                                            <button type="button" class="btn btn-outline-secondary" id="switchCameraBtn" style="display:none;">
+                                                <i class="bi bi-arrow-repeat me-1"></i>{{ translations.switch_camera ?? 'Przełącz kamerę' }}
+                                            </button>
+                                            <button type="button" class="btn btn-primary px-5" id="capturePhotoBtn">
+                                                <i class="bi bi-circle-fill me-1"></i>{{ translations.capture ?? 'Zrób zdjęcie' }}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {# Przyciski — widoczne po wyborze produktu #}
+                            <div class="row" id="submitSection" style="display:none;">
+                                <div class="col-12 d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary" id="submit_complaint">
+                                        <i class="bi bi-send me-1"></i>{{ translations.submit_complaint }}
+                                    </button>
+                                    <a href="{{ ROOT }}/complaints" class="btn btn-secondary ms-auto">
+                                        <i class="bi bi-arrow-left me-1"></i>{{ translations.back_to_complaints }}
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+    const orderSelect   = document.getElementById('order_select');
+    const materialSelect = document.getElementById('material_select');
+    const idOrderInput  = document.getElementById('id_order');
+    const idMaterialInput = document.getElementById('id_material');
+    const supplierSkuInput = document.getElementById('supplier_sku');
+    const idUnitInput   = document.getElementById('id_unit');
+    const qtyInput      = document.getElementById('product_quantity');
+    const qtyMaxLabel   = document.getElementById('qtyMaxLabel');
+    const productSection    = document.getElementById('productSection');
+    const qtySection        = document.getElementById('qtySection');
+    const reasonSection     = document.getElementById('reasonSection');
+    const attachmentSection = document.getElementById('attachmentSection');
+    const submitSection     = document.getElementById('submitSection');
+    function showProductSections() {
+        productSection.style.display    = '';
+        reasonSection.style.display     = '';
+        attachmentSection.style.display = '';
+        submitSection.style.display     = '';
+    }
+    function hideProductDetail() {
+        qtySection.style.display = 'none';
+        idMaterialInput.value = '';
+        supplierSkuInput.value = '';
+        idUnitInput.value = '';
+        qtyInput.value = '1';
+        qtyInput.removeAttribute('max');
+        qtyMaxLabel.textContent = '';
+    }
+    // Zmiana zamówienia – populuj listę produktów
+    orderSelect.addEventListener('change', function () {
+        const orderId = this.value;
+        idOrderInput.value = orderId;
+        materialSelect.innerHTML = '<option value="">{{ translations.select_material|escape("js") }}</option>';
+        hideProductDetail();
+        if (!orderId) {
+            productSection.style.display    = 'none';
+            reasonSection.style.display     = 'none';
+            attachmentSection.style.display = 'none';
+            submitSection.style.display     = 'none';
+            return;
+        }
+        const order = deliveredOrders.find(o => String(o.id) === String(orderId));
+        if (!order || !order.products || order.products.length === 0) {
+            showProductSections();
+            return;
+        }
+        order.products.forEach(function (p) {
+            const maxQty = ((p.pack_quantity ?? 0) * (p.pack_size_in_base_unit ?? 1));
+            const opt = document.createElement('option');
+            opt.value        = p.id_material;
+            opt.dataset.sku  = p.supplier_sku   ?? '';
+            opt.dataset.unit = p.id_unit        ?? '';
+            opt.dataset.unitName = p.unit_name  ?? '';
+            opt.dataset.max  = maxQty;
+            opt.textContent  = `${p.material_name}${p.supplier_sku ? ' (' + p.supplier_sku + ')' : ''}`;
+            materialSelect.appendChild(opt);
+        });
+        showProductSections();
+    });
+    // Zmiana produktu – uzupełnij pola ukryte i max ilości
+    materialSelect.addEventListener('change', function () {
+        const opt = this.options[this.selectedIndex];
+        hideProductDetail();
+        if (!this.value) return;
+        idMaterialInput.value  = this.value;
+        supplierSkuInput.value = opt.dataset.sku  ?? '';
+        idUnitInput.value      = opt.dataset.unit ?? '';
+        const maxQty  = parseFloat(opt.dataset.max  ?? 0);
+        const unitName = opt.dataset.unitName ?? '';
+        qtyInput.max   = maxQty > 0 ? maxQty : '';
+        qtyInput.value = 1;
+        if (maxQty > 0) {
+            qtyMaxLabel.textContent = `(max. ${maxQty}${unitName ? ' ' + unitName : ''})`;
+        }
+        qtySection.style.display = '';
+    });
+    // ===================== KAMERA =====================
+    (function () {
+        let currentStream  = null;
+        let currentSlot    = null;
+        let videoDevices   = [];
+        let currentDeviceIndex = 0;
+        // Przechowuje pliki zrobionych zdjęć per slot (poza file inputem)
+        const capturedFiles = {};
+
+        const video            = document.getElementById('cameraVideo');
+        const canvas           = document.getElementById('cameraCanvas');
+        const cameraError      = document.getElementById('cameraError');
+        const captureBtn       = document.getElementById('capturePhotoBtn');
+        const switchBtn        = document.getElementById('switchCameraBtn');
+        const deviceSelect     = document.getElementById('cameraDeviceSelect');
+        const selectorWrapper  = document.getElementById('cameraSelectorWrapper');
+        const modalEl          = document.getElementById('cameraModal');
+
+        if (!modalEl) return;
+
+        // Bootstrap modal instance
+        const bsModal = new bootstrap.Modal(modalEl);
+
+        async function enumerateDevices() {
+            try {
+                const devices  = await navigator.mediaDevices.enumerateDevices();
+                videoDevices   = devices.filter(d => d.kind === 'videoinput');
+                deviceSelect.innerHTML = '';
+                videoDevices.forEach((d, i) => {
+                    const opt = document.createElement('option');
+                    opt.value = i;
+                    opt.textContent = d.label || ('Kamera ' + (i + 1));
+                    deviceSelect.appendChild(opt);
+                });
+                if (videoDevices.length > 1) {
+                    selectorWrapper.style.display = '';
+                    switchBtn.style.display = '';
+                } else {
+                    selectorWrapper.style.display = 'none';
+                    switchBtn.style.display = 'none';
+                }
+            } catch {}
+        }
+
+        async function startCamera(deviceIndex) {
+            stopCamera();
+            cameraError.style.display = 'none';
+            const constraints = {
+                video: videoDevices.length > 0
+                    ? { deviceId: { exact: videoDevices[deviceIndex].deviceId }, facingMode: 'environment' }
+                    : { facingMode: 'environment' },
+                audio: false
+            };
+            try {
+                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = currentStream;
+                currentDeviceIndex = deviceIndex;
+                if (deviceSelect) deviceSelect.value = deviceIndex;
+            } catch (err) {
+                cameraError.style.display = '';
+                cameraError.textContent = 'Brak dostępu do kamery: ' + err.message;
+            }
+        }
+
+        function stopCamera() {
+            if (currentStream) {
+                currentStream.getTracks().forEach(t => t.stop());
+                currentStream = null;
+            }
+            video.srcObject = null;
+        }
+
+        // Otwieranie modala
+        document.querySelectorAll('.camera-btn').forEach(function (btn) {
+            btn.addEventListener('click', async function () {
+                currentSlot = this.dataset.slot;
+                await enumerateDevices();
+                // Preferuj tylną kamerę na tablecie
+                const backIdx = videoDevices.findIndex(d =>
+                    d.label.toLowerCase().includes('back') ||
+                    d.label.toLowerCase().includes('rear') ||
+                    d.label.toLowerCase().includes('environment')
+                );
+                await startCamera(backIdx >= 0 ? backIdx : 0);
+                bsModal.show();
+            });
+        });
+
+        // Przełączanie kamery
+        if (switchBtn) {
+            switchBtn.addEventListener('click', async function () {
+                const nextIndex = (currentDeviceIndex + 1) % videoDevices.length;
+                await startCamera(nextIndex);
+            });
+        }
+
+        // Zmiana kamery z selecta
+        if (deviceSelect) {
+            deviceSelect.addEventListener('change', async function () {
+                await startCamera(parseInt(this.value));
+            });
+        }
+
+        // Zrobienie zdjęcia
+        if (captureBtn) {
+            captureBtn.addEventListener('click', function () {
+                if (!currentStream) return;
+                canvas.width  = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.getContext('2d').drawImage(video, 0, 0);
+                canvas.toBlob(function (blob) {
+                    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                    const file = new File([blob], 'photo_' + timestamp + '.jpg', { type: 'image/jpeg' });
+                    // Przypisz plik do właściwego inputa przez DataTransfer
+                    const dt = new DataTransfer();
+                    dt.items.add(file);
+                    const fileInput = document.getElementById('attachments_' + currentSlot);
+                    if (fileInput) {
+                        fileInput.files = dt.files;
+                    }
+                    // Pokaż podgląd
+                    const previewDiv = document.getElementById('cameraPreview_' + currentSlot);
+                    const previewImg = document.getElementById('capturedImg_' + currentSlot);
+                    if (previewDiv && previewImg) {
+                        previewImg.src = canvas.toDataURL('image/jpeg');
+                        previewDiv.style.display = '';
+                    }
+                    stopCamera();
+                    bsModal.hide();
+                }, 'image/jpeg', 0.92);
+            });
+        }
+
+        // Zatrzymaj kamerę przy zamykaniu modala
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            stopCamera();
+        });
+
+        // Usuwanie zrobionych zdjęć
+        document.querySelectorAll('.remove-photo-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const slot = this.dataset.slot;
+                const fileInput = document.getElementById('attachments_' + slot);
+                if (fileInput) {
+                    fileInput.value = '';
+                    // Reset przez DataTransfer
+                    try {
+                        const dt = new DataTransfer();
+                        fileInput.files = dt.files;
+                    } catch {}
+                }
+                const previewDiv = document.getElementById('cameraPreview_' + slot);
+                const previewImg = document.getElementById('capturedImg_' + slot);
+                if (previewDiv) previewDiv.style.display = 'none';
+                if (previewImg) previewImg.src = '';
+            });
+        });
+    })();
+    // ===================== KONIEC KAMERY =====================
+
+    // Walidacja i spinner przy submit
+    const form      = document.getElementById('complaintForm');
+    const submitBtn = document.getElementById('submit_complaint');
+    if (form && submitBtn) {
+        form.addEventListener('submit', function (e) {
+            // Walidacja wymaganego zamówienia
+            if (!idOrderInput.value) {
+                e.preventDefault();
+                alert('{{ translations.select_order|escape("js") }}');
+                orderSelect.focus();
+                return;
+            }
+            // Walidacja wymaganego produktu
+            if (!idMaterialInput.value) {
+                e.preventDefault();
+                alert('{{ translations.select_material|escape("js") }}');
+                materialSelect.focus();
+                return;
+            }
+            // Walidacja ilości
+            const maxQty    = parseFloat(qtyInput.max);
+            const enteredQty = parseFloat(qtyInput.value);
+            if (isNaN(enteredQty) || enteredQty < 0.01 || (maxQty > 0 && enteredQty > maxQty)) {
+                e.preventDefault();
+                alert('{{ translations.invalid_quantity_message|escape("js") }}');
+                qtyInput.focus();
+                return;
+            }
+            // Spinner
+            submitBtn.disabled = true;
+            if (!document.getElementById('submit-spinner')) {
+                const spinner = document.createElement('span');
+                spinner.className = 'spinner-border spinner-border-sm ms-2';
+                spinner.setAttribute('role', 'status');
+                spinner.setAttribute('aria-hidden', 'true');
+                spinner.id = 'submit-spinner';
+                submitBtn.appendChild(spinner);
+            }
+        });
+    }
+})();
+</script>
+{% endblock %}

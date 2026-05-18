@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Error{% endblock %}</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ ROOT }}/assets/css/bootstrap.css">
+    <link rel="stylesheet" href="{{ ROOT }}/assets/vendors/bootstrap-icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ ROOT }}/assets/css/app.css">
+    <link rel="shortcut icon" href="{{ ROOT }}/assets/images/favicon.svg" type="image/x-icon">
+
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #ebf3ff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+        }
+        .merr-wrap {
+            text-align: center;
+            padding: 2rem 1.5rem;
+            max-width: 480px;
+            width: 100%;
+        }
+        .merr-illu {
+            max-width: 260px;
+            width: 100%;
+            margin-bottom: 1.5rem;
+        }
+        .merr-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #212529;
+            margin-bottom: 0.5rem;
+        }
+        .merr-subtitle {
+            color: #6c757d;
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+        }
+        .merr-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="merr-wrap">
+        {% block illustration %}{% endblock %}
+
+        <div class="merr-title">{% block error_title %}Error{% endblock %}</div>
+        <div class="merr-subtitle">{% block error_subtitle %}{% endblock %}</div>
+
+        <div class="merr-actions">
+            {% block actions %}
+                <a href="{{ ROOT }}" class="btn btn-outline-primary btn-lg w-100">
+                    <i class="bi bi-house me-1"></i>
+                    {{ translations.go_home ?? 'Go to home' }}
+                </a>
+            {% endblock %}
+        </div>
+
+        {% block footer %}{% endblock %}
+    </div>
+
+    <script src="{{ ROOT }}/assets/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

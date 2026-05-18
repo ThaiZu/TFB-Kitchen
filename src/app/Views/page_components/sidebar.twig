@@ -1,5 +1,4 @@
 {% set p = current_path|default('') %}
-
 <div id="sidebar" class="active">
     <div class="sidebar-wrapper active">
         <div class="sidebar-header">
@@ -11,54 +10,63 @@
                 </div>
             </div>
         </div>
-
         <div class="sidebar-menu">
             <ul class="menu">
                 <li class="sidebar-title">{{ translations.menu }}</li>
-
+                {# ✓ PULPIT #}
                 <li class="sidebar-item {{ p starts with '/dashboard' ? 'active' : '' }}">
                     <a href="{{ ROOT }}/dashboard" class="sidebar-link">
                         <i class="bi bi-grid-1x2-fill"></i>
                         <span>{{ translations.kitchen_dashboard }}</span>
                     </a>
                 </li>
-
-                <li class="sidebar-item {{ p starts with '/production' ? 'active' : '' }}">
-                    <a href="{{ ROOT }}/production" class="sidebar-link">
+                {# ✗ PRODUKCJA – W TRAKCIE BUDOWY #}
+                <li class="sidebar-item" title="{{ translations.under_construction|default('W budowie') }}"
+                    style="opacity:.5; pointer-events:none; cursor:not-allowed;">
+                    <span class="sidebar-link text-muted">
                         <i class="bi bi-list-check"></i>
                         <span>{{ translations.production }}</span>
-                    </a>
+                        <span class="badge bg-warning text-dark ms-auto" style="font-size:.6rem; padding:.2rem .4rem;">
+                            <i class="bi bi-tools"></i>
+                        </span>
+                    </span>
                 </li>
-
+                {# ✓ BAZA WIEDZY #}
                 <li class="sidebar-item {{ p starts with '/knowledge' ? 'active' : '' }}">
                     <a href="{{ ROOT }}/knowledge" class="sidebar-link">
                         <i class="bi bi-book"></i>
                         <span>{{ translations.knowledge }}</span>
                     </a>
                 </li>
-
+                {# ✓ CHECKLISTY #}
                 <li class="sidebar-item {{ p starts with '/checklists' ? 'active' : '' }}">
                     <a href="{{ ROOT }}/checklists" class="sidebar-link">
                         <i class="bi bi-clipboard-check"></i>
                         <span>{{ translations.checklists }}</span>
                     </a>
                 </li>
-
+                {# ✓ ZAMÓWIENIA #}
                 <li class="sidebar-item {{ p starts with '/orders' ? 'active' : '' }}">
                     <a href="{{ ROOT }}/orders" class="sidebar-link">
                         <i class="bi bi-truck"></i>
                         <span>{{ translations.orders }}</span>
                     </a>
                 </li>
-
+                {# ✓ REKLAMACJE #}
+                <li class="sidebar-item {{ p starts with '/complaints' ? 'active' : '' }}">
+                    <a href="{{ ROOT }}/complaints" class="sidebar-link">
+                        <i class="bi bi-clipboard2-x"></i>
+                        <span>{{ translations.complaints }}</span>
+                    </a>
+                </li>
+                {# ✓ MÓJ PROFIL #}
                 <li class="sidebar-item {{ p starts with '/me' ? 'active' : '' }}">
                     <a href="{{ ROOT }}/me" class="sidebar-link">
                         <i class="bi bi-person"></i>
                         <span>{{ translations.my_profile }}</span>
                     </a>
                 </li>
-
-
+                {# ✓ WYLOGUJ #}
                 <li class="sidebar-item">
                     <a href="{{ ROOT }}/logout" class="sidebar-link">
                         <i class="bi bi-box-arrow-right"></i>

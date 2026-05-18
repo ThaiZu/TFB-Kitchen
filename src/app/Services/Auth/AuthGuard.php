@@ -20,7 +20,7 @@ class AuthGuard
         $refresh = $this->cookies->getRefreshToken();
 
         $now = time();
-        $leeway = 10;
+        $leeway = 300; // odśwież gdy do wygaśnięcia zostało < 5 minut
 
         // 1) Jeśli mamy access, sprawdź exp
         if ($access) {

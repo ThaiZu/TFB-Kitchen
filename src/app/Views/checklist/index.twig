@@ -1,0 +1,683 @@
+{% extends "layouts/base.twig" %}
+
+{% block title %}{{ translations.checklists_title | default('Checklisty') }}{% endblock %}
+
+{% block head %}
+<style>
+    .task-badge {
+        display: inline-block;
+        padding: .25rem .65rem;
+        border-radius: 999px;
+        font-size: .75rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .badge-done    { background: #d1e7dd; color: #0f5132; }
+    .badge-pending { background: #e2e3e5; color: #41464b; }
+    .badge-skipped { background: #fff3cd; color: #664d03; }
+    .badge-failed  { background: #f8d7da; color: #842029; }
+
+    .checklist-section { margin-bottom: 2rem; }
+
+    .task-row { transition: background .1s; }
+    .task-row:hover { background: #f8f9fa; }
+
+    .task-mandatory-icon { color: #e0a000; font-size: .75rem; }
+
+    .summary-stat {
+        text-align: center;
+        padding: .75rem 1rem;
+    }
+    .summary-stat .stat-value {
+        font-size: 1.5rem;
+        font-weight: 800;
+        line-height: 1.1;
+    }
+    .summary-stat .stat-label {
+        font-size: .75rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+    .stat-total  { color: #435ebe; }
+    .stat-done   { color: #198754; }
+    .stat-missed { color: #dc3545; }
+
+    .progress-bar-thin { height: 6px; border-radius: 3px; }
+</style>
+{% endblock %}
+
+{% block page_heading %}
+    <div class="page-heading">
+        <h3>{{ translations.checklists_title | default('Checklisty') }}</h3>
+        <p class="text-subtitle text-muted">{{ translations.checklists_subtitle | default('Przeglądaj zadania dzienne zgrupowane według checklisty.') }}</p>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ ROOT }}/dashboard">{{ translations.kitchen_dashboard | default('Pulpit') }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ translations.checklists | default('Checklisty') }}</li>
+            </ol>
+        </nav>
+    </div>
+{% endblock %}
+
+{% block content %}
+
+    {# ── Panel filtrów ── #}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" action="{{ ROOT }}/checklists" id="filterForm">
+                        <div class="row g-3 align-items-end">
+
+                            {# Data #}
+                            <div class="col-12 col-md-4">
+                                <label for="dateInput" class="form-label fw-semibold">
+                                    {{ translations.filter_date | default('Data') }}
+                                </label>
+                                <input type="date"
+                                       name="date"
+                                       id="dateInput"
+                                       class="form-control"
+                                       value="{{ selected_date }}"
+                                       max="{{ today }}"
+                                       required>
+                            </div>
+
+                            {# Checklista #}
+                            <div class="col-12 col-md-5">
+                                <label for="checklistSelect" class="form-label fw-semibold">
+                                    {{ translations.filter_checklist | default('Checklista') }}
+                                </label>
+                                <select name="checklist_id" id="checklistSelect" class="form-select">
+                                    <option value="">{{ translations.filter_checklist_all | default('— wszystkie —') }}</option>
+                                    {% for cl in checklists %}
+                                        <option value="{{ cl.id }}"
+                                            {{ selected_checklist_id == cl.id ? 'selected' : '' }}>
+                                            {{ cl.name }}{% if cl.execution_time %} ({{ cl.execution_time|slice(0,5) }}){% endif %}
+                                            · {{ cl.tasks_done }}/{{ cl.tasks_total }} {{ translations.tasks_done_of | default('wyk.') }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-12 col-md-3">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-funnel me-1"></i>
+                                    {{ translations.filter_apply | default('Pokaż') }}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ── Wyniki ── #}
+    {% if progress is not null and progress.checklist is defined %}
+
+        {# Nagłówek checklisty #}
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                            <div>
+                                <h4 class="mb-0 fw-bold">{{ progress.checklist.name }}</h4>
+                                <div class="text-muted small mt-1">
+                                    {% if progress.checklist.execution_time %}
+                                        <i class="bi bi-clock me-1"></i>{{ progress.checklist.execution_time|slice(0,5) }} ·
+                                    {% endif %}
+                                    {{ selected_date }}
+                                </div>
+                            </div>
+                            <div class="d-flex gap-3">
+                                <div class="summary-stat">
+                                    <div class="stat-value stat-total">{{ progress.summary.total }}</div>
+                                    <div class="stat-label">{{ translations.summary_total | default('Łącznie') }}</div>
+                                </div>
+                                <div class="summary-stat">
+                                    <div class="stat-value stat-done">{{ progress.summary.done }}</div>
+                                    <div class="stat-label">{{ translations.summary_done | default('Wykonane') }}</div>
+                                </div>
+                                <div class="summary-stat">
+                                    <div class="stat-value stat-missed">{{ progress.summary.not_done }}</div>
+                                    <div class="stat-label">{{ translations.summary_not_done | default('Niewykonane') }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if progress.summary.total > 0 %}
+                            <div class="mt-3">
+                                <div class="progress progress-bar-thin">
+                                    <div class="progress-bar bg-success"
+                                         style="width: {{ (progress.summary.done / progress.summary.total * 100)|round }}%"
+                                         aria-valuenow="{{ progress.summary.done }}"
+                                         aria-valuemin="0"
+                                         aria-valuemax="{{ progress.summary.total }}">
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Lista zadań #}
+        {% if progress.tasks is empty %}
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-clipboard-x" style="font-size:2.5rem;opacity:.3;"></i>
+                <p class="mt-3 mb-0">{{ translations.no_tasks | default('Brak zadań dla tej checklisty w wybranym dniu.') }}</p>
+            </div>
+        {% else %}
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3">#</th>
+                                    <th>{{ translations.col_task | default('Zadanie') }}</th>
+                                    <th>{{ translations.col_planned_time | default('Planowana godz.') }}</th>
+                                    <th>{{ translations.col_status | default('Status') }}</th>
+                                    <th>{{ translations.col_completed_at | default('Zrealizowane') }}</th>
+                                    <th>{{ translations.col_completed_by | default('Przez') }}</th>
+                                    <th>{{ translations.col_note | default('Notatka') }}</th>
+                                    <th>{{ translations.col_action | default('Akcja') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for task in progress.tasks %}
+                                    {% set status = task.status ?? 'PENDING' %}
+                                    <tr class="task-row">
+                                        <td class="ps-3 text-muted small align-middle">{{ loop.index }}</td>
+
+                                        <td class="align-middle fw-semibold">
+                                            {% if task.is_mandatory %}
+                                                <i class="bi bi-star-fill task-mandatory-icon me-1"
+                                                   title="{{ translations.mandatory | default('Obowiązkowe') }}"></i>
+                                            {% endif %}
+                                            {{ task.name }}
+                                            {% if task.requires_photo %}
+                                                <i class="bi bi-camera-fill ms-1 text-info" style="font-size:.8rem;"
+                                                   title="{{ translations.photo_required | default('Wymagane zdjęcie') }}"></i>
+                                            {% endif %}
+                                        </td>
+
+                                        <td class="align-middle text-muted small">
+                                            {% if task.execution_time %}
+                                                {{ task.execution_time|slice(0,5) }}
+                                            {% else %}
+                                                —
+                                            {% endif %}
+                                        </td>
+
+                                        <td class="align-middle">
+                                            {% if status == 'DONE' %}
+                                                <span class="task-badge badge-done">
+                                                    <i class="bi bi-check-circle-fill me-1"></i>{{ translations.status_done | default('Wykonane') }}
+                                                </span>
+                                            {% elseif status == 'SKIPPED' %}
+                                                <span class="task-badge badge-skipped">
+                                                    <i class="bi bi-skip-forward-fill me-1"></i>{{ translations.status_skipped | default('Pominięte') }}
+                                                </span>
+                                            {% elseif status == 'FAILED' %}
+                                                <span class="task-badge badge-failed">
+                                                    <i class="bi bi-x-circle-fill me-1"></i>{{ translations.status_failed | default('Nieudane') }}
+                                                </span>
+                                            {% else %}
+                                                <span class="task-badge badge-pending">
+                                                    <i class="bi bi-circle me-1"></i>{{ translations.status_pending | default('Oczekuje') }}
+                                                </span>
+                                            {% endif %}
+                                        </td>
+
+                                        <td class="align-middle text-muted small">
+                                            {% if task.completed_at %}
+                                                {{ task.completed_at|slice(11,5) }}
+                                            {% else %}
+                                                —
+                                            {% endif %}
+                                        </td>
+
+                                        <td class="align-middle small">
+                                            {% if task.completed_by %}
+                                                {{ task.completed_by }}
+                                            {% else %}
+                                                —
+                                            {% endif %}
+                                        </td>
+
+                                        <td class="align-middle small text-muted">
+                                            {% if task.note %}
+                                                <span title="{{ task.note }}">
+                                                    <i class="bi bi-chat-left-text me-1"></i>{{ task.note|slice(0,40) }}{% if task.note|length > 40 %}…{% endif %}
+                                                </span>
+                                            {% else %}
+                                                —
+                                            {% endif %}
+                                        </td>
+
+                                        <td class="align-middle">
+                                            {% if status != 'DONE' and status != 'SKIPPED' %}
+                                                <button type="button"
+                                                        class="btn btn-sm btn-outline-success btn-complete-task"
+                                                        data-task-id="{{ task.task_id }}"
+                                                        data-task-name="{{ task.name }}"
+                                                        data-date="{{ selected_date }}"
+                                                        data-requires-photo="{{ task.requires_photo ? '1' : '0' }}">
+                                                    <i class="bi bi-check2 me-1"></i>{{ translations.btn_complete | default('Wykonaj') }}
+                                                </button>
+                                            {% else %}
+                                                —
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+    {% elseif checklists is not empty and selected_checklist_id is empty %}
+
+        {# Widok listy checklist bez szczegółów #}
+        <div class="row g-3">
+            {% for cl in checklists %}
+                {% set pct = cl.tasks_total > 0 ? (cl.tasks_done / cl.tasks_total * 100)|round : 0 %}
+                <div class="col-12 col-md-6 col-lg-4">
+                    <a href="{{ ROOT }}/checklists?date={{ selected_date }}&checklist_id={{ cl.id }}"
+                       class="card h-100 shadow-sm border-0 text-decoration-none text-dark">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title fw-bold mb-0">{{ cl.name }}</h5>
+                                {% if cl.execution_time %}
+                                    <span class="text-muted small ms-2 text-nowrap">
+                                        <i class="bi bi-clock me-1"></i>{{ cl.execution_time|slice(0,5) }}
+                                    </span>
+                                {% endif %}
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mb-2 small text-muted">
+                                <span>{{ cl.tasks_done }} / {{ cl.tasks_total }} {{ translations.tasks_done_of | default('wykonanych') }}</span>
+                                <span class="fw-semibold {% if pct == 100 %}text-success{% elseif pct > 0 %}text-warning{% else %}text-secondary{% endif %}">
+                                    {{ pct }}%
+                                </span>
+                            </div>
+
+                            <div class="progress progress-bar-thin">
+                                <div class="progress-bar {% if pct == 100 %}bg-success{% elseif pct > 0 %}bg-warning{% else %}bg-secondary{% endif %}"
+                                     style="width:{{ pct }}%"></div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+
+    {% elseif selected_date and checklists is empty %}
+        <div class="text-center text-muted py-5">
+            <i class="bi bi-clipboard-x" style="font-size:2.5rem;opacity:.3;"></i>
+            <p class="mt-3 mb-0">{{ translations.no_checklists | default('Brak aktywnych checklist dla wybranego dnia.') }}</p>
+        </div>
+    {% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+
+{# ── Modal potwierdzenia wykonania zadania ── #}
+<div class="modal fade" id="completeTaskModal" tabindex="-1" aria-labelledby="completeTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="completeTaskModalLabel">
+                    {{ translations.modal_complete_title | default('Oznacz zadanie jako wykonane') }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small mb-3" id="modalTaskName"></p>
+
+                <div class="mb-3">
+                    <label for="modalEmployeeSelect" class="form-label fw-semibold">
+                        {{ translations.modal_employee_label | default('Pracownik') }} <span class="text-danger">*</span>
+                    </label>
+                    <select id="modalEmployeeSelect" class="form-select">
+                        <option value="">{{ translations.modal_employee_placeholder | default('— wybierz pracownika —') }}</option>
+                        {% for emp in employees %}
+                            <option value="{{ emp.id }}">{{ emp.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="modalPinInput" class="form-label fw-semibold">
+                        {{ translations.modal_pin_label | default('PIN') }} <span class="text-danger">*</span>
+                    </label>
+                    <input type="password"
+                           id="modalPinInput"
+                           class="form-control"
+                           maxlength="4"
+                           inputmode="numeric"
+                           autocomplete="off"
+                           placeholder="{{ translations.modal_pin_placeholder | default('4-cyfrowy PIN') }}">
+                </div>
+
+                <div class="mb-1">
+                    <label for="modalNoteInput" class="form-label fw-semibold">
+                        {{ translations.modal_note_label | default('Notatka (opcjonalnie)') }}
+                    </label>
+                    <input type="text" id="modalNoteInput" class="form-control" maxlength="255">
+                </div>
+
+                <div id="modalPhotoSection" class="mb-1 d-none">
+                    <label class="form-label fw-semibold">
+                        {{ translations.modal_photo_label | default('Zdjęcie') }}
+                        <span class="text-danger">*</span>
+                    </label>
+                    <div class="d-flex gap-2 mb-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="modalOpenCameraBtn">
+                            <i class="bi bi-camera me-1"></i>{{ 'Kamera' }}
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="modalClearPhotoBtn">
+                            <i class="bi bi-trash me-1"></i>{{ 'Wyczyść' }}
+                        </button>
+                    </div>
+                    <input type="file" id="modalPhotoInput" class="form-control form-control-sm"
+                           accept="image/*" capture="environment">
+                    <div id="modalCameraWrap" class="mt-2 d-none">
+                        <video id="modalCameraVideo" playsinline autoplay
+                               style="width:100%;border-radius:8px;background:#000;max-height:220px;object-fit:cover;"></video>
+                        <div class="d-flex gap-2 mt-1">
+                            <button type="button" class="btn btn-sm btn-primary" id="modalTakePhotoBtn">
+                                <i class="bi bi-camera me-1"></i>Zrób zdjęcie
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="modalCloseCameraBtn">
+                                <i class="bi bi-x-circle me-1"></i>Zamknij
+                            </button>
+                        </div>
+                        <canvas id="modalPhotoCanvas" style="display:none;"></canvas>
+                    </div>
+                    <div id="modalPhotoPreview" class="mt-2 d-none">
+                        <img id="modalPhotoPreviewImg" alt="Podgląd"
+                             style="max-width:100%;border-radius:8px;border:1px solid rgba(0,0,0,.1);">
+                    </div>
+                    <div class="text-muted small mt-1">
+                        {{ translations.modal_photo_hint | default('Zrób zdjęcie lub wybierz plik.') }}
+                    </div>
+                </div>
+
+                <div id="modalAlertBox" class="alert mt-3 d-none"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {{ translations.modal_btn_cancel | default('Anuluj') }}
+                </button>
+                <button type="button" class="btn btn-success" id="modalConfirmBtn">
+                    <span id="modalBtnSpinner" class="spinner-border spinner-border-sm me-1 d-none"></span>
+                    {{ translations.modal_btn_confirm | default('Zatwierdź') }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const ROOT = {{ ROOT | json_encode | raw }};
+    const translations = {
+        complete_success:                  {{ (translations.complete_success | default('Zadanie zostało oznaczone jako wykonane.')) | json_encode | raw }},
+        complete_error_invalid_pin:        {{ (translations.complete_error_invalid_pin | default('Nieprawidłowy PIN.')) | json_encode | raw }},
+        complete_error_employee_not_found: {{ (translations.complete_error_employee_not_found | default('Nie znaleziono pracownika.')) | json_encode | raw }},
+        complete_error_generic:            {{ (translations.complete_error_generic | default('Błąd podczas oznaczania zadania. Spróbuj ponownie.')) | json_encode | raw }},
+        complete_error_employee_required:  {{ (translations.complete_error_employee_required | default('Wybierz pracownika.')) | json_encode | raw }},
+        complete_error_pin_required:       {{ (translations.complete_error_pin_required | default('Wprowadź PIN.')) | json_encode | raw }},
+        complete_error_photo_required:     {{ (translations.complete_error_photo_required | default('To zadanie wymaga zdjęcia. Dodaj zdjęcie przed zatwierdzeniem.')) | json_encode | raw }},
+    };
+
+    let currentTaskId       = null;
+    let currentTaskDate     = null;
+    let currentRequiresPhoto = false;
+    let cameraStream        = null;
+
+    const modal          = document.getElementById('completeTaskModal');
+    const bsModal        = modal ? new bootstrap.Modal(modal) : null;
+    const taskNameEl     = document.getElementById('modalTaskName');
+    const employeeSel    = document.getElementById('modalEmployeeSelect');
+    const pinInput       = document.getElementById('modalPinInput');
+    const noteInput      = document.getElementById('modalNoteInput');
+    const confirmBtn     = document.getElementById('modalConfirmBtn');
+    const spinner        = document.getElementById('modalBtnSpinner');
+    const alertBox       = document.getElementById('modalAlertBox');
+
+    // Photo elements
+    const photoSection   = document.getElementById('modalPhotoSection');
+    const photoInput     = document.getElementById('modalPhotoInput');
+    const photoPreview   = document.getElementById('modalPhotoPreview');
+    const photoPreviewImg = document.getElementById('modalPhotoPreviewImg');
+    const cameraWrap     = document.getElementById('modalCameraWrap');
+    const cameraVideo    = document.getElementById('modalCameraVideo');
+    const photoCanvas    = document.getElementById('modalPhotoCanvas');
+    const openCameraBtn  = document.getElementById('modalOpenCameraBtn');
+    const closeCameraBtn = document.getElementById('modalCloseCameraBtn');
+    const takePhotoBtn   = document.getElementById('modalTakePhotoBtn');
+    const clearPhotoBtn  = document.getElementById('modalClearPhotoBtn');
+
+    function showAlert(message, type) {
+        alertBox.className = 'alert alert-' + type + ' mt-3';
+        alertBox.textContent = message;
+        alertBox.classList.remove('d-none');
+    }
+
+    function hideAlert() { alertBox.classList.add('d-none'); }
+
+    function stopCamera() {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(t => t.stop());
+            cameraStream = null;
+        }
+        if (cameraVideo) cameraVideo.srcObject = null;
+        if (cameraWrap) cameraWrap.classList.add('d-none');
+    }
+
+    function showPhotoPreview(file) {
+        if (file) {
+            photoPreviewImg.src = URL.createObjectURL(file);
+            photoPreview.classList.remove('d-none');
+        } else {
+            photoPreview.classList.add('d-none');
+            photoPreviewImg.removeAttribute('src');
+        }
+    }
+
+    function setInputFile(file) {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        photoInput.files = dt.files;
+        showPhotoPreview(file);
+    }
+
+    function resetModal() {
+        employeeSel.value = '';
+        pinInput.value    = '';
+        noteInput.value   = '';
+        hideAlert();
+        spinner.classList.add('d-none');
+        confirmBtn.disabled = false;
+        stopCamera();
+        if (photoInput) photoInput.value = '';
+        showPhotoPreview(null);
+    }
+
+    // Otwieranie modalu po kliknięciu "Wykonaj"
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('.btn-complete-task');
+        if (!btn) return;
+
+        currentTaskId        = btn.dataset.taskId;
+        currentTaskDate      = btn.dataset.date;
+        currentRequiresPhoto = btn.dataset.requiresPhoto === '1';
+        const taskName       = btn.dataset.taskName || '';
+
+        if (taskNameEl) taskNameEl.textContent = taskName;
+        resetModal();
+
+        if (photoSection) {
+            if (currentRequiresPhoto) {
+                photoSection.classList.remove('d-none');
+            } else {
+                photoSection.classList.add('d-none');
+            }
+        }
+
+        bsModal.show();
+    });
+
+    // Zmiana pliku przez file input
+    if (photoInput) {
+        photoInput.addEventListener('change', function () {
+            const file = photoInput.files && photoInput.files[0];
+            showPhotoPreview(file || null);
+        });
+    }
+
+    // Kamera — otwórz
+    if (openCameraBtn) {
+        openCameraBtn.addEventListener('click', async function () {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                photoInput.click();
+                return;
+            }
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { ideal: 'environment' } },
+                    audio: false,
+                });
+                cameraVideo.srcObject = cameraStream;
+                cameraWrap.classList.remove('d-none');
+            } catch (err) {
+                photoInput.click();
+            }
+        });
+    }
+
+    // Kamera — zamknij
+    if (closeCameraBtn) {
+        closeCameraBtn.addEventListener('click', stopCamera);
+    }
+
+    // Kamera — zrób zdjęcie
+    if (takePhotoBtn) {
+        takePhotoBtn.addEventListener('click', function () {
+            const w = cameraVideo.videoWidth;
+            const h = cameraVideo.videoHeight;
+            if (!w || !h || !cameraStream) return;
+            photoCanvas.width  = w;
+            photoCanvas.height = h;
+            const ctx = photoCanvas.getContext('2d', { alpha: false });
+            ctx.drawImage(cameraVideo, 0, 0, w, h);
+            photoCanvas.toBlob(function (blob) {
+                if (!blob) return;
+                const file = new File([blob], 'task_photo_' + Date.now() + '.jpg', { type: 'image/jpeg' });
+                setInputFile(file);
+                stopCamera();
+            }, 'image/jpeg', 0.9);
+        });
+    }
+
+    // Wyczyść zdjęcie
+    if (clearPhotoBtn) {
+        clearPhotoBtn.addEventListener('click', function () {
+            if (photoInput) photoInput.value = '';
+            showPhotoPreview(null);
+            stopCamera();
+        });
+    }
+
+    if (!confirmBtn) return;
+
+    confirmBtn.addEventListener('click', async function () {
+        hideAlert();
+
+        const employeeId = employeeSel.value;
+        const pin        = pinInput.value.trim();
+        const note       = noteInput.value.trim();
+        const photoFile  = photoInput && photoInput.files && photoInput.files[0]
+                            ? photoInput.files[0] : null;
+
+        if (!employeeId) {
+            showAlert(translations.complete_error_employee_required, 'warning');
+            return;
+        }
+        if (!pin) {
+            showAlert(translations.complete_error_pin_required, 'warning');
+            return;
+        }
+        if (currentRequiresPhoto && !photoFile) {
+            showAlert(translations.complete_error_photo_required, 'warning');
+            return;
+        }
+
+        spinner.classList.remove('d-none');
+        confirmBtn.disabled = true;
+
+        try {
+            const formData = new FormData();
+            formData.append('employee_id', employeeId);
+            formData.append('pin',         pin);
+            formData.append('date',        currentTaskDate);
+            formData.append('note',        note);
+            if (photoFile) {
+                formData.append('photo', photoFile);
+            }
+
+            const response = await fetch(ROOT + '/checklists/tasks/' + currentTaskId + '/complete', {
+                method: 'POST',
+                body:   formData,
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                bsModal.hide();
+                window.location.reload();
+            } else {
+                const msg = data.message || 'error';
+                let displayMsg;
+                if (msg === 'invalid_pin') {
+                    displayMsg = translations.complete_error_invalid_pin;
+                } else if (msg === 'employee_not_found') {
+                    displayMsg = translations.complete_error_employee_not_found;
+                } else if (msg === 'employee_required') {
+                    displayMsg = translations.complete_error_employee_required;
+                } else if (msg === 'pin_required') {
+                    displayMsg = translations.complete_error_pin_required;
+                } else {
+                    displayMsg = translations.complete_error_generic;
+                }
+                showAlert(displayMsg, 'danger');
+            }
+        } catch (err) {
+            showAlert(translations.complete_error_generic, 'danger');
+        } finally {
+            spinner.classList.add('d-none');
+            confirmBtn.disabled = false;
+        }
+    });
+
+    // Reset modalu po zamknięciu
+    if (modal) {
+        modal.addEventListener('hidden.bs.modal', function () {
+            stopCamera();
+            resetModal();
+        });
+    }
+})();
+</script>
+
+{% endblock %}

@@ -1,0 +1,499 @@
+{% extends "layouts/base.twig" %}
+{% block title %}{{ translations.complaints_title }}{% endblock %}
+{% block head %}
+<style>
+    .filter-badge {
+        cursor: pointer;
+        opacity: .45;
+        transition: opacity .15s ease, box-shadow .15s ease, transform .1s ease;
+        user-select: none;
+    }
+    .filter-badge:hover { opacity: .75; transform: translateY(-1px); }
+    .filter-badge.active {
+        opacity: 1;
+        box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(0,0,0,.4);
+        transform: none;
+    }
+    .supplier-badge.bg-light.active { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #6c757d; }
+</style>
+{% endblock %}
+{% block page_heading %}
+    <div class="page-heading">
+        <h3>{{ translations.complaints_title }}</h3>
+        <p class="text-subtitle text-muted">{{ translations.complaints_subtitle }}</p>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ ROOT }}">{{ translations.home }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ translations.complaints }}</li>
+            </ol>
+        </nav>
+    </div>
+{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        {# Filtry statusu i dostawcy #}
+        <div class="card mb-3">
+            <div class="card-body py-3">
+                <div class="d-flex flex-wrap align-items-center gap-1 mb-2">
+                    <span class="text-muted small fw-semibold me-2" style="min-width:4.5rem;">{{ translations.status }}:</span>
+                    <span class="badge rounded-pill filter-badge status-badge bg-secondary text-white active" data-value="all">{{ translations.all }}</span>
+                    <span class="badge rounded-pill filter-badge status-badge bg-secondary" data-value="NEW">{{ translations.status_new }}</span>
+                    <span class="badge rounded-pill filter-badge status-badge bg-info text-dark" data-value="IN_REVIEW">{{ translations.status_in_review }}</span>
+                    <span class="badge rounded-pill filter-badge status-badge bg-success" data-value="ACCEPTED">{{ translations.status_accepted }}</span>
+                    <span class="badge rounded-pill filter-badge status-badge bg-danger" data-value="REJECTED">{{ translations.status_rejected }}</span>
+                </div>
+                <div class="d-flex flex-wrap align-items-center gap-1">
+                    <span class="text-muted small fw-semibold me-2" style="min-width:4.5rem;">{{ translations.supplier }}:</span>
+                    <span class="badge rounded-pill filter-badge supplier-badge bg-secondary text-white active" data-value="all">{{ translations.all }}</span>
+                    {% set seenSuppliers = [] %}
+                    {% for complaint in complaints %}
+                        {% if complaint.getSupplierName() not in seenSuppliers %}
+                            {% set seenSuppliers = seenSuppliers|merge([complaint.getSupplierName()]) %}
+                            <span class="badge rounded-pill filter-badge supplier-badge bg-light text-dark border"
+                                  data-value="{{ complaint.getSupplierName() }}">{{ complaint.getSupplierName() }}</span>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {# Tabela reklamacji #}
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="card-title mb-0">
+                    <i class="bi bi-clipboard2-x me-2"></i>{{ translations.overview }}
+                    <span class="badge bg-secondary ms-2" id="complaintsCount"></span>
+                </h4>
+                <a href="{{ ROOT }}/complaints/new" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-circle me-1"></i>{{ translations.new_complaint }}
+                </a>
+            </div>
+            <div class="card-content">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 table-sm" id="complaintsTable" style="font-size:.82rem;">
+                            <thead class="table-light">
+                            <tr>
+                                <th class="ps-3" style="width:12%;">
+                                    {{ translations.complaint_key }}
+                                    <div class="fw-normal text-muted" style="font-size:.75rem;">{{ translations.date_of_report }}</div>
+                                </th>
+                                <th style="width:20%;">
+                                    {{ translations.supplier }}
+                                    <div class="fw-normal text-muted" style="font-size:.75rem;">{{ translations.product_name }}</div>
+                                </th>
+                                <th style="width:18%;">
+                                    {{ translations.order_key }}
+                                    <div class="fw-normal text-muted" style="font-size:.75rem;">{{ translations.complaint_reason }}</div>
+                                </th>
+                                <th class="text-center" style="width:8%;">{{ translations.complained_quantity }}</th>
+                                <th class="text-center" style="width:14%;">
+                                    {{ translations.status }}
+                                    <div class="fw-normal text-muted" style="font-size:.75rem;">{{ translations.last_update }}</div>
+                                </th>
+                                <th class="text-end pe-3" style="width:10%;">{{ translations.actions }}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for complaint in complaints %}
+                                <tr class="complaint-row"
+                                    data-status="{{ complaint.getStatus() }}"
+                                    data-supplier="{{ complaint.getSupplierName() }}">
+                                    <td class="ps-3 align-middle">
+                                        {% if complaint.getComplaintKey() %}
+                                            <code class="text-primary fw-semibold" style="font-size:.78rem;">{{ complaint.getComplaintKey() }}</code>
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                        <div class="text-muted" style="font-size:.75rem;">{{ complaint.getCreatedAt()|slice(0,16)|replace({'T': ' '}) }}</div>
+                                    </td>
+                                    <td class="align-middle">
+                                        <span class="fw-semibold d-block">{{ complaint.getSupplierName() }}</span>
+                                        <span class="text-muted d-block text-truncate" style="max-width:15rem; font-size:.78rem;" title="{{ complaint.getMaterialName() }}">{{ complaint.getMaterialName() }}</span>
+                                        {% if complaint.getSupplierSku() %}
+                                            <span class="text-muted" style="font-size:.72rem;">SKU: {{ complaint.getSupplierSku() }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="align-middle">
+                                        <span class="font-monospace d-block">{{ complaint.getOrderKey() }}</span>
+                                        <span class="text-muted" style="font-size:.78rem;">{{ complaint.getReasonName() }}</span>
+                                    </td>
+                                    <td class="text-center align-middle">
+                                        {% if complaint.getQty() is not null %}
+                                            {% set unitLower = complaint.getUnitName()|lower %}
+                                            <span class="fw-semibold">
+                                                {% if unitLower in ['pcs', 'g', 'ml'] %}{{ complaint.getQty()|round(0, 'common') }}{% else %}{{ complaint.getQty() }}{% endif %}
+                                            </span>
+                                            {% if complaint.getUnitName() %}
+                                                <div class="text-muted" style="font-size:.75rem;">{{ complaint.getUnitName() }}</div>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center align-middle">
+                                        {% set status = complaint.getStatus() %}
+                                        {% if status == 'NEW' %}
+                                            <span class="badge bg-secondary">{{ translations.status_new }}</span>
+                                        {% elseif status == 'IN_REVIEW' %}
+                                            <span class="badge bg-info text-dark">{{ translations.status_in_review }}</span>
+                                        {% elseif status == 'ACCEPTED' %}
+                                            <span class="badge bg-success">{{ translations.status_accepted }}</span>
+                                        {% elseif status == 'REJECTED' %}
+                                            <span class="badge bg-danger">{{ translations.status_rejected }}</span>
+                                        {% else %}
+                                            <span class="badge bg-light text-dark">{{ status }}</span>
+                                        {% endif %}
+                                        <div style="font-size:.72rem;">
+                                            {% if complaint.getUpdatedAt() and complaint.getUpdatedAt() != complaint.getCreatedAt() %}
+                                                <span class="text-muted">{{ complaint.getUpdatedAt()|slice(0,16)|replace({'T': ' '}) }}</span>
+                                            {% else %}
+                                                <span class="text-muted">—</span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td class="text-end pe-3 align-middle">
+                                        {% set attachCount = complaint.getAttachments()|length %}
+                                        {% if attachCount > 0 %}
+                                            <span class="badge bg-light text-dark border me-1">
+                                                <i class="bi bi-paperclip"></i> {{ attachCount }}
+                                            </span>
+                                        {% endif %}
+                                        <button class="btn btn-sm btn-outline-primary"
+                                                onclick="openComplaintDetails({{ complaint.getId() }})">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-muted">{{ translations.no_complaints_found }}</td>
+                                </tr>
+                            {% endfor %}
+                            {% if complaints is not empty %}
+                                <tr id="noResultsRow" style="display:none">
+                                    <td colspan="6" class="text-center py-4 text-muted">{{ translations.no_complaints_found }}</td>
+                                </tr>
+                            {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="{{ ROOT }}/orders" class="btn btn-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i>{{ translations.back }}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{# Modal szczegółów reklamacji #}
+<div class="modal fade" id="complaintDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-clipboard2-x me-2"></i>{{ translations.complaint_details }}
+                    <code class="ms-2 text-primary fw-semibold" id="modalComplaintKey" style="font-size:.85rem;"></code>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small mb-1">{{ translations.supplier }}</label>
+                            <div class="fw-semibold" id="modalSupplierName"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small mb-1">{{ translations.product_name }}</label>
+                            <div id="modalMaterialName"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small mb-1">{{ translations.order_key }}</label>
+                            <div class="font-monospace" id="modalOrderKey"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small mb-1">{{ translations.requested_action }}</label>
+                            <div id="modalRequestedAction"></div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small mb-1">{{ translations.complaint_reason }}</label>
+                            <div id="modalReasonName"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small mb-1">{{ translations.complained_quantity }}</label>
+                            <div id="modalQty"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small mb-1">{{ translations.status }}</label>
+                            <div id="modalStatus"></div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small mb-1">{{ translations.description }}</label>
+                            <div class="border rounded p-2 bg-light" id="modalDescription" style="min-height:3rem; white-space:pre-wrap;"></div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small mb-1">
+                                <i class="bi bi-chat-left-dots me-1"></i>{{ translations.production_response }}
+                            </label>
+                            <div class="border rounded p-2 bg-light" id="modalProductionResponse" style="min-height:3rem; white-space:pre-wrap;"></div>
+                        </div>
+                    </div>
+                    <div class="col-12" id="modalResolutionBlock" style="display:none;">
+                        <div class="card border-0 rounded-3" id="modalResolutionCard">
+                            <div class="card-body py-3 px-3">
+                                <h6 class="mb-3 d-flex align-items-center gap-2 fw-bold" id="modalResolutionTitle">
+                                    <i class="bi bi-check2-all"></i>{{ translations.resolution_summary }}
+                                </h6>
+                                <div class="row g-2">
+                                    <div class="col-12 col-sm-6">
+                                        <div class="small fw-semibold opacity-75 mb-1">{{ translations.accepted_quantity }}</div>
+                                        <div class="fw-bold fs-6" id="modalAcceptedQty">—</div>
+                                    </div>
+                                    <div class="col-12 col-sm-6">
+                                        <div class="small fw-semibold opacity-75 mb-1">{{ translations.compensation_method }}</div>
+                                        <div class="fw-semibold" id="modalCompensationMethod">—</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label text-muted small mb-2">
+                            <i class="bi bi-paperclip me-1"></i>{{ translations.attachments }}
+                        </label>
+                        <div id="modalAttachmentsList"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="text-muted small me-auto" id="modalDates"></div>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ translations.back }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const complaintsData = {
+{% for complaint in complaints %}
+"{{ complaint.getId() }}": {
+    complaint_key: {{ complaint.getComplaintKey() ? ('`' ~ complaint.getComplaintKey() ~ '`') : 'null' }},
+    supplier_name: `{{ complaint.getSupplierName()|escape('js') }}`,
+    material_name: `{{ complaint.getMaterialName()|escape('js') }}`,
+    order_key: `{{ complaint.getOrderKey()|escape('js') }}`,
+    reason_name: `{{ complaint.getReasonName()|escape('js') }}`,
+    qty: {{ complaint.getQty() is not null ? complaint.getQty() : 'null' }},
+    unit_name: {{ complaint.getUnitName() ? ('`' ~ complaint.getUnitName()|escape('js') ~ '`') : 'null' }},
+    status: `{{ complaint.getStatus() }}`,
+    description: {{ complaint.getDescription() ? ('`' ~ complaint.getDescription()|escape('js') ~ '`') : 'null' }},
+    production_response: {{ complaint.getProductionResponse() ? ('`' ~ complaint.getProductionResponse()|escape('js') ~ '`') : 'null' }},
+    requested_action: {{ complaint.getRequestedAction() ? ('`' ~ complaint.getRequestedAction()|escape('js') ~ '`') : 'null' }},
+    accepted_qty: {{ complaint.getAcceptedQty() is not null ? complaint.getAcceptedQty() : 'null' }},
+    compensation_method: {{ complaint.getCompensationMethod() ? ('`' ~ complaint.getCompensationMethod()|escape('js') ~ '`') : 'null' }},
+    created_at: `{{ complaint.getCreatedAt()|slice(0,16)|replace({'T': ' '}) }}`,
+    updated_at: {{ complaint.getUpdatedAt() ? ('`' ~ complaint.getUpdatedAt()|slice(0,16)|replace({'T': ' '}) ~ '`') : 'null' }},
+    attachments: [
+        {% for file in complaint.getAttachments() %}
+        {
+            id: `{{ (file.uuid ?? file.id ?? '')|escape('js') }}`,
+            name: `{{ (file.original_name ?? file.name ?? '')|escape('js') }}`,
+            mime: `{{ (file.mime_type ?? file.mime ?? '')|escape('js') }}`,
+            size: {{ file.size_bytes ?? file.size ?? 0 }}
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ]
+}{% if not loop.last %},{% endif %}
+{% endfor %}
+};
+const t = {
+    no_response_yet: `{{ translations.no_response_yet|escape('js') }}`,
+    no_description: `{{ translations.no_description|escape('js') }}`,
+    not_specified: `{{ translations.not_specified|escape('js') }}`,
+    status_new: `{{ translations.status_new|escape('js') }}`,
+    status_ready: `{{ translations.status_ready|escape('js') }}`,
+    status_in_review: `{{ translations.status_in_review|escape('js') }}`,
+    status_accepted: `{{ translations.status_accepted|escape('js') }}`,
+    status_rejected: `{{ translations.status_rejected|escape('js') }}`,
+    date_of_report: `{{ translations.date_of_report|escape('js') }}`,
+    last_update: `{{ translations.last_update|escape('js') }}`,
+    attachment: `{{ translations.attachment|escape('js') }}`,
+    requested_action_refund: `{{ translations.requested_action_refund|escape('js') }}`,
+    requested_action_replacement: `{{ translations.requested_action_replacement|escape('js') }}`,
+    requested_action_credit: `{{ translations.requested_action_credit|escape('js') }}`,
+    compensation_method_replacement: `{{ translations.compensation_method_replacement|escape('js') }}`,
+    compensation_method_credit_note: `{{ translations.compensation_method_credit_note|escape('js') }}`,
+    compensation_method_refund: `{{ translations.compensation_method_refund|escape('js') }}`
+};
+let activeStatus = 'all';
+let activeSupplier = 'all';
+function getStatusBadge(status) {
+    const map = {
+        NEW:       `<span class="badge bg-secondary">${t.status_new}</span>`,
+        IN_REVIEW: `<span class="badge bg-info text-dark">${t.status_in_review}</span>`,
+        ACCEPTED:  `<span class="badge bg-success">${t.status_accepted}</span>`,
+        REJECTED:  `<span class="badge bg-danger">${t.status_rejected}</span>`,
+    };
+    return map[status] ?? `<span class="badge bg-light text-dark">${status || '—'}</span>`;
+}
+function getMimeIcon(mime) {
+    if (!mime) return 'bi-paperclip';
+    if (mime.startsWith('image/')) return 'bi-file-image';
+    if (mime === 'application/pdf') return 'bi-file-earmark-pdf text-danger';
+    if (mime.includes('spreadsheet') || mime.includes('excel')) return 'bi-file-earmark-excel text-success';
+    if (mime.includes('word') || mime.includes('document')) return 'bi-file-earmark-word text-primary';
+    return 'bi-file-earmark';
+}
+function formatQty(qty, unit) {
+    if (qty === null || qty === undefined) return '—';
+    const wholeUnits = ['pcs', 'g', 'ml'];
+    return wholeUnits.includes((unit ?? '').toLowerCase().trim()) ? Math.round(qty) : qty;
+}
+function formatBytes(bytes) {
+    if (!bytes || bytes === 0) return '';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / 1048576).toFixed(1)} MB`;
+}
+function labelRequestedAction(code) {
+    const map = { REFUND: t.requested_action_refund, REPLACEMENT: t.requested_action_replacement, CREDIT: t.requested_action_credit };
+    return code ? (map[code.toUpperCase()] ?? code) : t.not_specified;
+}
+function labelCompensationMethod(code) {
+    if (!code) return t.not_specified;
+    const map = { REPLACEMENT: t.compensation_method_replacement, CREDIT_NOTE: t.compensation_method_credit_note, REFUND: t.compensation_method_refund };
+    return map[code.toUpperCase()] ?? code;
+}
+function applyFilters() {
+    const rows = document.querySelectorAll('#complaintsTable tbody .complaint-row');
+    let visible = 0;
+    rows.forEach(function (row) {
+        const ok = (activeStatus === 'all' || row.dataset.status === activeStatus)
+                && (activeSupplier === 'all' || row.dataset.supplier === activeSupplier);
+        row.style.display = ok ? '' : 'none';
+        if (ok) visible++;
+    });
+    const nr = document.getElementById('noResultsRow');
+    if (nr) nr.style.display = visible === 0 ? '' : 'none';
+    const badge = document.getElementById('complaintsCount');
+    if (badge) badge.textContent = visible;
+}
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.status-badge').forEach(function (el) {
+        el.addEventListener('click', function () {
+            document.querySelectorAll('.status-badge').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            activeStatus = el.dataset.value;
+            applyFilters();
+        });
+    });
+    document.querySelectorAll('.supplier-badge').forEach(function (el) {
+        el.addEventListener('click', function () {
+            document.querySelectorAll('.supplier-badge').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            activeSupplier = el.dataset.value;
+            applyFilters();
+        });
+    });
+    applyFilters();
+});
+function openComplaintDetails(id) {
+    const c = complaintsData[String(id)];
+    if (!c) return;
+    document.getElementById('modalComplaintKey').textContent = c.complaint_key ?? '';
+    document.getElementById('modalSupplierName').textContent = c.supplier_name ?? '—';
+    document.getElementById('modalMaterialName').textContent = c.material_name ?? '—';
+    document.getElementById('modalOrderKey').textContent     = c.order_key ?? '—';
+    document.getElementById('modalReasonName').textContent   = c.reason_name ?? '—';
+    document.getElementById('modalQty').textContent          = c.qty !== null
+        ? `${formatQty(c.qty, c.unit_name)}${c.unit_name ? ' ' + c.unit_name : ''}`
+        : '—';
+    document.getElementById('modalStatus').innerHTML = getStatusBadge(c.status);
+    document.getElementById('modalRequestedAction').innerHTML = c.requested_action
+        ? `<span class="badge bg-secondary">${labelRequestedAction(c.requested_action)}</span>`
+        : `<span class="text-muted fst-italic">${t.not_specified}</span>`;
+    const descEl = document.getElementById('modalDescription');
+    if (c.description) { descEl.textContent = c.description; }
+    else { descEl.innerHTML = `<span class="text-muted fst-italic">${t.no_description}</span>`; }
+    const respEl = document.getElementById('modalProductionResponse');
+    if (c.production_response) { respEl.textContent = c.production_response; }
+    else { respEl.innerHTML = `<span class="text-muted fst-italic">${t.no_response_yet}</span>`; }
+    const resBlock = document.getElementById('modalResolutionBlock');
+    const resCard  = document.getElementById('modalResolutionCard');
+    if (c.status === 'ACCEPTED' || c.status === 'REJECTED') {
+        resBlock.style.display = '';
+        const ok = c.status === 'ACCEPTED';
+        // bg-light-success: #d2ffe8 / #00391c  →  kontrast 12.2:1 ✓
+        // bg-light-danger:  #ffdede / #450000  →  kontrast 13.3:1 ✓
+        resCard.className = `card border-0 rounded-3 ${ok ? 'bg-light-success' : 'bg-light-danger'}`;
+        const titleEl = document.getElementById('modalResolutionTitle');
+        if (titleEl) titleEl.className = 'mb-3 d-flex align-items-center gap-2 fw-bold';
+        const aqEl = document.getElementById('modalAcceptedQty');
+        if (c.accepted_qty !== null && c.accepted_qty !== undefined) {
+            aqEl.textContent = `${formatQty(c.accepted_qty, c.unit_name)}${c.unit_name ? ' ' + c.unit_name : ''}`;
+            aqEl.className = ok ? 'fw-bold fs-6' : 'fw-bold fs-6 text-decoration-line-through opacity-50';
+        } else {
+            aqEl.textContent = '—'; aqEl.className = 'fw-bold fs-6';
+        }
+        const cmEl = document.getElementById('modalCompensationMethod');
+        cmEl.textContent = labelCompensationMethod(c.compensation_method);
+        cmEl.className = 'fw-semibold';
+    } else {
+        resBlock.style.display = 'none';
+    }
+    let datesHtml = `${t.date_of_report}: <strong>${c.created_at ?? '—'}</strong>`;
+    if (c.updated_at && c.updated_at !== c.created_at) {
+        datesHtml += `\u00A0\u00A0|\u00A0\u00A0${t.last_update}: <strong>${c.updated_at}</strong>`;
+    }
+    document.getElementById('modalDates').innerHTML = datesHtml;
+    const attachEl = document.getElementById('modalAttachmentsList');
+    if (c.attachments && c.attachments.length > 0) {
+        let html = '<div class="list-group list-group-flush border rounded">';
+        c.attachments.forEach(function (file) {
+            const icon = getMimeIcon(file.mime);
+            const size = formatBytes(file.size);
+            html += `<div class="list-group-item px-3 py-2 d-flex align-items-center gap-2">
+                <i class="bi ${icon} fs-5 flex-shrink-0"></i>
+                <span class="flex-grow-1 text-truncate" title="${file.name}">${file.name}</span>
+                ${size ? `<small class="text-muted text-nowrap">${size}</small>` : ''}
+                <button class="btn btn-sm btn-outline-primary ms-2 flex-shrink-0" onclick="downloadAttachment('${file.id}')">
+                    <i class="bi bi-download me-1"></i>${t.attachment}
+                </button>
+            </div>`;
+        });
+        html += '</div>';
+        attachEl.innerHTML = html;
+    } else {
+        attachEl.innerHTML = '<span class="text-muted fst-italic small">—</span>';
+    }
+    new bootstrap.Modal(document.getElementById('complaintDetailsModal')).show();
+}
+function downloadAttachment(id) {
+    fetch(`{{ ROOT }}/ajax/complaints/attachment/${id}/presigned-url`)
+        .then(r => r.json())
+        .then(result => {
+            if (result.ok && result.url) {
+                const a = document.createElement('a');
+                a.href = result.url;
+                a.target = '_blank';
+                a.download = '';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            } else {
+                showSnack(false, 'Błąd pobierania pliku');
+            }
+        })
+        .catch(() => showSnack(false, 'Błąd połączenia'));
+}
+</script>
+{% endblock %}

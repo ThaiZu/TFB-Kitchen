@@ -23,7 +23,7 @@ class LoginRepository{
     }
 
     public function refresh($refreshToken) {
-        $response = $this->apiClient->login('/material-suppliers/auth/refresh', ['refresh_token' => $refreshToken]);
+        $response = $this->apiClient->login('/devices/auth/refresh', ['refresh_token' => $refreshToken]);
 
         if (isset($response['access_token']) && isset($response['refresh_token'])) {
             return $response;
