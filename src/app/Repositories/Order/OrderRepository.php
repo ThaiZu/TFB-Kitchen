@@ -74,5 +74,20 @@ class OrderRepository
 
         return new OrderModel($data);
     }
+
+    public function insert(array $data): array
+    {
+        return $this->apiClient->post('/client-orders', $data);
+    }
+
+    public function update(int $id, array $data): array
+    {
+        return $this->apiClient->patch("/client-orders/{$id}", $data);
+    }
+
+    public function delete(int $id): array
+    {
+        return $this->apiClient->delete("/client-orders/{$id}");
+    }
 }
 

@@ -68,6 +68,19 @@
                 <li class="breadcrumb-item active" aria-current="page">#{{ order.getId() }}</li>
             </ol>
         </nav>
+        <div class="d-flex flex-wrap gap-2 mt-3">
+            <a href="{{ ROOT }}/orders/{{ order.getId() }}/edit" class="btn btn-primary btn-sm">
+                <i class="bi bi-pencil-square me-1"></i>
+                {{ translations.edit_order | default('Edytuj zamówienie') }}
+            </a>
+            <button type="button"
+                    class="btn btn-outline-danger btn-sm"
+                    id="cancelOrderBtn"
+                    data-order-id="{{ order.getId() }}">
+                <i class="bi bi-trash me-1"></i>
+                {{ translations.cancel_order | default('Anuluj zamówienie') }}
+            </button>
+        </div>
     </div>
 {% endblock %}
 
@@ -399,4 +412,38 @@
 
 {% endblock %}
 
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const cancelButton = document.getElementById('cancelOrderBtn');
+
+    if (!cancelButton) {
+        return;
+    }
+
+    cancelButton.addEventListener('click', async function () {
+        const orderId = this.getAttribute('data-order-id');
+        if (!orderId) {
+            return;
+        }
+
+        const confirmed = window.confirm('{{ translations.cancel_order_confirm | default("Na pewno anulować to zamówienie?") }}');
+        if (!confirmed) {
+            return;
+        }
+
+        const response = await api(`/ajax/client-orders/${orderId}`, {
+            method: 'DELETE'
+        });
+
+        if (!response.ok || response.status !== 'success') {
+            window.alert(response.description || response.message || '{{ translations.cancel_order_failed | default("Nie udało się anulować zamówienia.") }}');
+            return;
+        }
+
+        window.location.href = '{{ ROOT }}/orders';
+    });
+});
+</script>
+{% endblock %}
 

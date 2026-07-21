@@ -9,7 +9,7 @@ class CookieManager {
     {
 
         $res_access = setcookie('kitchen_access_token', $accessToken, [
-            'expires' => strtotime($expiryTokenDate), // Poprawiony timestamp
+            'expires' => strtotime($expiryTokenDate),
             'path' => '/',
             'secure' => true,
             'httponly' => true,
@@ -18,8 +18,12 @@ class CookieManager {
 
         if(!$res_access) return false;
 
+        // Aktualizuj $_COOKIE natychmiast, żeby nowy token był dostępny
+        // w bieżącym żądaniu (setcookie nie aktualizuje $_COOKIE automatycznie).
+        $_COOKIE['kitchen_access_token'] = $accessToken;
+
         $res_expiry = setcookie('kitchen_access_token_expiry', $expiryTokenDate, [
-            'expires' => strtotime($expiryTokenDate), // Poprawiony timestamp
+            'expires' => strtotime($expiryTokenDate),
             'path' => '/',
             'secure' => true,
             'httponly' => true,
@@ -27,6 +31,8 @@ class CookieManager {
         ]);
 
         if(!$res_expiry) return false;
+
+        $_COOKIE['kitchen_access_token_expiry'] = $expiryTokenDate;
 
         return true;
     }

@@ -14,10 +14,13 @@ class DeviceRepository
     {
     }
 
-    public function getMe($id)
+    public function getMe()
     {
-        $resp = $this->apiClient->get('/devices/' . $id);
-        return new DeviceModel($resp['data']) ?? null;
+        $resp = $this->apiClient->get('/devices/me');
+        if (!($resp['success'] ?? false) || !is_array($resp['data'])) {
+            return null;
+        }
+        return new DeviceModel($resp['data']);
     }
 
 }

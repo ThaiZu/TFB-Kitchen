@@ -75,7 +75,7 @@
     .fiche-header-photo img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
         border-radius: 6px;
     }
     .fiche-photo-label {
@@ -277,7 +277,7 @@
     .plano-photo img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
         border-radius: 6px;
     }
 
@@ -293,6 +293,42 @@
         .fiche-header { flex-direction: column; }
         .fiche-header-photo { width: 100%; min-width: unset; height: 200px; }
         .plano-photos { flex-direction: column; }
+    }
+
+    /* --- LIGHTBOX --- */
+    .fiche-lightbox {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: rgba(0,0,0,0.88);
+        align-items: center;
+        justify-content: center;
+        cursor: zoom-out;
+    }
+    .fiche-lightbox.active { display: flex; }
+    .fiche-lightbox img {
+        max-width: 92vw;
+        max-height: 92vh;
+        object-fit: contain;
+        border-radius: 6px;
+        box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+        cursor: default;
+    }
+    .fiche-lightbox-close {
+        position: fixed;
+        top: 18px;
+        right: 24px;
+        color: #fff;
+        font-size: 2rem;
+        cursor: pointer;
+        opacity: 0.8;
+        line-height: 1;
+        z-index: 10000;
+    }
+    .fiche-lightbox-close:hover { opacity: 1; }
+    .fiche-zoomable {
+        cursor: zoom-in;
     }
 </style>
 {% endblock %}
@@ -391,9 +427,11 @@
 
             {# Zdjęcie główne w nagłówku #}
             <div class="fiche-header-photo">
-                {% if photos and photos.hasPhoto1() %}
-                    <img src="{{ photos.getPhoto1Url() }}"
+                {% if photos and photos.hasMainPhoto() %}
+                    <img src="{{ photos.getMainPhotoUrl() }}"
                          alt="{{ product.getName() }}"
+                         class="fiche-zoomable"
+                         onclick="ficheLightboxOpen(this)"
                          onerror="ficheImgError(this)">
                     <span class="fiche-photo-label">{{ translations.photo_product|default('Zdjęcie produktu') }}</span>
                 {% else %}
@@ -622,35 +660,25 @@
 
             <div class="row g-3">
 
-                {# Zdjęcia planogramu #}
-                {% set hasPhoto2 = photos and photos.hasPhoto2() %}
-                {% set hasPhoto3 = photos and photos.hasPhoto3() %}
-                {% if hasPhoto2 or hasPhoto3 %}
-                    <div class="col-12 col-md-{{ package and package.hasMaterials() ? '5' : '12' }}">
-                        <div class="plano-photos">
-                            {% if hasPhoto2 %}
-                                <div class="plano-photo">
-                                    <img src="{{ photos.getPhoto2Url() }}"
-                                         alt="{{ product.getName() }} – 2"
-                                         onerror="ficheImgErrorSmall(this)">
-                                    <span class="fiche-photo-label">{{ translations.photo_presentation|default('Prezentacja') }}</span>
-                                </div>
-                            {% endif %}
-                            {% if hasPhoto3 %}
-                                <div class="plano-photo">
-                                    <img src="{{ photos.getPhoto3Url() }}"
-                                         alt="{{ product.getName() }} – 3"
-                                         onerror="ficheImgErrorSmall(this)">
-                                    <span class="fiche-photo-label">{{ translations.photo_display|default('Ekspozycja') }}</span>
-                                </div>
-                            {% endif %}
-                        </div>
+                                {# Planogram – modul Prezentacja i Ekspozycja do dobudowania w przyszlosci #}
+                <div class="col-12 col-md-6">
+                    <div class="plano-photo" style="height:120px; flex-direction:column; gap:6px;">
+                        <i class="bi bi-easel" style="font-size:1.8rem; color:#ced4da"></i>
+                        <span style="font-size:0.78rem; color:#adb5bd">{{ translations.photo_presentation|default('Prezentacja') }}</span>
+                        <span style="font-size:0.68rem; color:#ced4da; font-style:italic">{{ translations.coming_soon|default('Wkrótce') }}</span>
                     </div>
-                {% endif %}
+                </div>
+                <div class="col-12 col-md-6">
+                    <div class="plano-photo" style="height:120px; flex-direction:column; gap:6px;">
+                        <i class="bi bi-layout-wtf" style="font-size:1.8rem; color:#ced4da"></i>
+                        <span style="font-size:0.78rem; color:#adb5bd">{{ translations.photo_display|default('Ekspozycja') }}</span>
+                        <span style="font-size:0.68rem; color:#ced4da; font-style:italic">{{ translations.coming_soon|default('Wkrótce') }}</span>
+                    </div>
+                </div>
 
                 {# Opakowanie – tabela materiałów #}
                 {% if package and package.hasMaterials() %}
-                    <div class="col-12 col-md-{{ (hasPhoto2 or hasPhoto3) ? '7' : '12' }}">
+                    <div class="col-12">
                         <h6 class="fiche-section-title mb-2" style="margin-top:0">
                             <i class="bi bi-box me-1"></i>{{ translations.packaging_materials|default('Materiały opakowaniowe') }}
                         </h6>
@@ -678,7 +706,7 @@
                 {% endif %}
 
                 {# Fallback – brak zdjęć i opakowania #}
-                {% if not hasPhoto2 and not hasPhoto3 and (not package or not package.hasMaterials()) %}
+                {% if not package or not package.hasMaterials() %}
                     <div class="col-12 text-center text-muted py-3">
                         <i class="bi bi-image" style="font-size:2rem"></i>
                         <p class="mt-2 small">{{ translations.no_media|default('Brak zdjęć i materiałów opakowaniowych') }}</p>
@@ -690,12 +718,79 @@
 
     </div>{# /fiche-wrap #}
 
+
+    {# ---- GALERIA ZDJEC ---- #}
+    {% set hasPhoto1gallery = photos and photos.hasPhoto1() %}
+    {% set hasPhoto2gallery = photos and photos.hasPhoto2() %}
+    {% set hasPhoto3gallery = photos and photos.hasPhoto3() %}
+    {% set hasMainGallery = photos and photos.hasMainPhoto() %}
+    {% if hasPhoto1gallery or hasPhoto2gallery or hasPhoto3gallery or hasMainGallery %}
+    <div class="fiche-wrap mb-4">
+        <div class="fiche-plano">
+            <div class="fiche-plano-header">
+                <span class="fiche-plano-title">
+                    <i class="bi bi-images me-1"></i>{{ translations.photos|default('Zdjecia') }}
+                </span>
+            </div>
+            <div class="plano-photos">
+                {% if hasPhoto1gallery %}
+                    <div class="plano-photo">
+                        <img src="{{ photos.getPhoto1Url() }}"
+                             alt="{{ product.getName() }} - photo 1"
+                             class="fiche-zoomable"
+                             onclick="ficheLightboxOpen(this)"
+                             onerror="ficheImgErrorSmall(this)">
+                        <span class="fiche-photo-label">{{ translations.photo_1|default('Zdjecie 1') }}</span>
+                    </div>
+                {% endif %}
+                {% if hasPhoto2gallery %}
+                    <div class="plano-photo">
+                        <img src="{{ photos.getPhoto2Url() }}"
+                             alt="{{ product.getName() }} - photo 2"
+                             class="fiche-zoomable"
+                             onclick="ficheLightboxOpen(this)"
+                             onerror="ficheImgErrorSmall(this)">
+                        <span class="fiche-photo-label">{{ translations.photo_2|default('Zdjecie 2') }}</span>
+                    </div>
+                {% endif %}
+                {% if hasPhoto3gallery %}
+                    <div class="plano-photo">
+                        <img src="{{ photos.getPhoto3Url() }}"
+                             alt="{{ product.getName() }} - photo 3"
+                             class="fiche-zoomable"
+                             onclick="ficheLightboxOpen(this)"
+                             onerror="ficheImgErrorSmall(this)">
+                        <span class="fiche-photo-label">{{ translations.photo_3|default('Zdjecie 3') }}</span>
+                    </div>
+                {% endif %}
+                {% if hasMainGallery %}
+                    <div class="plano-photo">
+                        <img src="{{ photos.getMainPhotoUrl() }}"
+                             alt="{{ product.getName() }} - main"
+                             class="fiche-zoomable"
+                             onclick="ficheLightboxOpen(this)"
+                             onerror="ficheImgErrorSmall(this)">
+                        <span class="fiche-photo-label">{{ translations.main_photo|default('Glowne') }}</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     {# Przycisk powrotu #}
     <div class="mb-4">
         <a href="{{ ROOT }}/knowledge/products" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left me-2"></i>{{ translations.back_to_products|default('Wróć do listy produktów') }}
         </a>
     </div>
+
+    {# Lightbox #}
+    <div class="fiche-lightbox" id="ficheLightbox" onclick="ficheLightboxClose()">
+        <span class="fiche-lightbox-close" onclick="ficheLightboxClose()">&times;</span>
+        <img id="ficheLightboxImg" src="" alt="" onclick="event.stopPropagation()">
+    </div>
+
 
 {% endblock %}
 
@@ -712,5 +807,20 @@ function ficheImgErrorSmall(img) {
     img.remove();
     p.innerHTML = '<i class="bi bi-image" style="font-size:2rem;color:#ced4da"></i>';
 }
+function ficheLightboxOpen(img) {
+    var lb = document.getElementById('ficheLightbox');
+    var lbImg = document.getElementById('ficheLightboxImg');
+    lbImg.src = img.src;
+    lbImg.alt = img.alt;
+    lb.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+function ficheLightboxClose() {
+    document.getElementById('ficheLightbox').classList.remove('active');
+    document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') ficheLightboxClose();
+});
 </script>
 {% endblock %}

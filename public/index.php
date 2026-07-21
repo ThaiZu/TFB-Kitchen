@@ -3,13 +3,13 @@
 use App\Kitchen\app\Services\Auth\JwtService;
 use App\Kitchen\core\Bootstrap\App;
 use App\Kitchen\core\Support\GlobalRegistry;
-use Dotenv\Dotenv;
+//use Dotenv\Dotenv;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
 // Załaduj .env
-$dotenv = Dotenv::createImmutable(__DIR__ . '/../../', null, false);
-$dotenv->load();
+//$dotenv = Dotenv::createImmutable(__DIR__ . '/../../', null, false);
+//$dotenv->load();
 
 require __DIR__ . '/../config/app.php';
 require __DIR__ . '/../src/core/Support/functions.php';

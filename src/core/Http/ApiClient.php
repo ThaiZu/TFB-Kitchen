@@ -9,20 +9,21 @@ use CURLFile;
 class ApiClient
 {
     private $baseUrl;
-    private $jwtToken;
+    private $cookieManager;
     private $userHeaderProvider;
 
     public function __construct($baseUrl, CookieManager $cookieManager, UserHeaderProvider $userHeaderProvider)
     {
         $this->baseUrl = $baseUrl;
-        $this->jwtToken = $cookieManager->getAccessToken();
+        $this->cookieManager = $cookieManager;
         $this->userHeaderProvider = $userHeaderProvider;
     }
 
     private function getHeaders() {
         $headers = [];
-        if ($this->jwtToken) {
-            $headers[] = 'Authorization: Bearer ' . $this->jwtToken;
+        $jwtToken = $this->cookieManager->getAccessToken();
+        if ($jwtToken) {
+            $headers[] = 'Authorization: Bearer ' . $jwtToken;
         }
 
         $language = $this->userHeaderProvider->getLanguage();
@@ -159,7 +160,6 @@ class ApiClient
         curl_setopt($ch, CURLOPT_HTTPHEADER, array_merge($headers, ['Content-Type: application/json']));
 
         $result = curl_exec($ch);
-
 
         curl_close($ch);
 

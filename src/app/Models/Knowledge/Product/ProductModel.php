@@ -21,6 +21,7 @@ class ProductModel implements JsonSerializable{
     private $nutriscore;
     private $allergene;
     private $suggested_sale_price;
+    private $portion_price;
     private $quantity_per_label;
     private $is_piece_based;
     private $id_package;
@@ -52,6 +53,7 @@ class ProductModel implements JsonSerializable{
         $this->nutriscore = $data['nutriscore'] ?? null;
         $this->allergene = $data['allergene'] ?? null;
         $this->suggested_sale_price = $data['suggested_sale_price'] ?? null;
+        $this->portion_price = $data['portion_price'] ?? null;
         $this->quantity_per_label = $data['quantity_per_label'] ?? null;
         $this->is_piece_based = $data['is_piece_based'] ?? null;
         $this->id_package = $data['id_package'] ?? null;
@@ -86,6 +88,7 @@ class ProductModel implements JsonSerializable{
             'nutriscore' => $this->nutriscore,
             'allergene' => $this->allergene,
             'suggested_sale_price' => $this->suggested_sale_price,
+            'portion_price' => $this->portion_price,
             'quantity_per_label' => $this->quantity_per_label,
             'is_piece_based' => $this->is_piece_based,
             'id_package' => $this->id_package,
@@ -122,6 +125,7 @@ class ProductModel implements JsonSerializable{
     public function getNutriscore() { return $this->nutriscore; }
     public function getAllergene() { return $this->allergene; }
     public function getSuggestedSalePrice() { return $this->suggested_sale_price; }
+    public function getPortionPrice() { return $this->portion_price; }
     public function getQuantityPerLabel() { return $this->quantity_per_label; }
     public function getIsPieceBased() { return $this->is_piece_based; }
     public function getIdPackage() { return $this->id_package; }

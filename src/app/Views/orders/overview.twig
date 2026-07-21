@@ -128,9 +128,14 @@
             —
             <span class="text-primary">{{ date | date('d.m.Y') }}</span>
         </span>
-        <span class="badge bg-primary">
-            {{ orders | length }} {{ translations.orders_count | default('zamówień') }}
-        </span>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-primary">
+                {{ orders | length }} {{ translations.orders_count | default('zamówień') }}
+            </span>
+            <a href="{{ ROOT }}/orders/new" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-circle me-1"></i>{{ translations.new_order | default('Nowe zamówienie') }}
+            </a>
+        </div>
     </div>
 
     <div class="card-body p-0">
@@ -215,6 +220,11 @@
 
                             {# Akcja – szczegóły #}
                             <td>
+                                <a href="{{ ROOT }}/orders/{{ order.getId() }}/edit"
+                                   class="btn btn-sm btn-outline-secondary me-1"
+                                   title="{{ translations.edit_order | default('Edytuj') }}">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
                                 <a href="{{ ROOT }}/orders/{{ order.getId() }}"
                                    class="btn btn-sm btn-outline-primary"
                                    title="{{ translations.view_details | default('Szczegóły') }}">

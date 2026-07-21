@@ -41,5 +41,21 @@ class OrderService
     {
         return $this->orderRepository->getById($id);
     }
+
+    public function insert(array $data): array
+    {
+        $data['id_shop'] = (int)(GlobalRegistry::get('user')['shop_id'] ?? 0);
+        return $this->orderRepository->insert($data);
+    }
+
+    public function update(int $id, array $data): array
+    {
+        return $this->orderRepository->update($id, $data);
+    }
+
+    public function delete(int $id): array
+    {
+        return $this->orderRepository->delete($id);
+    }
 }
 

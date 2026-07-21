@@ -10,6 +10,11 @@ return function (RouteCollector $r) {
         'method' => 'index'
     ]);
 
+    $r->addRoute('POST', '/ajax/clients', [
+        'controller' => \App\Kitchen\app\Http\Controllers\Client\ClientController::class,
+        'method' => 'ajaxInsert'
+    ]);
+
     $r->addRoute('GET', '/clients/{clientId:\d+}/price-list', [
         'controller' => \App\Kitchen\app\Http\Controllers\Price\PriceController::class,
         'method' => 'priceList'

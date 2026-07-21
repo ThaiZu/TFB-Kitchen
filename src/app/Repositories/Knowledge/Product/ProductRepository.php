@@ -14,13 +14,25 @@ class ProductRepository
     {
     }
 
-    public function getAll($langCode = "pl")
+    public function getAvailableToSale(int $shopId, array $options = [])
     {
-        $queryStr = "?" . http_build_query([
-                'lang_code' => $langCode
-            ]);
+        $params = [];
 
-        $response = $this->apiClient->get("/products$queryStr");
+        if (isset($options['include']) && $options['include']) {
+            $params[] = "include=" . implode(",", $options['include']);
+        }
+
+        if (isset($options['period'])) {
+            $params[] = "period=" . $options['period'];
+        }
+
+        if (isset($options['date'])) {
+            $params[] = "date=" . $options['date'];
+        }
+
+        $queryStr = $params ? "?" . implode("&", $params) : "";
+
+        $response = $this->apiClient->get("/shops/$shopId/products/available$queryStr");
 
         $objects = [];
 
