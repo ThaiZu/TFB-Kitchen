@@ -1,0 +1,91 @@
+{
+  "key": "kitchen",
+  "slug": "kitchen",
+  "group": "Terrain",
+  "icon": "chef-hat",
+  "isNew": true,
+  "sortOrder": 7,
+  "name": {
+    "fr": "Cuisine",
+    "en": "Kitchen",
+    "ar": "المطبخ"
+  },
+  "description": {
+    "fr": "L'app de la cuisine du magasin : production du jour, checklists, fiches techniques.",
+    "en": "The store kitchen's app: today's production, checklists, technical sheets.",
+    "ar": "تطبيق مطبخ الفرع: إنتاج اليوم، وقوائم المهام، والبطاقات الفنية."
+  },
+  "overview": {
+    "fr": "Une application installable, tenue à une main derrière le plan de travail. Elle dit à l'équipe ce qu'il faut produire aujourd'hui, dans quel ordre, avec les fiches produit et les recettes à portée. Les checklists remplacent les feuilles plastifiées, et les réclamations client remontent depuis le poste où le problème a été vu.",
+    "en": "An installable app, held one-handed behind the worktop. It tells the team what to produce today and in what order, with product sheets and recipes within reach. Checklists replace laminated sheets, and customer complaints are raised from the station where the problem was seen."
+  },
+  "metric": {
+    "value": "0",
+    "label": { "fr": "feuille plastifiée au mur", "en": "laminated sheet on the wall" }
+  },
+  "features": [
+    {
+      "key": "production",
+      "icon": "list-checks",
+      "name": { "fr": "Production du jour", "en": "Today's production" },
+      "description": {
+        "fr": "Ce qu'il y a à faire aujourd'hui, avec l'avancement par tâche : à faire, en cours, terminé. Le tableau de bord ouvre sur cet état, pas sur un menu.",
+        "en": "What has to be made today, with per-task progress: to do, in progress, done. The dashboard opens on that state, not on a menu."
+      }
+    },
+    {
+      "key": "checklists",
+      "icon": "clipboard-check",
+      "name": { "fr": "Checklists de poste", "en": "Station checklists" },
+      "description": {
+        "fr": "Les contrôles d'ouverture, de service et de fermeture cochés dans l'app, horodatés et attribués. Ce qui a été fait est prouvable sans classeur.",
+        "en": "Opening, service and closing checks ticked in the app, timestamped and attributed. What was done is provable without a binder."
+      }
+    },
+    {
+      "key": "fiches",
+      "icon": "book-open",
+      "name": { "fr": "Produits et recettes", "en": "Products and recipes" },
+      "description": {
+        "fr": "La base de connaissances de la cuisine : fiche produit, recette, fiche technique. Le même contenu que celui tenu par le fournisseur, consulté au poste de travail.",
+        "en": "The kitchen's knowledge base: product sheet, recipe, technical sheet. The same content the supplier maintains, read at the workstation."
+      }
+    },
+    {
+      "key": "commandes",
+      "icon": "receipt",
+      "name": { "fr": "Commandes à produire", "en": "Orders to produce" },
+      "description": {
+        "fr": "Les commandes qui concernent la cuisine, avec leur détail. La cuisine travaille sur la commande réelle du client, pas sur une recopie.",
+        "en": "The orders that concern the kitchen, in detail. The kitchen works from the customer's real order, not a transcription."
+      }
+    },
+    {
+      "key": "clients",
+      "icon": "users",
+      "name": { "fr": "Clients servis", "en": "Customers served" },
+      "description": {
+        "fr": "Qui est livré, avec quelles particularités. Utile quand une commande B2B revient chaque semaine avec ses contraintes.",
+        "en": "Who is being served, with what particulars. Useful when a B2B order comes back every week with its constraints."
+      }
+    },
+    {
+      "key": "reclamations",
+      "icon": "message-square",
+      "name": { "fr": "Réclamations", "en": "Complaints" },
+      "description": {
+        "fr": "Un problème constaté en production se déclare sur place, avec son motif. Il part vers le fournisseur ou le siège au lieu de rester dans un carnet.",
+        "en": "A problem seen in production is raised on the spot, with its reason. It travels to the supplier or head office instead of staying in a notebook."
+      }
+    },
+    {
+      "key": "hors-ligne",
+      "icon": "smartphone",
+      "name": { "fr": "Installable et hors ligne", "en": "Installable and offline" },
+      "description": {
+        "fr": "L'app s'installe sur le téléphone ou la tablette de la cuisine depuis le navigateur, sans boutique d'applications ni intervention IT, et supporte les coupures réseau du magasin.",
+        "en": "The app installs on the kitchen's phone or tablet straight from the browser — no app store, no IT visit — and copes with the store's network dropouts."
+      }
+    }
+  ]
+}
