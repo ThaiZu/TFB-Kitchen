@@ -53,5 +53,14 @@
   "photo_3": "Foto 3",
   "take_photo": "Foto maken",
   "switch_camera": "Camera wisselen",
-  "capture": "Vastleggen"
+  "capture": "Vastleggen",
+  "or": "of",
+  "remove": "Verwijderen",
+  "scan_qr": "QR-code scannen",
+  "scan_qr_hint": "Vindt het product automatisch",
+  "delivery": "Levering",
+  "expiry_date": "Houdbaarheidsdatum",
+  "to_be_developed": "Te ontwikkelen",
+  "step": "Stap",
+  "optional": "optioneel"
 }

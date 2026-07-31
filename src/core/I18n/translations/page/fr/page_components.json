@@ -53,5 +53,14 @@
   "photo_3": "Photo 3",
   "take_photo": "Prendre une photo",
   "switch_camera": "Changer de caméra",
-  "capture": "Capturer"
+  "capture": "Capturer",
+  "or": "ou",
+  "remove": "Retirer",
+  "scan_qr": "Scanner le code QR",
+  "scan_qr_hint": "Trouve le produit automatiquement",
+  "delivery": "Livraison",
+  "expiry_date": "Date de péremption",
+  "to_be_developed": "À développer",
+  "step": "Étape",
+  "optional": "facultatif"
 }
