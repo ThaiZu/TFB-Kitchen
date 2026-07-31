@@ -163,13 +163,6 @@
         <p class="text-subtitle text-muted">{{ translations.products_overview_subtitle|default('Znajdź produkt i przeglądaj jego kartę techniczną') }}</p>
 
         {# Breadcrumb to show user's location #}
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ ROOT }}">{{ translations.home|default('Home') }}</a></li>
-                <li class="breadcrumb-item"><a href="{{ ROOT }}/knowledge">{{ translations.knowledge|default('Knowledge') }}</a></li>
-                <li class="breadcrumb-item active" aria-current="page">{{ translations.products|default('Products') }}</li>
-            </ol>
-        </nav>
     </div>
 {% endblock %}
 

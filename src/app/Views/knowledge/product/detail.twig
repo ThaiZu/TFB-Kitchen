@@ -422,14 +422,6 @@
     <div class="page-heading">
         <h3>{{ translations.technical_sheet|default('Karta techniczna') }}</h3>
         <p class="text-subtitle text-muted">{{ product.getName() }}</p>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ ROOT }}">{{ translations.home|default('Home') }}</a></li>
-                <li class="breadcrumb-item"><a href="{{ ROOT }}/knowledge">{{ translations.knowledge|default('Wiedza') }}</a></li>
-                <li class="breadcrumb-item"><a href="{{ ROOT }}/knowledge/products">{{ translations.products|default('Produkty') }}</a></li>
-                <li class="breadcrumb-item active" aria-current="page">{{ product.getName() }}</li>
-            </ol>
-        </nav>
     </div>
 {% endblock %}
 

@@ -80,18 +80,6 @@
                 : translations.client_order_subtitle | default('Dodaj klienta i od razu złoż zamówienie na tablecie kuchennym.')
             }}
         </p>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ ROOT }}">{{ translations.home | default('Home') }}</a></li>
-                <li class="breadcrumb-item"><a href="{{ ROOT }}/orders">{{ translations.orders | default('Zamówienia') }}</a></li>
-                <li class="breadcrumb-item active" aria-current="page">
-                    {{ isEditMode
-                        ? translations.edit_client_order | default('Edycja zamówienia')
-                        : translations.new_client_order | default('Nowe zamówienie')
-                    }}
-                </li>
-            </ol>
-        </nav>
     </div>
 {% endblock %}
 

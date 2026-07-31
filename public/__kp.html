@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+    <title>Produits</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/css/bootstrap.css">
+    <link rel="stylesheet" href="/assets/vendors/perfect-scrollbar/perfect-scrollbar.css">
+    <link rel="stylesheet" href="/assets/vendors/bootstrap-icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="shortcut icon" href="/assets/images/favicon.svg" type="image/x-icon">
+    <link rel="stylesheet" href="/assets/css/snackbarStyle.css">
+    <link rel="stylesheet" href="/assets/css/custom.css">
+    <link rel="stylesheet" href="/assets/vendors/dripicons/webfont.css">
+    <link rel="stylesheet" href="/assets/css/pages/dripicons.css">
+    <link rel="stylesheet" href="/assets/vendors/choices.js/choices.min.css" />
+
+    <link rel="stylesheet" href="/assets/css/filepond.css">
+    <link rel="stylesheet" href="/assets/css/filepond-plugin-image-preview.css">
+    <link rel="stylesheet" href="/assets/css/cropper/cropper.css">
+
+        <link rel="stylesheet" href="/assets/css/app-shell.css">
+    <link rel="stylesheet" href="/assets/css/atelier-theme.css">
+
+    <style>
+        /* Przykład: Upewnij się, że nie ma limitów w CSS */
+        .choices__list--multiple {
+            max-height: none;
+        }
+    </style>
+
+    <!-- DISABLE ENTER ON EVERY PAGE -->
+    <script>
+        window.addEventListener('keydown',function(e) {
+            if (e.keyIdentifier=='U+000A' || e.keyIdentifier=='Enter' || e.keyCode==13) {
+                if (e.target.nodeName=='INPUT' && e.target.type=='text') {
+                    e.preventDefault();
+
+                    return false;
+                }
+            }
+        }, true);
+    </script>
+
+    <style>
+    /* ── Liste des produits — pensée pour la tablette ──────────────────
+       C'est le poste de consultation réel : une tablette posée ou tenue
+       près du plan de travail, lue à bout de bras, touchée avec des
+       doigts qui viennent de manipuler de la pâte.
+
+       La grille Bootstrap donnait quatre colonnes dès 992 px. Sur une
+       tablette en paysage, les noms de produits se cassaient en deux
+       lignes et les cartes, de hauteurs inégales, faisaient flotter
+       « Voir la fiche » à des niveaux différents — l'œil n'avait aucune
+       ligne de repère pour parcourir la liste.
+
+       Trois colonnes en paysage, deux en portrait, des cartes de même
+       hauteur avec leur pied aligné.
+       ────────────────────────────────────────────────────────────────── */
+
+    .kp-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+    @media (min-width: 600px)  { .kp-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+    @media (min-width: 900px)  { .kp-grid { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+    @media (min-width: 1400px) { .kp-grid { grid-template-columns: repeat(4, minmax(0,1fr)); } }
+
+    .kp-card {
+        display: flex; flex-direction: column;
+        height: 100%; min-height: 190px;
+        padding: 18px;
+        background: var(--c-surface, #fff);
+        border: 1px solid var(--c-line, rgba(36,26,22,.09));
+        border-radius: var(--r-lg, 18px);
+        box-shadow: var(--sh-2);
+        text-decoration: none;
+        transition: transform .16s var(--ease), box-shadow .2s var(--ease), border-color .16s var(--ease);
+        -webkit-tap-highlight-color: transparent;
+    }
+    @media (hover: hover) {
+        .kp-card:hover { transform: translateY(-3px); box-shadow: var(--sh-3); border-color: var(--c-line-2, rgba(36,26,22,.14)); }
+    }
+    .kp-card:active { transform: scale(.985); }
+
+    /* ── Photo en tête de carte ──
+       573 produits coiffés de la même icône ne se parcourent pas : entre
+       « Assiette - Carpaccio » et « Assiette - Saumon belle-vue », c'est
+       l'image qui tranche, pas le nom. La photo prend donc le haut de la
+       carte, et les repères se posent dessus.
+
+       Sans photo servie par l'API, la zone retombe sur la pastille d'icône
+       d'avant — la carte reste lisible, elle perd seulement son atout. */
+    .kp-photo {
+        position: relative;
+        margin: -18px -18px 12px; /* déborde le padding de la carte */
+        aspect-ratio: 4 / 3;
+        background: linear-gradient(145deg, rgba(141,29,44,.07), rgba(141,29,44,.02));
+        border-bottom: 1px solid var(--c-line, rgba(36,26,22,.09));
+        border-radius: var(--r-lg, 18px) var(--r-lg, 18px) 0 0;
+        overflow: hidden;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .kp-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    /* Sans photo, la zone en 4/3 mangeait la moitié de la carte pour ne rien
+       montrer : sur 573 produits sans image, la liste devenait trois fois
+       plus longue sans rien gagner. Le repli est un simple bandeau. */
+    .kp-photo.is-empty {
+        aspect-ratio: auto; height: 74px;
+        justify-content: flex-end; padding-right: 16px;
+    }
+    /* Dans le bandeau, l'icône centrée passait sous les pastilles : elle se
+       range à droite, les repères restent à gauche, centrés en hauteur. */
+    .kp-photo.is-empty .kp-photo-flags {
+        top: 0; bottom: 0; right: 58px; align-items: center;
+    }
+    .kp-photo-empty { color: var(--c-primary, #8D1D2C); opacity: .35; }
+    .kp-photo-empty svg { width: 26px; height: 26px; }
+
+    /* Repères posés sur la photo, en bas — lus sans descendre. */
+    .kp-photo-flags {
+        position: absolute; left: 10px; right: 10px; bottom: 10px;
+        display: flex; flex-wrap: wrap; gap: 6px;
+    }
+    .kp-photo-flags .kp-flag {
+        background: rgba(255,255,255,.94);
+        box-shadow: 0 3px 10px -5px rgba(70,40,25,.5);
+    }
+
+    .kp-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+    .kp-ic {
+        width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        background: linear-gradient(145deg, rgba(141,29,44,.15), rgba(141,29,44,.04));
+        color: var(--c-primary, #8D1D2C);
+    }
+    .kp-ic svg { width: 22px; height: 22px; display: block; }
+
+    /* Les pastilles portaient une icône qui n'existe pas dans cette
+       version de bootstrap-icons (bi-leaf) : elles s'affichaient vides,
+       deux barres de couleur sans signification. Libellé explicite. */
+    .kp-flags { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+    .kp-flag {
+        display: inline-flex; align-items: center; gap: 5px;
+        font-size: .68rem; font-weight: 700; letter-spacing: .02em;
+        border-radius: 999px; padding: 4px 9px; white-space: nowrap;
+    }
+    .kp-flag svg { width: 12px; height: 12px; flex-shrink: 0; }
+    .kp-flag-veg  { background: rgba(45,122,62,.13);  color: #2D7A3E; }
+    .kp-flag-prep { background: rgba(193,122,42,.16); color: #8a5a12; }
+
+    /* Nom lisible à bout de bras, borné à deux lignes pour que toutes les
+       cartes gardent le même rythme. */
+    .kp-name {
+        font-size: 1.05rem; font-weight: 700; color: var(--c-ink, #241f1c);
+        line-height: 1.3; margin: 0 0 6px;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .kp-cat { font-size: .82rem; color: var(--c-muted, #7a7168); display: flex; align-items: center; gap: 6px; }
+
+    .kp-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .kp-chip {
+        display: inline-flex; align-items: center; gap: 5px;
+        font-size: .78rem; color: var(--c-muted, #7a7168);
+        background: var(--c-bg-2, #F4EFE8);
+        border: 1px solid var(--c-line, rgba(36,26,22,.09));
+        border-radius: 999px; padding: 5px 10px;
+    }
+    .kp-chip svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+    /* Pied poussé en bas : les « Voir la fiche » s'alignent d'une carte à
+       l'autre et donnent une ligne de lecture horizontale. */
+    .kp-foot {
+        margin-top: auto; padding-top: 14px;
+        border-top: 1px solid var(--c-line, rgba(36,26,22,.09));
+        display: flex; align-items: center; justify-content: space-between; gap: 8px;
+        color: var(--c-primary, #8D1D2C); font-weight: 600; font-size: .88rem;
+    }
+    .kp-foot svg { width: 17px; height: 17px; }
+
+    /* ── Recherche ──
+       Sur une liste longue, le champ doit rester à portée sans remonter :
+       il colle sous la barre supérieure. */
+    .kp-search-card { position: sticky; top: 64px; z-index: 5; }
+    .kp-search { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+    .kp-search-field { flex: 1 1 320px; min-width: 0; }
+    .kp-search-field .form-control { min-height: 52px; font-size: 1rem; }
+    .kp-search-cat { flex: 0 1 260px; min-width: 200px; }
+    .kp-search-cat .form-select { min-height: 52px; font-size: 1rem; }
+    @media (max-width: 599px) { .kp-search-card { position: static; } }
+</style>
+</head>
+
+<body>
+
+    <div class="app-topbar">
+        <div class="container">
+            <div class="app-topbar-inner">
+                                <a href="/dashboard" class="app-brand">
+                    <img src="/assets/brand/logo.png" alt="L'Atelier" class="app-brand-logo">
+                    <span class="app-brand-module">Cuisine</span>
+                </a>
+
+                <div class="d-flex align-items-center gap-2">
+                                        <button class="app-hamburger" id="appHamburger"
+                            aria-label="Menu"
+                            aria-expanded="false" aria-controls="appNavSheet">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<main class="app-content">
+    <div class="container py-3">
+            <div class="page-heading">
+        <h3>Produits</h3>
+        <p class="text-subtitle text-muted">Trouvez un produit et consultez sa fiche technique</p>
+
+            </div>
+
+        
+
+
+
+
+
+                    
+        
+
+
+
+
+
+    <div class="row">
+
+                <div class="col-12 mb-4">
+            <div class="card kp-search-card">
+                <div class="card-body">
+                    <div class="kp-search">
+                        <div class="kp-search-field">
+                            <label for="productSearch" class="form-label fw-semibold">
+                                Rechercher
+                            </label>
+                            <input
+                                type="search"
+                                class="form-control"
+                                id="productSearch"
+                                placeholder="Rechercher un produit par nom..."
+                                autocomplete="off"
+                                inputmode="search"
+                            >
+                        </div>
+
+                        <div class="kp-search-cat">
+                            <label for="categoryFilter" class="form-label fw-semibold">
+                                Filtrer par catégorie
+                            </label>
+                            <select class="form-select" id="categoryFilter">
+                                <option value="">Toutes les catégories</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+                <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">Liste des produits</h4>
+                    <span class="badge bg-primary" id="productCount">8 produits</span>
+                </div>
+                <div class="card-body">
+
+                                        <div id="noResults" class="alert alert-info d-none" role="alert">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Aucun produit trouvé correspondant à la recherche
+                    </div>
+
+                                        <div class="kp-grid" id="productsGrid">
+                                                    <div class="product-item"
+                                 data-product-id="6700100"
+                                 data-product-name="croissant pur beurre"
+                                 data-category="viennoiserie">
+                                <a href="/knowledge/products/6700100" class="kp-card">
+
+                                    <div class="kp-photo is-empty">
+                                                                                    <span class="kp-photo-empty" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M3.3 7 12 12l8.7-5"/><path d="M12 22V12"/></svg></span>
+                                        
+                                        <span class="kp-photo-flags">
+                                                                                            <span class="kp-flag kp-flag-veg">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>Végétarien
+                                                </span>
+                                                                                                                                        <span class="kp-flag kp-flag-prep">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Préparé à l&#039;avance
+                                                </span>
+                                                                                    </span>
+                                    </div>
+
+                                    <p class="kp-name product-name">Croissant pur beurre</p>
+                                    <div class="kp-cat">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.41l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".7"/></svg>
+                                        <span class="product-category">Viennoiserie</span>
+                                    </div>
+
+                                    <div class="kp-meta">
+                                                                                    <span class="kp-chip">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>Ambiante
+                                            </span>
+                                                                                                                            <span class="kp-chip">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/><path d="M9 2h6"/></svg>48 h
+                                            </span>
+                                                                            </div>
+
+                                    <div class="kp-foot">
+                                        <span>Voir la fiche</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+                                    </div>
+                                </a>
+                            </div>
+                                                    <div class="product-item"
+                                 data-product-id="6700101"
+                                 data-product-name="pain de campagne 500 g"
+                                 data-category="boulangerie">
+                                <a href="/knowledge/products/6700101" class="kp-card">
+
+                                    <div class="kp-photo is-empty">
+                                                                                    <span class="kp-photo-empty" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M3.3 7 12 12l8.7-5"/><path d="M12 22V12"/></svg></span>
+                                        
+                                        <span class="kp-photo-flags">
+                                                                                            <span class="kp-flag kp-flag-veg">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>Végétarien
+                                                </span>
+                                                                                                                                </span>
+                                    </div>
+
+                                    <p class="kp-name product-name">Pain de campagne 500 g</p>
+                                    <div class="kp-cat">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.41l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".7"/></svg>
+                                        <span class="product-category">Boulangerie</span>
+                                    </div>
+
+                                    <div class="kp-meta">
+                                                                                    <span class="kp-chip">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>Ambiante
+                                            </span>
+                                                                                                                            <span class="kp-chip">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/><path d="M9 2h6"/></svg>24 h
+                                            </span>
+                                                                            </div>
+
+                                    <div class="kp-foot">
+                                        <span>Voir la fiche</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+                                    </div>
+                                </a>
+                            </div>
+                                                    <div class="product-item"
+                                 data-product-id="6700102"
+                                 data-product-name="quiche lorraine"
+                                 data-category="traiteur">
+                                <a href="/knowledge/products/6700102" class="kp-card">
+
+                                    <div class="kp-photo is-empty">
+                                                                                    <span class="kp-photo-empty" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M3.3 7 12 12l8.7-5"/><path d="M12 22V12"/></svg></span>
+                                        
+                                        <span class="kp-photo-flags">
+                                                                                                                                        <span class="kp-flag kp-flag-prep">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Préparé à l&#039;avance
+                                                </span>
+                                                                                    </span>
+                                    </div>
+
+                                    <p class="kp-name product-name">Quiche lorraine</p>
+                                    <div class="kp-cat">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.41l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".7"/></svg>
+                                        <span class="product-category">Traiteur</span>
+                                    </div>
+
+                                    <div class="kp-meta">
+                                                                                    <span class="kp-chip">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>Réfrigéré
+                                            </span>
+                                                                                                                            <span class="kp-chip">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/><path d="M9 2h6"/></svg>72 h
+                                            </span>
+                                                                            </div>
+
+                                    <div class="kp-foot">
+                                        <span>Voir la fiche</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+                                    </div>
+                                </a>
+                            </div>
+                                                    <div class="product-item"
+                                 data-product-id="6700103"
+                                 data-product-name="tarte au citron meringuée"
+                                 data-category="pâtisserie">
+                                <a href="/knowledge/products/6700103" class="kp-card">
+
+                                    <div class="kp-photo is-empty">
+                                                                                    <span class="kp-photo-empty" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M3.3 7 12 12l8.7-5"/><path d="M12 22V12"/></svg></span>
+                                        
+                                        <span class="kp-photo-flags">
+                                                                                            <span class="kp-flag kp-flag-veg">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>Végétarien
+                                                </span>
+                                                                                                                                        <span class="kp-flag kp-flag-prep">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Préparé à l&#039;avance
+                                                </span>
+                                                                                    </span>
+                                    </div>
+
+                                    <p class="kp-name product-name">Tarte au citron meringuée</p>
+                                    <div class="kp-cat">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.41l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".7"/></svg>
+                                        <span class="product-category">Pâtisserie</span>
+                                    </div>
+
+                                    <div class="kp-meta">
+                                                                                    <span class="kp-chip">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>Réfrigéré
+                                            </span>
+                                                                                                                            <span class="kp-chip">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/><path d="M9 2h6"/></svg>48 h
+                                            </span>
+                                                                            </div>
+
+                                    <div class="kp-foot">
+                                        <span>Voir la fiche</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+                                    </div>
+                                </a>
+                            </div>
+                                                    <div class="product-item"
+                                 data-product-id="6700104"
+                                 data-product-name="sandwich poulet crudités"
+                                 data-category="snacking">
+                                <a href="/knowledge/products/6700104" class="kp-card">
+
+                                    <div class="kp-photo is-empty">
+                                                                                    <span class="kp-photo-empty" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M3.3 7 12 12l8.7-5"/><path d="M12 22V12"/></svg></span>
+                                        
+                                        <span class="kp-photo-flags">
+                                                                                                                                        <span class="kp-flag kp-flag-prep">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Préparé à l&#039;avance
+                                                </span>
+                                                                                    </span>
+                                    </div>
+
+                                    <p class="kp-name product-name">Sandwich poulet crudités</p>
+                                    <div class="kp-cat">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.41l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".7"/></svg>
+                                        <span class="product-category">Snacking</span>
+                                    </div>
+
+                                    <div class="kp-meta">
+                                                                                    <span class="kp-chip">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>Réfrigéré
+                                            </span>
+                                                                                                                            <span class="kp-chip">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/><path d="M9 2h6"/></svg>24 h
+                                            </span>
+                                                                            </div>
+
+                                    <div class="kp-foot">
+                                        <span>Voir la fiche</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+                                    </div>
+                                </a>
+                            </div>
+                                                    <div class="product-item"
+                                 data-product-id="6700105"
+                                 data-product-name="éclair au chocolat"
+                                 data-category="pâtisserie">
+                                <a href="/knowledge/products/6700105" class="kp-card">
+
+                                    <div class="kp-photo is-empty">
+                                                                                    <span class="kp-photo-empty" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M3.3 7 12 12l8.7-5"/><path d="M12 22V12"/></svg></span>
+                                        
+                                        <span class="kp-photo-flags">
+                                                                                            <span class="kp-flag kp-flag-veg">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>Végétarien
+                                                </span>
+                                                                                                                                        <span class="kp-flag kp-flag-prep">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Préparé à l&#039;avance
+                                                </span>
+                                                                                    </span>
+                                    </div>
+
+                                    <p class="kp-name product-name">Éclair au chocolat</p>
+                                    <div class="kp-cat">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.41l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".7"/></svg>
+                                        <span class="product-category">Pâtisserie</span>
+                                    </div>
+
+                                    <div class="kp-meta">
+                                                                                    <span class="kp-chip">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>Réfrigéré
+                                            </span>
+                                                                                                                            <span class="kp-chip">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/><path d="M9 2h6"/></svg>36 h
+                                            </span>
+                                                                            </div>
+
+                                    <div class="kp-foot">
+                                        <span>Voir la fiche</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+                                    </div>
+                                </a>
+                            </div>
+                                                    <div class="product-item"
+                                 data-product-id="6700106"
+                                 data-product-name="baguette tradition"
+                                 data-category="boulangerie">
+                                <a href="/knowledge/products/6700106" class="kp-card">
+
+                                    <div class="kp-photo is-empty">
+                                                                                    <span class="kp-photo-empty" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M3.3 7 12 12l8.7-5"/><path d="M12 22V12"/></svg></span>
+                                        
+                                        <span class="kp-photo-flags">
+                                                                                            <span class="kp-flag kp-flag-veg">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>Végétarien
+                                                </span>
+                                                                                                                                </span>
+                                    </div>
+
+                                    <p class="kp-name product-name">Baguette tradition</p>
+                                    <div class="kp-cat">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.41l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".7"/></svg>
+                                        <span class="product-category">Boulangerie</span>
+                                    </div>
+
+                                    <div class="kp-meta">
+                                                                                    <span class="kp-chip">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>Ambiante
+                                            </span>
+                                                                                                                            <span class="kp-chip">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/><path d="M9 2h6"/></svg>12 h
+                                            </span>
+                                                                            </div>
+
+                                    <div class="kp-foot">
+                                        <span>Voir la fiche</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+                                    </div>
+                                </a>
+                            </div>
+                                                    <div class="product-item"
+                                 data-product-id="6700107"
+                                 data-product-name="salade césar"
+                                 data-category="traiteur">
+                                <a href="/knowledge/products/6700107" class="kp-card">
+
+                                    <div class="kp-photo is-empty">
+                                                                                    <span class="kp-photo-empty" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M3.3 7 12 12l8.7-5"/><path d="M12 22V12"/></svg></span>
+                                        
+                                        <span class="kp-photo-flags">
+                                                                                                                                        <span class="kp-flag kp-flag-prep">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Préparé à l&#039;avance
+                                                </span>
+                                                                                    </span>
+                                    </div>
+
+                                    <p class="kp-name product-name">Salade César</p>
+                                    <div class="kp-cat">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.41l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".7"/></svg>
+                                        <span class="product-category">Traiteur</span>
+                                    </div>
+
+                                    <div class="kp-meta">
+                                                                                    <span class="kp-chip">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>Réfrigéré
+                                            </span>
+                                                                                                                            <span class="kp-chip">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/><path d="M9 2h6"/></svg>24 h
+                                            </span>
+                                                                            </div>
+
+                                    <div class="kp-foot">
+                                        <span>Voir la fiche</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+                                    </div>
+                                </a>
+                            </div>
+                                            </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+            </div>
+</main>
+
+<div id="snackbar"></div>
+
+
+
+<div class="app-nav-backdrop" id="appNavBackdrop" aria-hidden="true"></div>
+
+<div class="app-nav-sheet"
+     id="appNavSheet"
+     role="dialog"
+     aria-modal="true"
+     aria-label="Menu">
+
+    <div class="app-nav-sheet-header">
+        <p class="app-nav-sheet-title">Menu</p>
+        <button class="app-nav-sheet-close" id="appNavClose" aria-label="Fermer">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+    </div>
+
+    <div class="app-nav-grid">
+                                <a href="/dashboard"
+               class="app-nav-card  "
+               
+               aria-current="false">
+                <span class="app-nav-card-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="m3 10 9-7 9 7v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 21v-8h6v8"/></svg></span>
+                <span class="app-nav-card-label">Tableau de bord cuisine</span>
+                            </a>
+                                <a href="#"
+               class="app-nav-card  is-disabled"
+               aria-disabled="true" tabindex="-1"
+               aria-current="false">
+                <span class="app-nav-card-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></svg></span>
+                <span class="app-nav-card-label">Production</span>
+                                    <span class="app-nav-card-tag badge bg-warning text-dark">
+                        En construction
+                    </span>
+                            </a>
+                                <a href="/checklists"
+               class="app-nav-card  "
+               
+               aria-current="false">
+                <span class="app-nav-card-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg></span>
+                <span class="app-nav-card-label">Listes de contrôle</span>
+                            </a>
+                                <a href="/orders"
+               class="app-nav-card  "
+               
+               aria-current="false">
+                <span class="app-nav-card-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1z"/><path d="M8 7h8"/><path d="M8 11h8"/><path d="M8 15h5"/></svg></span>
+                <span class="app-nav-card-label">Commandes</span>
+                            </a>
+                                <a href="/knowledge"
+               class="app-nav-card is-active "
+               
+               aria-current="page">
+                <span class="app-nav-card-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M2 6h4"/><path d="M2 10h4"/><path d="M2 14h4"/><path d="M2 18h4"/><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M16 2v20"/></svg></span>
+                <span class="app-nav-card-label">Base de connaissances</span>
+                            </a>
+                                <a href="/complaints"
+               class="app-nav-card  "
+               
+               aria-current="false">
+                <span class="app-nav-card-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg></span>
+                <span class="app-nav-card-label">Réclamations</span>
+                            </a>
+            </div>
+
+                    <a href="/me" class="app-nav-profile ">
+        <span class="app-nav-profile-avatar" aria-hidden="true">AK</span>
+        <span class="app-nav-profile-txt">
+            <span class="app-nav-profile-name">Anna Kowalska</span>
+            <span class="app-nav-profile-sub">Chef de cuisine</span>
+        </span>
+        <span class="app-nav-profile-chev"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></span>
+    </a>
+
+    <a href="/logout" class="app-nav-logout">
+        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+        <span>Déconnexion</span>
+    </a>
+
+    <div class="app-nav-sheet-handle"></div>
+</div>
+
+<script>
+(function () {
+    var btn      = document.getElementById('appHamburger');
+    var sheet    = document.getElementById('appNavSheet');
+    var backdrop = document.getElementById('appNavBackdrop');
+    var closeBtn = document.getElementById('appNavClose');
+    if (!btn || !sheet || !backdrop) return;
+
+    function openMenu() {
+        sheet.classList.add('is-open');
+        backdrop.classList.add('is-open');
+        btn.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+        if (closeBtn) closeBtn.focus();
+    }
+    function closeMenu() {
+        sheet.classList.remove('is-open');
+        backdrop.classList.remove('is-open');
+        btn.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+    }
+    function toggleMenu() {
+        if (sheet.classList.contains('is-open')) { closeMenu(); } else { openMenu(); }
+    }
+
+    btn.addEventListener('click', toggleMenu);
+    backdrop.addEventListener('click', closeMenu);
+    if (closeBtn) closeBtn.addEventListener('click', closeMenu);
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && sheet.classList.contains('is-open')) closeMenu();
+    });
+})();
+</script>
+
+<nav class="app-tabbar-bar" aria-label="Menu">
+    <a href="/dashboard" class="app-tab ">
+        <svg xmlns="http://www.w3.org/2000/svg" width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="m3 10 9-7 9 7v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 21v-8h6v8"/></svg><span>Accueil</span>
+    </a>
+    <span class="app-tab" style="opacity:.4;" aria-disabled="true"
+          title="En construction">
+        <svg xmlns="http://www.w3.org/2000/svg" width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></svg><span>Production</span>
+    </span>
+    <a href="/checklists" class="app-tab ">
+        <svg xmlns="http://www.w3.org/2000/svg" width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg><span>Checklists</span>
+    </a>
+    <a href="/orders" class="app-tab ">
+        <svg xmlns="http://www.w3.org/2000/svg" width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc-icon" aria-hidden="true"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1z"/><path d="M8 7h8"/><path d="M8 11h8"/><path d="M8 15h5"/></svg><span>Commandes</span>
+    </a>
+            <a href="/me" class="app-tab app-tab-profile ">
+        <span class="app-tab-avatar" aria-hidden="true">AK</span>
+        <span>Profil</span>
+    </a>
+</nav>
+
+<script src="/assets/vendors/perfect-scrollbar/perfect-scrollbar.min.js"></script>
+<script src="/assets/js/bootstrap.bundle.min.js"></script>
+<script src="/assets/js/functions.js"></script>
+<script type="module" src="/assets/js/modules.js"></script>
+<script src="/assets/vendors/sweetalert2/sweetalert2.all.min.js"></script>
+<script src="/assets/vendors/choices.js/choices.min.js"></script>
+<script src="/assets/js/cropper/cropper.min.js"></script>
+
+<script>
+    function showSnack(resp, message = "") {
+
+        var x = document.getElementById("snackbar");
+
+        if(resp){
+            x.innerText = message ?? "success";
+            x.style.backgroundColor = '#4cd038';
+        } else {
+            x.innerText = message;
+            x.style.backgroundColor = '#ff6666';
+        }
+        x.className = "show";
+
+        // After 3 seconds, remove the show class from DIV
+        setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    }, false);
+
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('productSearch');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const productsGrid = document.getElementById('productsGrid');
+    const productItems = document.querySelectorAll('.product-item');
+    const noResults = document.getElementById('noResults');
+    const productCount = document.getElementById('productCount');
+
+    // Populate category filter
+    const categories = new Set();
+    productItems.forEach(item => {
+        const category = item.getAttribute('data-category');
+        if (category && category.trim() !== '') {
+            categories.add(category);
+        }
+    });
+
+    // Sort categories and add to select
+    Array.from(categories).sort().forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+        categoryFilter.appendChild(option);
+    });
+
+    // Filter function
+    function filterProducts() {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        const selectedCategory = categoryFilter.value.toLowerCase();
+        let visibleCount = 0;
+
+        productItems.forEach(item => {
+            const productName = item.getAttribute('data-product-name');
+            const productCategory = item.getAttribute('data-category');
+
+            const matchesSearch = !searchTerm || productName.includes(searchTerm);
+            const matchesCategory = !selectedCategory || productCategory === selectedCategory;
+
+            if (matchesSearch && matchesCategory) {
+                item.style.display = '';
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        // Update count and show/hide no results message
+        productCount.textContent = visibleCount + ' produits';
+
+        if (visibleCount === 0) {
+            noResults.classList.remove('d-none');
+        } else {
+            noResults.classList.add('d-none');
+        }
+    }
+
+    // Event listeners
+    searchInput.addEventListener('input', filterProducts);
+    categoryFilter.addEventListener('change', filterProducts);
+
+    // Focus au chargement seulement au clavier physique. Sur tablette, il
+    // faisait surgir le clavier virtuel par-dessus la liste : on arrivait sur
+    // l'écran sans voir un seul produit.
+    if (window.matchMedia('(pointer: fine)').matches) {
+        searchInput.focus();
+    }
+});
+</script>
+
+</body>
+</html>

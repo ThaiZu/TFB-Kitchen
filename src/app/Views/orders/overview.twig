@@ -76,12 +76,6 @@
     <div class="page-heading">
         <h3>{{ translations.orders_title | default('Zamówienia klientów') }}</h3>
         <p class="text-subtitle text-muted">{{ translations.orders_subtitle | default('Przeglądaj zamówienia klientów oczekujące na realizację.') }}</p>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ ROOT }}">{{ translations.home | default('Home') }}</a></li>
-                <li class="breadcrumb-item active" aria-current="page">{{ translations.orders | default('Zamówienia') }}</li>
-            </ol>
-        </nav>
     </div>
 {% endblock %}
 

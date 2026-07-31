@@ -8,13 +8,6 @@
         <p class="text-subtitle text-muted">{{ translations.knowledge_overview_subtitle|default('Przegląd dostępnych zasobów wiedzy w firmie') }}</p>
 
         {# Breadcrumb to show user's location #}
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ ROOT }}">{{ translations.home|default('Home') }}</a></li>
-                <li class="breadcrumb-item">{{ translations.knowledge|default('Knowledge') }}</li>
-                <li class="breadcrumb-item active" aria-current="page">{{ translations.knowledge_overview|default('Overview') }}</li>
-            </ol>
-        </nav>
     </div>
 {% endblock %}
 
