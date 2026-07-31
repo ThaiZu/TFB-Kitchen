@@ -177,6 +177,8 @@
     }
 
     /* ── PIN : quatre cases ── */
+    #modalNoteInput { resize: vertical; min-height: 62px; }
+
     .pin-boxes { display: flex; gap: 10px; }
     .pin-box {
         width: 56px; height: 60px; flex: 0 0 auto;
@@ -573,11 +575,21 @@
                     </select>
                 </div>
 
+                {# La note passe AVANT le PIN : on écrit ce qu'on a constaté,
+                   puis on signe. Le PIN en dernier, juste avant le bouton de
+                   validation, fait de la saisie du code le geste qui conclut. #}
+                <div class="mb-3">
+                    <label for="modalNoteInput" class="form-label fw-semibold">
+                        {{ translations.modal_note_label | default('Notatka (opcjonalnie)') }}
+                    </label>
+                    <textarea id="modalNoteInput" class="form-control" rows="2" maxlength="255"></textarea>
+                </div>
+
                 {# ── PIN ──
                    Quatre chiffres, quatre cases : on voit ce qu'on a saisi et
                    où on en est. Le champ unique en type=password n'appelait pas
                    le pavé numérique de façon fiable et ne montrait rien. #}
-                <div class="mb-3">
+                <div class="mb-1">
                     <label class="form-label fw-semibold">
                         {{ translations.modal_pin_label | default('PIN') }} <span class="text-danger">*</span>
                     </label>
@@ -593,13 +605,6 @@
                         {% endfor %}
                     </div>
                     <input type="hidden" id="modalPinInput">
-                </div>
-
-                <div class="mb-1">
-                    <label for="modalNoteInput" class="form-label fw-semibold">
-                        {{ translations.modal_note_label | default('Notatka (opcjonalnie)') }}
-                    </label>
-                    <input type="text" id="modalNoteInput" class="form-control" maxlength="255">
                 </div>
 
                 <div id="modalPhotoSection" class="mb-1 d-none">
@@ -688,8 +693,16 @@
                 b.classList.add('is-active');
                 sel.value = b.dataset.empId;
                 sel.dispatchEvent(new Event('change', { bubbles: true }));
+                // Focus sur la première case du PIN. Différé d'un tour de
+                // boucle : Bootstrap replace le focus dans la modale au moment
+                // du clic, et le prendrait sinon de vitesse.
                 var first = document.querySelector('.pin-box');
-                if (first) first.focus();
+                if (first) {
+                    setTimeout(function () {
+                        first.focus();
+                        first.select && first.select();
+                    }, 0);
+                }
             });
         }
 
