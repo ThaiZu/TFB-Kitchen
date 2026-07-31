@@ -1,0 +1,153 @@
+name: Deploy to server (SSH / rsync)
+
+# Déploie la PWA Kitchen (app PHP) sur le serveur du client par SSH (rsync),
+# avec les MÊMES secrets que pwa_consultant / WebShop / back_office_ws_franchisee.
+# Les runners GitHub joignent le serveur sur le port 22 ; le sandbox Claude non,
+# d'où ce workflow plutôt qu'un déploiement depuis la session de chat.
+#
+# L'app a son front controller dans public/ (public/index.php). L'URL
+#   https://<host>/kitchen
+# doit donc pointer sur le dossier public/ de l'app, tandis que config/ src/
+# vendor/ vivent un niveau au-dessus, hors du dossier servi par le web.
+#
+# Le segment d'URL n'est PAS libre ici : public/.htaccess fixe
+# « RewriteBase /kitchen/ » et config/app.php construit ROOT = …/kitchen.
+# Changer URL_PATH sans toucher ces deux fichiers casserait le routage et
+# toutes les URL d'assets.
+#
+# Disposition créée sur le serveur :
+#   APP_DIR   = /var/www/app/pwa_kitchen   (app complète : config src vendor public …)
+#   WEB_ROOT  = /var/www/html              (docroot Apache)
+#   symlink   /var/www/html/kitchen -> /var/www/app/pwa_kitchen/public
+#
+# ─── Réglage unique (GitHub → Settings → Secrets and variables → Actions) ─────
+#   Secrets (mêmes noms que pwa_consultant) :
+#     SSH_HOST       IP/hôte du serveur, ex. 185.180.206.46
+#     SSH_USER       utilisateur ssh (un utilisateur de déploiement dédié est préférable)
+#     SSH_PASSWORD   son mot de passe
+#   Variables de dépôt optionnelles (remplacent les défauts ci-dessous) :
+#     SSH_PORT       port ssh          (défaut 22)
+#     APP_DIR        dossier de l'app  (défaut /var/www/app/pwa_kitchen)
+#     WEB_ROOT       docroot Apache    (défaut /var/www/html)
+#     URL_PATH       segment d'URL     (défaut kitchen — voir l'avertissement plus haut)
+#
+#   Prérequis Apache pour que le symlink + .htaccess fonctionnent :
+#     • Options +FollowSymLinks (ou +SymLinksIfOwnerMatch) sur le docroot
+#     • AllowOverride All   (pour que « RewriteBase /kitchen/ » s'applique)
+#     • mod_rewrite activé
+#
+#   Notes :
+#   • Contrairement au consultant, vendor/ n'est PAS committé ici (.gitignore) :
+#     le workflow lance donc composer install avant le rsync.
+#   • rsync tourne SANS --delete : les autres fichiers d'APP_DIR ne sont jamais
+#     effacés. .env est exclu explicitement — il porte les secrets du serveur et
+#     n'est pas dans Git.
+#   • public/.htaccess, lui, EST suivi par Git et sera donc écrasé. S'il portait
+#     des directives ajoutées à la main sur le serveur (SetEnv JWT_SECRET…, la
+#     couche dotenv étant commentée dans public/index.php), elles seraient
+#     perdues : l'étape « Back up server .htaccess » en garde une copie
+#     horodatée à côté et l'affiche dans le log avant l'écrasement.
+#   • SÉCURITÉ : préférer un utilisateur de déploiement non-root + clé SSH au mot
+#     de passe root (remplacer les lignes sshpass par un ssh-agent, retirer
+#     SSH_PASSWORD).
+# ─────────────────────────────────────────────────────────────────────────────
+
+on:
+  push:
+    # La branche de refonte UX est listée à titre TEMPORAIRE, pour pouvoir
+    # publier le nouveau design sur /kitchen avant sa fusion dans master.
+    # À retirer une fois la branche fusionnée.
+    branches: [master, claude/ux-pwa-consultant-t02npa]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP + Composer
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: curl, mbstring
+          tools: composer:v2
+
+      # vendor/ est gitignoré dans ce dépôt : sans cette étape, public/index.php
+      # échouerait sur son require de vendor/autoload.php.
+      - name: Install PHP dependencies (vendor/ is not committed)
+        run: composer install --no-dev --optimize-autoloader --no-interaction --no-progress
+
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: Prepare remote dir + symlink (validates SSH login)
+        env:
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          APP_DIR='${{ vars.APP_DIR || '/var/www/app/pwa_kitchen' }}'
+          WEB_ROOT='${{ vars.WEB_ROOT || '/var/www/html' }}'
+          URL_PATH='${{ vars.URL_PATH || 'kitchen' }}'
+          sshpass -e ssh -p ${{ vars.SSH_PORT || '22' }} \
+            -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "set -e; \
+             mkdir -p '$APP_DIR'; \
+             mkdir -p '$WEB_ROOT'; \
+             ln -sfn '$APP_DIR/public' '$WEB_ROOT/$URL_PATH'; \
+             command -v rsync >/dev/null || { echo 'rsync missing on server — apt-get install -y rsync'; exit 1; }"
+
+      # Le .htaccess du dépôt va écraser celui du serveur. S'il portait des
+      # SetEnv ajoutés à la main, on veut pouvoir les retrouver : copie datée
+      # sur place + affichage intégral dans le log.
+      - name: Back up server .htaccess before it is overwritten
+        env:
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          APP_DIR='${{ vars.APP_DIR || '/var/www/app/pwa_kitchen' }}'
+          sshpass -e ssh -p ${{ vars.SSH_PORT || '22' }} \
+            -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "f='$APP_DIR/public/.htaccess'; \
+             if [ -f \"\$f\" ]; then \
+               cp -p \"\$f\" \"\$f.bak-\$(date +%Y%m%d%H%M%S)\"; \
+               echo '── .htaccess actuellement sur le serveur ──'; cat \"\$f\"; \
+               echo '── fin ──'; \
+             else \
+               echo 'Aucun .htaccess sur le serveur (premier déploiement).'; \
+             fi"
+
+      - name: Deploy app → APP_DIR (rsync)
+        env:
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          APP_DIR='${{ vars.APP_DIR || '/var/www/app/pwa_kitchen' }}'
+          sshpass -e rsync -rltDz --omit-dir-times \
+            --exclude '.git' --exclude '.github' --exclude '.idea' --exclude '.env' \
+            -e "ssh -p ${{ vars.SSH_PORT || '22' }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
+            ./ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:$APP_DIR/"
+
+      - name: Verify served page + theme assets on the server
+        env:
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          sshpass -e ssh -p ${{ vars.SSH_PORT || '22' }} \
+            -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -s << 'REMOTE'
+          BASE="http://localhost/${{ vars.URL_PATH || 'kitchen' }}"
+          echo "== page de l'app : $BASE/ =="
+          code=$(curl -s -o /dev/null -w "%{http_code}" "$BASE/")
+          echo "  HTTP $code  $BASE/"
+          echo "== feuille de style du design system + polices =="
+          for f in assets/css/atelier-theme.css assets/fonts/GC_Vank.ttf assets/fonts/Gotham_Book.otf; do
+            out=$(curl -s -o /dev/null -w "%{http_code} %{size_download}" "$BASE/$f")
+            echo "  $out  $f"
+          done
+          case "$code" in
+            200|301|302) echo "OK — l'app est servie sur $BASE/";;
+            403) echo "ATTENTION : 403 — vérifier Options +FollowSymLinks et AllowOverride All sur le docroot";;
+            404) echo "ATTENTION : 404 — le symlink ou l'Alias ne résout pas ; vérifier que $BASE pointe sur APP_DIR/public";;
+            500) echo "ATTENTION : 500 — souvent des variables d'env manquantes (JWT_SECRET…) ; voir le .htaccess sauvegardé plus haut";;
+            *)   echo "ATTENTION : statut inattendu $code — vérifier la conf Apache + mod_rewrite";;
+          esac
+          REMOTE
