@@ -87,11 +87,7 @@
   width: 38px; height: 38px; border-radius: 11px;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-.app-nav-card-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.app-nav-card-label { font-weight: 700; font-size: .9rem; }
-/* Une section à développer sans un mot d'explication se découvre en cliquant
-   dessus — or elle ne réagit pas. Le sous-titre dit ce qu'elle apportera. */
-.app-nav-card-sub { font-size: .72rem; line-height: 1.35; }
+.app-nav-card-label { font-weight: 700; font-size: .9rem; flex: 1; }
 
 /* Section en construction : présente pour situer le parcours, mais pas
    cliquable — mieux vaut une entrée grisée qu'une entrée absente. */

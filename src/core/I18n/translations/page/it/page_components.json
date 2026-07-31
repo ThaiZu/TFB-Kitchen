@@ -76,7 +76,5 @@
   "sound_order_label": "Suono nuovi ordini",
   "sound_order_hint": "Un segnale acustico avvisa dell'arrivo di un ordine su questo dispositivo.",
   "sound_order_test": "Prova il suono",
-  "stock": "Magazzino",
-  "stock_sub": "Validare gli ordini in arrivo e monitorare le giacenze",
-  "production_sub": "Cosa produrre oggi e in quale ordine"
+  "stock": "Magazzino"
 }

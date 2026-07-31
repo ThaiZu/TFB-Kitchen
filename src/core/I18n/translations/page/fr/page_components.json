@@ -76,7 +76,5 @@
   "sound_order_label": "Son des nouvelles commandes",
   "sound_order_hint": "Un bip signale l'arrivée d'une commande sur cet appareil.",
   "sound_order_test": "Tester le son",
-  "stock": "Stock",
-  "stock_sub": "Valider les commandes entrantes et suivre les états de stock",
-  "production_sub": "Ce qu'il y a à produire aujourd'hui, dans quel ordre"
+  "stock": "Stock"
 }

@@ -76,7 +76,5 @@
   "sound_order_label": "New order sound",
   "sound_order_hint": "A beep signals an incoming order on this device.",
   "sound_order_test": "Test the sound",
-  "stock": "Stock",
-  "stock_sub": "Validate incoming deliveries and track stock levels",
-  "production_sub": "What to produce today, and in what order"
+  "stock": "Stock"
 }

@@ -17,7 +17,6 @@
     {
         key:      'production',
         label:    translations.production ?? 'Production',
-        sub:      translations.production_sub ?? null,
         icon:     'list-checks',
         href:     '#',
         disabled: true
@@ -25,7 +24,6 @@
     {
         key:      'stock',
         label:    translations.stock ?? 'Stock',
-        sub:      translations.stock_sub ?? null,
         icon:     'package',
         href:     '#',
         disabled: true
@@ -79,12 +77,7 @@
                {{ it.disabled ?? false ? 'aria-disabled="true" tabindex="-1"' : '' }}
                aria-current="{{ is_active ? 'page' : 'false' }}">
                 <span class="app-nav-card-icon" aria-hidden="true">{{ icons.svg(it.icon, 20) }}</span>
-                <span class="app-nav-card-txt">
-                    <span class="app-nav-card-label">{{ it.label }}</span>
-                    {% if it.sub is defined and it.sub %}
-                        <span class="app-nav-card-sub">{{ it.sub }}</span>
-                    {% endif %}
-                </span>
+                <span class="app-nav-card-label">{{ it.label }}</span>
                 {% if it.disabled ?? false %}
                     <span class="app-nav-card-tag badge bg-warning text-dark">
                         {{ translations.under_construction ?? 'En construction' }}

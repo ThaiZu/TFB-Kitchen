@@ -76,7 +76,5 @@
   "sound_order_label": "Geluid nieuwe bestellingen",
   "sound_order_hint": "Een pieptoon meldt een binnenkomende bestelling op dit apparaat.",
   "sound_order_test": "Geluid testen",
-  "stock": "Voorraad",
-  "stock_sub": "Inkomende bestellingen valideren en voorraadniveaus volgen",
-  "production_sub": "Wat vandaag te produceren, en in welke volgorde"
+  "stock": "Voorraad"
 }

@@ -76,7 +76,5 @@
   "sound_order_label": "Dźwięk nowych zamówień",
   "sound_order_hint": "Sygnał dźwiękowy informuje o nowym zamówieniu na tym urządzeniu.",
   "sound_order_test": "Przetestuj dźwięk",
-  "stock": "Magazyn",
-  "stock_sub": "Zatwierdzanie dostaw przychodzących i podgląd stanów magazynowych",
-  "production_sub": "Co wyprodukować dzisiaj i w jakiej kolejności"
+  "stock": "Magazyn"
 }
