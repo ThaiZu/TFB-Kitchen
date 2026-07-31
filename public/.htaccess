@@ -1,6 +1,12 @@
 RewriteEngine On
 RewriteBase /kitchen/
 
+# Base de l'API métier, hébergée sur un autre hôte que ce front.
+# Sans elle, config/app.php retombe sur « http://<hôte courant>/api/v1 », qui
+# n'existe pas sur le serveur de test : le sélecteur de magasin du login reste
+# alors vide. Nécessite AllowOverride autorisant SetEnv (mod_env).
+SetEnv KITCHEN_API_BASE https://atelierby.tfbuddy.com/api/v1
+
 # Nie przepisywuj istniejących plików i katalogów
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
