@@ -236,6 +236,7 @@ a .card:active,.card.is-tappable:active { transform:scale(.985); }
 .app-nav-card:active { background: rgba(141,29,44,.07); }
 .app-nav-card.is-active { background: var(--c-primary-soft); }
 .app-nav-card.is-active .app-nav-card-label { color: var(--c-primary); }
+.app-nav-card-sub { color: var(--c-muted); }
 .app-nav-card-icon { background: var(--c-secondary-soft); }
 .app-nav-card-icon svg { color: var(--c-primary); display: block; }
 .app-nav-card.is-active .app-nav-card-icon { background: rgba(141,29,44,.14); }
