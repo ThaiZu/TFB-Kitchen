@@ -1,503 +1,311 @@
 {# production/index.twig
-   Le plan de production du jour, tenu sur une tablette posée près du four.
+   Écran de pilotage de la journée d'atelier, sur tablette posée près du four.
 
-   Trois états bien distincts, et c'est le cœur de l'écran :
-     • le plan n'est pas servi par l'API      → on le dit
-     • le plan est servi mais vide            → « rien de prévu »
-     • le plan est servi et rempli            → les lignes, groupées par statut
-   Confondre les deux premiers ferait croire un matin qu'il n'y a rien à
-   produire. Voir docs/ENDPOINTS_PRODUCTION.md. #}
+   Quatre vues derrière un toggle : les trois périodes (mise en place et
+   produits à sortir) et le stock live (ce qui reste, ce qu'il faut recuire).
+
+   Chaque bloc de données distingue trois états, et ce n'est pas du zèle : une
+   liste vide affichée à la place d'un endpoint muet ferait ouvrir le magasin
+   sans rien en vitrine. Voir docs/ENDPOINTS_PRODUCTION.md. #}
 {% extends "layouts/base.twig" %}
 {% import "components/_icons.twig" as icons %}
 
-{% block title %}{{ translations.production_title | default('Production du jour') }}{% endblock %}
+{% block title %}{{ translations.production_title | default('Production') }}{% endblock %}
 
 {% block head %}
 <style>
-    /* ── Barre de date ───────────────────────────────────────────────────
-       La cuisine regarde surtout aujourd'hui, parfois la veille (ce qui
-       n'est pas sorti) et le lendemain (ce qu'il faut préparer ce soir).
-       Deux flèches larges plutôt qu'un calendrier à ouvrir. */
-    .pr-datebar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .pr-datenav {
-        width: 48px; height: 48px; flex: 0 0 auto;
-        display: inline-flex; align-items: center; justify-content: center;
-        border: 1px solid var(--c-line-2, rgba(36,26,22,.14));
-        border-radius: var(--r-md, 13px);
-        background: #fff; color: var(--c-ink, #241f1c);
-        text-decoration: none;
+    /* ── Toggle quatre positions ─────────────────────────────────────────
+       Un select cacherait trois vues sur quatre derrière un tap. Quatre
+       cibles visibles, hautes de 54 px, se visent avec un doigt fariné. */
+    .pr-toggle {
+        display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+        background: var(--c-bg-2, #F4EFE8);
+        border: 1px solid var(--c-line, rgba(36,26,22,.09));
+        border-radius: var(--r-lg, 18px); padding: 6px;
+    }
+    .pr-tab {
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+        min-height: 54px; padding: 6px 4px; border-radius: var(--r-md, 13px);
+        text-decoration: none; text-align: center;
+        font-size: .84rem; font-weight: 700; line-height: 1.15;
+        color: var(--c-muted, #7a7168); background: transparent;
         -webkit-tap-highlight-color: transparent;
     }
-    .pr-datenav:active { background: var(--c-bg-2, #F4EFE8); }
-    .pr-datefield { flex: 1 1 180px; min-width: 150px; }
-    .pr-datefield input { min-height: 48px; }
-    .pr-today {
-        min-height: 48px; padding: 0 16px; flex: 0 0 auto;
-        display: inline-flex; align-items: center;
-        border-radius: var(--r-md, 13px);
-        text-decoration: none; font-weight: 700; font-size: .88rem;
+    .pr-tab small { font-size: .66rem; font-weight: 600; opacity: .75; }
+    .pr-tab:active { background: rgba(0,0,0,.04); }
+    .pr-tab.is-active {
+        background: var(--c-primary, #8D1D2C); color: #fff;
+        box-shadow: 0 6px 14px -8px rgba(141,29,44,.7);
+    }
+    .pr-tab.is-active small { opacity: .85; }
+    .pr-tab-dot {
+        display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+        background: var(--c-secondary, #F2C9A0); margin-left: 5px; vertical-align: middle;
     }
 
-    /* ── Bandeau de synthèse ─────────────────────────────────────────── */
-    .pr-sum { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .pr-stat {
-        flex: 1 1 90px; min-width: 84px; text-align: center;
-        padding: 10px 8px; border-radius: var(--r-md, 13px);
-        background: var(--c-bg-2, #F4EFE8);
+    /* ── Barre de date ───────────────────────────────────────────────── */
+    .pr-datebar { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+    .pr-datenav {
+        width: 46px; height: 46px; flex: 0 0 auto;
+        display: inline-flex; align-items: center; justify-content: center;
+        border: 1px solid var(--c-line-2, rgba(36,26,22,.14));
+        border-radius: var(--r-md, 13px); background: #fff;
+        color: var(--c-ink, #241f1c); text-decoration: none;
     }
-    .pr-stat b { display: block; font-size: 1.6rem; font-weight: 800; line-height: 1.05; }
-    .pr-stat span {
-        display: block; font-size: .7rem; letter-spacing: .04em;
-        text-transform: uppercase; color: var(--c-muted, #7a7168); margin-top: 2px;
-    }
-    .pr-stat-todo b        { color: var(--c-primary, #8D1D2C); }
-    .pr-stat-progress b    { color: #C17A2A; }
-    .pr-stat-done b        { color: #2D7A3E; }
-    .pr-sum-bar {
-        height: 8px; border-radius: 4px; background: #e6ded3;
-        overflow: hidden; margin-top: 14px;
-    }
-    .pr-sum-bar > span { display: block; height: 100%; background: #2D7A3E; border-radius: 4px; }
-    .pr-sum-pct { font-size: .82rem; color: var(--c-muted, #7a7168); margin: 8px 0 0; }
-    .pr-sum-pct b { color: var(--c-ink, #241f1c); font-weight: 800; }
+    .pr-datefield { flex: 0 1 230px; min-width: 150px; }
+    .pr-datefield input { min-height: 46px; }
+    .pr-today { min-height: 46px; padding: 0 15px; display: inline-flex; align-items: center;
+                border-radius: var(--r-md, 13px); text-decoration: none; font-weight: 700; font-size: .86rem; }
 
-    /* ── Groupes ─────────────────────────────────────────────────────── */
-    .pr-group { margin-top: 22px; }
-    .pr-group-title {
+    /* ── Bandeau MEP ─────────────────────────────────────────────────────
+       Première action de la journée, et rien ne se vend avant elle : elle a
+       droit à la pleine largeur et à la couleur de marque. */
+    .mep-banner {
+        background: var(--c-primary, #8D1D2C); color: #fff;
+        border-radius: var(--r-lg, 18px); padding: 18px 20px;
+        box-shadow: var(--sh-2);
+    }
+    .mep-banner h2 { font-size: 1.05rem; font-weight: 800; margin: 0 0 5px; color: #fff; }
+    .mep-banner p { margin: 0; font-size: .87rem; line-height: 1.5; color: rgba(255,255,255,.88); }
+    .mep-banner-btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+        margin-top: 15px; width: 100%; min-height: 52px;
+        border: 0; border-radius: var(--r-md, 13px);
+        background: #fff; color: var(--c-primary, #8D1D2C);
+        font-family: inherit; font-size: 1rem; font-weight: 800; cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .mep-banner-btn:active { transform: scale(.995); }
+    .mep-banner-meta { margin-top: 10px; font-size: .74rem; color: rgba(255,255,255,.72); }
+
+    .mep-done {
+        display: flex; align-items: center; gap: 10px;
+        background: #eaf4ec; border: 1px solid #cfe6d5;
+        border-radius: var(--r-md, 13px); padding: 13px 16px;
+        color: #1d5a2c; font-size: .88rem; font-weight: 700;
+    }
+
+    /* ── Catégories et produits ──────────────────────────────────────── */
+    .pr-cat { margin-top: 20px; }
+    .pr-cat-title {
         display: flex; align-items: center; gap: 8px;
-        font-size: .78rem; font-weight: 800; letter-spacing: .06em;
-        text-transform: uppercase; color: var(--c-muted, #7a7168);
-        margin: 0 0 10px 2px;
+        font-size: .76rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+        color: var(--c-muted, #7a7168); margin: 0 0 9px 2px;
     }
-    .pr-group-count {
-        min-width: 22px; height: 22px; padding: 0 7px; border-radius: 999px;
+    .pr-cat-count {
+        min-width: 21px; height: 21px; padding: 0 7px; border-radius: 999px;
         background: var(--c-bg-2, #F4EFE8); color: var(--c-ink, #241f1c);
-        font-size: .72rem; line-height: 22px; text-align: center;
+        font-size: .7rem; line-height: 21px; text-align: center;
     }
-
-    /* ── Tuile de production ─────────────────────────────────────────────
-       Même grammaire que les tuiles de tâche des checklists : liseré à
-       gauche pour l'état, titre large, chiffres, un geste principal en
-       pleine largeur et haut de 48 px. */
-    .pr-list { display: flex; flex-direction: column; gap: 10px; }
-    .pr-item {
+    .pr-rows { display: flex; flex-direction: column; gap: 8px; }
+    .pr-row {
+        display: flex; align-items: center; gap: 12px;
         background: var(--c-surface, #fff);
         border: 1px solid var(--c-line, rgba(36,26,22,.09));
-        border-left: 4px solid var(--c-muted, #7a7168);
-        border-radius: var(--r-lg, 18px);
-        box-shadow: var(--sh-2);
-        padding: 14px 16px;
+        border-left: 4px solid var(--c-line-2, rgba(36,26,22,.14));
+        border-radius: var(--r-lg, 18px); padding: 12px 15px;
+        box-shadow: var(--sh-1, 0 1px 2px rgba(0,0,0,.04));
+        text-decoration: none; color: inherit;
     }
-    .pr-item.is-todo        { border-left-color: var(--c-primary, #8D1D2C); }
-    .pr-item.is-in_progress { border-left-color: #C17A2A; }
-    .pr-item.is-done        { border-left-color: #2D7A3E; background: #fcfbf9; }
-
-    .pr-head { display: flex; align-items: flex-start; gap: 12px; }
+    .pr-row.is-mep-pending   { border-left-color: var(--c-primary, #8D1D2C); }
+    .pr-row.is-mep-validated { border-left-color: #2D7A3E; }
     .pr-thumb {
-        width: 54px; height: 54px; flex: 0 0 auto;
-        border-radius: var(--r-md, 13px); object-fit: cover;
-        background: var(--c-bg-2, #F4EFE8);
-        display: flex; align-items: center; justify-content: center;
-        color: var(--c-muted, #7a7168);
+        width: 46px; height: 46px; flex: 0 0 auto; border-radius: var(--r-md, 13px);
+        object-fit: cover; background: var(--c-bg-2, #F4EFE8);
+        display: flex; align-items: center; justify-content: center; color: var(--c-muted, #7a7168);
     }
-    .pr-ttl { flex: 1; min-width: 0; }
-    .pr-name {
-        margin: 0; font-size: 1.05rem; font-weight: 700; line-height: 1.3;
-        color: var(--c-ink, #241f1c); overflow-wrap: anywhere;
+    .pr-row-txt { flex: 1; min-width: 0; }
+    .pr-row-name { font-size: .96rem; font-weight: 700; color: var(--c-ink, #241f1c); line-height: 1.3; overflow-wrap: anywhere; }
+    .pr-row-meta {
+        margin: 4px 0 0; display: flex; flex-wrap: wrap; gap: 4px 9px;
+        font-size: .75rem; color: var(--c-muted, #7a7168);
     }
-    .pr-sub {
-        margin: 3px 0 0; font-size: .8rem; color: var(--c-muted, #7a7168);
-        display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px;
-    }
-    .pr-sub span { display: inline-flex; align-items: center; gap: 4px; }
-    .pr-badge {
-        flex: 0 0 auto; border-radius: 999px; padding: 5px 11px;
-        font-size: .74rem; font-weight: 700; white-space: nowrap;
-    }
-    .pr-badge-todo        { background: #e2e3e5; color: #41464b; }
-    .pr-badge-in_progress { background: #fdf0dd; color: #8a5312; }
-    .pr-badge-done        { background: #d1e7dd; color: #0f5132; }
+    .pr-row-meta span { display: inline-flex; align-items: center; gap: 4px; }
+    .pr-row-qty { flex: 0 0 auto; text-align: right; }
+    .pr-row-qty b { display: block; font-size: 1.25rem; font-weight: 800; line-height: 1.05; color: var(--c-ink, #241f1c); }
+    .pr-row-qty span { display: block; font-size: .66rem; text-transform: uppercase; letter-spacing: .04em; color: var(--c-muted, #7a7168); }
 
-    /* Les chiffres sont ce qu'on vient lire de loin : gros, alignés. */
-    .pr-count {
-        display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap;
-        margin: 13px 0 0;
+    .pr-pill {
+        flex: 0 0 auto; border-radius: 999px; padding: 4px 10px;
+        font-size: .7rem; font-weight: 700; white-space: nowrap;
     }
-    .pr-count-done    { font-size: 1.7rem; font-weight: 800; line-height: 1; color: var(--c-ink, #241f1c); }
-    .pr-count-sep     { font-size: 1.15rem; color: var(--c-muted, #7a7168); }
-    .pr-count-planned { font-size: 1.15rem; font-weight: 700; color: var(--c-muted, #7a7168); }
-    .pr-count-unit    { font-size: .84rem; color: var(--c-muted, #7a7168); }
-    .pr-count-rest {
-        margin-left: auto; font-size: .8rem; color: var(--c-muted, #7a7168);
-        background: var(--c-bg-2, #F4EFE8);
+    .pill-pending   { background: #f4dfe2; color: #7a1524; }
+    .pill-validated { background: #d1e7dd; color: #0f5132; }
+    .pill-skipped   { background: #e2e3e5; color: #41464b; }
+
+    /* ── Stock ───────────────────────────────────────────────────────── */
+    .stk-head {
+        display: flex; align-items: baseline; justify-content: space-between;
+        gap: 10px; flex-wrap: wrap; margin-bottom: 10px;
+    }
+    .stk-hint { font-size: .75rem; color: var(--c-muted, #7a7168); margin: 0; }
+    .stk-row {
+        display: flex; align-items: center; gap: 12px;
+        background: var(--c-surface, #fff);
         border: 1px solid var(--c-line, rgba(36,26,22,.09));
-        border-radius: 999px; padding: 4px 11px;
+        border-left: 4px solid #2D7A3E;
+        border-radius: var(--r-lg, 18px); padding: 12px 15px;
+        box-shadow: var(--sh-1, 0 1px 2px rgba(0,0,0,.04));
     }
-    .pr-count-rest b { color: var(--c-ink, #241f1c); font-weight: 800; }
+    .stk-row.is-low { border-left-color: #C17A2A; }
+    .stk-row.is-out { border-left-color: var(--c-primary, #8D1D2C); background: #fdf7f7; }
+    .stk-qty { flex: 0 0 auto; min-width: 62px; text-align: right; }
+    .stk-qty b { display: block; font-size: 1.5rem; font-weight: 800; line-height: 1; color: var(--c-ink, #241f1c); }
+    .stk-row.is-out .stk-qty b { color: var(--c-primary, #8D1D2C); }
+    .stk-qty span { display: block; font-size: .68rem; color: var(--c-muted, #7a7168); margin-top: 2px; }
 
-    .pr-bar { height: 6px; border-radius: 3px; background: #e6ded3; overflow: hidden; margin-top: 9px; }
-    .pr-bar > span { display: block; height: 100%; border-radius: 3px; background: #C17A2A; }
-    .pr-item.is-done .pr-bar > span { background: #2D7A3E; }
-
-    .pr-note {
-        display: flex; gap: 7px; margin: 11px 0 0;
-        font-size: .86rem; color: #5b524a; line-height: 1.5;
+    /* ── Propositions de recuisson ───────────────────────────────────── */
+    .rbk-card {
+        background: var(--c-surface, #fff);
+        border: 1px solid var(--c-secondary, #F2C9A0);
+        border-left: 4px solid #C17A2A;
+        border-radius: var(--r-lg, 18px); padding: 14px 16px;
+        box-shadow: var(--sh-2); margin-bottom: 10px;
     }
-    .pr-note .lc-icon { flex-shrink: 0; margin-top: 3px; color: var(--c-muted, #7a7168); }
-
-    .pr-actions { display: flex; gap: 9px; margin-top: 13px; }
-    .pr-btn {
-        flex: 1; min-height: 48px;
-        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-        border: 0; border-radius: var(--r-md, 13px);
-        font-family: inherit; font-size: .95rem; font-weight: 700; cursor: pointer;
-        text-decoration: none; -webkit-tap-highlight-color: transparent;
+    .rbk-top { display: flex; align-items: flex-start; gap: 12px; }
+    .rbk-name { flex: 1; min-width: 0; font-size: 1rem; font-weight: 700; color: var(--c-ink, #241f1c); line-height: 1.3; overflow-wrap: anywhere; }
+    .rbk-qty {
+        flex: 0 0 auto; text-align: right;
+        font-size: 1.7rem; font-weight: 800; line-height: 1; color: #8a5312;
     }
-    .pr-btn:active { transform: scale(.99); }
-    .pr-btn[disabled] { opacity: .55; cursor: default; }
-    .pr-btn-start  { background: var(--c-primary, #8D1D2C); color: #fff; }
-    .pr-btn-start:hover  { background: #74101f; color: #fff; }
-    .pr-btn-finish { background: #2D7A3E; color: #fff; box-shadow: 0 8px 18px -10px rgba(45,122,62,.6); }
-    .pr-btn-finish:hover { background: #256633; color: #fff; }
-    /* « +1 » est le geste le plus répété du service : il reste large et à
-       gauche, sous la main qui tient la plaque. */
-    .pr-btn-inc {
-        flex: 0 0 92px;
-        background: var(--c-secondary, #F2C9A0); color: var(--c-on-abricot, #4a2c12);
-        font-size: 1.05rem; font-weight: 800;
-    }
-    .pr-btn-sheet {
-        flex: 0 0 48px; padding: 0;
-        background: #fff; color: var(--c-primary, #8D1D2C);
-        border: 1px solid var(--c-line-2, rgba(36,26,22,.14));
-    }
-    .pr-btn-sheet:hover { background: var(--c-primary-soft, #f4dfe2); color: var(--c-primary, #8D1D2C); }
-
-    .pr-done-info {
-        display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px;
-        font-size: .78rem; color: var(--c-muted, #7a7168);
-    }
-    .pr-done-info span {
+    .rbk-qty small { display: block; font-size: .66rem; font-weight: 700; color: var(--c-muted, #7a7168); margin-top: 3px; text-transform: uppercase; letter-spacing: .04em; }
+    /* Le raisonnement est affiché, pas seulement le résultat : en atelier, une
+       proposition qu'on ne peut pas expliquer est une proposition qu'on
+       n'applique pas. */
+    .rbk-why { display: flex; flex-wrap: wrap; gap: 6px; margin: 11px 0 0; }
+    .rbk-why span {
         display: inline-flex; align-items: center; gap: 5px;
+        font-size: .76rem; color: var(--c-muted, #7a7168);
         background: var(--c-bg-2, #F4EFE8);
         border: 1px solid var(--c-line, rgba(36,26,22,.09));
-        border-radius: 999px; padding: 4px 11px;
+        border-radius: 999px; padding: 4px 10px;
     }
+    .rbk-why b { color: var(--c-ink, #241f1c); font-weight: 800; }
+    .rbk-warn { margin: 9px 0 0; font-size: .76rem; color: #8a5312; display: flex; gap: 6px; }
+    .rbk-btn {
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        width: 100%; min-height: 50px; margin-top: 12px;
+        border: 0; border-radius: var(--r-md, 13px);
+        background: #C17A2A; color: #fff;
+        font-family: inherit; font-size: .96rem; font-weight: 700; cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .rbk-btn:active { transform: scale(.995); }
+    .rbk-btn[disabled] { opacity: .55; cursor: default; }
+
+    /* ── Modale MEP ──────────────────────────────────────────────────── */
+    .mepm-line {
+        display: flex; align-items: center; gap: 11px;
+        padding: 10px 0; border-bottom: 1px solid var(--c-line, rgba(36,26,22,.09));
+    }
+    .mepm-line:last-child { border-bottom: 0; }
+    .mepm-txt { flex: 1; min-width: 0; }
+    .mepm-name { display: block; font-size: .9rem; font-weight: 700; color: var(--c-ink, #241f1c); line-height: 1.3; overflow-wrap: anywhere; }
+    .mepm-planned { display: block; font-size: .74rem; color: var(--c-muted, #7a7168); margin-top: 2px; }
+    .mepm-qty {
+        width: 84px; flex: 0 0 auto; min-height: 48px;
+        text-align: center; font-size: 1.05rem; font-weight: 700;
+    }
+    .mepm-skip {
+        flex: 0 0 auto; width: 46px; height: 46px; padding: 0;
+        display: inline-flex; align-items: center; justify-content: center;
+        border: 1px solid var(--c-line-2, rgba(36,26,22,.14));
+        border-radius: var(--r-md, 13px); background: #fff;
+        color: var(--c-muted, #7a7168); cursor: pointer;
+    }
+    .mepm-skip.is-on { background: #f4dfe2; border-color: var(--c-primary, #8D1D2C); color: var(--c-primary, #8D1D2C); }
+    .mepm-line.is-skipped .mepm-txt { opacity: .45; }
+    .mepm-line.is-skipped .mepm-qty { opacity: .35; }
 
     /* ── États vides ─────────────────────────────────────────────────── */
-    .pr-state { text-align: center; padding: 40px 22px; }
+    .pr-state { text-align: center; padding: 34px 22px; }
     .pr-state .lc-icon { color: var(--c-muted, #7a7168); opacity: .45; }
-    .pr-state p { margin: 14px auto 0; max-width: 46ch; color: var(--c-muted, #7a7168); line-height: 1.6; }
+    .pr-state p { margin: 13px auto 0; max-width: 48ch; color: var(--c-muted, #7a7168); line-height: 1.6; }
 </style>
 {% endblock %}
 
 {% block page_heading %}
     <div class="page-heading">
-        <h3>{{ translations.production_title | default('Production du jour') }}</h3>
+        <h3>{{ translations.production_title | default('Production') }}</h3>
         <p class="text-subtitle text-muted">
-            {{ translations.production_subtitle | default("Ce qu'il y a à produire aujourd'hui, dans l'ordre") }}
+            {{ translations.production_subtitle | default('Mise en place, cuissons et stock de la journée') }}
         </p>
     </div>
 {% endblock %}
 
 {% block content %}
 
-    {# ── Date ── #}
-    <div class="card mb-3">
-        <div class="card-body">
-            <form method="GET" action="{{ ROOT }}/production" class="pr-datebar" id="prDateForm">
-                <a class="pr-datenav"
-                   href="{{ ROOT }}/production?date={{ selected_date|date_modify('-1 day')|date('Y-m-d') }}"
-                   aria-label="{{ translations.prod_prev_day | default('Jour précédent') }}">
-                    {{ icons.svg('chevron-left', 20) }}
-                </a>
-
-                <div class="pr-datefield">
-                    <label for="prDate" class="visually-hidden">{{ translations.prod_date | default('Date') }}</label>
-                    <input type="date" id="prDate" name="date" class="form-control" value="{{ selected_date }}">
-                </div>
-
-                <a class="pr-datenav"
-                   href="{{ ROOT }}/production?date={{ selected_date|date_modify('+1 day')|date('Y-m-d') }}"
-                   aria-label="{{ translations.prod_next_day | default('Jour suivant') }}">
-                    {{ icons.svg('chevron-right', 20) }}
-                </a>
-
-                {% if selected_date != today %}
-                    <a class="pr-today btn btn-outline-primary" href="{{ ROOT }}/production">
-                        {{ translations.prod_today | default("Aujourd'hui") }}
-                    </a>
-                {% endif %}
-
-                {# Sans JavaScript, le champ date a besoin d'un bouton pour partir. #}
-                <noscript>
-                    <button type="submit" class="pr-today btn btn-primary">
-                        {{ translations.prod_apply | default('Afficher') }}
-                    </button>
-                </noscript>
-            </form>
-        </div>
-    </div>
-
-    {% if not plan_available %}
-
-        {# L'API ne sert pas encore le plan. On le dit en toutes lettres : une
-           liste vide laisserait croire qu'il n'y a rien à produire. #}
-        <div class="card">
-            <div class="card-body pr-state">
-                {{ icons.svg('package', 42) }}
-                <p>{{ translations.prod_not_served | default("Le plan de production n'est pas encore servi par l'API.") }}</p>
-            </div>
-        </div>
-
-    {% elseif items is empty %}
-
-        <div class="card">
-            <div class="card-body pr-state">
-                {{ icons.svg('check-check', 42) }}
-                <p>{{ translations.prod_empty | default('Aucune production prévue pour cette date.') }}</p>
-            </div>
-        </div>
-
-    {% else %}
-
-        {# ── Synthèse ── #}
-        <div class="card mb-3">
-            <div class="card-body">
-                <div class="pr-sum">
-                    <div class="pr-stat pr-stat-todo">
-                        <b>{{ summary.todo }}</b><span>{{ translations.prod_todo | default('À faire') }}</span>
-                    </div>
-                    <div class="pr-stat pr-stat-progress">
-                        <b>{{ summary.in_progress }}</b><span>{{ translations.prod_in_progress | default('En cours') }}</span>
-                    </div>
-                    <div class="pr-stat pr-stat-done">
-                        <b>{{ summary.done }}</b><span>{{ translations.prod_done | default('Terminé') }}</span>
-                    </div>
-                </div>
-
-                <div class="pr-sum-bar" aria-hidden="true">
-                    <span style="width: {{ summary.percent }}%"></span>
-                </div>
-                <p class="pr-sum-pct">
-                    {% if summary.todo == 0 and summary.in_progress == 0 %}
-                        {{ translations.prod_all_done | default('Tout est produit') }}
-                    {% else %}
-                        {{ translations.prod_progress | default('Avancement') }} <b>{{ summary.percent }}%</b>
-                    {% endif %}
-                </p>
-            </div>
-        </div>
-
-        {# ── Les trois groupes, dans l'ordre où la cuisine les lit ── #}
-        {% set blocks = [
-            { key: 'in_progress', label: translations.prod_in_progress | default('En cours') },
-            { key: 'todo',        label: translations.prod_todo        | default('À faire') },
-            { key: 'done',        label: translations.prod_done        | default('Terminé') }
-        ] %}
-
-        {% for b in blocks %}
-            {% set rows = groups[b.key] %}
-            {% if rows is not empty %}
-                <section class="pr-group">
-                    <h2 class="pr-group-title">
-                        {{ b.label }}<span class="pr-group-count">{{ rows|length }}</span>
-                    </h2>
-
-                    <div class="pr-list">
-                        {% for it in rows %}
-                            {% set st = it.status|lower %}
-                            <article class="pr-item is-{{ st }}"
-                                     data-item-id="{{ it.id }}"
-                                     data-status="{{ it.status }}"
-                                     data-done="{{ it.quantityDone }}"
-                                     data-planned="{{ it.quantityPlanned }}">
-
-                                <div class="pr-head">
-                                    {% if it.hasMainPhoto %}
-                                        <img class="pr-thumb" src="{{ it.mainPhotoUrl }}" alt="" loading="lazy">
-                                    {% else %}
-                                        <span class="pr-thumb" aria-hidden="true">{{ icons.svg('package', 22) }}</span>
-                                    {% endif %}
-
-                                    <div class="pr-ttl">
-                                        <h3 class="pr-name">{{ it.name | default('—') }}</h3>
-                                        <p class="pr-sub">
-                                            {% if it.slot %}
-                                                <span>{{ icons.svg('clock', 14) }}{{ it.slot|slice(0,5) }}</span>
-                                            {% endif %}
-                                            {% if it.categoryName %}
-                                                <span>{{ it.categoryName }}</span>
-                                            {% endif %}
-                                        </p>
-                                    </div>
-
-                                    <span class="pr-badge pr-badge-{{ st }}">
-                                        {% if it.isDone %}{{ translations.prod_done | default('Terminé') }}
-                                        {% elseif it.isInProgress %}{{ translations.prod_in_progress | default('En cours') }}
-                                        {% else %}{{ translations.prod_todo | default('À faire') }}{% endif %}
-                                    </span>
-                                </div>
-
-                                <div class="pr-count">
-                                    <span class="pr-count-done" data-role="done">{{ it.quantityDone|number_format(0, ',', ' ') }}</span>
-                                    <span class="pr-count-sep">/</span>
-                                    <span class="pr-count-planned">{{ it.quantityPlanned|number_format(0, ',', ' ') }}</span>
-                                    {% if it.unitName %}<span class="pr-count-unit">{{ it.unitName }}</span>{% endif %}
-                                    {% if not it.isDone %}
-                                        <span class="pr-count-rest">
-                                            {{ translations.prod_remaining | default('Reste') }}
-                                            <b data-role="rest">{{ it.quantityRemaining|number_format(0, ',', ' ') }}</b>
-                                        </span>
-                                    {% endif %}
-                                </div>
-
-                                <div class="pr-bar" aria-hidden="true">
-                                    <span data-role="bar" style="width: {{ it.progressPercent }}%"></span>
-                                </div>
-
-                                {% if it.note %}
-                                    <p class="pr-note">{{ icons.svg('message-square', 15) }}{{ it.note }}</p>
-                                {% endif %}
-
-                                {% if it.isDone %}
-                                    <div class="pr-done-info">
-                                        {% if it.completedAt %}
-                                            <span>{{ icons.svg('check', 13) }}{{ it.completedAt|slice(11,5) }}</span>
-                                        {% endif %}
-                                        {% if it.completedBy %}
-                                            <span>{{ icons.svg('user', 13) }}{{ it.completedBy }}</span>
-                                        {% endif %}
-                                        {% if it.idProduct %}
-                                            <a class="pr-btn pr-btn-sheet" style="flex:0 0 auto;min-height:30px;padding:0 11px;font-size:.78rem;"
-                                               href="{{ ROOT }}/knowledge/products/{{ it.idProduct }}">
-                                                {{ icons.svg('notebook', 14) }}
-                                                {{ translations.prod_open_sheet | default('Fiche technique') }}
-                                            </a>
-                                        {% endif %}
-                                    </div>
-                                {% else %}
-                                    <div class="pr-actions">
-                                        {% if it.isInProgress %}
-                                            <button type="button" class="pr-btn pr-btn-inc" data-action="inc">+1</button>
-                                            <button type="button" class="pr-btn pr-btn-finish" data-action="finish">
-                                                {{ icons.svg('check', 18) }}{{ translations.prod_finish | default('Terminer') }}
-                                            </button>
-                                        {% else %}
-                                            <button type="button" class="pr-btn pr-btn-start" data-action="start">
-                                                {{ icons.svg('play', 16) }}{{ translations.prod_start | default('Démarrer') }}
-                                            </button>
-                                        {% endif %}
-
-                                        {% if it.idProduct %}
-                                            <a class="pr-btn pr-btn-sheet"
-                                               href="{{ ROOT }}/knowledge/products/{{ it.idProduct }}"
-                                               aria-label="{{ translations.prod_open_sheet | default('Fiche technique') }}"
-                                               title="{{ translations.prod_open_sheet | default('Fiche technique') }}">
-                                                {{ icons.svg('notebook', 19) }}
-                                            </a>
-                                        {% endif %}
-                                    </div>
-                                {% endif %}
-                            </article>
-                        {% endfor %}
-                    </div>
-                </section>
-            {% endif %}
+    {# ── Toggle ── #}
+    {% set date_qs = selected_date != today ? '&date=' ~ selected_date : '' %}
+    <nav class="pr-toggle" aria-label="{{ translations.production_title | default('Production') }}">
+        {% for p in periods %}
+            <a class="pr-tab {{ active_view == p.key ? 'is-active' : '' }}"
+               href="{{ ROOT }}/production?view={{ p.key }}{{ date_qs }}"
+               {{ active_view == p.key ? 'aria-current="page"' : '' }}>
+                {{ translations['period_' ~ p.key] ?? (p.label ?? p.key) }}
+                <small>{{ p.start }} – {{ p.end }}</small>
+            </a>
         {% endfor %}
+        <a class="pr-tab {{ active_view == 'stock' ? 'is-active' : '' }}"
+           href="{{ ROOT }}/production?view=stock{{ date_qs }}"
+           {{ active_view == 'stock' ? 'aria-current="page"' : '' }}>
+            {{ translations.prod_view_stock | default('Stock (live)') }}
+        </a>
+    </nav>
 
+    {% if active_view == 'stock' %}
+        {% include "production/_stock.twig" %}
+    {% else %}
+        {# La date ne sert qu'aux vues période : le stock, lui, est toujours
+           celui de maintenant. #}
+        <div class="card mt-3 mb-3">
+            <div class="card-body">
+                <form method="GET" action="{{ ROOT }}/production" class="pr-datebar" id="prDateForm">
+                    <input type="hidden" name="view" value="{{ active_view }}">
+                    <a class="pr-datenav"
+                       href="{{ ROOT }}/production?view={{ active_view }}&date={{ selected_date|date_modify('-1 day')|date('Y-m-d') }}"
+                       aria-label="{{ translations.prod_prev_day | default('Jour précédent') }}">
+                        {{ icons.svg('chevron-left', 20) }}
+                    </a>
+                    <div class="pr-datefield">
+                        <label for="prDate" class="visually-hidden">{{ translations.prod_date | default('Date') }}</label>
+                        <input type="date" id="prDate" name="date" class="form-control" value="{{ selected_date }}">
+                    </div>
+                    <a class="pr-datenav"
+                       href="{{ ROOT }}/production?view={{ active_view }}&date={{ selected_date|date_modify('+1 day')|date('Y-m-d') }}"
+                       aria-label="{{ translations.prod_next_day | default('Jour suivant') }}">
+                        {{ icons.svg('chevron-right', 20) }}
+                    </a>
+                    {% if selected_date != today %}
+                        <a class="pr-today btn btn-outline-primary" href="{{ ROOT }}/production?view={{ active_view }}">
+                            {{ translations.prod_today | default("Aujourd'hui") }}
+                        </a>
+                    {% endif %}
+                    <noscript>
+                        <button type="submit" class="pr-today btn btn-primary">
+                            {{ translations.prod_apply | default('Afficher') }}
+                        </button>
+                    </noscript>
+                </form>
+            </div>
+        </div>
+
+        {% include "production/_period.twig" %}
     {% endif %}
 
 {% endblock %}
 
 {% block scripts %}
-<script>
-(function () {
-    // Changer de date part tout seul ; le bouton reste dans <noscript>.
-    var f = document.getElementById('prDateForm');
-    var d = document.getElementById('prDate');
-    if (f && d) d.addEventListener('change', function () { f.submit(); });
-})();
-</script>
-
-{# ── Avancement ─────────────────────────────────────────────────────────
-   Trois gestes, un seul appel : PATCH /ajax/production/{id}.
-
-   Le serveur arbitre — deux tablettes peuvent pousser en même temps — donc
-   on réaffiche ce qu'il renvoie plutôt que ce qu'on croit avoir fait. Tant
-   que seule la quantité bouge, la tuile se met à jour sur place : recharger
-   la page à chaque « +1 » ferait perdre sa ligne au milieu du service. Si le
-   statut change, la ligne doit changer de groupe : là, on recharge.
-   ──────────────────────────────────────────────────────────────────── #}
-<script>
-(function () {
-    var ROOT  = {{ ROOT | json_encode | raw }};
-    var ERROR = {{ (translations.prod_update_error | default("La mise à jour n'a pas pu être enregistrée.")) | json_encode | raw }};
-
-    function payloadFor(action, card) {
-        var done    = parseFloat(card.dataset.done || '0');
-        var planned = parseFloat(card.dataset.planned || '0');
-        if (action === 'start')  return { status: 'IN_PROGRESS' };
-        if (action === 'inc')    return { quantity_done: Math.min(done + 1, planned > 0 ? planned : done + 1) };
-        if (action === 'finish') return { status: 'DONE', quantity_done: planned };
-        return null;
-    }
-
-    function repaint(card, item) {
-        var planned = parseFloat(item.quantity_planned != null ? item.quantity_planned : card.dataset.planned) || 0;
-        var done    = parseFloat(item.quantity_done != null ? item.quantity_done : card.dataset.done) || 0;
-
-        card.dataset.done = done;
-        card.dataset.planned = planned;
-
-        var elDone = card.querySelector('[data-role="done"]');
-        var elRest = card.querySelector('[data-role="rest"]');
-        var elBar  = card.querySelector('[data-role="bar"]');
-        if (elDone) elDone.textContent = done;
-        if (elRest) elRest.textContent = Math.max(0, planned - done);
-        if (elBar)  elBar.style.width = (planned > 0 ? Math.min(100, Math.round(done / planned * 100)) : 0) + '%';
-    }
-
-    document.addEventListener('click', function (e) {
-        var btn = e.target.closest('.pr-btn[data-action]');
-        if (!btn) return;
-
-        var card = btn.closest('.pr-item');
-        if (!card || !card.dataset.itemId) return;
-
-        var body = payloadFor(btn.dataset.action, card);
-        if (!body) return;
-
-        btn.disabled = true;
-
-        fetch(ROOT + '/ajax/production/' + card.dataset.itemId, {
-            method:      'PATCH',
-            headers:     { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-            credentials: 'same-origin',
-            body:        JSON.stringify(body)
-        })
-        .then(function (r) { return r.json().catch(function () { return null; }); })
-        .then(function (res) {
-            if (!res || !res.success) {
-                showSnack(false, ERROR);
-                btn.disabled = false;
-                return;
-            }
-            var item = res.data || {};
-            // Le statut renvoyé fait autorité : s'il a changé, la ligne
-            // appartient à un autre groupe et la page doit se relire.
-            if (item.status && item.status !== card.dataset.status) {
-                window.location.reload();
-                return;
-            }
-            repaint(card, item);
-            btn.disabled = false;
-        })
-        .catch(function () {
-            showSnack(false, ERROR);
-            btn.disabled = false;
-        });
-    });
-})();
-</script>
+{% if active_view != 'stock' %}
+    <script>
+    (function () {
+        var f = document.getElementById('prDateForm');
+        var d = document.getElementById('prDate');
+        if (f && d) d.addEventListener('change', function () { f.submit(); });
+    })();
+    </script>
+    {% include "production/_mep_modal.twig" %}
+{% else %}
+    {% include "production/_stock_scripts.twig" %}
+{% endif %}
 {% endblock %}

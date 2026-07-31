@@ -1,0 +1,139 @@
+{# production/_stock.twig — le stock live et ce qu'il faut relancer.
+
+   Les propositions de recuisson passent AVANT la liste : c'est ce sur quoi on
+   agit. Le stock complet vient après, trié du plus bas au plus haut.
+
+   Reçoit du contrôleur : stock_available, stock, rebakes_available, rebakes,
+   rebakes_samples, params. #}
+{% import "components/_icons.twig" as icons %}
+
+<div class="mt-3" id="stockRoot"
+     data-url="{{ ROOT }}/ajax/production/stock"
+     data-rebake-url="{{ ROOT }}/ajax/production/rebake">
+
+    {# ── À recuire ── #}
+    <section id="rebakeSection">
+        <div class="stk-head">
+            <h2 class="pr-cat-title mb-0">
+                {{ translations.rebake_title | default('À recuire') }}
+                <span class="pr-cat-count" id="rebakeCount">{{ rebakes|length }}</span>
+            </h2>
+        </div>
+
+        {% if not rebakes_available %}
+            <div class="card">
+                <div class="card-body pr-state">
+                    {{ icons.svg('trending-up', 34) }}
+                    <p>{{ translations.rebake_not_served | default("Le profil de ventes n'est pas encore servi par l'API.") }}</p>
+                </div>
+            </div>
+        {% else %}
+            {% if rebakes_samples is not null and rebakes_samples < params.history_weeks %}
+                {# Une moyenne sur deux mardis n'est pas une tendance. On le dit
+                   plutôt que de la présenter comme telle. #}
+                <p class="rbk-warn mb-2">
+                    {{ icons.svg('alert-triangle', 15) }}
+                    {{ (translations.rebake_samples_low | default('Moyenne sur %s journées seulement.'))|replace({'%s': rebakes_samples}) }}
+                </p>
+            {% endif %}
+
+            <div id="rebakeList">
+                {% for r in rebakes %}
+                    <article class="rbk-card" data-id="{{ r.idProduct }}">
+                        <div class="rbk-top">
+                            <span class="rbk-name">{{ r.name | default('—') }}</span>
+                            <span class="rbk-qty">
+                                {{ r.suggestedQuantity|number_format(0, ',', ' ') }}
+                                <small>
+                                    {% if r.isBatchKnown %}
+                                        {{ r.batchCount }}
+                                        {{ r.batchCount > 1
+                                            ? (translations.rebake_batch_many | default('fournées'))
+                                            : (translations.rebake_batch_one  | default('fournée')) }}
+                                    {% else %}
+                                        {{ r.unitName | default('') }}
+                                    {% endif %}
+                                </small>
+                            </span>
+                        </div>
+
+                        <div class="rbk-why">
+                            <span>{{ translations.rebake_stock | default('Stock') }} <b>{{ r.stock|number_format(0, ',', ' ') }}</b></span>
+                            <span>{{ translations.rebake_expected | default('Ventes prévues') }} <b>{{ r.expectedSales|number_format(1, ',', ' ') }}</b></span>
+                            <span>{{ translations.rebake_projected | default('Projeté') }} <b>{{ r.projected|number_format(1, ',', ' ') }}</b></span>
+                            <span>{{ translations.rebake_window | default('Fenêtre') }} <b>{{ r.windowMinutes }} {{ translations.prod_unit_min | default('min') }}</b></span>
+                        </div>
+
+                        {% if not r.isBatchKnown %}
+                            <p class="rbk-warn">
+                                {{ icons.svg('alert-triangle', 15) }}
+                                {{ translations.rebake_batch_unknown | default("Pas de taille de fournée déclarée.") }}
+                            </p>
+                        {% endif %}
+
+                        <button type="button" class="rbk-btn"
+                                data-id="{{ r.idProduct }}"
+                                data-qty="{{ r.suggestedQuantity }}">
+                            {{ icons.svg('check', 18) }}
+                            {{ translations.rebake_validate | default('Valider la recuisson') }}
+                        </button>
+                    </article>
+                {% endfor %}
+            </div>
+
+            <div class="card {{ rebakes is empty ? '' : 'd-none' }}" id="rebakeEmpty">
+                <div class="card-body pr-state">
+                    {{ icons.svg('check-check', 34) }}
+                    <p>{{ translations.rebake_none | default('Aucune recuisson nécessaire pour l\'instant.') }}</p>
+                </div>
+            </div>
+        {% endif %}
+    </section>
+
+    {# ── Stock ── #}
+    <section class="mt-4">
+        <div class="stk-head">
+            <h2 class="pr-cat-title mb-0">
+                {{ translations.stock_title | default('Stock live') }}
+                <span class="pr-cat-count">{{ stock|length }}</span>
+            </h2>
+            <p class="stk-hint">{{ translations.stock_sorted_hint | default('Trié du plus bas au plus haut.') }}</p>
+        </div>
+
+        {% if not stock_available %}
+            <div class="card">
+                <div class="card-body pr-state">
+                    {{ icons.svg('package', 38) }}
+                    <p>{{ translations.stock_not_served | default("Le stock live n'est pas encore servi par l'API.") }}</p>
+                </div>
+            </div>
+        {% elseif stock is empty %}
+            <div class="card">
+                <div class="card-body pr-state">
+                    {{ icons.svg('package', 38) }}
+                    <p>{{ translations.stock_empty | default('Aucun produit en stock.') }}</p>
+                </div>
+            </div>
+        {% else %}
+            <div class="pr-rows" id="stockList">
+                {% for s in stock %}
+                    <div class="stk-row {{ s.quantity <= 0 ? 'is-out' : (s.quantity <= 5 ? 'is-low' : '') }}">
+                        <span class="pr-row-txt">
+                            <span class="pr-row-name">{{ s.name | default('—') }}</span>
+                            {% if s.categoryName %}
+                                <span class="pr-row-meta"><span>{{ s.categoryName }}</span></span>
+                            {% endif %}
+                        </span>
+                        {% if s.quantity <= 0 %}
+                            <span class="pr-pill pill-pending">{{ translations.stock_out | default('Rupture') }}</span>
+                        {% endif %}
+                        <span class="stk-qty">
+                            <b>{{ s.quantity|number_format(0, ',', ' ') }}</b>
+                            <span>{{ s.unitName | default('') }}</span>
+                        </span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </section>
+</div>

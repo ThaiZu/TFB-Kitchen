@@ -2,141 +2,323 @@
 
 État au 31/07/2026. **Aucun de ces endpoints n'existe encore.** Le front est
 écrit contre ce contrat : le jour où l'API répond, l'écran fonctionne sans
-modification.
+modification. Tant qu'elle ne répond pas, chaque vue affiche un état explicite
+plutôt qu'une liste vide — confondre « rien à produire » et « pas encore servi »
+coûterait une matinée.
 
-## Ce que l'écran doit montrer
-
-D'après `.tfb/module.json` : « Ce qu'il y a à faire aujourd'hui, avec
-l'avancement par tâche : à faire, en cours, terminé. »
-
-Le plan vient du serveur — il n'est pas déduit des commandes du jour. Et
-l'avancement vit côté serveur, pas dans la tablette : deux personnes doivent
-travailler sur la même liste, et le magasin compte souvent plusieurs
-appareils.
+Rappel d'architecture : la PWA n'a **aucune base de données**. Tout ce qui est
+décrit ici doit être détenu et persisté côté back-office.
 
 ---
 
-## 1. Le plan du jour
+## Décisions arrêtées
+
+| Point | Décision |
+|---|---|
+| Calcul de la prévision | L'API sert un **profil de ventes agrégé** ; la PWA en tire la projection et l'arrondi au batch |
+| Moyenne historique | **Même jour de semaine**, moyenne simple sur N semaines (6 par défaut) |
+| Détenteur du stock live | **Le back-office**. La PWA n'écrit jamais dans la caisse |
+| Validation de la MEP | **Ligne par ligne, quantité éditable** |
+
+La PWA ne parle donc **jamais** au POS. Le back-office consolide production et
+ventes ; la caisse s'aligne sur lui. `PosSalesProviderInterface` existe côté
+front pour isoler l'origine des ventes, mais son implémentation lit le
+back-office, pas la caisse.
+
+---
+
+## 0. Configuration du magasin
 
 ```
-GET /shops/{shopId}/production?date=YYYY-MM-DD
+GET /shops/{shopId}/production/config
 ```
 
-`date` optionnelle, défaut : aujourd'hui. La cuisine consulte aussi la veille
-et le lendemain — le plan doit donc être interrogeable sur une date, pas
-seulement « maintenant ».
+```json
+{
+  "success": true,
+  "data": {
+    "periods": [
+      { "key": "morning",   "label": "Matin",       "start": "05:00", "end": "11:00" },
+      { "key": "noon",      "label": "Midi",        "start": "11:00", "end": "14:00" },
+      { "key": "afternoon", "label": "Après-midi",  "start": "14:00", "end": "19:00" }
+    ],
+    "forecast_hours": 2,
+    "history_weeks": 6,
+    "safety_margin": 0
+  }
+}
+```
+
+Facultatif. Sans lui, la PWA retombe sur les constantes de `config/app.php`
+(`PRODUCTION_PERIODS`, `PRODUCTION_FORECAST_HOURS`, `PRODUCTION_HISTORY_WEEKS`,
+`PRODUCTION_SAFETY_MARGIN`). Les bornes horaires codées en dur sont un pari sur
+un magasin type : dès que deux magasins ouvrent à des heures différentes, cet
+endpoint devient nécessaire.
+
+---
+
+## 1. Les produits de production
+
+```
+GET /shops/{shopId}/production/products
+```
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id_product": 6700106,
+      "name": "Croissant pur beurre",
+      "id_category": 12,
+      "category_name": "Viennoiserie",
+      "periods": ["morning", "noon"],
+      "batch_size": 24,
+      "unit_name": "pc",
+      "production_lead_minutes": 40,
+      "is_active": true,
+      "main_photo_path": "r2://products/6700106/main.jpg"
+    }
+  ]
+}
+```
+
+| champ | rôle | obligatoire |
+|---|---|---|
+| `id_product` | clé de jointure avec le stock, la MEP et les ventes | oui |
+| `periods` | **un produit peut appartenir à plusieurs périodes** | oui |
+| `batch_size` | taille de fournée ; la proposition est arrondie à son multiple supérieur | oui |
+| `production_lead_minutes` | temps entre la validation et la disponibilité à la vente | recommandé |
+| `is_active` | un produit inactif ne se produit pas et ne se propose pas | oui |
+| `id_category` / `category_name` | regroupement dans la vue période | recommandé |
+
+**`batch_size` est structurant.** Sans lui, la seule proposition honnête serait
+« il manque 17 croissants », alors que le four sort des plaques de 24. À défaut,
+la PWA traite le produit comme un batch de 1 et le signale.
+
+**`production_lead_minutes` ferme un trou réel.** Une recuisson validée à 15 h 00
+avec 40 minutes de cuisson ne couvre pas les ventes de 15 h 00 à 15 h 40. La
+fenêtre de projection d'un produit est donc `forecast_hours + son lead`.
+
+> **À confirmer** : ce lead est-il une donnée produit stable, ou dépend-il du
+> four et de la charge du moment ? Le front le lit par produit ; s'il doit
+> devenir un réglage magasin, c'est un champ de `production/config`.
+
+---
+
+## 2. La MEP de la veille
+
+```
+GET /shops/{shopId}/mep?date=YYYY-MM-DD
+```
+
+`date` = le jour **de consommation** (aujourd'hui). Le serveur renvoie la MEP
+préparée la veille pour ce jour-là ; la PWA n'a pas à raisonner en J‑1.
 
 ```json
 {
   "success": true,
   "data": {
     "date": "2026-07-31",
-    "items": [
+    "prepared_at": "2026-07-30 18:20:00",
+    "status": "PREPARED",
+    "lines": [
       {
-        "id": 8801,
+        "id": 4401,
         "id_product": 6700106,
         "name": "Croissant pur beurre",
         "category_name": "Viennoiserie",
+        "period": "morning",
         "quantity_planned": 120,
-        "quantity_done": 45,
+        "quantity_validated": null,
         "unit_name": "pc",
-        "status": "IN_PROGRESS",
-        "slot": "06:00",
-        "priority": 1,
-        "note": "Série du matin, avant l'ouverture",
-        "main_photo_path": "r2://products/6700106/main.jpg",
-        "started_at": "2026-07-31 05:40:00",
-        "completed_at": null,
-        "completed_by": "Nathan C."
+        "status": "PREPARED"
       }
     ]
   }
 }
 ```
 
-### Champs
+`status` de la MEP : `PREPARED` (à valider) ou `VALIDATED`. Idem par ligne, plus
+`SKIPPED` pour une ligne écartée.
 
-| champ | rôle | obligatoire |
-|---|---|---|
-| `id` | identifiant de la ligne de production (pas du produit) | oui |
-| `id_product` | pour ouvrir la fiche technique | recommandé |
-| `name` | ce qu'on produit | oui |
-| `quantity_planned` | combien il faut en faire | oui |
-| `quantity_done` | combien sont faits | oui |
-| `unit_name` | pièce, kg, plaque… | recommandé |
-| `status` | `TODO`, `IN_PROGRESS`, `DONE`, `CANCELLED` | oui |
-| `slot` | heure ou créneau visé | recommandé |
-| `priority` | ordre d'exécution, 1 = d'abord | recommandé |
-| `note` | consigne libre | facultatif |
-| `main_photo_path` | même convention `r2://` que les produits | facultatif |
-| `started_at`, `completed_at`, `completed_by` | traçabilité | facultatif |
-
-**`quantity_done` compte.** Une production se fait rarement d'un bloc : on
-enfourne une partie, on reprend plus tard. Un simple booléen fait/pas fait
-obligerait à mentir jusqu'à la fin de la série.
-
-**Le statut et les quantités doivent être cohérents côté serveur** : c'est lui
-qui décide que `quantity_done == quantity_planned` vaut `DONE`. Deux tablettes
-peuvent écrire en même temps ; l'arbitrage ne peut pas vivre dans le
-navigateur.
-
----
-
-## 2. Mettre à jour l'avancement
+### Valider
 
 ```
-PATCH /production/{itemId}
+POST /shops/{shopId}/mep/validate
 ```
 
 ```json
-{ "status": "IN_PROGRESS", "quantity_done": 45, "id_employee": 12 }
+{
+  "date": "2026-07-31",
+  "lines": [
+    { "id": 4401, "quantity": 118 },
+    { "id": 4402, "quantity": 0, "skipped": true }
+  ]
+}
 ```
 
-Les trois champs sont facultatifs et indépendants : on peut incrémenter la
-quantité sans toucher au statut, ou marquer terminé sans compter.
+Une quantité par ligne, éditable : on avait prévu 120 croissants, il en sort
+118. Le stock de départ doit être le réel, pas le prévu — sinon l'écart se
+propage dans toutes les prévisions de la journée.
 
-Réponse : la ligne mise à jour, dans la forme ci-dessus. Le front la réaffiche
-telle quelle plutôt que de deviner le nouvel état.
+Réponse : la MEP mise à jour, dans la forme ci-dessus, **et le stock qui en
+résulte**. C'est cette validation qui rend les produits vendables en caisse.
 
-### Question ouverte : faut-il un PIN ?
+> **À confirmer** : que devient une ligne préparée mais non validée en fin de
+> journée — perte tracée, report sur le lendemain, ou simplement ignorée ? Le
+> front envoie `skipped: true` et n'en fait rien de plus.
 
-Les checklists exigent un PIN employé pour valider une tâche. Faut-il la même
-exigence en production ? Deux lectures :
-
-- **Oui**, si l'avancement est une preuve — qui a produit quoi, à quelle heure.
-- **Non**, si c'est un tableau de bord d'atelier qu'on manipule à quatre mains
-  pendant le service, où chaque validation coûterait quatre chiffres.
-
-Le front est écrit sans PIN. L'ajouter plus tard est simple ; le retirer après
-l'avoir imposé aux équipes l'est moins.
+> **À confirmer** : la validation exige-t-elle un PIN employé, comme les
+> checklists ? Le front est écrit sans. L'ajouter est simple ; le retirer après
+> l'avoir imposé aux équipes l'est moins.
 
 ---
 
-## 3. Compteur, pour le badge de l'onglet
+## 3. Le stock live
+
+```
+GET /shops/{shopId}/stock
+```
+
+```json
+{
+  "success": true,
+  "data": {
+    "updated_at": "2026-07-31 10:42:11",
+    "items": [
+      {
+        "id_product": 6700106,
+        "name": "Croissant pur beurre",
+        "category_name": "Viennoiserie",
+        "quantity": 34,
+        "unit_name": "pc"
+      }
+    ]
+  }
+}
+```
+
+Le back-office est la source de vérité : `quantity` = productions validées −
+ventes, consolidé côté serveur. La PWA ne recalcule rien et ne trie que pour
+l'affichage (croissant : ce qui est en tension d'abord).
+
+Sondé toutes les dix secondes par l'écran, comme le compteur de commandes.
+
+---
+
+## 4. Le profil de ventes (base de la prévision)
+
+```
+GET /shops/{shopId}/sales/profile?date=YYYY-MM-DD&weeks=6&weekday_only=1&granularity=30
+```
+
+C'est **le seul endpoint de prévision**, et il ne prévoit rien : il renvoie ce
+qui s'est vendu, agrégé. La projection est faite par la PWA.
+
+```json
+{
+  "success": true,
+  "data": {
+    "granularity_minutes": 30,
+    "weeks": 6,
+    "weekday_only": true,
+    "samples": 6,
+    "slots": ["06:00", "06:30", "07:00", "…"],
+    "products": [
+      { "id_product": 6700106, "expected": [0.4, 1.2, 3.8, 5.1, "…"] }
+    ]
+  }
+}
+```
+
+`expected[i]` = **moyenne des quantités vendues** sur le créneau `slots[i]`, aux
+`weeks` mêmes jours de semaine précédents (6 derniers mardis pour un mardi).
+Décimal assumé : 3,8 croissants par demi-heure est une information, 4 est un
+arrondi prématuré.
+
+`samples` = nombre de journées réellement agrégées. S'il est inférieur à
+`weeks` (magasin ouvert récemment, jours de fermeture), l'écran le dit plutôt
+que de présenter une moyenne de deux mardis comme une tendance.
+
+**Pourquoi par créneau et non par fenêtre :** la fenêtre de projection diffère
+d'un produit à l'autre — elle inclut son temps de cuisson. Un endpoint qui
+renverrait « les ventes des 2 prochaines heures » obligerait à un appel par
+durée distincte. Des créneaux fixes se somment côté front, une fois.
+
+**Exclure les jours de fermeture** de la moyenne, ou les compter comme zéro ?
+Les compter comme zéro divise la prévision par deux après un jour férié. À
+exclure, donc — et c'est au serveur de le savoir.
+
+---
+
+## 5. Valider une production (MEP ou recuisson)
+
+```
+POST /shops/{shopId}/production/batches
+```
+
+```json
+{
+  "id_product": 6700106,
+  "quantity": 48,
+  "source": "REBAKE",
+  "id_employee": 12
+}
+```
+
+`source` : `MEP` ou `REBAKE`. Réponse : le lot créé **et le stock du produit
+après application**, pour que l'écran réaffiche un chiffre serveur plutôt que
+sa propre addition.
+
+Le serveur arbitre : deux tablettes peuvent valider la même recuisson à
+quelques secondes d'intervalle.
+
+---
+
+## 6. Compteur, pour la pastille de l'onglet
 
 ```
 GET /shops/{shopId}/production/pending-count?date=YYYY-MM-DD
 ```
 
 ```json
-{ "success": true, "data": { "todo": 6, "in_progress": 2, "done": 14 } }
+{ "success": true, "data": { "mep_pending": 12, "rebakes_suggested": 3 } }
 ```
 
-Même logique que `/ajax/orders/pending-count` : sondé toutes les dix secondes,
-il ne renvoie que des nombres.
+Facultatif — sans lui, l'onglet Production n'affiche simplement pas de pastille.
 
-Optionnel — sans lui, l'onglet Production n'affichera simplement pas de
-pastille.
+---
+
+## Ce que la PWA calcule elle-même
+
+Rien qui touche à la vérité des stocks. Uniquement l'arithmétique de
+proposition, dans `ForecastService` — une fonction pure, testable hors HTTP
+(`php bin/forecast-test.php`) :
+
+```
+fenêtre(produit) = [maintenant ; maintenant + forecast_hours + lead(produit)]
+ventes_prévues   = Σ expected[i] pour les créneaux couverts par la fenêtre
+projection       = stock − ventes_prévues − marge_sécurité
+si projection < 0 :
+    besoin     = −projection
+    proposition = ceil(besoin / batch_size) × batch_size
+```
+
+Après chaque recuisson validée, le stock est relu depuis le serveur et la
+projection refaite : une proposition acceptée ne doit pas être reproposée, et
+une vente survenue entre-temps doit être prise en compte.
 
 ---
 
 ## Comportement du front en attendant
 
-`ProductionRepository` appelle déjà ces routes. Tant qu'elles renvoient 404 ou
-une réponse vide, l'écran affiche un état explicite : « le plan de production
-n'est pas encore servi par l'API ». Ni page blanche, ni erreur, ni fausse liste
-vide qui laisserait croire qu'il n'y a rien à produire aujourd'hui — la
-confusion serait pire que l'absence.
+| Endpoint muet | Ce que montre l'écran |
+|---|---|
+| `production/config` | bornes horaires par défaut, sans avertissement (ce sont des réglages, pas des données) |
+| `production/products` | « le catalogue de production n'est pas encore servi par l'API » |
+| `mep` | « la MEP n'est pas encore servie par l'API » — jamais « aucune MEP » |
+| `stock` | « le stock live n'est pas encore servi par l'API » |
+| `sales/profile` | le stock s'affiche, sans proposition de recuisson, et l'écran l'écrit |
 
-L'entrée du menu reste marquée « en construction » jusqu'à ce que l'API
-réponde.
+L'entrée du menu reste marquée « en construction » jusqu'à ce que l'API réponde.

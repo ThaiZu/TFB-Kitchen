@@ -2,14 +2,29 @@
 
 namespace App\Kitchen\app\Services\Production;
 
-use App\Kitchen\app\Models\Production\ProductionItemModel;
+use App\Kitchen\app\Models\Production\MepLineModel;
+use App\Kitchen\app\Models\Production\PeriodModel;
+use App\Kitchen\app\Models\Production\ProductionProductModel;
+use App\Kitchen\app\Models\Production\StockLineModel;
 use App\Kitchen\app\Repositories\Production\ProductionRepository;
 use App\Kitchen\core\Support\GlobalRegistry;
 
+/**
+ * Orchestration du module Production : périodes, MEP, stock, recuissons.
+ *
+ * Le calcul de proposition vit dans ForecastService, qui est pur. Ce
+ * service-ci est celui qui parle au réseau et assemble.
+ */
 class ProductionService
 {
+    /** @var array{periods: PeriodModel[], forecast_hours: float, history_weeks: int, safety_margin: float}|null */
+    private ?array $configCache = null;
+    private bool $configLoaded = false;
+
     public function __construct(
-        private ProductionRepository $productionRepository
+        private ProductionRepository $productionRepository,
+        private ForecastService $forecastService,
+        private PosSalesProviderInterface $salesProvider
     ) {}
 
     private function getShopId(): int
@@ -17,101 +32,219 @@ class ProductionService
         return (int)(GlobalRegistry::get('user')['shop_id'] ?? 0);
     }
 
+    // ── Réglages ─────────────────────────────────────────────────────────
+
     /**
-     * Plan du jour.
+     * Réglages du magasin, avec repli sur les constantes de config/app.php.
      *
-     * @return ProductionItemModel[]|null null quand l'API ne sert pas encore
-     *         le plan — à distinguer d'un tableau vide, qui signifie « rien à
-     *         produire aujourd'hui ».
+     * Contrairement aux données, un réglage absent n'appelle pas de message :
+     * des bornes horaires par défaut restent utilisables, une MEP absente non.
      */
-    public function getPlan(?string $date = null): ?array
+    private function config(): array
+    {
+        if (!$this->configLoaded) {
+            $this->configLoaded = true;
+            $shopId = $this->getShopId();
+            $this->configCache = $shopId > 0 ? $this->productionRepository->getConfig($shopId) : null;
+        }
+
+        if ($this->configCache !== null) {
+            return $this->configCache;
+        }
+
+        return [
+            'periods'        => array_map(fn($p) => new PeriodModel($p), PRODUCTION_PERIODS),
+            'forecast_hours' => (float)PRODUCTION_FORECAST_HOURS,
+            'history_weeks'  => (int)PRODUCTION_HISTORY_WEEKS,
+            'safety_margin'  => (float)PRODUCTION_SAFETY_MARGIN,
+        ];
+    }
+
+    /** @return PeriodModel[] */
+    public function getPeriods(): array
+    {
+        return $this->config()['periods'];
+    }
+
+    public function getParams(): array
+    {
+        $c = $this->config();
+        return [
+            'forecast_hours' => $c['forecast_hours'],
+            'history_weeks'  => $c['history_weeks'],
+            'safety_margin'  => $c['safety_margin'],
+        ];
+    }
+
+    /** La période qui contient l'heure donnée, sinon la première. */
+    public function currentPeriodKey(?string $time = null): string
+    {
+        $time    = $time ?? date('H:i');
+        $periods = $this->getPeriods();
+
+        foreach ($periods as $p) {
+            if ($p->contains($time)) {
+                return $p->getKey();
+            }
+        }
+        // Avant l'ouverture ou après la fermeture : le matin est le point de
+        // départ naturel de la journée d'atelier.
+        return $periods[0]->getKey() ?? 'morning';
+    }
+
+    // ── Catalogue ────────────────────────────────────────────────────────
+
+    /** @return ProductionProductModel[]|null null = catalogue non servi */
+    public function getProducts(): ?array
+    {
+        $shopId = $this->getShopId();
+        return $shopId > 0 ? $this->productionRepository->getProducts($shopId) : null;
+    }
+
+    /**
+     * Les produits d'une période, regroupés par catégorie et triés par nom.
+     *
+     * @param ProductionProductModel[] $products
+     * @return array<string, ProductionProductModel[]>
+     */
+    public function groupByCategory(array $products, string $periodKey): array
+    {
+        $groups = [];
+        foreach ($products as $p) {
+            if (!$p->isActive() || !$p->belongsTo($periodKey)) {
+                continue;
+            }
+            $groups[$p->getCategoryName() ?? '—'][] = $p;
+        }
+
+        ksort($groups, SORT_NATURAL | SORT_FLAG_CASE);
+        foreach ($groups as &$g) {
+            usort($g, fn($a, $b) => strcasecmp((string)$a->getName(), (string)$b->getName()));
+        }
+        unset($g);
+
+        return $groups;
+    }
+
+    // ── MEP ──────────────────────────────────────────────────────────────
+
+    /** @return array{date: string, status: string, prepared_at: ?string, lines: MepLineModel[]}|null */
+    public function getMep(string $date): ?array
+    {
+        $shopId = $this->getShopId();
+        return $shopId > 0 ? $this->productionRepository->getMep($shopId, $date) : null;
+    }
+
+    /**
+     * Lignes de MEP d'une période. Les lignes sans période déclarée sont
+     * montrées partout plutôt que nulle part : mieux vaut une ligne vue deux
+     * fois qu'une ligne oubliée à la cuisson.
+     *
+     * @param MepLineModel[] $lines
+     * @return MepLineModel[]
+     */
+    public function mepLinesForPeriod(array $lines, string $periodKey): array
+    {
+        return array_values(array_filter(
+            $lines,
+            fn(MepLineModel $l) => $l->getPeriod() === null || $l->getPeriod() === strtolower($periodKey)
+        ));
+    }
+
+    /** @param array<int, array{id: int, quantity: float, skipped?: bool}> $lines */
+    public function validateMep(string $date, array $lines): array
+    {
+        $shopId = $this->getShopId();
+        if ($shopId <= 0) {
+            return ['success' => false, 'description' => 'shop_unknown'];
+        }
+        return $this->productionRepository->validateMep($shopId, $date, $lines);
+    }
+
+    // ── Stock ────────────────────────────────────────────────────────────
+
+    /**
+     * Stock live, trié du plus bas au plus haut : les produits en tension
+     * d'abord, c'est l'ordre dans lequel on veut le lire en service.
+     *
+     * @return StockLineModel[]|null
+     */
+    public function getStock(): ?array
     {
         $shopId = $this->getShopId();
         if ($shopId <= 0) {
             return null;
         }
-        return $this->productionRepository->getPlan($shopId, $date ?? date('Y-m-d'));
-    }
 
-    /**
-     * Répartit le plan par statut, dans l'ordre où la cuisine le lit :
-     * ce qui est en cours d'abord, puis ce qui reste, puis ce qui est fait.
-     *
-     * @param ProductionItemModel[] $items
-     * @return array{in_progress: array, todo: array, done: array}
-     */
-    public function groupByStatus(array $items): array
-    {
-        $groups = ['in_progress' => [], 'todo' => [], 'done' => []];
-
-        foreach ($items as $item) {
-            if ($item->isCancelled()) {
-                continue; // une ligne annulée n'a rien à faire dans un plan de travail
-            }
-            if ($item->isInProgress()) {
-                $groups['in_progress'][] = $item;
-            } elseif ($item->isDone()) {
-                $groups['done'][] = $item;
-            } else {
-                $groups['todo'][] = $item;
-            }
+        $stock = $this->productionRepository->getStock($shopId);
+        if ($stock === null) {
+            return null;
         }
 
-        // Priorité déclarée d'abord, puis créneau horaire : c'est l'ordre dans
-        // lequel les choses doivent sortir du four.
-        $sort = function (array &$g) {
-            usort($g, function (ProductionItemModel $a, ProductionItemModel $b) {
-                $pa = $a->getPriority() ?? PHP_INT_MAX;
-                $pb = $b->getPriority() ?? PHP_INT_MAX;
-                if ($pa !== $pb) {
-                    return $pa <=> $pb;
-                }
-                return ($a->getSlot() ?? '99:99') <=> ($b->getSlot() ?? '99:99');
-            });
-        };
-        $sort($groups['in_progress']);
-        $sort($groups['todo']);
-        $sort($groups['done']);
+        usort($stock, function (StockLineModel $a, StockLineModel $b) {
+            $c = $a->getQuantity() <=> $b->getQuantity();
+            return $c !== 0 ? $c : strcasecmp((string)$a->getName(), (string)$b->getName());
+        });
 
-        return $groups;
+        return $stock;
     }
 
+    // ── Recuissons ───────────────────────────────────────────────────────
+
     /**
-     * Totaux affichés en tête d'écran.
+     * Propositions de recuisson pour l'instant présent.
      *
-     * @param ProductionItemModel[] $items
+     * @param ProductionProductModel[]|null $products
+     * @param StockLineModel[]|null         $stock
+     *
+     * @return array{available: bool, samples: ?int, suggestions: array}
+     *         available = false quand le profil de ventes n'est pas servi ;
+     *         l'écran l'écrit au lieu de laisser croire qu'il n'y a rien à
+     *         recuire.
      */
-    public function summarise(array $items): array
+    public function getRebakeSuggestions(?array $products, ?array $stock, ?string $date = null, ?string $time = null): array
     {
-        $todo = $inProgress = $done = 0;
-        $plannedTotal = $doneTotal = 0.0;
-
-        foreach ($items as $item) {
-            if ($item->isCancelled()) {
-                continue;
-            }
-            $plannedTotal += $item->getQuantityPlanned();
-            $doneTotal    += $item->getQuantityDone();
-
-            if ($item->isDone())            { $done++; }
-            elseif ($item->isInProgress())  { $inProgress++; }
-            else                            { $todo++; }
+        if ($products === null || $stock === null) {
+            return ['available' => false, 'samples' => null, 'suggestions' => []];
         }
+
+        $shopId = $this->getShopId();
+        $params = $this->getParams();
+
+        $profile = $shopId > 0
+            ? $this->salesProvider->getProfile($shopId, $date ?? date('Y-m-d'), (int)$params['history_weeks'], true, 30)
+            : null;
+
+        if ($profile === null) {
+            return ['available' => false, 'samples' => null, 'suggestions' => []];
+        }
+
+        $nowMinutes = ForecastService::minutesOf($time ?? date('H:i'));
 
         return [
-            'todo'        => $todo,
-            'in_progress' => $inProgress,
-            'done'        => $done,
-            'total'       => $todo + $inProgress + $done,
-            'percent'     => $plannedTotal > 0
-                ? (int)min(100, round($doneTotal / $plannedTotal * 100))
-                : 0,
+            'available'   => true,
+            'samples'     => $profile->getSamples(),
+            'suggestions' => $this->forecastService->suggest($products, $stock, $profile, $nowMinutes, $params),
         ];
     }
 
-    /** Met à jour une ligne ; renvoie la réponse brute de l'API. */
-    public function updateItem(int $itemId, array $payload): array
+    /** Valide une recuisson : le lot entre en production, donc en stock. */
+    public function createRebake(int $idProduct, float $quantity, ?int $employeeId = null): array
     {
-        return $this->productionRepository->updateItem($itemId, $payload);
+        $shopId = $this->getShopId();
+        if ($shopId <= 0) {
+            return ['success' => false, 'description' => 'shop_unknown'];
+        }
+
+        $payload = [
+            'id_product' => $idProduct,
+            'quantity'   => $quantity,
+            'source'     => 'REBAKE',
+        ];
+        if ($employeeId !== null) {
+            $payload['id_employee'] = $employeeId;
+        }
+
+        return $this->productionRepository->createBatch($shopId, $payload);
     }
 }

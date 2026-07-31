@@ -47,6 +47,24 @@ define('JWT_REFRESH_TOKEN_EXPIRY', $_ENV['JWT_REFRESH_TOKEN_EXPIRY']); // Refres
 const APP_SUPPORTED_LANGUAGES = ['fr', 'en', 'pl', 'it', 'nl'];
 const APP_FALLBACK_LANGUAGE = 'fr';
 
+// ── Production ────────────────────────────────────────────────────────────
+// Valeurs de repli. Dès que l'API sert /shops/{id}/production/config, elles
+// sont écrasées par les réglages du magasin : deux magasins n'ouvrent pas aux
+// mêmes heures, et une constante partagée serait fausse pour l'un des deux.
+// Voir docs/ENDPOINTS_PRODUCTION.md.
+const PRODUCTION_PERIODS = [
+    ['key' => 'morning',   'start' => '05:00', 'end' => '11:00'],
+    ['key' => 'noon',      'start' => '11:00', 'end' => '14:00'],
+    ['key' => 'afternoon', 'start' => '14:00', 'end' => '19:00'],
+];
+// Durée sur laquelle on projette les ventes avant de proposer une recuisson.
+const PRODUCTION_FORECAST_HOURS = 2;
+// Profondeur d'historique, en semaines, pour la moyenne du même jour de semaine.
+const PRODUCTION_HISTORY_WEEKS = 6;
+// Marge de sécurité, en unités produit, retranchée avant de conclure au manque.
+// À 0, on propose dès que la projection passe sous zéro.
+const PRODUCTION_SAFETY_MARGIN = 0;
+
 define('DEFAULT_LANGUAGE', $_ENV['DEFAULT_LANGUAGE'] ?? APP_FALLBACK_LANGUAGE);
 define('COUNTRY_CODE', $_ENV['DEFAULT_COUNTRY']);
 define('CURRENCY', $_ENV['CURRENCY']);

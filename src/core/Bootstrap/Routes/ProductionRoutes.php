@@ -4,15 +4,29 @@ use FastRoute\RouteCollector;
 
 return function (RouteCollector $r) {
 
-    // Plan de production du jour
+    $controller = \App\Kitchen\app\Http\Controllers\Production\ProductionController::class;
+
+    // Écran unique, quatre vues : matin, midi, après-midi, stock.
     $r->addRoute('GET', '/production', [
-        'controller' => \App\Kitchen\app\Http\Controllers\Production\ProductionController::class,
+        'controller' => $controller,
         'method'     => 'index',
     ]);
 
-    // Avancement d'une ligne (statut et/ou quantité produite)
-    $r->addRoute('PATCH', '/ajax/production/{id:\d+}', [
-        'controller' => \App\Kitchen\app\Http\Controllers\Production\ProductionController::class,
-        'method'     => 'ajaxUpdate',
+    // Stock live + propositions de recuisson, dans la même réponse.
+    $r->addRoute('GET', '/ajax/production/stock', [
+        'controller' => $controller,
+        'method'     => 'ajaxStock',
+    ]);
+
+    // Validation de la MEP : c'est elle qui rend les produits vendables.
+    $r->addRoute('POST', '/ajax/production/mep/validate', [
+        'controller' => $controller,
+        'method'     => 'ajaxValidateMep',
+    ]);
+
+    // Validation d'une recuisson.
+    $r->addRoute('POST', '/ajax/production/rebake', [
+        'controller' => $controller,
+        'method'     => 'ajaxRebake',
     ]);
 };
