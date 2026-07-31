@@ -144,6 +144,55 @@
         .tk-do { width: 100%; margin-left: 0; }
     }
 
+    /* ── Choix de l'employé : badges deux par ligne ── */
+    .emp-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 9px; }
+    .emp-badge {
+        display: flex; align-items: center; gap: 10px;
+        min-height: 52px; padding: 8px 12px;
+        border: 1px solid var(--c-line-2, rgba(36,26,22,.14));
+        border-radius: var(--r-md, 13px);
+        background: #fff; cursor: pointer; text-align: left;
+        font-family: inherit;
+        transition: border-color .15s ease, background .15s ease;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .emp-badge.is-active {
+        border-color: var(--c-primary, #8D1D2C);
+        background: var(--c-primary-soft, #f4dfe2);
+    }
+    .emp-initials {
+        width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--c-primary, #8D1D2C); color: #fff;
+        font-family: var(--font-display); font-size: .8rem; line-height: 1;
+    }
+    .emp-name {
+        flex: 1; min-width: 0;
+        font-size: .88rem; font-weight: 600; color: var(--c-ink, #241f1c);
+        line-height: 1.25; overflow-wrap: anywhere;
+    }
+    .emp-note {
+        font-size: .78rem; color: var(--c-muted, #7a7168);
+        margin: 9px 0 0; display: flex; gap: 6px; align-items: flex-start;
+    }
+
+    /* ── PIN : quatre cases ── */
+    .pin-boxes { display: flex; gap: 10px; }
+    .pin-box {
+        width: 56px; height: 60px; flex: 0 0 auto;
+        border: 1px solid var(--c-line-2, rgba(36,26,22,.14));
+        border-radius: var(--r-md, 13px);
+        background: #fff; text-align: center;
+        font-size: 1.5rem; font-weight: 700; color: var(--c-ink, #241f1c);
+        font-family: inherit;
+    }
+    .pin-box:focus {
+        outline: none;
+        border-color: var(--c-secondary, #F2C9A0);
+        box-shadow: 0 0 0 .22rem rgba(141,29,44,.14);
+    }
+    .pin-box.is-filled { border-color: var(--c-primary, #8D1D2C); }
+
     .task-mandatory-icon { color: #e0a000; font-size: .75rem; }
 
     .summary-stat {
@@ -478,29 +527,72 @@
             <div class="modal-body">
                 <p class="text-muted small mb-3" id="modalTaskName"></p>
 
+                {# ── Qui a fait la tâche ──
+                   Une liste déroulante obligeait à deux taps et n'affichait
+                   qu'un nom à la fois. Des badges, deux par ligne, montrent
+                   toute l'équipe d'un coup — et se visent au doigt.
+
+                   Le select reste dans le document, masqué : le JavaScript qui
+                   lit #modalEmployeeSelect et envoie le formulaire fonctionne
+                   sans être réécrit. #}
                 <div class="mb-3">
-                    <label for="modalEmployeeSelect" class="form-label fw-semibold">
+                    <label class="form-label fw-semibold">
                         {{ translations.modal_employee_label | default('Pracownik') }} <span class="text-danger">*</span>
                     </label>
-                    <select id="modalEmployeeSelect" class="form-select">
-                        <option value="">{{ translations.modal_employee_placeholder | default('— wybierz pracownika —') }}</option>
-                        {% for emp in employees %}
+
+                    {% set on_duty = employees|filter(e => e.on_schedule is same as(true)) %}
+                    {% set schedule_known = employees|filter(e => e.on_schedule is not null)|length > 0 %}
+                    {% set shown = schedule_known ? on_duty : employees %}
+
+                    <div class="emp-grid">
+                        {% for emp in shown %}
+                            <button type="button" class="emp-badge" data-emp-id="{{ emp.id }}">
+                                <span class="emp-initials">{{ emp.initials ?: '—' }}</span>
+                                <span class="emp-name">{{ emp.name }}</span>
+                            </button>
+                        {% endfor %}
+                    </div>
+
+                    {% if shown is empty %}
+                        <p class="emp-note">{{ translations.no_employees | default('Aucun employé disponible.') }}</p>
+                    {% elseif not schedule_known %}
+                        {# Un filtre annoncé mais inopérant tromperait : tant que
+                           l'API ne dit pas qui est de service, on montre tout le
+                           monde et on l'écrit. #}
+                        <p class="emp-note">
+                            <i class="bi bi-info-circle"></i>
+                            {{ translations.schedule_not_served | default("L'API ne dit pas encore qui est de service : toute l'équipe est proposée.") }}
+                        </p>
+                    {% endif %}
+
+                    <select id="modalEmployeeSelect" class="visually-hidden" tabindex="-1" aria-hidden="true">
+                        <option value=""></option>
+                        {% for emp in shown %}
                             <option value="{{ emp.id }}">{{ emp.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
 
+                {# ── PIN ──
+                   Quatre chiffres, quatre cases : on voit ce qu'on a saisi et
+                   où on en est. Le champ unique en type=password n'appelait pas
+                   le pavé numérique de façon fiable et ne montrait rien. #}
                 <div class="mb-3">
-                    <label for="modalPinInput" class="form-label fw-semibold">
+                    <label class="form-label fw-semibold">
                         {{ translations.modal_pin_label | default('PIN') }} <span class="text-danger">*</span>
                     </label>
-                    <input type="password"
-                           id="modalPinInput"
-                           class="form-control"
-                           maxlength="4"
-                           inputmode="numeric"
-                           autocomplete="off"
-                           placeholder="{{ translations.modal_pin_placeholder | default('4-cyfrowy PIN') }}">
+                    <div class="pin-boxes" id="pinBoxes">
+                        {% for i in 1..4 %}
+                            <input type="password"
+                                   class="pin-box"
+                                   inputmode="numeric"
+                                   pattern="[0-9]*"
+                                   maxlength="1"
+                                   autocomplete="off"
+                                   aria-label="{{ translations.modal_pin_label | default('PIN') }} {{ i }}">
+                        {% endfor %}
+                    </div>
+                    <input type="hidden" id="modalPinInput">
                 </div>
 
                 <div class="mb-1">
@@ -583,6 +675,68 @@
     const modal          = document.getElementById('completeTaskModal');
     const bsModal        = modal ? new bootstrap.Modal(modal) : null;
     const taskNameEl     = document.getElementById('modalTaskName');
+    // Badges d'employés et cases de PIN : ils alimentent #modalEmployeeSelect
+    // et #modalPinInput, que la suite du script lit sans modification.
+    (function () {
+        var grid = document.querySelector('.emp-grid');
+        var sel  = document.getElementById('modalEmployeeSelect');
+        if (grid && sel) {
+            grid.addEventListener('click', function (e) {
+                var b = e.target.closest('.emp-badge');
+                if (!b) return;
+                grid.querySelectorAll('.emp-badge').forEach(function (x) { x.classList.remove('is-active'); });
+                b.classList.add('is-active');
+                sel.value = b.dataset.empId;
+                sel.dispatchEvent(new Event('change', { bubbles: true }));
+                var first = document.querySelector('.pin-box');
+                if (first) first.focus();
+            });
+        }
+
+        var boxes  = Array.prototype.slice.call(document.querySelectorAll('.pin-box'));
+        var hidden = document.getElementById('modalPinInput');
+        if (!boxes.length || !hidden) return;
+
+        function sync() {
+            hidden.value = boxes.map(function (b) { return b.value; }).join('');
+            boxes.forEach(function (b) { b.classList.toggle('is-filled', b.value !== ''); });
+        }
+        boxes.forEach(function (box, i) {
+            box.addEventListener('input', function () {
+                box.value = box.value.replace(/\D/g, '').slice(0, 1);
+                sync();
+                if (box.value && boxes[i + 1]) boxes[i + 1].focus();
+            });
+            // Retour arrière sur une case vide : on remonte, sinon on reste
+            // coincé au bout du champ.
+            box.addEventListener('keydown', function (e) {
+                if (e.key === 'Backspace' && !box.value && boxes[i - 1]) {
+                    boxes[i - 1].focus();
+                    e.preventDefault();
+                }
+            });
+            // Coller un PIN complet doit remplir les quatre cases.
+            box.addEventListener('paste', function (e) {
+                var t = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
+                if (!t) return;
+                e.preventDefault();
+                boxes.forEach(function (b, j) { b.value = t[j] || ''; });
+                sync();
+                (boxes[Math.min(t.length, 3)] || boxes[3]).focus();
+            });
+        });
+        // Vider les cases à chaque ouverture, comme le faisait le champ unique.
+        var modalEl = document.getElementById('completeTaskModal');
+        if (modalEl) {
+            modalEl.addEventListener('show.bs.modal', function () {
+                boxes.forEach(function (b) { b.value = ''; });
+                sync();
+                var grid2 = document.querySelector('.emp-grid');
+                if (grid2) grid2.querySelectorAll('.emp-badge').forEach(function (x) { x.classList.remove('is-active'); });
+            });
+        }
+    })();
+
     const employeeSel    = document.getElementById('modalEmployeeSelect');
     const pinInput       = document.getElementById('modalPinInput');
     const noteInput      = document.getElementById('modalNoteInput');

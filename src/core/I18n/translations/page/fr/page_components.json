@@ -70,5 +70,7 @@
   "delivery_mode": "Livraison",
   "fulfilment_not_served": "L'API ne renvoie pas encore le mode de remise : le filtre reste sans effet et toutes les commandes sont affichées.",
   "search": "Rechercher",
-  "admin_data": "Données de gestion"
+  "admin_data": "Données de gestion",
+  "no_employees": "Aucun employé disponible.",
+  "schedule_not_served": "L'API ne dit pas encore qui est de service : toute l'équipe est proposée."
 }

@@ -70,5 +70,7 @@
   "delivery_mode": "Delivery",
   "fulfilment_not_served": "The API does not return the fulfilment mode yet: the filter has no effect and all orders are shown.",
   "search": "Search",
-  "admin_data": "Administrative data"
+  "admin_data": "Administrative data",
+  "no_employees": "No employee available.",
+  "schedule_not_served": "The API does not say yet who is on shift: the whole team is offered."
 }

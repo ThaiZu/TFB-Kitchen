@@ -70,5 +70,7 @@
   "delivery_mode": "Levering",
   "fulfilment_not_served": "De API geeft de afhaalwijze nog niet terug: het filter heeft geen effect en alle bestellingen worden getoond.",
   "search": "Zoeken",
-  "admin_data": "Beheergegevens"
+  "admin_data": "Beheergegevens",
+  "no_employees": "Geen medewerker beschikbaar.",
+  "schedule_not_served": "De API geeft nog niet aan wie dienst heeft: het hele team wordt getoond."
 }

@@ -70,5 +70,7 @@
   "delivery_mode": "Consegna",
   "fulfilment_not_served": "L'API non restituisce ancora la modalità di ritiro: il filtro non ha effetto e sono mostrati tutti gli ordini.",
   "search": "Cerca",
-  "admin_data": "Dati gestionali"
+  "admin_data": "Dati gestionali",
+  "no_employees": "Nessun dipendente disponibile.",
+  "schedule_not_served": "L'API non indica ancora chi è in turno: viene proposto tutto il team."
 }
