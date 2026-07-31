@@ -169,6 +169,17 @@
         .auth-logo-wrap img {
             width: 100%; height: 100%; object-fit: contain; padding: 7px;
         }
+        /* Marque : lettrage commun + nom du module */
+        .auth-brand {
+            display: flex; align-items: center; gap: 10px;
+            padding-bottom: 14px; margin-bottom: 14px;
+            border-bottom: 1px solid var(--c-line);
+        }
+        .auth-brand-logo { height: 24px; width: auto; display: block; flex-shrink: 0; }
+        .auth-brand-module {
+            font-family: var(--font-display); font-size: 1rem; line-height: 1; color: var(--c-primary);
+            padding-left: 10px; border-left: 1px solid var(--c-line-2);
+        }
         .auth-title   { font-family: var(--font-display); font-size: 1.35rem; font-weight: 400; letter-spacing: .01em; margin: 0; }
         .auth-subtitle { font-size: .88rem; color: var(--c-muted); margin: 2px 0 0; }
         /* chip kontekstu – wyraźnie identyfikuje gdzie jest user */
@@ -358,11 +369,14 @@
         <div class="auth-panel">
             {# Nagłówek panelu — user ZAWSZE wie gdzie jest #}
             <div class="auth-panel-header">
+                {# Lettrage de marque commun aux modules, puis le module courant —
+                   même présentation que l'écran de connexion du consultant. #}
+                <div class="auth-brand">
+                    <img src="{{ ROOT }}/assets/brand/logo.png" alt="L'Atelier" class="auth-brand-logo">
+                    <span class="auth-brand-module">{{ translations.module_name ?? 'Kitchen' }}</span>
+                </div>
                 <div class="d-flex align-items-center justify-content-between gap-3">
                     <div class="d-flex align-items-center gap-3">
-                        <div class="auth-logo-wrap">
-                            <img src="{{ ROOT }}/assets/images/atelierby.png" alt="L'Atelier By">
-                        </div>
                         <div>
                             <h2 class="auth-title">{{ translations.login }}</h2>
                             <p class="auth-subtitle">{{ translations.login_to_kitchen }}</p>

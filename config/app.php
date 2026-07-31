@@ -41,7 +41,13 @@ define('JWT_ISSUER', $_ENV['JWT_ISSUER']); // Issuer
 define('JWT_ACCESS_TOKEN_EXPIRY', $_ENV['JWT_ACCESS_TOKEN_EXPIRY']); // Access token expiry in seconds
 define('JWT_REFRESH_TOKEN_EXPIRY', $_ENV['JWT_REFRESH_TOKEN_EXPIRY']); // Refresh token expiry in seconds
 
-define('DEFAULT_LANGUAGE', $_ENV['DEFAULT_LANGUAGE']);
+// Langues réellement traduites (un dossier par code sous
+// src/core/I18n/translations/page/). Une langue absente d'ici retombe sur
+// APP_FALLBACK_LANGUAGE plutôt que de vider l'interface de ses libellés.
+const APP_SUPPORTED_LANGUAGES = ['fr', 'en', 'pl', 'it', 'nl'];
+const APP_FALLBACK_LANGUAGE = 'fr';
+
+define('DEFAULT_LANGUAGE', $_ENV['DEFAULT_LANGUAGE'] ?? APP_FALLBACK_LANGUAGE);
 define('COUNTRY_CODE', $_ENV['DEFAULT_COUNTRY']);
 define('CURRENCY', $_ENV['CURRENCY']);
 if (!defined('CURRENCY_SYMBOL')) {

@@ -75,8 +75,13 @@
     <div class="app-topbar">
         <div class="container">
             <div class="app-topbar-inner">
-                <a href="{{ ROOT }}/dashboard" class="d-flex align-items-center text-decoration-none">
-                    <img src="{{ ROOT }}/assets/images/atelierby.png" alt="L'Atelier By" style="height:30px; width:auto;">
+                {# Même lettrage de marque que pwa_consultant (assets/brand/logo.png),
+                   suivi du nom du module — le consultant affiche « Panel consultant »
+                   sous le même logo. Les deux apps sont deux modules d'un même
+                   écosystème, la marque est commune et seul le module change. #}
+                <a href="{{ ROOT }}/dashboard" class="app-brand">
+                    <img src="{{ ROOT }}/assets/brand/logo.png" alt="L'Atelier" class="app-brand-logo">
+                    <span class="app-brand-module">{{ translations.module_name ?? 'Kitchen' }}</span>
                 </a>
 
                 <div class="d-flex align-items-center gap-2">
@@ -123,23 +128,23 @@
    mais non cliquable. #}
 <nav class="app-tabbar-bar" aria-label="{{ translations.menu ?? 'Navigation' }}">
     <a href="{{ ROOT }}/dashboard" class="app-tab {{ active_nav == 'dashboard' ? 'is-active' : '' }}">
-        {{ icons.svg('home', 23) }}<span>{{ translations.kitchen_dashboard ?? 'Pulpit' }}</span>
+        {{ icons.svg('home', 23) }}<span>{{ translations.nav_dashboard ?? 'Pulpit' }}</span>
     </a>
     <span class="app-tab" style="opacity:.4;" aria-disabled="true"
           title="{{ translations.under_construction ?? 'En construction' }}">
-        {{ icons.svg('list-checks', 23) }}<span>{{ translations.production ?? 'Production' }}</span>
+        {{ icons.svg('list-checks', 23) }}<span>{{ translations.nav_production ?? 'Production' }}</span>
     </span>
     <a href="{{ ROOT }}/checklists" class="app-tab {{ active_nav == 'checklists' ? 'is-active' : '' }}">
-        {{ icons.svg('clipboard-check', 23) }}<span>{{ translations.checklists ?? 'Checklists' }}</span>
+        {{ icons.svg('clipboard-check', 23) }}<span>{{ translations.nav_checklists ?? 'Checklists' }}</span>
     </a>
     <a href="{{ ROOT }}/orders" class="app-tab {{ active_nav == 'orders' ? 'is-active' : '' }}">
-        {{ icons.svg('receipt', 23) }}<span>{{ translations.orders ?? 'Commandes' }}</span>
+        {{ icons.svg('receipt', 23) }}<span>{{ translations.nav_orders ?? 'Commandes' }}</span>
     </a>
     {% set _dn2 = (user.displayName ?? 'K')|trim %}
     {% set _pp = _dn2|split(' ') %}
     <a href="{{ ROOT }}/me" class="app-tab app-tab-profile {{ active_nav == 'me' ? 'is-active' : '' }}">
         <span class="app-tab-avatar" aria-hidden="true">{{ (_pp[0]|first ~ (_pp[1] is defined ? _pp[1]|first : ''))|upper }}</span>
-        <span>{{ translations.my_profile ?? 'Profil' }}</span>
+        <span>{{ translations.nav_profile ?? 'Profil' }}</span>
     </a>
 </nav>
 

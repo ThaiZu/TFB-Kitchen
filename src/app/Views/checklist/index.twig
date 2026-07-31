@@ -19,6 +19,54 @@
 
     .checklist-section { margin-bottom: 2rem; }
 
+    /* ── Choix de la checklist : tuiles, deux par ligne ── */
+    .cl-pick-set { border: 0; padding: 0; margin: 1rem 0 0; min-width: 0; }
+    .cl-pick-set > legend { float: none; width: auto; font-size: .82rem; margin-bottom: .5rem; }
+    .cl-pick {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+    .cl-pick-tile {
+        position: relative;
+        display: flex; flex-direction: column; gap: 4px;
+        padding: 12px 14px;
+        border: 1px solid var(--c-line, rgba(36,26,22,.09));
+        border-radius: var(--r-md, 13px);
+        background: #fff;
+        cursor: pointer;
+        transition: border-color .15s ease, background .15s ease, transform .1s ease;
+        -webkit-tap-highlight-color: transparent;
+        min-width: 0;
+    }
+    .cl-pick-tile:active { transform: scale(.99); }
+    /* Le radio pilote l'état mais reste invisible : la tuile entière est la
+       cible tactile, pas une pastille de 16 px. */
+    .cl-pick-tile input { position: absolute; opacity: 0; pointer-events: none; }
+    .cl-pick-tile:has(input:checked),
+    .cl-pick-tile.is-active {
+        border-color: var(--c-primary, #8D1D2C);
+        background: var(--c-primary-soft, #f4dfe2);
+    }
+    .cl-pick-tile:has(input:focus-visible) {
+        outline: 2px solid var(--c-secondary, #F2C9A0);
+        outline-offset: 2px;
+    }
+    .cl-pick-name {
+        font-size: .88rem; font-weight: 700; color: var(--c-ink, #241f1c);
+        line-height: 1.25; overflow-wrap: anywhere;
+    }
+    .cl-pick-time { font-size: .72rem; color: var(--c-muted, #7a7168); }
+    .cl-pick-bar {
+        display: block; height: 5px; border-radius: 3px;
+        background: #e6ded3; overflow: hidden; margin-top: 2px;
+    }
+    .cl-pick-bar > span {
+        display: block; height: 100%; border-radius: 3px;
+        background: var(--c-primary, #8D1D2C);
+    }
+    .cl-pick-count { font-size: .7rem; color: var(--c-muted, #7a7168); }
+
     .task-row { transition: background .1s; }
     .task-row:hover { background: #f8f9fa; }
 
@@ -71,7 +119,7 @@
                         <div class="row g-3 align-items-end">
 
                             {# Data #}
-                            <div class="col-12 col-md-4">
+                            <div class="col-12 col-md-8">
                                 <label for="dateInput" class="form-label fw-semibold">
                                     {{ translations.filter_date | default('Data') }}
                                 </label>
@@ -84,30 +132,58 @@
                                        required>
                             </div>
 
-                            {# Checklista #}
-                            <div class="col-12 col-md-5">
-                                <label for="checklistSelect" class="form-label fw-semibold">
-                                    {{ translations.filter_checklist | default('Checklista') }}
-                                </label>
-                                <select name="checklist_id" id="checklistSelect" class="form-select">
-                                    <option value="">{{ translations.filter_checklist_all | default('— wszystkie —') }}</option>
-                                    {% for cl in checklists %}
-                                        <option value="{{ cl.id }}"
-                                            {{ selected_checklist_id == cl.id ? 'selected' : '' }}>
-                                            {{ cl.name }}{% if cl.execution_time %} ({{ cl.execution_time|slice(0,5) }}){% endif %}
-                                            · {{ cl.tasks_done }}/{{ cl.tasks_total }} {{ translations.tasks_done_of | default('wyk.') }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-
-                            <div class="col-12 col-md-3">
+                            <div class="col-12 col-md-4">
                                 <button type="submit" class="btn btn-primary w-100">
                                     <i class="bi bi-funnel me-1"></i>
                                     {{ translations.filter_apply | default('Pokaż') }}
                                 </button>
                             </div>
                         </div>
+
+                        {# ── Checklista ──
+                           Une liste déroulante cachait les checklists derrière un
+                           tap et n'en montrait qu'une à la fois : impossible de
+                           comparer l'avancement d'un coup d'œil. Des tuiles, deux
+                           par ligne, montrent tout — nom, heure, avancement.
+                           Chaque tuile porte un radio, donc le formulaire et son
+                           bouton continuent de fonctionner sans JavaScript ; le
+                           script ne fait qu'éviter le second tap. #}
+                        <fieldset class="cl-pick-set">
+                            <legend class="form-label fw-semibold">
+                                {{ translations.filter_checklist | default('Checklista') }}
+                            </legend>
+
+                            <div class="cl-pick">
+                                <label class="cl-pick-tile {{ selected_checklist_id is empty ? 'is-active' : '' }}">
+                                    <input type="radio" name="checklist_id" value=""
+                                           {{ selected_checklist_id is empty ? 'checked' : '' }}>
+                                    <span class="cl-pick-name">
+                                        {{ translations.filter_checklist_all | default('— wszystkie —') }}
+                                    </span>
+                                </label>
+
+                                {% for cl in checklists %}
+                                    {% set done = cl.tasks_total > 0 ? (cl.tasks_done / cl.tasks_total * 100)|round : 0 %}
+                                    <label class="cl-pick-tile {{ selected_checklist_id == cl.id ? 'is-active' : '' }}">
+                                        <input type="radio" name="checklist_id" value="{{ cl.id }}"
+                                               {{ selected_checklist_id == cl.id ? 'checked' : '' }}>
+                                        <span class="cl-pick-name">{{ cl.name }}</span>
+                                        {% if cl.execution_time %}
+                                            <span class="cl-pick-time">
+                                                <i class="bi bi-clock"></i> {{ cl.execution_time|slice(0,5) }}
+                                            </span>
+                                        {% endif %}
+                                        <span class="cl-pick-bar" aria-hidden="true">
+                                            <span style="width:{{ done }}%"></span>
+                                        </span>
+                                        <span class="cl-pick-count">
+                                            {{ cl.tasks_done }}/{{ cl.tasks_total }}
+                                            {{ translations.tasks_done_of | default('wyk.') }}
+                                        </span>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </fieldset>
                     </form>
                 </div>
             </div>
@@ -329,6 +405,18 @@
 {% endblock %}
 
 {% block scripts %}
+
+{# Choisir une tuile envoie le formulaire : un tap au lieu de deux. Sans
+   JavaScript, le bouton « Pokaż » reste la voie normale — rien n'est perdu. #}
+<script>
+(function () {
+    var form = document.getElementById('filterForm');
+    if (!form) return;
+    form.querySelectorAll('.cl-pick-tile input[type="radio"]').forEach(function (r) {
+        r.addEventListener('change', function () { form.submit(); });
+    });
+})();
+</script>
 
 {# ── Modal potwierdzenia wykonania zadania ── #}
 <div class="modal fade" id="completeTaskModal" tabindex="-1" aria-labelledby="completeTaskModalLabel" aria-hidden="true">
