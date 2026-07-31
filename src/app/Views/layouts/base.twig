@@ -12,6 +12,7 @@
 {% set p = current_path|default('') %}
 {% set active_nav =
     p starts with '/dashboard'  ? 'dashboard'  :
+    p starts with '/production' ? 'production' :
     p starts with '/checklists' ? 'checklists' :
     p starts with '/orders'     ? 'orders'     :
     p starts with '/knowledge'  ? 'knowledge'  :
@@ -123,17 +124,14 @@
 
 {% include "components/app_nav.twig" with { active_nav: active_nav } %}
 
-{# Barre d'onglets — les quatre gestes du quotidien, plus le profil à droite.
-   Production est encore en construction : présente pour situer le parcours,
-   mais non cliquable. #}
+{# Barre d'onglets — les quatre gestes du quotidien, plus le profil à droite. #}
 <nav class="app-tabbar-bar" aria-label="{{ translations.menu ?? 'Navigation' }}">
     <a href="{{ ROOT }}/dashboard" class="app-tab {{ active_nav == 'dashboard' ? 'is-active' : '' }}">
         {{ icons.svg('home', 23) }}<span>{{ translations.nav_dashboard ?? 'Pulpit' }}</span>
     </a>
-    <span class="app-tab" style="opacity:.4;" aria-disabled="true"
-          title="{{ translations.under_construction ?? 'En construction' }}">
+    <a href="{{ ROOT }}/production" class="app-tab {{ active_nav == 'production' ? 'is-active' : '' }}">
         {{ icons.svg('list-checks', 23) }}<span>{{ translations.nav_production ?? 'Production' }}</span>
-    </span>
+    </a>
     <a href="{{ ROOT }}/checklists" class="app-tab {{ active_nav == 'checklists' ? 'is-active' : '' }}">
         {{ icons.svg('clipboard-check', 23) }}<span>{{ translations.nav_checklists ?? 'Checklists' }}</span>
     </a>

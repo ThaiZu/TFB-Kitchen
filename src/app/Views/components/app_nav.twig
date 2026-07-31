@@ -15,11 +15,11 @@
         href:  ROOT ~ '/dashboard'
     },
     {
-        key:      'production',
-        label:    translations.production ?? 'Production',
-        icon:     'list-checks',
-        href:     '#',
-        disabled: true
+        key:   'production',
+        label: translations.production ?? 'Production',
+        icon:  'list-checks',
+        href:  ROOT ~ '/production',
+        wip:   true
     },
     {
         key:      'stock',
@@ -79,13 +79,18 @@
     <div class="app-nav-grid">
         {% for it in items %}
             {% set is_active = (active_nav ?? '') == it.key %}
+            {# « wip » et « disabled » portent le même badge mais pas le même
+               comportement : une section en chantier dont l'écran existe déjà
+               reste cliquable — elle explique elle-même ce qui lui manque. #}
+            {% set is_disabled = it.disabled ?? false %}
+            {% set is_wip = it.wip ?? false %}
             <a href="{{ it.href }}"
-               class="app-nav-card {{ is_active ? 'is-active' : '' }} {{ it.disabled ?? false ? 'is-disabled' : '' }}"
-               {{ it.disabled ?? false ? 'aria-disabled="true" tabindex="-1"' : '' }}
+               class="app-nav-card {{ is_active ? 'is-active' : '' }} {{ is_disabled ? 'is-disabled' : '' }}"
+               {{ is_disabled ? 'aria-disabled="true" tabindex="-1"' : '' }}
                aria-current="{{ is_active ? 'page' : 'false' }}">
                 <span class="app-nav-card-icon" aria-hidden="true">{{ icons.svg(it.icon, 20) }}</span>
                 <span class="app-nav-card-label">{{ it.label }}</span>
-                {% if it.disabled ?? false %}
+                {% if is_disabled or is_wip %}
                     <span class="app-nav-card-tag badge bg-warning text-dark">
                         {{ translations.under_construction ?? 'En construction' }}
                     </span>
