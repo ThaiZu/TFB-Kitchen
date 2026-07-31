@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{{ ROOT }}/assets/css/bootstrap.css">
     <link rel="stylesheet" href="{{ ROOT }}/assets/vendors/bootstrap-icons/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ ROOT }}/assets/css/app.css">
+    <link rel="stylesheet" href="{{ ROOT }}/assets/css/atelier-theme.css">
     <style>
         html, body { height: 100%; margin: 0; }
         #auth-root { min-height: 100vh; display: flex; }
@@ -21,8 +22,8 @@
             justify-content: space-between;
             padding: 40px 44px;
             background:
-                radial-gradient(ellipse 900px 600px at 0% 10%, rgba(255,255,255,.04), transparent 65%),
-                linear-gradient(160deg, #0f1923 0%, #111d2b 50%, #0a1219 100%);
+                radial-gradient(ellipse 900px 600px at 0% 10%, rgba(242,201,160,.14), transparent 65%),
+                linear-gradient(160deg, #9a2233 0%, #7c1824 55%, #5f1320 100%);
             color: #fff;
             position: relative;
             overflow: hidden;
@@ -56,8 +57,8 @@
         .app-id-pill .dot {
             width: 7px; height: 7px;
             border-radius: 50%;
-            background: #34d399;
-            box-shadow: 0 0 6px #34d399;
+            background: #6ec27e;
+            box-shadow: 0 0 6px rgba(110,194,126,.9);
             flex-shrink: 0;
         }
         /* duży tytuł sekcji kuchni */
@@ -73,9 +74,10 @@
             font-size: 1.8rem;
         }
         .brand-headline {
-            font-size: 2rem;
-            font-weight: 800;
-            letter-spacing: -.03em;
+            font-family: var(--font-display);
+            font-size: 2.1rem;
+            font-weight: 400;
+            letter-spacing: .01em;
             line-height: 1.15;
             margin: 0 0 10px;
         }
@@ -133,7 +135,7 @@
             align-items: center;
             justify-content: center;
             padding: 48px 24px;
-            background: #f0f2f7;
+            background: var(--c-bg);
         }
         .auth-panel {
             width: 100%;
@@ -141,31 +143,31 @@
         }
         /* nagłówek formularza */
         .auth-panel-header {
-            background: #fff;
-            border-radius: 16px 16px 0 0;
+            background: var(--c-surface);
+            border-radius: var(--r-xl) var(--r-xl) 0 0;
             padding: 22px 26px 18px;
-            border-bottom: 1px solid #e9ecef;
+            border-bottom: 1px solid var(--c-line);
         }
         .auth-panel-body {
-            background: #fff;
-            border-radius: 0 0 16px 16px;
+            background: var(--c-surface);
+            border-radius: 0 0 var(--r-xl) var(--r-xl);
             padding: 24px 26px 26px;
-            box-shadow: 0 4px 32px rgba(0,0,0,.09);
+            box-shadow: var(--sh-3);
         }
         .auth-logo-wrap {
             width: 48px; height: 48px;
             border-radius: 14px;
             overflow: hidden;
-            background: #f0f2f7;
+            background: var(--c-bg-2);
             flex-shrink: 0;
             display: flex; align-items: center; justify-content: center;
-            border: 1px solid #e2e6ef;
+            border: 1px solid var(--c-line-2);
         }
         .auth-logo-wrap img {
             width: 100%; height: 100%; object-fit: cover;
         }
-        .auth-title   { font-size: 1.25rem; font-weight: 800; letter-spacing: -.02em; margin: 0; }
-        .auth-subtitle { font-size: .88rem; color: #6c757d; margin: 2px 0 0; }
+        .auth-title   { font-family: var(--font-display); font-size: 1.35rem; font-weight: 400; letter-spacing: .01em; margin: 0; }
+        .auth-subtitle { font-size: .88rem; color: var(--c-muted); margin: 2px 0 0; }
         /* chip kontekstu – wyraźnie identyfikuje gdzie jest user */
         .context-badge {
             display: inline-flex;
@@ -177,14 +179,14 @@
             font-weight: 700;
             letter-spacing: .02em;
             white-space: nowrap;
-            background: #ecfdf5;
-            color: #065f46;
-            border: 1px solid #a7f3d0;
+            background: rgba(45,122,62,.1);
+            color: var(--c-vert);
+            border: 1px solid rgba(45,122,62,.28);
         }
         .context-badge .dot {
             width: 6px; height: 6px;
             border-radius: 50%;
-            background: #10b981;
+            background: var(--c-vert);
             flex-shrink: 0;
         }
         /* inputy */
@@ -198,15 +200,15 @@
             top: 50%;
             transform: translateY(-50%);
             font-size: 1rem;
-            color: #adb5bd;
+            color: var(--c-muted);
             pointer-events: none;
             z-index: 2;
         }
         .input-wrap input,
         .input-wrap select {
             padding-left: 40px;
-            border-radius: 12px;
-            border: 1.5px solid #dee2e6;
+            border-radius: var(--r-md);
+            border: 1.5px solid var(--c-line-2);
             padding-top: .85rem;
             padding-bottom: .85rem;
             font-size: .95rem;
@@ -215,8 +217,8 @@
         }
         .input-wrap input:focus,
         .input-wrap select:focus {
-            border-color: #111827;
-            box-shadow: 0 0 0 3px rgba(17,24,39,.1);
+            border-color: var(--c-secondary);
+            box-shadow: 0 0 0 3px rgba(141,29,44,.14);
         }
         .input-wrap input.is-invalid,
         .input-wrap select.is-invalid {
@@ -240,16 +242,17 @@
         .btn-login {
             width: 100%;
             padding: .9rem;
-            border-radius: 12px;
-            font-weight: 700;
+            border-radius: var(--r-md);
+            font-weight: 600;
             font-size: .97rem;
-            background: #111827;
+            background: var(--c-primary);
             color: #fff;
             border: none;
             margin-top: 6px;
+            box-shadow: 0 8px 20px -10px rgba(141,29,44,.6);
             transition: background .15s, transform .1s;
         }
-        .btn-login:hover { background: #1f2d3d; }
+        .btn-login:hover { background: var(--c-primary-hover); color: #fff; }
         .btn-login:active { transform: scale(.985); }
         /* alert błędu */
         .auth-alert-danger {
@@ -267,7 +270,7 @@
         /* stopka */
         .auth-footer-note {
             font-size: .78rem;
-            color: #9ca3af;
+            color: var(--c-muted);
             text-align: center;
             margin-top: 20px;
         }
