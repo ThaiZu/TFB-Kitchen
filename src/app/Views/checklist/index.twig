@@ -75,8 +75,74 @@
     }
     .cl-pick-all .cl-pick-name { font-size: .84rem; text-align: center; }
 
-    .task-row { transition: background .1s; }
-    .task-row:hover { background: #f8f9fa; }
+    /* ── Tuiles de tâches ── */
+    .tk-list { display: flex; flex-direction: column; gap: 10px; }
+    .tk-item {
+        background: var(--c-surface, #fff);
+        border: 1px solid var(--c-line, rgba(36,26,22,.09));
+        border-left: 4px solid var(--c-muted, #7a7168);
+        border-radius: var(--r-lg, 18px);
+        box-shadow: var(--sh-2);
+        padding: 14px 16px;
+    }
+    /* L'état se lit au liseré avant même le badge : en parcourant la liste,
+       on voit ce qui reste à faire sans lire un mot. */
+    .tk-item.is-done    { border-left-color: #2D7A3E; }
+    .tk-item.is-pending { border-left-color: var(--c-primary, #8D1D2C); }
+    .tk-item.is-skipped { border-left-color: #C17A2A; }
+    .tk-item.is-failed  { border-left-color: #8D1D2C; }
+    .tk-item.is-done { background: #fcfbf9; }
+
+    .tk-head { display: flex; align-items: flex-start; gap: 11px; }
+    .tk-num {
+        width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--c-bg-2, #F4EFE8); color: var(--c-muted, #7a7168);
+        font-size: .78rem; font-weight: 700;
+    }
+    /* Le nom de la tâche est ce qu'on vient lire : il prend la largeur au lieu
+       de se casser dans une colonne de deux mots. */
+    .tk-title {
+        flex: 1; min-width: 0;
+        font-size: 1rem; font-weight: 600; color: var(--c-ink, #241f1c);
+        line-height: 1.4;
+    }
+    .tk-photo-icon { color: #1F4F6B; font-size: .8rem; }
+
+    .tk-meta { display: flex; flex-wrap: wrap; gap: 7px; margin: 11px 0 0 37px; }
+    .tk-chip {
+        display: inline-flex; align-items: center; gap: 5px;
+        font-size: .78rem; color: var(--c-muted, #7a7168);
+        background: var(--c-bg-2, #F4EFE8);
+        border: 1px solid var(--c-line, rgba(36,26,22,.09));
+        border-radius: 999px; padding: 5px 11px;
+    }
+    .tk-chip strong { color: var(--c-ink, #241f1c); font-weight: 700; }
+
+    .tk-note {
+        display: flex; gap: 7px; margin: 10px 0 0 37px;
+        font-size: .85rem; color: #5b524a; line-height: 1.5;
+    }
+    .tk-note i { color: var(--c-muted, #7a7168); flex-shrink: 0; margin-top: 2px; }
+
+    /* Cocher une tâche est le geste de l'écran : pleine largeur, 48 px. */
+    .tk-do {
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        width: calc(100% - 37px); margin: 12px 0 0 37px; min-height: 48px;
+        border: 0; border-radius: var(--r-md, 13px);
+        background: #2D7A3E; color: #fff;
+        font-family: inherit; font-size: .95rem; font-weight: 600; cursor: pointer;
+        box-shadow: 0 8px 18px -10px rgba(45,122,62,.6);
+        -webkit-tap-highlight-color: transparent;
+    }
+    .tk-do:hover { background: #256633; color: #fff; }
+    .tk-do:active { transform: scale(.99); }
+    .tk-do i { font-size: 1.1rem; }
+
+    @media (max-width: 520px) {
+        .tk-meta, .tk-note { margin-left: 0; }
+        .tk-do { width: 100%; margin-left: 0; }
+    }
 
     .task-mandatory-icon { color: #e0a000; font-size: .75rem; }
 
@@ -253,114 +319,90 @@
                 <p class="mt-3 mb-0">{{ translations.no_tasks | default('Brak zadań dla tej checklisty w wybranym dniu.') }}</p>
             </div>
         {% else %}
-            <div class="card shadow-sm">
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="ps-3">#</th>
-                                    <th>{{ translations.col_task | default('Zadanie') }}</th>
-                                    <th>{{ translations.col_planned_time | default('Planowana godz.') }}</th>
-                                    <th>{{ translations.col_status | default('Status') }}</th>
-                                    <th>{{ translations.col_completed_at | default('Zrealizowane') }}</th>
-                                    <th>{{ translations.col_completed_by | default('Przez') }}</th>
-                                    <th>{{ translations.col_note | default('Notatka') }}</th>
-                                    <th>{{ translations.col_action | default('Akcja') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for task in progress.tasks %}
-                                    {% set status = task.status ?? 'PENDING' %}
-                                    <tr class="task-row">
-                                        <td class="ps-3 text-muted small align-middle">{{ loop.index }}</td>
+            {# ── Tâches ──
+               Huit colonnes dans un tableau : sur une tablette tenue en main,
+               « Vérifier si le magasin est propre » se cassait sur cinq lignes
+               dans une colonne large de deux mots, le nom de l'opérateur était
+               tronqué et le reste sortait de l'écran. Chaque tâche est une
+               tuile : ce qu'il y a à faire en tête, l'état sur le côté, les
+               horaires en dessous, et le bouton d'exécution à portée du pouce. #}
+            <div class="tk-list">
+                {% for task in progress.tasks %}
+                    {% set status = task.status ?? 'PENDING' %}
+                    <div class="tk-item is-{{ status|lower }}">
 
-                                        <td class="align-middle fw-semibold">
-                                            {% if task.is_mandatory %}
-                                                <i class="bi bi-star-fill task-mandatory-icon me-1"
-                                                   title="{{ translations.mandatory | default('Obowiązkowe') }}"></i>
-                                            {% endif %}
-                                            {{ task.name }}
-                                            {% if task.requires_photo %}
-                                                <i class="bi bi-camera-fill ms-1 text-info" style="font-size:.8rem;"
-                                                   title="{{ translations.photo_required | default('Wymagane zdjęcie') }}"></i>
-                                            {% endif %}
-                                        </td>
+                        <div class="tk-head">
+                            <span class="tk-num">{{ loop.index }}</span>
+                            <div class="tk-title">
+                                {{ task.name }}
+                                {% if task.is_mandatory %}
+                                    <i class="bi bi-star-fill task-mandatory-icon"
+                                       title="{{ translations.mandatory | default('Obowiązkowe') }}"></i>
+                                {% endif %}
+                                {% if task.requires_photo %}
+                                    <i class="bi bi-camera-fill tk-photo-icon"
+                                       title="{{ translations.photo_required | default('Wymagane zdjęcie') }}"></i>
+                                {% endif %}
+                            </div>
+                            {% if status == 'DONE' %}
+                                <span class="task-badge badge-done">
+                                    <i class="bi bi-check-circle-fill me-1"></i>{{ translations.status_done | default('Wykonane') }}
+                                </span>
+                            {% elseif status == 'SKIPPED' %}
+                                <span class="task-badge badge-skipped">
+                                    <i class="bi bi-skip-forward-fill me-1"></i>{{ translations.status_skipped | default('Pominięte') }}
+                                </span>
+                            {% elseif status == 'FAILED' %}
+                                <span class="task-badge badge-failed">
+                                    <i class="bi bi-x-circle-fill me-1"></i>{{ translations.status_failed | default('Nieudane') }}
+                                </span>
+                            {% else %}
+                                <span class="task-badge badge-pending">
+                                    <i class="bi bi-circle me-1"></i>{{ translations.status_pending | default('Oczekuje') }}
+                                </span>
+                            {% endif %}
+                        </div>
 
-                                        <td class="align-middle text-muted small">
-                                            {% if task.execution_time %}
-                                                {{ task.execution_time|slice(0,5) }}
-                                            {% else %}
-                                                —
-                                            {% endif %}
-                                        </td>
+                        <div class="tk-meta">
+                            {% if task.execution_time %}
+                                <span class="tk-chip">
+                                    <i class="bi bi-clock"></i>
+                                    {{ translations.col_planned_time | default('Planowana godz.') }}
+                                    <strong>{{ task.execution_time|slice(0,5) }}</strong>
+                                </span>
+                            {% endif %}
+                            {% if task.completed_at %}
+                                <span class="tk-chip">
+                                    <i class="bi bi-check2"></i>
+                                    {{ translations.col_completed_at | default('Zrealizowane') }}
+                                    <strong>{{ task.completed_at|slice(11,5) }}</strong>
+                                </span>
+                            {% endif %}
+                            {% if task.completed_by %}
+                                <span class="tk-chip">
+                                    <i class="bi bi-person"></i><strong>{{ task.completed_by }}</strong>
+                                </span>
+                            {% endif %}
+                        </div>
 
-                                        <td class="align-middle">
-                                            {% if status == 'DONE' %}
-                                                <span class="task-badge badge-done">
-                                                    <i class="bi bi-check-circle-fill me-1"></i>{{ translations.status_done | default('Wykonane') }}
-                                                </span>
-                                            {% elseif status == 'SKIPPED' %}
-                                                <span class="task-badge badge-skipped">
-                                                    <i class="bi bi-skip-forward-fill me-1"></i>{{ translations.status_skipped | default('Pominięte') }}
-                                                </span>
-                                            {% elseif status == 'FAILED' %}
-                                                <span class="task-badge badge-failed">
-                                                    <i class="bi bi-x-circle-fill me-1"></i>{{ translations.status_failed | default('Nieudane') }}
-                                                </span>
-                                            {% else %}
-                                                <span class="task-badge badge-pending">
-                                                    <i class="bi bi-circle me-1"></i>{{ translations.status_pending | default('Oczekuje') }}
-                                                </span>
-                                            {% endif %}
-                                        </td>
+                        {% if task.note %}
+                            <p class="tk-note">
+                                <i class="bi bi-chat-left-text"></i>{{ task.note }}
+                            </p>
+                        {% endif %}
 
-                                        <td class="align-middle text-muted small">
-                                            {% if task.completed_at %}
-                                                {{ task.completed_at|slice(11,5) }}
-                                            {% else %}
-                                                —
-                                            {% endif %}
-                                        </td>
-
-                                        <td class="align-middle small">
-                                            {% if task.completed_by %}
-                                                {{ task.completed_by }}
-                                            {% else %}
-                                                —
-                                            {% endif %}
-                                        </td>
-
-                                        <td class="align-middle small text-muted">
-                                            {% if task.note %}
-                                                <span title="{{ task.note }}">
-                                                    <i class="bi bi-chat-left-text me-1"></i>{{ task.note|slice(0,40) }}{% if task.note|length > 40 %}…{% endif %}
-                                                </span>
-                                            {% else %}
-                                                —
-                                            {% endif %}
-                                        </td>
-
-                                        <td class="align-middle">
-                                            {% if status != 'DONE' and status != 'SKIPPED' %}
-                                                <button type="button"
-                                                        class="btn btn-sm btn-outline-success btn-complete-task"
-                                                        data-task-id="{{ task.task_id }}"
-                                                        data-task-name="{{ task.name }}"
-                                                        data-date="{{ selected_date }}"
-                                                        data-requires-photo="{{ task.requires_photo ? '1' : '0' }}">
-                                                    <i class="bi bi-check2 me-1"></i>{{ translations.btn_complete | default('Wykonaj') }}
-                                                </button>
-                                            {% else %}
-                                                —
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                        {% if status != 'DONE' and status != 'SKIPPED' %}
+                            <button type="button"
+                                    class="tk-do btn-complete-task"
+                                    data-task-id="{{ task.task_id }}"
+                                    data-task-name="{{ task.name }}"
+                                    data-date="{{ selected_date }}"
+                                    data-requires-photo="{{ task.requires_photo ? '1' : '0' }}">
+                                <i class="bi bi-check2"></i>{{ translations.btn_complete | default('Wykonaj') }}
+                            </button>
+                        {% endif %}
                     </div>
-                </div>
+                {% endfor %}
             </div>
         {% endif %}
 
