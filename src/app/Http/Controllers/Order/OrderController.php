@@ -2,6 +2,7 @@
 
 namespace App\Kitchen\app\Http\Controllers\Order;
 
+use App\Kitchen\app\Models\Order\OrderModel;
 use App\Kitchen\app\Http\Controllers\Controller;
 use App\Kitchen\app\Services\Client\ClientService;
 use App\Kitchen\app\Services\Knowledge\Product\ProductService;
@@ -60,6 +61,32 @@ class OrderController extends Controller
             'pending_only' => $pendingOnly,
             'today'       => date('Y-m-d'),
         ]);
+    }
+
+    /**
+     * Compteur des commandes en attente, pour le sondage du front.
+     *
+     * GET /ajax/orders/pending-count
+     *
+     * Volontairement minimal : appelé toutes les dix secondes sur chaque
+     * tablette de chaque magasin, il ne doit renvoyer que des nombres. Le
+     * détail par mode de remise reste à zéro tant que l'API ne sert pas le
+     * champ correspondant (voir docs/ENDPOINTS_COMMANDES_WEB.md).
+     */
+    #[Route('GET', '/ajax/orders/pending-count')]
+    public function pendingCount(): void
+    {
+        $orders = $this->orderService->getOrders(date('Y-m-d'), null, true);
+
+        $collect = count($this->orderService->filterByFulfilment($orders, OrderModel::MODE_COLLECT));
+        $delivery = count($this->orderService->filterByFulfilment($orders, OrderModel::MODE_DELIVERY));
+
+        $json = $this->json([
+            'total'    => count($orders),
+            'collect'  => $collect,
+            'delivery' => $delivery,
+        ], 200);
+        $json->send();
     }
 
     #[Route('GET', '/orders/new')]

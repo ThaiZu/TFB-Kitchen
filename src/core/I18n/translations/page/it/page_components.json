@@ -72,5 +72,8 @@
   "search": "Cerca",
   "admin_data": "Dati gestionali",
   "no_employees": "Nessun dipendente disponibile.",
-  "schedule_not_served": "L'API non indica ancora chi è in turno: viene proposto tutto il team."
+  "schedule_not_served": "L'API non indica ancora chi è in turno: viene proposto tutto il team.",
+  "sound_order_label": "Suono nuovi ordini",
+  "sound_order_hint": "Un segnale acustico avvisa dell'arrivo di un ordine su questo dispositivo.",
+  "sound_order_test": "Prova il suono"
 }

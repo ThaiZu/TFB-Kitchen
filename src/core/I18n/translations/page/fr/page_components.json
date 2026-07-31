@@ -72,5 +72,8 @@
   "search": "Rechercher",
   "admin_data": "Données de gestion",
   "no_employees": "Aucun employé disponible.",
-  "schedule_not_served": "L'API ne dit pas encore qui est de service : toute l'équipe est proposée."
+  "schedule_not_served": "L'API ne dit pas encore qui est de service : toute l'équipe est proposée.",
+  "sound_order_label": "Son des nouvelles commandes",
+  "sound_order_hint": "Un bip signale l'arrivée d'une commande sur cet appareil.",
+  "sound_order_test": "Tester le son"
 }

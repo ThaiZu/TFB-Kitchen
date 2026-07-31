@@ -72,5 +72,8 @@
   "search": "Search",
   "admin_data": "Administrative data",
   "no_employees": "No employee available.",
-  "schedule_not_served": "The API does not say yet who is on shift: the whole team is offered."
+  "schedule_not_served": "The API does not say yet who is on shift: the whole team is offered.",
+  "sound_order_label": "New order sound",
+  "sound_order_hint": "A beep signals an incoming order on this device.",
+  "sound_order_test": "Test the sound"
 }

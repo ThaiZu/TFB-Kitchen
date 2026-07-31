@@ -72,5 +72,8 @@
   "search": "Zoeken",
   "admin_data": "Beheergegevens",
   "no_employees": "Geen medewerker beschikbaar.",
-  "schedule_not_served": "De API geeft nog niet aan wie dienst heeft: het hele team wordt getoond."
+  "schedule_not_served": "De API geeft nog niet aan wie dienst heeft: het hele team wordt getoond.",
+  "sound_order_label": "Geluid nieuwe bestellingen",
+  "sound_order_hint": "Een pieptoon meldt een binnenkomende bestelling op dit apparaat.",
+  "sound_order_test": "Geluid testen"
 }

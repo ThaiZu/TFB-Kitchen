@@ -138,7 +138,12 @@
         {{ icons.svg('clipboard-check', 23) }}<span>{{ translations.nav_checklists ?? 'Checklists' }}</span>
     </a>
     <a href="{{ ROOT }}/orders" class="app-tab {{ active_nav == 'orders' ? 'is-active' : '' }}">
-        {{ icons.svg('receipt', 23) }}<span>{{ translations.nav_orders ?? 'Commandes' }}</span>
+        <span class="app-tab-ic">
+            {{ icons.svg('receipt', 23) }}
+            {# Rempli par le sondage ; masqué tant qu'il n'y a rien à signaler. #}
+            <span class="app-tab-count" id="ordersCount" hidden></span>
+        </span>
+        <span>{{ translations.nav_orders ?? 'Commandes' }}</span>
     </a>
     {% set _dn2 = (user.displayName ?? 'K')|trim %}
     {% set _pp = _dn2|split(' ') %}
@@ -185,6 +190,82 @@
 
 
 {% block scripts %}{% endblock %}
+
+{# ── Commandes en attente : sondage, pastille, son ──────────────────────
+   Une commande web arrive sans que personne ne regarde l'écran. Le nombre
+   se met donc à jour tout seul, et un son le signale.
+
+   Sondage court plutôt que temps réel : dix secondes suffisent en cuisine,
+   et cela évite d'introduire une connexion persistante pour un compteur.
+   L'onglet en arrière-plan ne sonde pas — inutile de solliciter l'API et
+   la batterie pendant que la tablette dort.
+   ────────────────────────────────────────────────────────────────────── #}
+<script>
+(function () {
+    var badge = document.getElementById('ordersCount');
+    if (!badge) return;
+
+    var URL_COUNT = '{{ ROOT }}/ajax/orders/pending-count';
+    var KEY_SOUND = 'kitchen.orderSound';   // partagé avec l'écran Profil
+    var KEY_SEEN  = 'kitchen.ordersSeen';   // dernier total connu
+
+    function soundOn() { return localStorage.getItem(KEY_SOUND) !== '0'; }
+
+    // Bip de synthèse : aucun fichier à charger, donc rien à déployer ni à
+    // mettre en cache, et le son reste disponible hors ligne.
+    var audioCtx = null;
+    function beep() {
+        if (!soundOn()) return;
+        try {
+            audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            [0, 0.18].forEach(function (delay) {
+                var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+                o.type = 'sine';
+                o.frequency.value = 880;
+                g.gain.setValueAtTime(0.0001, audioCtx.currentTime + delay);
+                g.gain.exponentialRampToValueAtTime(0.25, audioCtx.currentTime + delay + 0.02);
+                g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + delay + 0.14);
+                o.connect(g); g.connect(audioCtx.destination);
+                o.start(audioCtx.currentTime + delay);
+                o.stop(audioCtx.currentTime + delay + 0.16);
+            });
+        } catch (e) { /* pas d'audio disponible : le compteur suffit */ }
+    }
+
+    function paint(total) {
+        if (total > 0) {
+            badge.textContent = total > 99 ? '99+' : total;
+            badge.hidden = false;
+        } else {
+            badge.hidden = true;
+        }
+    }
+
+    function poll() {
+        if (document.hidden) return;
+        fetch(URL_COUNT, { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (d) {
+                if (!d || typeof d.total !== 'number') return;
+                paint(d.total);
+                document.dispatchEvent(new CustomEvent('orders:count', { detail: d }));
+
+                var seen = parseInt(localStorage.getItem(KEY_SEEN) || '-1', 10);
+                // Au tout premier passage on ne sonne pas : on ne signale que
+                // ce qui arrive pendant le service, pas l'état trouvé en
+                // ouvrant l'app.
+                if (seen >= 0 && d.total > seen) beep();
+                localStorage.setItem(KEY_SEEN, String(d.total));
+            })
+            .catch(function () { /* réseau de magasin : on retentera dans 10 s */ });
+    }
+
+    poll();
+    setInterval(poll, 10000);
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) poll(); });
+})();
+</script>
 
 </body>
 </html>

@@ -72,5 +72,8 @@
   "search": "Szukaj",
   "admin_data": "Dane administracyjne",
   "no_employees": "Brak dostępnych pracowników.",
-  "schedule_not_served": "API nie podaje jeszcze, kto jest na zmianie: pokazano cały zespół."
+  "schedule_not_served": "API nie podaje jeszcze, kto jest na zmianie: pokazano cały zespół.",
+  "sound_order_label": "Dźwięk nowych zamówień",
+  "sound_order_hint": "Sygnał dźwiękowy informuje o nowym zamówieniu na tym urządzeniu.",
+  "sound_order_test": "Przetestuj dźwięk"
 }

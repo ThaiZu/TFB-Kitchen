@@ -264,6 +264,20 @@ a .card:active,.card.is-tappable:active { transform:scale(.985); }
 }
 .app-tab-profile.is-active .app-tab-avatar { box-shadow: 0 0 0 2px var(--c-secondary); }
 
+/* Compteur de commandes en attente, posé sur l'icône de l'onglet. Abricot :
+   la même teinte que les repères de commandes ailleurs dans l'app, et assez
+   franche pour se voir du coin de l'œil sans crier au rouge d'alerte. */
+.app-tab-ic { position: relative; display: inline-flex; }
+.app-tab-count {
+  position: absolute; top: -6px; left: 100%; transform: translateX(-45%);
+  min-width: 18px; height: 18px; padding: 0 5px;
+  border-radius: 999px;
+  background: var(--c-secondary); color: var(--c-on-abricot);
+  font-size: 10px; font-weight: 800; line-height: 18px; text-align: center;
+  box-shadow: 0 0 0 2px rgba(255,255,255,.94);
+}
+.app-tab-count[hidden] { display: none; }
+
 /* =========================================================================
    Reliquat Mazer — sidebar et navbar ne sont plus incluses par le layout,
    mais les règles restent si un écran les réutilise.
