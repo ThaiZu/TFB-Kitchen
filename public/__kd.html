@@ -167,21 +167,14 @@
 
     /* --- MAIN 2-KOLUMNY --- */
     /* ── Corps de la fiche ──
-       Deux colonnes rigides à 50/50 : quand un produit n'a pas d'étapes de
-       préparation — le cas de beaucoup d'assiettes — la droite restait vide
-       sur toute la hauteur pendant que la gauche défilait. Les sections se
-       répartissent maintenant selon leur contenu, et se rangent sur une
-       colonne dès qu'il n'y a plus la place pour deux. */
-    .fiche-main {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-        align-items: start;
-    }
+       Une seule colonne, à toutes les largeurs. La fiche se lit alors dans
+       un ordre unique — composition, allergènes, stockage, préparation —
+       le même quel que soit l'écran et quelles que soient les sections
+       présentes. Deux colonnes obligeaient l'œil à choisir un côté, et
+       laissaient la droite vide sur les produits sans étapes. */
+    .fiche-main { display: block; }
     .fiche-sec { padding: 20px 24px; min-width: 0; }
-    .fiche-sec + .fiche-sec { border-left: 1px solid #dee2e6; }
-    @media (max-width: 1023.98px) {
-        .fiche-sec + .fiche-sec { border-left: none; border-top: 1px solid #dee2e6; }
-    }
+    .fiche-sec + .fiche-sec { border-top: 1px solid #dee2e6; }
 
     /* Repli des données de gestion */
     .fiche-admin { margin-top: 14px; }
