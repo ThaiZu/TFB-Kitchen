@@ -63,5 +63,10 @@
   "to_be_developed": "Do zrobienia",
   "step": "Krok",
   "optional": "opcjonalne",
-  "view_all": "Zobacz wszystko"
+  "view_all": "Zobacz wszystko",
+  "fulfilment": "Sposób odbioru",
+  "fulfilment_all": "Wszystkie",
+  "click_and_collect": "Click & Collect",
+  "delivery_mode": "Dostawa",
+  "fulfilment_not_served": "API nie zwraca jeszcze sposobu odbioru: filtr nie działa, pokazane są wszystkie zamówienia."
 }

@@ -63,5 +63,10 @@
   "to_be_developed": "À développer",
   "step": "Étape",
   "optional": "facultatif",
-  "view_all": "Tout voir"
+  "view_all": "Tout voir",
+  "fulfilment": "Mode de remise",
+  "fulfilment_all": "Toutes",
+  "click_and_collect": "Click & Collect",
+  "delivery_mode": "Livraison",
+  "fulfilment_not_served": "L'API ne renvoie pas encore le mode de remise : le filtre reste sans effet et toutes les commandes sont affichées."
 }

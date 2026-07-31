@@ -11,18 +11,51 @@
         font-size: .75rem;
         font-weight: 600;
     }
-    .status-new         { background: #d1e7ff; color: #084298; }
-    .status-in_production { background: #fff3cd; color: #664d03; }
-    .status-completed   { background: #d1e7dd; color: #0f5132; }
-    .status-picked_up   { background: #cfe2ff; color: #084298; }
-    .status-unpicked    { background: #f8d7da; color: #842029; }
-    .status-unknown     { background: #e2e3e5; color: #41464b; }
+    /* Les statuts gardent leurs couleurs sémantiques — vert pour terminé,
+       rouge pour non retiré — mais reprises dans les teintes de la charte
+       plutôt que dans les bleus Bootstrap d'origine. */
+    .status-new           { background: rgba(31,79,107,.11);  color: #1F4F6B; }
+    .status-in_production { background: rgba(193,122,42,.16); color: #8a5a12; }
+    .status-completed     { background: rgba(45,122,62,.13);  color: #2D7A3E; }
+    .status-picked_up     { background: rgba(45,122,62,.13);  color: #2D7A3E; }
+    .status-unpicked      { background: rgba(141,29,44,.11);  color: #8D1D2C; }
+    .status-unknown       { background: rgba(36,26,22,.07);   color: #7a7168; }
 
-    .type-badge-b2b        { background: #e2e3e5; color: #41464b; }
-    .type-badge-individual { background: #cfe2ff; color: #084298; }
+    .type-badge-b2b        { background: rgba(36,26,22,.07);  color: #7a7168; }
+    .type-badge-individual { background: rgba(92,74,138,.12); color: #5C4A8A; }
 
     .filter-card { border-radius: 12px; }
     .orders-table th { white-space: nowrap; }
+
+    /* ── Bascule du mode de remise ── */
+    .ff-seg {
+        display: flex; gap: 4px; margin-top: 4px; padding: 4px;
+        background: var(--c-bg-2, #F4EFE8);
+        border: 1px solid var(--c-line, rgba(36,26,22,.09));
+        border-radius: 999px;
+    }
+    .ff-seg-btn {
+        flex: 1; min-height: 40px;
+        display: inline-flex; align-items: center; justify-content: center;
+        border-radius: 999px; padding: 0 14px;
+        font-size: .85rem; font-weight: 600; text-decoration: none;
+        color: var(--c-muted, #7a7168); white-space: nowrap;
+        transition: background .15s ease, color .15s ease;
+    }
+    .ff-seg-btn:hover { color: var(--c-ink, #241f1c); }
+    .ff-seg-btn.is-active {
+        background: var(--c-primary, #8D1D2C); color: #fff;
+        box-shadow: 0 6px 14px -8px rgba(141,29,44,.55);
+    }
+    .ff-seg-note { font-size: .76rem; color: var(--c-muted, #7a7168); margin: 8px 2px 0; }
+
+    .ff-badge {
+        display: inline-flex; align-items: center;
+        font-size: .74rem; font-weight: 600;
+        border-radius: 999px; padding: 4px 10px; white-space: nowrap;
+    }
+    .ff-badge-collect  { background: rgba(31,79,107,.11); color: #1F4F6B; }
+    .ff-badge-delivery { background: rgba(193,122,42,.16); color: #8a5a12; }
     .value-col { font-variant-numeric: tabular-nums; }
     .initials-badge {
         display: inline-flex;
@@ -115,6 +148,34 @@
                 </a>
             </div>
 
+            {# ── Mode de remise ──
+               Trois états exclusifs qu'on veut voir tous à la fois pour savoir
+               lequel est actif : des onglets segmentés, pas une liste
+               déroulante. Ce sont des liens : ils conservent la date et le nom
+               de client de l'URL, et fonctionnent sans JavaScript. #}
+            <div class="col-12">
+                <div class="ff-seg" role="group" aria-label="{{ translations.fulfilment }}">
+                    {% set _q = {'date': date, 'client_name': client_name, 'pending_only': pending_only ? '1' : '0'} %}
+                    {% for key, label in {
+                        'all':      translations.fulfilment_all ?? 'Toutes',
+                        'collect':  translations.click_and_collect ?? 'Click & Collect',
+                        'delivery': translations.delivery_mode ?? 'Livraison'
+                    } %}
+                        <a class="ff-seg-btn {{ fulfilment == key ? 'is-active' : '' }}"
+                           href="{{ ROOT }}/orders?{{ (_q|merge({'fulfilment': key}))|url_encode }}"
+                           aria-current="{{ fulfilment == key ? 'true' : 'false' }}">{{ label }}</a>
+                    {% endfor %}
+                </div>
+
+                {# Un filtre qui ne filtre rien doit le dire. Sans ce mot, il
+                   passerait pour cassé. #}
+                {% if not has_fulfilment_data %}
+                    <p class="ff-seg-note">
+                        <i class="bi bi-info-circle"></i>
+                        {{ translations.fulfilment_not_served }}
+                    </p>
+                {% endif %}
+            </div>
         </form>
     </div>
 </div>
@@ -145,6 +206,7 @@
                     <tr>
                         <th>{{ translations.col_client | default('Klient') }}</th>
                         <th>{{ translations.col_type | default('Typ') }}</th>
+                        <th>{{ translations.fulfilment }}</th>
                         <th>{{ translations.col_pickup | default('Data odbioru') }}</th>
                         <th class="value-col">{{ translations.col_value | default('Wartość') }}</th>
                         <th class="text-center">{{ translations.col_accepted_by | default('Przyjął') }}</th>
@@ -178,6 +240,21 @@
                                     <span class="order-status-badge type-badge-individual">
                                         <i class="bi bi-person me-1"></i>{{ translations.type_individual | default('Indywidualny') }}
                                     </span>
+                                {% endif %}
+                            </td>
+
+                            {# Mode de remise #}
+                            <td>
+                                {% if order.isDelivery() %}
+                                    <span class="ff-badge ff-badge-delivery">
+                                        <i class="bi bi-truck me-1"></i>{{ translations.delivery_mode }}
+                                    </span>
+                                {% elseif order.isClickAndCollect() %}
+                                    <span class="ff-badge ff-badge-collect">
+                                        <i class="bi bi-bag-check me-1"></i>{{ translations.click_and_collect }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">{{ translations.not_available | default('—') }}</span>
                                 {% endif %}
                             </td>
 
@@ -235,7 +312,7 @@
                         {% endfor %}
                     {% else %}
                         <tr>
-                            <td colspan="7" class="text-center py-5 text-muted">
+                            <td colspan="8" class="text-center py-5 text-muted">
                                 <i class="bi bi-inbox fs-2 d-block mb-2"></i>
                                 {{ translations.no_orders | default('Brak zamówień spełniających kryteria wyszukiwania.') }}
                                 <div class="small mt-1">

@@ -41,10 +41,22 @@ class OrderController extends Controller
             []
         );
 
+        // Mode de remise : all | collect | delivery. Trié en PHP faute d'un
+        // paramètre d'API (voir docs/ENDPOINTS_COMMANDES_WEB.md).
+        $fulfilment = $_GET['fulfilment'] ?? 'all';
+        if (!in_array($fulfilment, ['all', 'collect', 'delivery'], true)) {
+            $fulfilment = 'all';
+        }
+
+        $hasFulfilmentData = $this->orderService->hasFulfilmentData($orders);
+        $orders = $this->orderService->filterByFulfilment($orders, $fulfilment);
+
         $this->view('orders/overview', [
-            'orders'      => $orders,
-            'date'        => $date,
-            'client_name' => $clientName,
+            'orders'              => $orders,
+            'fulfilment'          => $fulfilment,
+            'has_fulfilment_data' => $hasFulfilmentData,
+            'date'                => $date,
+            'client_name'         => $clientName,
             'pending_only' => $pendingOnly,
             'today'       => date('Y-m-d'),
         ]);

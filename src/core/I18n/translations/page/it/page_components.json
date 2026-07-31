@@ -63,5 +63,10 @@
   "to_be_developed": "Da sviluppare",
   "step": "Passo",
   "optional": "facoltativo",
-  "view_all": "Vedi tutto"
+  "view_all": "Vedi tutto",
+  "fulfilment": "Modalità di ritiro",
+  "fulfilment_all": "Tutti",
+  "click_and_collect": "Click & Collect",
+  "delivery_mode": "Consegna",
+  "fulfilment_not_served": "L'API non restituisce ancora la modalità di ritiro: il filtro non ha effetto e sono mostrati tutti gli ordini."
 }

@@ -63,5 +63,10 @@
   "to_be_developed": "To be developed",
   "step": "Step",
   "optional": "optional",
-  "view_all": "View all"
+  "view_all": "View all",
+  "fulfilment": "Fulfilment",
+  "fulfilment_all": "All",
+  "click_and_collect": "Click & Collect",
+  "delivery_mode": "Delivery",
+  "fulfilment_not_served": "The API does not return the fulfilment mode yet: the filter has no effect and all orders are shown."
 }
