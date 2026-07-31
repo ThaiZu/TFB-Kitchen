@@ -53,6 +53,9 @@
     .pr-tab-stock {
         grid-column: 1 / -1;
         flex-direction: row; gap: 8px; min-height: 44px; padding: 6px 12px;
+        /* S'ajoute au gap de la grille : le stock se détache de la rangée des
+           moments de la journée sans sortir du même bloc. */
+        margin-top: 6px;
     }
     .pr-tab-stock .lc-icon { opacity: .8; }
 
