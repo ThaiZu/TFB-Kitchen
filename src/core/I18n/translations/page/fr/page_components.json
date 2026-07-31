@@ -28,7 +28,7 @@
   "settings": "Paramètres",
   "kitchen_dashboard": "Tableau de bord cuisine",
   "production": "Production",
-  "knowledge": "Connaissances",
+  "knowledge": "Base de connaissances",
   "checklists": "Listes de contrôle",
   "orders": "Commandes",
   "complaints": "Réclamations",
@@ -62,5 +62,6 @@
   "expiry_date": "Date de péremption",
   "to_be_developed": "À développer",
   "step": "Étape",
-  "optional": "facultatif"
+  "optional": "facultatif",
+  "view_all": "Tout voir"
 }

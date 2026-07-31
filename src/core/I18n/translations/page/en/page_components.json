@@ -28,7 +28,7 @@
   "settings": "Settings",
   "kitchen_dashboard": "Kitchen Dashboard",
   "production": "Production",
-  "knowledge": "Knowledge",
+  "knowledge": "Knowledge base",
   "checklists": "Checklists",
   "orders": "Orders",
   "complaints": "Complaints",
@@ -62,5 +62,6 @@
   "expiry_date": "Expiry date",
   "to_be_developed": "To be developed",
   "step": "Step",
-  "optional": "optional"
+  "optional": "optional",
+  "view_all": "View all"
 }

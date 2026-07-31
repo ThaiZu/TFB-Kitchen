@@ -20,12 +20,13 @@
        Ils sont ici explicites et réguliers.
        ────────────────────────────────────────────────────────────────── */
 
-    .dash-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; }
-    @media (max-width: 991px) { .dash-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
-    @media (max-width: 575px) { .dash-grid { grid-template-columns: 1fr; } }
+    /* Une tuile par ligne. Empilées, elles se lisent dans l'ordre où le travail
+       se fait et gardent la même largeur de frappe sur tous les écrans ; en
+       quatre colonnes, les descriptions se cassaient en trois lignes étroites. */
+    .dash-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
 
     .dash-action {
-        display: flex; flex-direction: column; gap: 10px;
+        display: flex; align-items: flex-start; gap: 14px;
         padding: 16px; height: 100%;
         background: var(--c-surface, #fff);
         border: 1px solid var(--c-line, rgba(36,26,22,.09));
@@ -41,7 +42,11 @@
     a.dash-action:active { transform: scale(.985); }
     .dash-action.is-disabled { opacity: .6; pointer-events: none; }
 
-    .dash-action-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; }
+    .dash-action-top { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .dash-action-body { flex: 1; min-width: 0; }
+    /* Le badge « en construction » rejoint le titre : en pleine largeur, la
+       place est là, et il reste hors du flux du texte. */
+    .dash-action-titleline { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
 
     .dash-action-ic {
         width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
@@ -134,12 +139,14 @@
         <div class="dash-action is-disabled">
             <div class="dash-action-top">
                 <span class="dash-action-ic ic-gris">{{ icons.svg('list-checks', 22) }}</span>
-                <span class="dash-wip">
-                    {{ icons.svg('clock', 12) }}{{ translations.under_construction|default('W budowie') }}
-                </span>
             </div>
-            <div>
-                <p class="dash-action-title text-muted">{{ translations.todays_production }}</p>
+            <div class="dash-action-body">
+                <div class="dash-action-titleline">
+                    <p class="dash-action-title text-muted">{{ translations.todays_production }}</p>
+                    <span class="dash-wip">
+                        {{ icons.svg('clock', 12) }}{{ translations.under_construction|default('W budowie') }}
+                    </span>
+                </div>
                 <p class="dash-action-sub">{{ translations.todays_production_subtitle }}</p>
             </div>
         </div>
@@ -149,7 +156,7 @@
             <div class="dash-action-top">
                 <span class="dash-action-ic ic-encre">{{ icons.svg('notebook', 22) }}</span>
             </div>
-            <div>
+            <div class="dash-action-body">
                 <p class="dash-action-title">{{ translations.production_cards }}</p>
                 <p class="dash-action-sub">{{ translations.production_cards_subtitle }}</p>
             </div>
@@ -160,7 +167,7 @@
             <div class="dash-action-top">
                 <span class="dash-action-ic ic-ambre">{{ icons.svg('clipboard-check', 22) }}</span>
             </div>
-            <div>
+            <div class="dash-action-body">
                 <p class="dash-action-title">{{ translations.checklists }}</p>
                 <p class="dash-action-sub">{{ translations.checklists_subtitle }}</p>
             </div>
@@ -171,7 +178,7 @@
             <div class="dash-action-top">
                 <span class="dash-action-ic ic-brun">{{ icons.svg('receipt', 22) }}</span>
             </div>
-            <div>
+            <div class="dash-action-body">
                 <p class="dash-action-title">{{ translations.my_orders }}</p>
                 <p class="dash-action-sub">{{ translations.my_orders_subtitle }}</p>
             </div>
@@ -228,7 +235,7 @@
                 {{ icons.svg('package', 15) }} {{ translations.products|default('Produkty') }}
             </a>
             <a href="{{ ROOT }}/knowledge" class="btn btn-sm btn-outline-primary">
-                {{ icons.svg('layers', 15) }} {{ translations.knowledge|default('Przegląd') }}
+                {{ icons.svg('layers', 15) }} {{ translations.view_all|default('Tout voir') }}
             </a>
         </div>
     </div>

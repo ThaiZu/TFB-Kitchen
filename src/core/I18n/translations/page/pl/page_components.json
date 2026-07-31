@@ -28,7 +28,7 @@
   "settings": "Ustawienia",
   "kitchen_dashboard": "Pulpit kuchni",
   "production": "Produkcja",
-  "knowledge": "Wiedza",
+  "knowledge": "Baza wiedzy",
   "checklists": "Checklisty",
   "orders": "Zamówienia",
   "complaints": "Reklamacje",
@@ -62,5 +62,6 @@
   "expiry_date": "Data przydatności",
   "to_be_developed": "Do zrobienia",
   "step": "Krok",
-  "optional": "opcjonalne"
+  "optional": "opcjonalne",
+  "view_all": "Zobacz wszystko"
 }

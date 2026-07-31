@@ -28,7 +28,7 @@
   "settings": "Instellingen",
   "kitchen_dashboard": "Keukendashboard",
   "production": "Productie",
-  "knowledge": "Kennis",
+  "knowledge": "Kennisbank",
   "checklists": "Checklists",
   "orders": "Bestellingen",
   "complaints": "Klachten",
@@ -62,5 +62,6 @@
   "expiry_date": "Houdbaarheidsdatum",
   "to_be_developed": "Te ontwikkelen",
   "step": "Stap",
-  "optional": "optioneel"
+  "optional": "optioneel",
+  "view_all": "Alles bekijken"
 }

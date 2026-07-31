@@ -67,6 +67,14 @@
     }
     .cl-pick-count { font-size: .7rem; color: var(--c-muted, #7a7168); }
 
+    /* « Toutes » : pleine largeur, hauteur réduite au strict nécessaire. */
+    .cl-pick-all {
+        grid-column: 1 / -1;
+        flex-direction: row; align-items: center; justify-content: center;
+        padding: 9px 14px; min-height: 44px;
+    }
+    .cl-pick-all .cl-pick-name { font-size: .84rem; text-align: center; }
+
     .task-row { transition: background .1s; }
     .task-row:hover { background: #f8f9fa; }
 
@@ -154,7 +162,10 @@
                             </legend>
 
                             <div class="cl-pick">
-                                <label class="cl-pick-tile {{ selected_checklist_id is empty ? 'is-active' : '' }}">
+                                {# « Toutes » n'a ni heure ni avancement à montrer : en tuile
+                                   carrée elle laissait un grand vide à côté des autres. Elle
+                                   prend la ligne entière, en bandeau fin. #}
+                                <label class="cl-pick-tile cl-pick-all {{ selected_checklist_id is empty ? 'is-active' : '' }}">
                                     <input type="radio" name="checklist_id" value=""
                                            {{ selected_checklist_id is empty ? 'checked' : '' }}>
                                     <span class="cl-pick-name">
