@@ -183,6 +183,12 @@ a:hover { color:var(--c-primary-hover); }
   font-family:var(--font-display); font-weight:400; color:var(--c-ink); margin-bottom:0;
 }
 .card .card-footer { background:transparent; border-top:1px solid var(--c-line); padding:12px 18px; }
+/* Mazer pose « .card .card-header~.card-body { padding-top:0 } », dont la
+   spécificité (0,3,0) bat la règle de padding ci-dessus (0,2,0). Résultat :
+   dans TOUTE carte à en-tête, le premier élément du corps collait au filet
+   de séparation — « NOM DU CLIENT » ou « ACCEPTÉ PAR » sans un pixel d'air
+   au-dessus. On rétablit le padding avec la même spécificité. */
+.card .card-header ~ .card-body { padding-top:16px; }
 a .card:active,.card.is-tappable:active { transform:scale(.985); }
 @media (hover:hover) {
   a .card:hover,.hover-lift:hover { transform:translateY(-3px); box-shadow:var(--sh-3) !important; }

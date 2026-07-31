@@ -14,15 +14,18 @@
         font-size: .8rem;
         font-weight: 600;
     }
-    .status-new           { background: #d1e7ff; color: #084298; }
-    .status-in_production { background: #fff3cd; color: #664d03; }
-    .status-completed     { background: #d1e7dd; color: #0f5132; }
-    .status-picked_up     { background: #cfe2ff; color: #084298; }
-    .status-unpicked      { background: #f8d7da; color: #842029; }
-    .status-unknown       { background: #e2e3e5; color: #41464b; }
+    /* Mêmes teintes que sur la liste des commandes : les statuts gardent leur
+       sens — vert pour terminé, rouge pour non retiré — dans la palette de la
+       charte plutôt que dans les bleus Bootstrap d'origine. */
+    .status-new           { background: rgba(31,79,107,.11);  color: #1F4F6B; }
+    .status-in_production { background: rgba(193,122,42,.16); color: #8a5a12; }
+    .status-completed     { background: rgba(45,122,62,.13);  color: #2D7A3E; }
+    .status-picked_up     { background: rgba(45,122,62,.13);  color: #2D7A3E; }
+    .status-unpicked      { background: rgba(141,29,44,.11);  color: #8D1D2C; }
+    .status-unknown       { background: rgba(36,26,22,.07);   color: #7a7168; }
 
-    .detail-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; color: #6c757d; }
-    .detail-value { font-size: .95rem; font-weight: 500; color: #212529; }
+    .detail-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; color: var(--c-muted, #7a7168); }
+    .detail-value { font-size: .95rem; font-weight: 500; color: var(--c-ink, #241f1c); }
 
     .section-card { border-radius: 12px; margin-bottom: 1.25rem; }
     .section-card .card-header { border-radius: 12px 12px 0 0; }
