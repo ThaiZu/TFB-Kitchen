@@ -143,6 +143,27 @@ jobs:
             out=$(curl -s -o /dev/null -w "%{http_code} %{size_download}" "$BASE/$f")
             echo "  $out  $f"
           done
+          # Un 200 ne prouve pas que la page rend : PHP renvoie 200 avec des
+          # warnings en haut de page si une variable d'env manque (JWT_SECRET…),
+          # et config/app.php a DEBUG=true. On regarde donc le contenu.
+          echo "== contenu servi =="
+          body=$(curl -s "$BASE/")
+          echo "  octets : $(printf '%s' "$body" | wc -c)"
+          if printf '%s' "$body" | grep -qi 'atelier-theme.css'; then
+            echo "  OK — la page référence bien la feuille du design system"
+          else
+            echo "  ATTENTION — atelier-theme.css absent du HTML servi"
+          fi
+          if printf '%s' "$body" | grep -qiE 'Warning:|Fatal error|Notice:|Undefined (array key|variable)'; then
+            echo "  ATTENTION — erreurs PHP dans la page :"
+            printf '%s' "$body" | grep -iE 'Warning:|Fatal error|Notice:|Undefined (array key|variable)' | head -5
+          else
+            echo "  OK — aucune erreur PHP visible dans la page"
+          fi
+          echo "  ── 400 premiers octets ──"
+          printf '%s' "$body" | head -c 400
+          echo
+          echo "  ── fin ──"
           case "$code" in
             200|301|302) echo "OK — l'app est servie sur $BASE/";;
             403) echo "ATTENTION : 403 — vérifier Options +FollowSymLinks et AllowOverride All sur le docroot";;
