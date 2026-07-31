@@ -123,17 +123,34 @@
     }
 
     /* --- MAIN 2-KOLUMNY --- */
+    /* ── Corps de la fiche ──
+       Deux colonnes rigides à 50/50 : quand un produit n'a pas d'étapes de
+       préparation — le cas de beaucoup d'assiettes — la droite restait vide
+       sur toute la hauteur pendant que la gauche défilait. Les sections se
+       répartissent maintenant selon leur contenu, et se rangent sur une
+       colonne dès qu'il n'y a plus la place pour deux. */
     .fiche-main {
-        display: flex;
-        min-height: 400px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+        align-items: start;
     }
-    .fiche-col {
-        flex: 1;
-        padding: 20px 24px;
+    .fiche-sec { padding: 20px 24px; min-width: 0; }
+    .fiche-sec + .fiche-sec { border-left: 1px solid #dee2e6; }
+    @media (max-width: 1023.98px) {
+        .fiche-sec + .fiche-sec { border-left: none; border-top: 1px solid #dee2e6; }
     }
-    .fiche-col-left {
-        border-right: 1px solid #dee2e6;
+
+    /* Repli des données de gestion */
+    .fiche-admin { margin-top: 14px; }
+    .fiche-admin > summary {
+        cursor: pointer; list-style: none;
+        font-size: .78rem; font-weight: 600; color: #8a8178;
+        padding: 9px 0; min-height: 40px;
+        display: flex; align-items: center; gap: 7px;
     }
+    .fiche-admin > summary::-webkit-details-marker { display: none; }
+    .fiche-admin > summary::before { content: '⌄'; font-size: 1rem; line-height: 1; }
+    .fiche-admin[open] > summary::before { content: '⌃'; }
 
     /* --- SECTION TITLE --- */
     .fiche-section-title {
@@ -320,7 +337,6 @@
 
     @media (max-width: 768px) {
         .fiche-main { flex-direction: column; }
-        .fiche-col-left { border-right: none; border-bottom: 1px solid #dee2e6; }
         .fiche-header { flex-direction: column; }
         .fiche-hero { aspect-ratio: 4 / 3; max-height: 38vh; }
         .plano-photos { flex-direction: column; }
@@ -336,11 +352,6 @@
        que la colonne de droite restait à moitié vide. Le seuil monte à
        1024 px : portrait sur une colonne, paysage sur deux.
        ══════════════════════════════════════════════════════════════════ */
-    @media (max-width: 1023.98px) {
-        .fiche-main { flex-direction: column; }
-        .fiche-col-left { border-right: none; border-bottom: 1px solid #dee2e6; }
-    }
-
     /* Sur tablette, la fiche est lue plus loin de l'œil qu'un téléphone et
        plus loin qu'un écran de bureau. Les tailles d'origine — 0,72 à
        0,88 rem — y sont trop petites : tout le corps de texte remonte d'un
@@ -357,7 +368,7 @@
         .allergen-note        { font-size: .88rem; }
         .package-materials-table td,
         .package-materials-table th { font-size: .95rem; padding: 11px 10px; }
-        .fiche-col            { padding: 22px 26px; }
+        .fiche-sec            { padding: 22px 26px; }
     }
 
     /* En portrait, l'intitulé et sa valeur se disputaient la largeur : le
@@ -532,9 +543,7 @@
 
         {# ---- MAIN 2 KOLUMNY ---- #}
         <div class="fiche-main">
-
-            {# =========== LEWA KOLUMNA =========== #}
-            <div class="fiche-col fiche-col-left">
+            <div class="fiche-sec">
 
                 {# SKŁAD (składniki jako chipy) #}
                 <h4 class="fiche-section-title">
@@ -627,24 +636,32 @@
                         <span class="fiche-info-value">{{ recipe.getYieldQuantity() }} pcs</span>
                     </div>
                 {% endif %}
-                {% if obj.getQuantityPerLabel() %}
-                    <div class="fiche-info-row">
-                        <span class="fiche-info-label">{{ translations.quantity_per_label|default('Ilość na etykiecie') }}</span>
-                        <span class="fiche-info-value">{{ obj.getQuantityPerLabel() }}</span>
-                    </div>
-                {% endif %}
-                {% if obj.getTaxValPerc() %}
-                    <div class="fiche-info-row">
-                        <span class="fiche-info-label">{{ translations.tax|default('Stawka VAT') }}</span>
-                        <span class="fiche-info-value">{{ obj.getTaxValPerc() }}%</span>
-                    </div>
+                {# Étiquetage et TVA ne servent pas à produire : ils descendent
+                   dans un repli, ouvrable quand on en a besoin. Sur une tablette
+                   de cuisine, un taux de TVA au milieu des conditions de service
+                   n'est que du bruit. #}
+                {% if obj.getQuantityPerLabel() or obj.getTaxValPerc() %}
+                    <details class="fiche-admin">
+                        <summary>{{ translations.admin_data|default('Données de gestion') }}</summary>
+                        {% if obj.getQuantityPerLabel() %}
+                            <div class="fiche-info-row">
+                                <span class="fiche-info-label">{{ translations.quantity_per_label|default('Ilość na etykiecie') }}</span>
+                                <span class="fiche-info-value">{{ obj.getQuantityPerLabel() }}</span>
+                            </div>
+                        {% endif %}
+                        {% if obj.getTaxValPerc() %}
+                            <div class="fiche-info-row">
+                                <span class="fiche-info-label">{{ translations.tax|default('Stawka VAT') }}</span>
+                                <span class="fiche-info-value">{{ obj.getTaxValPerc() }}%</span>
+                            </div>
+                        {% endif %}
+                    </details>
                 {% endif %}
                 {% endif %}{# /if obj #}
 
-            </div>{# /fiche-col-left #}
+            </div>
 
-            {# =========== PRAWA KOLUMNA =========== #}
-            <div class="fiche-col">
+            <div class="fiche-sec">
 
                 {# PRZYGOTOWANIE – typy #}
                 {% if preparation and preparation.hasTypes() %}
@@ -672,12 +689,10 @@
                             <div>{{ step.getStepDescription() }}</div>
                         </div>
                     {% endfor %}
-                {% elseif not preparation or not preparation.hasTypes() %}
-                    <h4 class="fiche-section-title" style="margin-top:0">
-                        <i class="bi bi-list-ol me-1"></i>{{ translations.preparation|default('Przygotowanie') }}
-                    </h4>
-                    <p class="text-muted small">—</p>
                 {% endif %}
+                {# Une section « Préparation » titrée pour n'afficher qu'un tiret
+                   occupait une place et faisait chercher une information qui
+                   n'existe pas. Sans étapes, elle disparaît. #}
 
                 {# RECEPTURA SZCZEGÓŁOWA (drzewo składników z ilościami) #}
                 {% if recipe and recipe.hasElements() %}
@@ -729,7 +744,7 @@
                     {% endfor %}
                 {% endif %}
 
-            </div>{# /fiche-col-right #}
+            </div>
 
         </div>{# /fiche-main #}
 
