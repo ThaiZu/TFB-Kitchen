@@ -110,6 +110,23 @@ class ProductionRepository
     }
 
     /**
+     * Enregistre (ou remplace) la MEP préparée pour une date à venir.
+     *
+     * C'est l'encodage de l'après-midi : ce qu'on met en place aujourd'hui
+     * pour demain. Les lignes portent `id_product`, pas `id` — elles n'existent
+     * pas encore côté serveur.
+     *
+     * @param array<int, array{id_product: int, quantity: float}> $lines
+     */
+    public function saveMep(int $shopId, string $date, array $lines): array
+    {
+        return $this->apiClient->post("/shops/{$shopId}/mep", [
+            'date'  => $date,
+            'lines' => $lines,
+        ]);
+    }
+
+    /**
      * Valide la MEP, ligne par ligne, avec la quantité réellement obtenue.
      *
      * @param array<int, array{id: int, quantity: float, skipped?: bool}> $lines

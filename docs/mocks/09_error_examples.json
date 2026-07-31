@@ -1,0 +1,24 @@
+{
+  "not_found_404": {
+    "success": false,
+    "description": "mep_not_found"
+  },
+  "validation_422": {
+    "success": false,
+    "description": "invalid_quantity",
+    "errors": [
+      {
+        "id": 4401,
+        "message": "quantity must be >= 0"
+      }
+    ]
+  },
+  "conflict_409": {
+    "success": false,
+    "description": "mep_already_validated"
+  },
+  "server_500": {
+    "success": false,
+    "description": "internal_error"
+  }
+}

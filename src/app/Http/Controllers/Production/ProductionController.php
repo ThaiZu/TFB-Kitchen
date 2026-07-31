@@ -3,6 +3,7 @@
 namespace App\Kitchen\app\Http\Controllers\Production;
 
 use App\Kitchen\app\Http\Controllers\Controller;
+use App\Kitchen\app\Models\Production\MepLineModel;
 use App\Kitchen\app\Services\Production\ProductionService;
 
 class ProductionController extends Controller
@@ -12,41 +13,46 @@ class ProductionController extends Controller
     ) {}
 
     /**
-     * GET /production[?view=morning|noon|afternoon|stock][&date=Y-m-d]
+     * GET /production[?view=mep|morning|noon|afternoon|stock][&mep=morning|afternoon]
      *
-     * Un seul écran, quatre vues. Le toggle ne recharge que ce que la vue
-     * demandée exige : la vue Stock n'a pas besoin du catalogue de MEP, et la
-     * vue Matin n'a pas besoin du profil de ventes.
+     * L'écran travaille toujours pour aujourd'hui : pas de sélecteur de date.
+     * Une cuisine ne produit pas pour hier, et un écran qui peut afficher une
+     * autre journée finit par en afficher une par erreur au milieu du service.
+     * Seul l'encodage de la MEP regarde demain, et il le dit.
      */
     public function index(): void
     {
-        $date    = $this->readDate();
+        $today   = date('Y-m-d');
         $periods = $this->productionService->getPeriods();
         $view    = $this->readView($periods);
 
         $data = [
-            'periods'       => $periods,
-            'active_view'   => $view,
-            'selected_date' => $date,
-            'today'         => date('Y-m-d'),
-            'params'        => $this->productionService->getParams(),
+            'periods'     => $periods,
+            'active_view' => $view,
+            'today'       => $today,
+            'params'      => $this->productionService->getParams(),
         ];
 
         if ($view === 'stock') {
             $products = $this->productionService->getProducts();
             $stock    = $this->productionService->getStock();
-            $rebakes  = $this->productionService->getRebakeSuggestions($products, $stock, $date);
+            $rebakes  = $this->productionService->getRebakeSuggestions($products, $stock, $today);
 
             $data += [
-                'stock_available' => $stock !== null,
-                'stock'           => $stock ?? [],
-                'rebakes'         => $rebakes['suggestions'],
+                'stock_available'   => $stock !== null,
+                'stock'             => $stock ?? [],
+                'rebakes'           => $rebakes['suggestions'],
                 'rebakes_available' => $rebakes['available'],
                 'rebakes_samples'   => $rebakes['samples'],
             ];
+        } elseif ($view === 'mep') {
+            $data += $this->mepData($today);
         } else {
             $products = $this->productionService->getProducts();
-            $mep      = $this->productionService->getMep($date);
+            $mep      = $this->productionService->getMep($today);
+            $lines    = $mep !== null
+                ? $this->productionService->mepLinesForPeriod($mep['lines'], $view)
+                : [];
 
             $data += [
                 'products_available' => $products !== null,
@@ -54,15 +60,60 @@ class ProductionController extends Controller
                     ? $this->productionService->groupByCategory($products, $view)
                     : [],
                 'mep_available'      => $mep !== null,
-                'mep_status'         => $mep['status'] ?? null,
-                'mep_prepared_at'    => $mep['prepared_at'] ?? null,
-                'mep_lines'          => $mep !== null
-                    ? $this->productionService->mepLinesForPeriod($mep['lines'], $view)
-                    : [],
+                'mep_lines'          => $lines,
+                'mep_pending_count'  => count(array_filter($lines, fn(MepLineModel $l) => $l->isPending())),
             ];
         }
 
         $this->view('production/index', $data);
+    }
+
+    /**
+     * Les deux temps de la MEP.
+     *
+     * Le matin, on valide ce qui a été préparé hier : c'est cette validation
+     * qui ouvre la vente. L'après-midi, on encode ce qu'on prépare pour
+     * demain. Deux gestes opposés — l'un ferme une journée, l'autre en ouvre
+     * une — d'où deux écrans plutôt qu'un formulaire à double usage.
+     */
+    private function mepData(string $today): array
+    {
+        $sub = ($_GET['mep'] ?? '') === 'afternoon' ? 'afternoon' : 'morning';
+
+        if ($sub === 'morning') {
+            $mep = $this->productionService->getMep($today);
+            return [
+                'mep_sub'         => 'morning',
+                'mep_available'   => $mep !== null,
+                'mep_status'      => $mep['status'] ?? null,
+                'mep_prepared_at' => $mep['prepared_at'] ?? null,
+                'mep_lines'       => $mep['lines'] ?? [],
+            ];
+        }
+
+        $tomorrow = date('Y-m-d', strtotime($today . ' +1 day'));
+        $products = $this->productionService->getProducts();
+        // Un brouillon peut déjà exister : on reprend l'encodage là où il en
+        // était plutôt que de repartir de zéro à chaque ouverture.
+        $draft    = $this->productionService->getMep($tomorrow);
+
+        $quantities = [];
+        foreach ($draft['lines'] ?? [] as $line) {
+            if ($line->getIdProduct() !== null) {
+                $quantities[$line->getIdProduct()] = $line->getQuantityPlanned();
+            }
+        }
+
+        return [
+            'mep_sub'            => 'afternoon',
+            'tomorrow'           => $tomorrow,
+            'products_available' => $products !== null,
+            'catalog'            => $products !== null
+                ? $this->productionService->groupAllByCategory($products)
+                : [],
+            'draft_available'    => $draft !== null,
+            'draft_quantities'   => $quantities,
+        ];
     }
 
     /**
@@ -73,10 +124,10 @@ class ProductionController extends Controller
      */
     public function ajaxStock(): void
     {
-        $date     = $this->readDate();
+        $today    = date('Y-m-d');
         $products = $this->productionService->getProducts();
         $stock    = $this->productionService->getStock();
-        $rebakes  = $this->productionService->getRebakeSuggestions($products, $stock, $date);
+        $rebakes  = $this->productionService->getRebakeSuggestions($products, $stock, $today);
 
         $this->json([
             'success'           => $stock !== null,
@@ -91,7 +142,8 @@ class ProductionController extends Controller
     /**
      * POST /ajax/production/mep/validate
      *
-     * Corps : { date, lines: [ { id, quantity, skipped? } ] }
+     * Corps : { lines: [ { id, quantity, skipped? } ] } — toujours pour
+     * aujourd'hui.
      */
     public function ajaxValidateMep(): void
     {
@@ -121,9 +173,45 @@ class ProductionController extends Controller
             return;
         }
 
-        $date     = $this->readDate($input['date'] ?? null);
-        $response = $this->productionService->validateMep($date, $lines);
+        $response = $this->productionService->validateMep(date('Y-m-d'), $lines);
+        $this->json($response, ($response['success'] ?? false) ? 200 : 502)->send();
+    }
 
+    /**
+     * POST /ajax/production/mep
+     *
+     * Corps : { date, lines: [ { id_product, quantity } ] }
+     * Encodage de la mise en place du lendemain.
+     */
+    public function ajaxSaveMep(): void
+    {
+        $input = json_decode(file_get_contents('php://input') ?: '', true);
+        if (!is_array($input) || !is_array($input['lines'] ?? null)) {
+            $this->json(['success' => false, 'description' => 'invalid_payload'], 400)->send();
+            return;
+        }
+
+        $lines = [];
+        foreach ($input['lines'] as $line) {
+            if (!is_array($line) || empty($line['id_product'])) {
+                continue;
+            }
+            $quantity = max(0, (float)($line['quantity'] ?? 0));
+            // Une ligne à zéro n'est pas une mise en place : elle est omise
+            // plutôt qu'envoyée, sinon la MEP de demain s'ouvrirait sur
+            // quarante lignes vides.
+            if ($quantity <= 0) {
+                continue;
+            }
+            $lines[] = ['id_product' => (int)$line['id_product'], 'quantity' => $quantity];
+        }
+
+        $date = (string)($input['date'] ?? '');
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            $date = date('Y-m-d', strtotime('+1 day'));
+        }
+
+        $response = $this->productionService->saveMep($date, $lines);
         $this->json($response, ($response['success'] ?? false) ? 200 : 502)->send();
     }
 
@@ -153,17 +241,12 @@ class ProductionController extends Controller
         $this->json($response, ($response['success'] ?? false) ? 200 : 502)->send();
     }
 
-    private function readDate(?string $raw = null): string
-    {
-        $date = $raw ?? ($_GET['date'] ?? '');
-        return preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$date) ? (string)$date : date('Y-m-d');
-    }
-
     /** @param \App\Kitchen\app\Models\Production\PeriodModel[] $periods */
     private function readView(array $periods): string
     {
         $allowed = array_map(fn($p) => $p->getKey(), $periods);
         $allowed[] = 'stock';
+        $allowed[] = 'mep';
 
         $view = (string)($_GET['view'] ?? '');
         if (in_array($view, $allowed, true)) {

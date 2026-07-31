@@ -112,8 +112,14 @@ fenêtre de projection d'un produit est donc `forecast_hours + son lead`.
 GET /shops/{shopId}/mep?date=YYYY-MM-DD
 ```
 
-`date` = le jour **de consommation** (aujourd'hui). Le serveur renvoie la MEP
-préparée la veille pour ce jour-là ; la PWA n'a pas à raisonner en J‑1.
+`date` = le jour **de consommation**. Le serveur renvoie la MEP préparée la
+veille pour ce jour-là ; la PWA n'a pas à raisonner en J‑1.
+
+L'écran l'appelle sur deux dates seulement : **aujourd'hui**, pour valider ce
+qui a été préparé hier, et **demain**, pour reprendre le brouillon en cours
+d'encodage. Il n'y a pas de sélecteur de date dans l'interface — une cuisine ne
+produit pas pour hier, et un écran qui peut afficher une autre journée finit
+par en afficher une par erreur au milieu du service.
 
 ```json
 {
@@ -142,7 +148,35 @@ préparée la veille pour ce jour-là ; la PWA n'a pas à raisonner en J‑1.
 `status` de la MEP : `PREPARED` (à valider) ou `VALIDATED`. Idem par ligne, plus
 `SKIPPED` pour une ligne écartée.
 
-### Valider
+### Encoder la MEP du lendemain
+
+```
+POST /shops/{shopId}/mep
+```
+
+```json
+{
+  "date": "2026-08-02",
+  "lines": [
+    { "id_product": 6700106, "quantity": 144 },
+    { "id_product": 6700120, "quantity": 72 }
+  ]
+}
+```
+
+C'est le geste de l'après-midi : on met en place aujourd'hui ce qui sera
+produit demain. Les lignes portent `id_product` — elles n'existent pas encore
+côté serveur — et **la période est déduite de la fiche produit** : demander à
+quelqu'un de choisir « matin » pour chaque croissant serait une saisie de plus
+sans information de plus.
+
+L'appel **remplace** la MEP de cette date. Les lignes à zéro ne sont pas
+envoyées ; celles qui disparaissent du corps sont supprimées. Rouvrir l'écran
+doit reprendre le brouillon là où il en était, d'où le `GET` sur la même date.
+
+Réponse : la MEP enregistrée, forme du `GET` ci-dessus.
+
+### Valider la MEP du jour
 
 ```
 POST /shops/{shopId}/mep/validate

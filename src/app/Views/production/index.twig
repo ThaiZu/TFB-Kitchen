@@ -18,11 +18,14 @@
        Un select cacherait trois vues sur quatre derrière un tap. Quatre
        cibles visibles, hautes de 54 px, se visent avec un doigt fariné. */
     .pr-toggle {
-        display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+        display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
         background: var(--c-bg-2, #F4EFE8);
         border: 1px solid var(--c-line, rgba(36,26,22,.09));
         border-radius: var(--r-lg, 18px); padding: 6px;
     }
+    /* Sur un écran étroit, l'horaire sous le libellé casse les colonnes avant
+       de rendre service : le libellé seul suffit à choisir. */
+    @media (max-width: 640px) { .pr-tab small { display: none; } }
     .pr-tab {
         display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
         min-height: 54px; padding: 6px 4px; border-radius: var(--r-md, 13px);
@@ -43,19 +46,72 @@
         background: var(--c-secondary, #F2C9A0); margin-left: 5px; vertical-align: middle;
     }
 
-    /* ── Barre de date ───────────────────────────────────────────────── */
-    .pr-datebar { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
-    .pr-datenav {
-        width: 46px; height: 46px; flex: 0 0 auto;
+    /* ── Sous-toggle de la MEP ───────────────────────────────────────────
+       Deux gestes opposés sous le même mot : le matin on valide la veille,
+       l'après-midi on prépare le lendemain. Ils ne partagent qu'un nom. */
+    .mep-sub { display: flex; gap: 8px; margin: 14px 0 16px; }
+    .mep-sub a {
+        flex: 1; min-height: 58px; padding: 8px 12px;
+        display: flex; flex-direction: column; justify-content: center; gap: 2px;
+        border: 1px solid var(--c-line-2, rgba(36,26,22,.14));
+        border-radius: var(--r-md, 13px); background: #fff;
+        text-decoration: none; color: var(--c-ink, #241f1c);
+    }
+    .mep-sub a small { font-size: .7rem; color: var(--c-muted, #7a7168); }
+    .mep-sub a b { font-size: .92rem; font-weight: 700; }
+    .mep-sub a.is-active {
+        border-color: var(--c-primary, #8D1D2C);
+        background: var(--c-primary-soft, #f4dfe2);
+    }
+    .mep-sub a.is-active small { color: #7a1524; }
+
+    /* ── Saisie des quantités ────────────────────────────────────────── */
+    .mep-line {
+        display: flex; align-items: center; gap: 12px;
+        background: var(--c-surface, #fff);
+        border: 1px solid var(--c-line, rgba(36,26,22,.09));
+        border-left: 4px solid var(--c-line-2, rgba(36,26,22,.14));
+        border-radius: var(--r-lg, 18px); padding: 11px 14px;
+        box-shadow: var(--sh-1, 0 1px 2px rgba(0,0,0,.04));
+    }
+    .mep-line.is-filled { border-left-color: var(--c-primary, #8D1D2C); }
+    .mep-line.is-skipped { opacity: .5; }
+    .mep-line-txt { flex: 1; min-width: 0; }
+    .mep-line-name { display: block; font-size: .95rem; font-weight: 700; color: var(--c-ink, #241f1c); line-height: 1.3; overflow-wrap: anywhere; }
+    .mep-line-sub { display: block; margin-top: 3px; font-size: .74rem; color: var(--c-muted, #7a7168); }
+    /* 96 px et 52 px de haut : on saisit au pouce, parfois avec un gant. */
+    .mep-qty { width: 96px; flex: 0 0 auto; min-height: 52px; text-align: center; font-size: 1.1rem; font-weight: 700; }
+    .mep-skip {
+        flex: 0 0 auto; width: 52px; height: 52px; padding: 0;
         display: inline-flex; align-items: center; justify-content: center;
         border: 1px solid var(--c-line-2, rgba(36,26,22,.14));
         border-radius: var(--r-md, 13px); background: #fff;
-        color: var(--c-ink, #241f1c); text-decoration: none;
+        color: var(--c-muted, #7a7168); cursor: pointer;
     }
-    .pr-datefield { flex: 0 1 230px; min-width: 150px; }
-    .pr-datefield input { min-height: 46px; }
-    .pr-today { min-height: 46px; padding: 0 15px; display: inline-flex; align-items: center;
-                border-radius: var(--r-md, 13px); text-decoration: none; font-weight: 700; font-size: .86rem; }
+    .mep-skip.is-on { background: #f4dfe2; border-color: var(--c-primary, #8D1D2C); color: var(--c-primary, #8D1D2C); }
+
+    /* Barre d'action collée en bas : la liste est longue, le bouton ne doit
+       pas obliger à remonter. */
+    .mep-actions {
+        position: sticky; bottom: calc(var(--app-tabbar-h, 72px) + 8px); z-index: 5;
+        margin-top: 18px; padding: 10px;
+        background: rgba(255,255,255,.96);
+        border: 1px solid var(--c-line, rgba(36,26,22,.09));
+        border-radius: var(--r-lg, 18px);
+        box-shadow: 0 -6px 20px -12px rgba(0,0,0,.28);
+        backdrop-filter: blur(6px);
+    }
+    .mep-submit {
+        display: flex; align-items: center; justify-content: center; gap: 9px;
+        width: 100%; min-height: 54px; border: 0; border-radius: var(--r-md, 13px);
+        background: var(--c-primary, #8D1D2C); color: #fff;
+        font-family: inherit; font-size: 1rem; font-weight: 800; cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .mep-submit:active { transform: scale(.995); }
+    .mep-submit[disabled] { opacity: .55; cursor: default; }
+    .mep-total { text-align: center; font-size: .78rem; color: var(--c-muted, #7a7168); margin: 0 0 8px; }
+    .mep-total b { color: var(--c-ink, #241f1c); font-weight: 800; }
 
     /* ── Bandeau MEP ─────────────────────────────────────────────────────
        Première action de la journée, et rien ne se vend avant elle : elle a
@@ -235,19 +291,26 @@
 
 {% block content %}
 
-    {# ── Toggle ── #}
-    {% set date_qs = selected_date != today ? '&date=' ~ selected_date : '' %}
+    {# ── Toggle ──
+       La MEP en tête : c'est par elle que la journée commence, et rien ne se
+       vend avant elle. #}
     <nav class="pr-toggle" aria-label="{{ translations.production_title | default('Production') }}">
+        <a class="pr-tab {{ active_view == 'mep' ? 'is-active' : '' }}"
+           href="{{ ROOT }}/production?view=mep"
+           {{ active_view == 'mep' ? 'aria-current="page"' : '' }}>
+            {{ translations.prod_view_mep | default('MEP') }}
+            <small>{{ translations.mep_sub_hint | default('Valider / préparer') }}</small>
+        </a>
         {% for p in periods %}
             <a class="pr-tab {{ active_view == p.key ? 'is-active' : '' }}"
-               href="{{ ROOT }}/production?view={{ p.key }}{{ date_qs }}"
+               href="{{ ROOT }}/production?view={{ p.key }}"
                {{ active_view == p.key ? 'aria-current="page"' : '' }}>
                 {{ translations['period_' ~ p.key] ?? (p.label ?? p.key) }}
                 <small>{{ p.start }} – {{ p.end }}</small>
             </a>
         {% endfor %}
         <a class="pr-tab {{ active_view == 'stock' ? 'is-active' : '' }}"
-           href="{{ ROOT }}/production?view=stock{{ date_qs }}"
+           href="{{ ROOT }}/production?view=stock"
            {{ active_view == 'stock' ? 'aria-current="page"' : '' }}>
             {{ translations.prod_view_stock | default('Stock (live)') }}
         </a>
@@ -255,57 +318,18 @@
 
     {% if active_view == 'stock' %}
         {% include "production/_stock.twig" %}
+    {% elseif active_view == 'mep' %}
+        {% include "production/_mep.twig" %}
     {% else %}
-        {# La date ne sert qu'aux vues période : le stock, lui, est toujours
-           celui de maintenant. #}
-        <div class="card mt-3 mb-3">
-            <div class="card-body">
-                <form method="GET" action="{{ ROOT }}/production" class="pr-datebar" id="prDateForm">
-                    <input type="hidden" name="view" value="{{ active_view }}">
-                    <a class="pr-datenav"
-                       href="{{ ROOT }}/production?view={{ active_view }}&date={{ selected_date|date_modify('-1 day')|date('Y-m-d') }}"
-                       aria-label="{{ translations.prod_prev_day | default('Jour précédent') }}">
-                        {{ icons.svg('chevron-left', 20) }}
-                    </a>
-                    <div class="pr-datefield">
-                        <label for="prDate" class="visually-hidden">{{ translations.prod_date | default('Date') }}</label>
-                        <input type="date" id="prDate" name="date" class="form-control" value="{{ selected_date }}">
-                    </div>
-                    <a class="pr-datenav"
-                       href="{{ ROOT }}/production?view={{ active_view }}&date={{ selected_date|date_modify('+1 day')|date('Y-m-d') }}"
-                       aria-label="{{ translations.prod_next_day | default('Jour suivant') }}">
-                        {{ icons.svg('chevron-right', 20) }}
-                    </a>
-                    {% if selected_date != today %}
-                        <a class="pr-today btn btn-outline-primary" href="{{ ROOT }}/production?view={{ active_view }}">
-                            {{ translations.prod_today | default("Aujourd'hui") }}
-                        </a>
-                    {% endif %}
-                    <noscript>
-                        <button type="submit" class="pr-today btn btn-primary">
-                            {{ translations.prod_apply | default('Afficher') }}
-                        </button>
-                    </noscript>
-                </form>
-            </div>
-        </div>
-
-        {% include "production/_period.twig" %}
+        <div class="mt-3">{% include "production/_period.twig" %}</div>
     {% endif %}
 
 {% endblock %}
 
 {% block scripts %}
-{% if active_view != 'stock' %}
-    <script>
-    (function () {
-        var f = document.getElementById('prDateForm');
-        var d = document.getElementById('prDate');
-        if (f && d) d.addEventListener('change', function () { f.submit(); });
-    })();
-    </script>
-    {% include "production/_mep_modal.twig" %}
-{% else %}
+{% if active_view == 'stock' %}
     {% include "production/_stock_scripts.twig" %}
+{% elseif active_view == 'mep' %}
+    {% include "production/_mep_scripts.twig" %}
 {% endif %}
 {% endblock %}

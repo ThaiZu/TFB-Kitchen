@@ -18,10 +18,16 @@ return function (RouteCollector $r) {
         'method'     => 'ajaxStock',
     ]);
 
-    // Validation de la MEP : c'est elle qui rend les produits vendables.
+    // Validation de la MEP du jour : c'est elle qui rend les produits vendables.
     $r->addRoute('POST', '/ajax/production/mep/validate', [
         'controller' => $controller,
         'method'     => 'ajaxValidateMep',
+    ]);
+
+    // Encodage de la MEP du lendemain, l'après-midi.
+    $r->addRoute('POST', '/ajax/production/mep', [
+        'controller' => $controller,
+        'method'     => 'ajaxSaveMep',
     ]);
 
     // Validation d'une recuisson.

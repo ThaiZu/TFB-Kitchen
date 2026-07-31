@@ -1,0 +1,213 @@
+{# production/_mep.twig — les deux temps de la mise en place.
+
+   Matin : valider ce qui a été préparé hier. C'est cette validation qui fait
+   passer les quantités en production, donc en stock, donc en vente — la caisse
+   ne peut rien vendre avant.
+
+   Après-midi : encoder ce qu'on met en place pour demain. Le même mot, deux
+   gestes opposés — l'un ferme une journée, l'autre en ouvre une. #}
+{% import "components/_icons.twig" as icons %}
+
+<div class="mep-sub">
+    <a href="{{ ROOT }}/production?view=mep&mep=morning"
+       class="{{ mep_sub == 'morning' ? 'is-active' : '' }}">
+        <b>{{ translations.mep_sub_morning | default('Matin') }}</b>
+        <small>{{ translations.mep_sub_morning_hint | default('Valider pour la production') }}</small>
+    </a>
+    <a href="{{ ROOT }}/production?view=mep&mep=afternoon"
+       class="{{ mep_sub == 'afternoon' ? 'is-active' : '' }}">
+        <b>{{ translations.mep_sub_afternoon | default('Après-midi') }}</b>
+        <small>{{ translations.mep_sub_afternoon_hint | default('Préparer la MEP de demain') }}</small>
+    </a>
+</div>
+
+{% if mep_sub == 'morning' %}
+
+    {# ── Valider la MEP du jour ── #}
+    {% if not mep_available %}
+        <div class="card">
+            <div class="card-body pr-state">
+                {{ icons.svg('clipboard-check', 38) }}
+                <p>{{ translations.mep_not_served | default("La MEP n'est pas encore servie par l'API.") }}</p>
+            </div>
+        </div>
+    {% else %}
+        {% set pending = mep_lines|filter(l => l.isPending) %}
+
+        {% if pending is empty %}
+            {% if mep_lines is empty %}
+                <div class="card">
+                    <div class="card-body pr-state">
+                        {{ icons.svg('clipboard-check', 38) }}
+                        <p>{{ translations.mep_empty | default('Aucune MEP préparée pour aujourd\'hui.') }}</p>
+                    </div>
+                </div>
+            {% else %}
+                <div class="mep-done mb-3">
+                    {{ icons.svg('check-circle', 19) }}
+                    <span>{{ translations.mep_nothing_pending | default('Toute la MEP du jour est validée.') }}</span>
+                </div>
+
+                <div class="pr-rows">
+                    {% for l in mep_lines %}
+                        <div class="mep-line is-filled">
+                            <span class="mep-line-txt">
+                                <span class="mep-line-name">{{ l.name | default('—') }}</span>
+                                <span class="mep-line-sub">
+                                    {{ translations.mep_planned | default('Prévu') }}
+                                    {{ l.quantityPlanned|number_format(0, ',', ' ') }}
+                                    {%- if l.unitName %} {{ l.unitName }}{% endif %}
+                                </span>
+                            </span>
+                            {% if l.isSkipped %}
+                                <span class="pr-pill pill-skipped">{{ translations.mep_skipped | default('Écartée') }}</span>
+                            {% else %}
+                                <span class="pr-row-qty">
+                                    <b>{{ l.quantityValidated|number_format(0, ',', ' ') }}</b>
+                                    <span>{{ translations.mep_real | default('Réel') }}</span>
+                                </span>
+                                <span class="pr-pill pill-validated">{{ translations.mep_validated | default('Validée') }}</span>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="mep-banner mb-3">
+                <h2>{{ translations.mep_banner_title | default('MEP de la veille à valider') }}</h2>
+                <p>{{ translations.mep_banner_text | default("Tant que la MEP n'est pas validée, la caisse ne peut pas vendre ces produits.") }}</p>
+                {% if mep_prepared_at %}
+                    <p class="mep-banner-meta">
+                        {{ translations.mep_prepared_at | default('Préparée le') }} {{ mep_prepared_at|slice(0,16) }}
+                    </p>
+                {% endif %}
+            </div>
+
+            <p class="stk-hint mb-2">
+                {{ translations.mep_modal_hint | default('Corrigez les quantités réellement obtenues.') }}
+            </p>
+
+            {# La saisie tient dans la page plutôt que dans une modale : la
+               liste peut faire quarante lignes, et une modale scrollable sur
+               tablette se ferme au moindre appui à côté. #}
+            <div class="pr-rows" id="mepValidateList">
+                {% for l in pending %}
+                    <div class="mep-line is-filled" data-line-id="{{ l.id }}">
+                        <span class="mep-line-txt">
+                            <span class="mep-line-name">{{ l.name | default('—') }}</span>
+                            <span class="mep-line-sub">
+                                {{ translations.mep_planned | default('Prévu') }}
+                                {{ l.quantityPlanned|number_format(0, ',', ' ') }}
+                                {%- if l.unitName %} {{ l.unitName }}{% endif %}
+                                {%- if l.categoryName %} · {{ l.categoryName }}{% endif %}
+                            </span>
+                        </span>
+                        <input type="number" class="form-control mep-qty"
+                               inputmode="numeric" min="0" step="1"
+                               value="{{ l.defaultQuantity|number_format(0, '.', '') }}"
+                               aria-label="{{ translations.mep_real | default('Réel') }} — {{ l.name }}">
+                        <button type="button" class="mep-skip" aria-pressed="false"
+                                title="{{ translations.mep_skip | default('Écarter') }}"
+                                aria-label="{{ translations.mep_skip | default('Écarter') }}">
+                            {{ icons.svg('x', 18) }}
+                        </button>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div id="mepAlert" class="alert mt-3 d-none"></div>
+
+            <div class="mep-actions">
+                <button type="button" class="mep-submit" id="mepValidateBtn">
+                    <span id="mepSpinner" class="spinner-border spinner-border-sm d-none"></span>
+                    {{ icons.svg('check-check', 19) }}
+                    {{ translations.mep_confirm | default('Valider et mettre en vente') }}
+                </button>
+            </div>
+        {% endif %}
+    {% endif %}
+
+{% else %}
+
+    {# ── Encoder la MEP de demain ── #}
+    {% if not products_available %}
+        <div class="card">
+            <div class="card-body pr-state">
+                {{ icons.svg('package', 38) }}
+                <p>{{ translations.prod_catalog_not_served | default("Le catalogue de production n'est pas encore servi par l'API.") }}</p>
+            </div>
+        </div>
+    {% elseif catalog is empty %}
+        <div class="card">
+            <div class="card-body pr-state">
+                {{ icons.svg('package', 38) }}
+                <p>{{ translations.prod_no_products | default('Aucun produit déclaré.') }}</p>
+            </div>
+        </div>
+    {% else %}
+        <div class="mep-done mb-3" style="background:#fdf3e8;border-color:#f0d8ba;color:#8a5312;">
+            {{ icons.svg('calendar-days', 19) }}
+            <span>
+                {{ translations.mep_next_title | default('Mise en place de demain') }}
+                — {{ tomorrow }}
+            </span>
+        </div>
+
+        <p class="stk-hint mb-2">
+            {{ translations.mep_next_hint | default('Saisissez les quantités à préparer. Les lignes laissées à zéro ne sont pas enregistrées.') }}
+        </p>
+
+        <div id="mepNextList" data-date="{{ tomorrow }}">
+            {% for category, items in catalog %}
+                <section class="pr-cat">
+                    <h2 class="pr-cat-title">
+                        {{ category }}<span class="pr-cat-count">{{ items|length }}</span>
+                    </h2>
+                    <div class="pr-rows">
+                        {% for p in items %}
+                            {% set qty = draft_quantities[p.idProduct] ?? 0 %}
+                            <div class="mep-line {{ qty > 0 ? 'is-filled' : '' }}" data-product-id="{{ p.idProduct }}">
+                                <span class="mep-line-txt">
+                                    <span class="mep-line-name">{{ p.name | default('—') }}</span>
+                                    <span class="mep-line-sub">
+                                        {% if p.hasBatchSize %}
+                                            {{ translations.prod_batch | default('Fournée') }}
+                                            {{ p.batchSize|number_format(0, ',', ' ') }}
+                                            {%- if p.unitName %} {{ p.unitName }}{% endif %}
+                                        {% elseif p.unitName %}
+                                            {{ p.unitName }}
+                                        {% endif %}
+                                    </span>
+                                </span>
+                                <input type="number" class="form-control mep-qty"
+                                       inputmode="numeric" min="0" step="1"
+                                       {# Case vide plutôt que « 0 » : rien à préparer et
+                                          zéro préparé se lisent pareil dans un champ, et
+                                          la case vide est la seule qui dise « pas encore
+                                          renseigné ». #}
+                                       value="{{ qty > 0 ? qty|number_format(0, '.', '') : '' }}"
+                                       aria-label="{{ translations.mep_qty | default('Quantité') }} — {{ p.name }}">
+                            </div>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endfor %}
+        </div>
+
+        <div id="mepAlert" class="alert mt-3 d-none"></div>
+
+        <div class="mep-actions">
+            <p class="mep-total">
+                {{ translations.mep_total | default('Total') }}
+                <b id="mepNextCount">0</b>
+                {{ translations.mep_lines | default('lignes') }}
+            </p>
+            <button type="button" class="mep-submit" id="mepNextBtn">
+                <span id="mepSpinner" class="spinner-border spinner-border-sm d-none"></span>
+                {{ icons.svg('check', 19) }}
+                {{ translations.mep_next_save | default('Enregistrer la MEP de demain') }}
+            </button>
+        </div>
+    {% endif %}
+
+{% endif %}

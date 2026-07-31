@@ -151,6 +151,48 @@ class ProductionService
         ));
     }
 
+    /**
+     * Enregistre la MEP d'une date à venir — l'encodage de l'après-midi.
+     *
+     * @param array<int, array{id_product: int, quantity: float}> $lines
+     */
+    public function saveMep(string $date, array $lines): array
+    {
+        $shopId = $this->getShopId();
+        if ($shopId <= 0) {
+            return ['success' => false, 'description' => 'shop_unknown'];
+        }
+        return $this->productionRepository->saveMep($shopId, $date, $lines);
+    }
+
+    /**
+     * Tout le catalogue actif, groupé par catégorie.
+     *
+     * Sert à l'encodage de la MEP de demain : on y saisit ce qu'on prépare,
+     * sans filtre de période — c'est le serveur qui rattachera chaque ligne à
+     * sa période depuis la fiche produit.
+     *
+     * @param ProductionProductModel[] $products
+     * @return array<string, ProductionProductModel[]>
+     */
+    public function groupAllByCategory(array $products): array
+    {
+        $groups = [];
+        foreach ($products as $p) {
+            if ($p->isActive()) {
+                $groups[$p->getCategoryName() ?? '—'][] = $p;
+            }
+        }
+
+        ksort($groups, SORT_NATURAL | SORT_FLAG_CASE);
+        foreach ($groups as &$g) {
+            usort($g, fn($a, $b) => strcasecmp((string)$a->getName(), (string)$b->getName()));
+        }
+        unset($g);
+
+        return $groups;
+    }
+
     /** @param array<int, array{id: int, quantity: float, skipped?: bool}> $lines */
     public function validateMep(string $date, array $lines): array
     {
