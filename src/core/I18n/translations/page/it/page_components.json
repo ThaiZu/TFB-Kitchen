@@ -76,5 +76,6 @@
   "sound_order_label": "Suono nuovi ordini",
   "sound_order_hint": "Un segnale acustico avvisa dell'arrivo di un ordine su questo dispositivo.",
   "sound_order_test": "Prova il suono",
-  "stock": "Magazzino"
+  "stock": "Magazzino",
+  "objectives_bonuses": "Obiettivi e premi"
 }

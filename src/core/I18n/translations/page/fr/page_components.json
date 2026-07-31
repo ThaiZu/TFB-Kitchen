@@ -76,5 +76,6 @@
   "sound_order_label": "Son des nouvelles commandes",
   "sound_order_hint": "Un bip signale l'arrivée d'une commande sur cet appareil.",
   "sound_order_test": "Tester le son",
-  "stock": "Stock"
+  "stock": "Stock",
+  "objectives_bonuses": "Objectifs & Primes"
 }
