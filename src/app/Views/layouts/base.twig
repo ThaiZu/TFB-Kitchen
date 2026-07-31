@@ -1,10 +1,29 @@
+{# layouts/base.twig
+   Coque applicative du kitchen : barre supérieure + contenu + feuille de
+   navigation + barre d'onglets en bas — le même type de menu que
+   pwa_consultant, à la place de la sidebar Mazer.
+
+   Les noms de blocs sont INCHANGÉS (title, head, page_heading, content,
+   error_only, scripts) : les vues existantes fonctionnent sans modification.
+
+   `active_nav` est déduit de `current_path` (exposé globalement par
+   Controller.php), donc aucune vue n'a à le passer. #}
+{% import "components/_icons.twig" as icons %}
+{% set p = current_path|default('') %}
+{% set active_nav =
+    p starts with '/dashboard'  ? 'dashboard'  :
+    p starts with '/checklists' ? 'checklists' :
+    p starts with '/orders'     ? 'orders'     :
+    p starts with '/knowledge'  ? 'knowledge'  :
+    p starts with '/complaints' ? 'complaints' :
+    p starts with '/me'         ? 'me'         : '' %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ lang_code ?? 'pl' }}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
-    <title>{% block title %}{{ pageTitle|default('Default Title') }}{% endblock %}</title>
+    <title>{% block title %}{{ pageTitle|default('Kitchen') }}{% endblock %}</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -23,8 +42,8 @@
     <link rel="stylesheet" href="{{ ROOT }}/assets/css/filepond-plugin-image-preview.css">
     <link rel="stylesheet" href="{{ ROOT }}/assets/css/cropper/cropper.css">
 
-    {# Design system L'Atelier By (porté depuis pwa_consultant) — chargé en
-       dernier pour surcharger Mazer et les styles de page. #}
+    {# Coque (structure) puis design system (habillage) : l'ordre compte. #}
+    <link rel="stylesheet" href="{{ ROOT }}/assets/css/app-shell.css">
     <link rel="stylesheet" href="{{ ROOT }}/assets/css/atelier-theme.css">
 
     <style>
@@ -33,7 +52,6 @@
             max-height: none;
         }
     </style>
-
 
     <!-- DISABLE ENTER ON EVERY PAGE -->
     <script>
@@ -47,53 +65,86 @@
             }
         }, true);
     </script>
-    
+
     {% block head %}{% endblock %}
 </head>
 
 <body>
-<div id="app">
-    {% include "page_components/sidebar.twig" %}
 
+{% block topbar %}
+    <div class="app-topbar">
+        <div class="container">
+            <div class="app-topbar-inner">
+                <a href="{{ ROOT }}/dashboard" class="d-flex align-items-center text-decoration-none">
+                    <img src="{{ ROOT }}/assets/images/atelierby.png" alt="L'Atelier By" style="height:30px; width:auto;">
+                </a>
 
-    <div id="main" class='layout-navbar'>
-        <header class='mb-3'>
-            {% include "page_components/navbar.twig" %}
-        </header>
-        <div id="main-content">
-            {% block page_heading %}{% endblock %}
-            <div class="page-content">
-                <div class="section">
-
-                    {% include "page_components/alerts.twig" %}
-
-
-                    {% if gate and errs is not empty %}
-                        {% block error_only %}
-                            <div class="row mt-4">
-                                <div class="col-12 text-center">
-                                    <a href="{{ error_back_url|default(ROOT ~ '/Dashboard') }}" class="btn btn-secondary">
-                                        ← {{ translations.back|default('back') }}
-                                    </a>
-                                </div>
-                            </div>
-                        {% endblock %}
-                    {% else %}
-                        {% block content %}{% endblock %}
-                    {% endif %}
-
+                <div class="d-flex align-items-center gap-2">
+                    {% block topbar_actions %}{% endblock %}
+                    <button class="app-hamburger" id="appHamburger"
+                            aria-label="{{ translations.menu ?? 'Menu' }}"
+                            aria-expanded="false" aria-controls="appNavSheet">
+                        {{ icons.svg('menu') }}
+                    </button>
                 </div>
             </div>
-
-            <div id="snackbar"></div>
-            <footer></footer>
         </div>
     </div>
-</div>
+{% endblock %}
+
+<main class="app-content">
+    <div class="container py-3">
+        {% block page_heading %}{% endblock %}
+
+        {% include "page_components/alerts.twig" %}
+
+        {% if gate and errs is not empty %}
+            {% block error_only %}
+                <div class="row mt-4">
+                    <div class="col-12 text-center">
+                        <a href="{{ error_back_url|default(ROOT ~ '/Dashboard') }}" class="btn btn-secondary">
+                            ← {{ translations.back|default('back') }}
+                        </a>
+                    </div>
+                </div>
+            {% endblock %}
+        {% else %}
+            {% block content %}{% endblock %}
+        {% endif %}
+    </div>
+</main>
+
+<div id="snackbar"></div>
+
+{% include "components/app_nav.twig" with { active_nav: active_nav } %}
+
+{# Barre d'onglets — les quatre gestes du quotidien, plus le profil à droite.
+   Production est encore en construction : présente pour situer le parcours,
+   mais non cliquable. #}
+<nav class="app-tabbar-bar" aria-label="{{ translations.menu ?? 'Navigation' }}">
+    <a href="{{ ROOT }}/dashboard" class="app-tab {{ active_nav == 'dashboard' ? 'is-active' : '' }}">
+        {{ icons.svg('home', 23) }}<span>{{ translations.kitchen_dashboard ?? 'Pulpit' }}</span>
+    </a>
+    <span class="app-tab" style="opacity:.4;" aria-disabled="true"
+          title="{{ translations.under_construction ?? 'En construction' }}">
+        {{ icons.svg('list-checks', 23) }}<span>{{ translations.production ?? 'Production' }}</span>
+    </span>
+    <a href="{{ ROOT }}/checklists" class="app-tab {{ active_nav == 'checklists' ? 'is-active' : '' }}">
+        {{ icons.svg('clipboard-check', 23) }}<span>{{ translations.checklists ?? 'Checklists' }}</span>
+    </a>
+    <a href="{{ ROOT }}/orders" class="app-tab {{ active_nav == 'orders' ? 'is-active' : '' }}">
+        {{ icons.svg('receipt', 23) }}<span>{{ translations.orders ?? 'Commandes' }}</span>
+    </a>
+    {% set _dn2 = (user.displayName ?? 'K')|trim %}
+    {% set _pp = _dn2|split(' ') %}
+    <a href="{{ ROOT }}/me" class="app-tab app-tab-profile {{ active_nav == 'me' ? 'is-active' : '' }}">
+        <span class="app-tab-avatar" aria-hidden="true">{{ (_pp[0]|first ~ (_pp[1] is defined ? _pp[1]|first : ''))|upper }}</span>
+        <span>{{ translations.my_profile ?? 'Profil' }}</span>
+    </a>
+</nav>
 
 <script src="{{ ROOT }}/assets/vendors/perfect-scrollbar/perfect-scrollbar.min.js"></script>
 <script src="{{ ROOT }}/assets/js/bootstrap.bundle.min.js"></script>
-<script src="{{ ROOT }}/assets/js/main.js"></script>
 <script src="{{ ROOT }}/assets/js/functions.js"></script>
 <script type="module" src="{{ ROOT }}/assets/js/modules.js"></script>
 <script src="{{ ROOT }}/assets/vendors/sweetalert2/sweetalert2.all.min.js"></script>
