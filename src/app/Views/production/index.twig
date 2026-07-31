@@ -18,7 +18,7 @@
        Un select cacherait trois vues sur quatre derrière un tap. Quatre
        cibles visibles, hautes de 54 px, se visent avec un doigt fariné. */
     .pr-toggle {
-        display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
+        display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
         background: var(--c-bg-2, #F4EFE8);
         border: 1px solid var(--c-line, rgba(36,26,22,.09));
         border-radius: var(--r-lg, 18px); padding: 6px;
@@ -45,6 +45,16 @@
         display: inline-block; width: 7px; height: 7px; border-radius: 50%;
         background: var(--c-secondary, #F2C9A0); margin-left: 5px; vertical-align: middle;
     }
+
+    /* Le stock n'est pas un moment de la journée : il n'a pas sa place dans la
+       même rangée que la MEP et les trois périodes. Il prend la ligne entière,
+       en bandeau plus fin — visible en permanence, sans faire croire à une
+       cinquième période. */
+    .pr-tab-stock {
+        grid-column: 1 / -1;
+        flex-direction: row; gap: 8px; min-height: 44px; padding: 6px 12px;
+    }
+    .pr-tab-stock .lc-icon { opacity: .8; }
 
     /* ── Sous-toggle de la MEP ───────────────────────────────────────────
        Deux gestes opposés sous le même mot : le matin on valide la veille,
@@ -309,9 +319,10 @@
                 <small>{{ p.start }} – {{ p.end }}</small>
             </a>
         {% endfor %}
-        <a class="pr-tab {{ active_view == 'stock' ? 'is-active' : '' }}"
+        <a class="pr-tab pr-tab-stock {{ active_view == 'stock' ? 'is-active' : '' }}"
            href="{{ ROOT }}/production?view=stock"
            {{ active_view == 'stock' ? 'aria-current="page"' : '' }}>
+            {{ icons.svg('package', 17) }}
             {{ translations.prod_view_stock | default('Stock (live)') }}
         </a>
     </nav>
