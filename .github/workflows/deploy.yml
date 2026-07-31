@@ -160,6 +160,18 @@ jobs:
           else
             echo "  OK — aucune erreur PHP visible dans la page"
           fi
+          # Le sélecteur de magasin est peuplé par l'API (/public/shops). Un
+          # seul <option> = le placeholder seul = l'API n'a rien renvoyé.
+          opts=$(printf '%s' "$body" | grep -o '<option' | wc -l)
+          echo "  <option> dans le formulaire : $opts"
+          if [ "$opts" -gt 1 ]; then
+            echo "  OK — le sélecteur de magasin est peuplé par l'API"
+          else
+            echo "  ATTENTION — sélecteur vide : vérifier KITCHEN_API_BASE (SetEnv/mod_env)"
+            echo "  et la réponse de l'API :"
+            curl -s -o /dev/null -w "    HTTP %{http_code}  %{size_download} o  %{url_effective}\n" \
+              "https://atelierby.tfbuddy.com/api/v1/public/shops" || true
+          fi
           echo "  ── 400 premiers octets ──"
           printf '%s' "$body" | head -c 400
           echo

@@ -8,11 +8,21 @@ define('ROOT',
         ? 'https://'
         : 'http://') . $_SERVER['SERVER_NAME'] . '/kitchen');
 
+// L'API est hébergée séparément (autre hôte que le front). Sans cette
+// surcharge, l'app interroge « http://<hôte courant>/api/v1 » : sur le serveur
+// de test, ce chemin n'existe pas, donc /public/shops ne renvoie rien et le
+// sélecteur de magasin du login reste vide.
+// À surcharger par l'env KITCHEN_API_BASE (SetEnv dans .htaccess), sinon on
+// retombe sur le même origine + /api/v1. Même mécanisme que pwa_consultant
+// (CONSULTANT_API_BASE), qui fonctionne déjà sur ce serveur.
+$__kitchenApiBase = $_SERVER['KITCHEN_API_BASE'] ?? $_ENV['KITCHEN_API_BASE'] ?? getenv('KITCHEN_API_BASE') ?: '';
 define('API_BASE_URL',
-    (((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ||
-        (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https'))
-        ? 'https://'
-        : 'http://') . $_SERVER['SERVER_NAME'] . '/api/v1');
+    $__kitchenApiBase !== ''
+        ? rtrim($__kitchenApiBase, '/')
+        : ((((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ||
+            (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https'))
+            ? 'https://'
+            : 'http://') . $_SERVER['SERVER_NAME'] . '/api/v1'));
 
 define('SHARED_FILES_URL',
     (((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ||
