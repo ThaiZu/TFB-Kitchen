@@ -68,5 +68,6 @@
   "fulfilment_all": "Toutes",
   "click_and_collect": "Click & Collect",
   "delivery_mode": "Livraison",
-  "fulfilment_not_served": "L'API ne renvoie pas encore le mode de remise : le filtre reste sans effet et toutes les commandes sont affichées."
+  "fulfilment_not_served": "L'API ne renvoie pas encore le mode de remise : le filtre reste sans effet et toutes les commandes sont affichées.",
+  "search": "Rechercher"
 }

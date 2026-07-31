@@ -68,5 +68,6 @@
   "fulfilment_all": "Wszystkie",
   "click_and_collect": "Click & Collect",
   "delivery_mode": "Dostawa",
-  "fulfilment_not_served": "API nie zwraca jeszcze sposobu odbioru: filtr nie działa, pokazane są wszystkie zamówienia."
+  "fulfilment_not_served": "API nie zwraca jeszcze sposobu odbioru: filtr nie działa, pokazane są wszystkie zamówienia.",
+  "search": "Szukaj"
 }

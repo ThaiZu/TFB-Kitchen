@@ -68,5 +68,6 @@
   "fulfilment_all": "All",
   "click_and_collect": "Click & Collect",
   "delivery_mode": "Delivery",
-  "fulfilment_not_served": "The API does not return the fulfilment mode yet: the filter has no effect and all orders are shown."
+  "fulfilment_not_served": "The API does not return the fulfilment mode yet: the filter has no effect and all orders are shown.",
+  "search": "Search"
 }

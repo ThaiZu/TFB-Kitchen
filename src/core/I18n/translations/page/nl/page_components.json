@@ -68,5 +68,6 @@
   "fulfilment_all": "Alle",
   "click_and_collect": "Click & Collect",
   "delivery_mode": "Levering",
-  "fulfilment_not_served": "De API geeft de afhaalwijze nog niet terug: het filter heeft geen effect en alle bestellingen worden getoond."
+  "fulfilment_not_served": "De API geeft de afhaalwijze nog niet terug: het filter heeft geen effect en alle bestellingen worden getoond.",
+  "search": "Zoeken"
 }
