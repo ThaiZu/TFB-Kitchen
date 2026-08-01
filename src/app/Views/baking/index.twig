@@ -78,6 +78,145 @@
     .bk-legend span { display: inline-flex; align-items: center; gap: 6px; }
     .bk-sw { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
 
+    /* ── Ordres ──────────────────────────────────────────────────────────
+       Un ordre par ligne, le premier en gros. On ne lit pas une liste ici :
+       on lit une phrase, on tape dessus, on retourne au four. */
+    .bk-h { font-size: .72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+            color: var(--c-muted, #7a7168); margin: 0 0 12px; }
+    .bk-order {
+        display: flex; align-items: center; gap: 14px; width: 100%;
+        min-height: 62px; padding: 11px 15px; margin-bottom: 8px;
+        border: 1px solid var(--c-line, rgba(36,26,22,.09));
+        border-left: 5px solid #d8d2c9; border-radius: var(--r-lg, 18px);
+        background: var(--c-surface, #fff); text-align: left; cursor: pointer;
+        font-family: inherit; color: var(--c-ink, #241f1c);
+        -webkit-tap-highlight-color: transparent;
+    }
+    .bk-order:last-child { margin-bottom: 0; }
+    .bk-order:active { transform: scale(.996); }
+    .bk-order.o-prep   { border-left-color: #1F4F6B; }
+    .bk-order.o-cook   { border-left-color: #8D1D2C; }
+    .bk-order.o-finish { border-left-color: #C17A2A; }
+    /* Le premier ordre porte la couleur de son étape en plein : de l'autre
+       bout du fournil, on doit voir qu'il y a quelque chose à faire. */
+    .bk-order.is-lead { min-height: 84px; color: #fff; border-color: transparent; }
+    .bk-order.is-lead.o-prep   { background: #1F4F6B; }
+    .bk-order.is-lead.o-cook   { background: #8D1D2C; }
+    .bk-order.is-lead.o-finish { background: #C17A2A; }
+    .bk-order.is-lead .bk-order-verb { font-size: 1.12rem; }
+    .bk-order.is-lead .bk-order-what span,
+    .bk-order.is-lead .bk-order-when span { color: rgba(255,255,255,.8); }
+    .bk-order.is-lead .bk-order-when b { color: #fff; }
+    .bk-order.is-lead .is-late,
+    .bk-order.is-lead .is-soon { color: #fff; font-weight: 800; }
+    /* Du blanc sur l'abricot passe à peine 3:1 : sur cette couleur-là, c'est
+       l'encre qui lit, comme sur les pastilles de mise en rayon. */
+    .bk-order.is-lead.o-finish { color: var(--c-on-abricot, #4a2c12); }
+    .bk-order.is-lead.o-finish .bk-order-when b,
+    .bk-order.is-lead.o-finish .is-late,
+    .bk-order.is-lead.o-finish .is-soon { color: var(--c-on-abricot, #4a2c12); }
+    .bk-order.is-lead.o-finish .bk-order-what span,
+    .bk-order.is-lead.o-finish .bk-order-when span { color: rgba(74,44,18,.78); }
+
+    .bk-order-verb { flex: 0 0 auto; font-size: .92rem; font-weight: 800; line-height: 1.2; max-width: 40%; }
+    .bk-order-what { flex: 1; min-width: 0; }
+    .bk-order-what b { display: block; font-size: .92rem; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
+    .bk-order-what span { display: block; font-size: .72rem; color: var(--c-muted, #7a7168); margin-top: 2px; }
+    .bk-order-when { flex: 0 0 auto; text-align: right; }
+    .bk-order-when b { display: block; font-size: 1.05rem; font-weight: 800; line-height: 1; }
+    .bk-order-when span { display: block; font-size: .7rem; color: var(--c-muted, #7a7168); margin-top: 3px; white-space: nowrap; }
+    .bk-order-when .is-late { color: #8D1D2C; font-weight: 800; }
+    .bk-order-when .is-soon { color: #C17A2A; font-weight: 800; }
+    .bk-more { margin: 10px 0 0; font-size: .74rem; color: var(--c-muted, #7a7168); }
+
+    @media (max-width: 560px) {
+        .bk-order { flex-wrap: wrap; gap: 4px 12px; }
+        .bk-order-verb { flex: 1 0 100%; max-width: none; }
+    }
+
+    /* ── Feuille d'attribution ── */
+    .bk-sheet {
+        position: fixed; inset: 0; z-index: 1080;
+        background: rgba(31,20,16,.45);
+        display: flex; align-items: flex-end; justify-content: center;
+    }
+    .bk-sheet[hidden] { display: none; }
+    .bk-sheet-panel {
+        display: flex; flex-direction: column; gap: 4px;
+        width: 100%; max-width: 620px; max-height: 92vh; overflow-y: auto;
+        background: var(--c-bg, #EAE4DC);
+        border-radius: var(--r-xl, 24px) var(--r-xl, 24px) 0 0;
+        padding: 16px 17px calc(16px + env(safe-area-inset-bottom));
+        box-shadow: 0 -12px 40px -18px rgba(0,0,0,.5);
+    }
+    .bk-sheet-head { display: flex; align-items: flex-start; gap: 12px; }
+    .bk-sheet-head h2 { margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--c-ink, #241f1c); }
+    .bk-sheet-head p { margin: 3px 0 0; font-size: .8rem; color: var(--c-muted, #7a7168); }
+    .bk-sheet-head > div { flex: 1; min-width: 0; }
+    .bk-sheet-x {
+        flex: 0 0 auto; width: 40px; height: 40px; padding: 0;
+        display: inline-flex; align-items: center; justify-content: center;
+        border: 1px solid var(--c-line-2, rgba(36,26,22,.14));
+        border-radius: var(--r-md, 13px); background: #fff;
+        color: var(--c-muted, #7a7168); cursor: pointer;
+    }
+    .bk-sheet-lbl {
+        margin: 14px 0 8px; font-size: .7rem; font-weight: 800;
+        letter-spacing: .06em; text-transform: uppercase; color: var(--c-muted, #7a7168);
+    }
+    .bk-sheet-hint { margin: 7px 0 0; font-size: .74rem; color: var(--c-muted, #7a7168); }
+
+    /* Le temps imparti se règle par pas de cinq minutes : en atelier, personne
+       ne raisonne à la minute près sur une durée de cuisson. */
+    .bk-time { display: flex; align-items: center; gap: 10px; }
+    .bk-time-step {
+        flex: 0 0 auto; width: 56px; height: 56px; padding: 0;
+        border: 1px solid var(--c-line-2, rgba(36,26,22,.14));
+        border-radius: var(--r-md, 13px); background: #fff;
+        color: var(--c-ink, #241f1c); font-size: 1.5rem; font-weight: 700; line-height: 1;
+        cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .bk-time-step:active { background: var(--c-primary-soft, #f4dfe2); }
+    .bk-time-val {
+        flex: 1; min-height: 56px; display: flex; align-items: center; justify-content: center; gap: 5px;
+        border-radius: var(--r-md, 13px); background: #fff;
+        border: 1px solid var(--c-line, rgba(36,26,22,.09));
+        font-size: .85rem; color: var(--c-muted, #7a7168);
+    }
+    .bk-time-val b { font-size: 1.5rem; font-weight: 800; color: var(--c-ink, #241f1c); }
+
+    .bk-sheet-go {
+        display: flex; align-items: center; justify-content: center; gap: 9px;
+        width: 100%; min-height: 56px; margin-top: 16px;
+        border: 0; border-radius: var(--r-md, 13px);
+        background: var(--c-primary, #8D1D2C); color: #fff;
+        font-family: inherit; font-size: 1rem; font-weight: 800; cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .bk-sheet-go[disabled] { opacity: .55; cursor: default; }
+
+    /* Badges d'employés : mêmes que ceux des checklists, à dessein — c'est le
+       même geste, « je dis qui l'a fait ». */
+    .emp-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 9px; }
+    .emp-badge {
+        display: flex; align-items: center; gap: 10px;
+        min-height: 52px; padding: 8px 12px;
+        border: 1px solid var(--c-line-2, rgba(36,26,22,.14));
+        border-radius: var(--r-md, 13px);
+        background: #fff; cursor: pointer; text-align: left; font-family: inherit;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .emp-badge.is-active { border-color: var(--c-primary, #8D1D2C); background: var(--c-primary-soft, #f4dfe2); }
+    .emp-initials {
+        width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--c-primary, #8D1D2C); color: #fff;
+        font-family: var(--font-display); font-size: .8rem; line-height: 1;
+    }
+    .emp-name { flex: 1; min-width: 0; font-size: .88rem; font-weight: 600;
+                color: var(--c-ink, #241f1c); line-height: 1.25; overflow-wrap: anywhere; }
+    .emp-note { font-size: .78rem; color: var(--c-muted, #7a7168); margin: 9px 0 0; }
+
     /* ── Cartes ── */
     .bk-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
     .bk-card {
@@ -214,6 +353,7 @@
     {% else %}
 
         {% include "baking/_gantt.twig" %}
+        {% include "baking/_next.twig" %}
         {% include "baking/_cards.twig" %}
 
     {% endif %}

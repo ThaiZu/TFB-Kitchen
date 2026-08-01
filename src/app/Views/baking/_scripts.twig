@@ -48,6 +48,26 @@
         });
     }
 
+    // Les échéances des ordres bougent sans que rien ne change d'état : sans
+    // ce repeint, « dans 12 min » resterait affiché une heure durant, puisque
+    // le rechargement n'a lieu qu'au changement de statut.
+    var OMSG = {
+        late: {{ (translations.order_late | default('en retard de')) | json_encode | raw }},
+        now:  {{ (translations.order_now  | default('maintenant')) | json_encode | raw }},
+        'in': {{ (translations.order_in   | default('dans')) | json_encode | raw }}
+    };
+    function paintOrders(batches) {
+        batches.forEach(function (b) {
+            var el = document.querySelector('.bk-order[data-id="' + b.id + '"] .bk-order-when span');
+            if (!el) return;
+            var n = b.left;
+            el.textContent = n < 0 ? OMSG.late + ' ' + (-n) + ' min'
+                           : (n === 0 ? OMSG.now : OMSG['in'] + ' ' + n + ' min');
+            el.classList.toggle('is-late', n < 0);
+            el.classList.toggle('is-soon', n >= 0 && n <= 5);
+        });
+    }
+
     function paintProgress(batches) {
         batches.forEach(function (b) {
             var card = document.querySelector('.bk-card[data-id="' + b.id + '"] .bk-prog > i');
@@ -65,37 +85,124 @@
                 paintNow(d.now, d.now_clock);
                 paintCounts(d.counts);
                 paintProgress(d.batches);
+                paintOrders(d.batches);
             })
             .catch(function () { /* réseau de magasin : on retentera dans 30 s */ });
     }
 
-    document.addEventListener('click', function (e) {
-        var btn = e.target.closest('.bk-act[data-next]');
-        if (!btn || !btn.dataset.next) return;
-
-        btn.disabled = true;
-
-        fetch(ROOT + '/ajax/baking/' + btn.dataset.id, {
+    function advance(id, status, body, onFail) {
+        fetch(ROOT + '/ajax/baking/' + id, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
             credentials: 'same-origin',
-            body: JSON.stringify({ status: btn.dataset.next })
+            body: JSON.stringify(Object.assign({ status: status }, body || {}))
         })
         .then(function (r) { return r.json().catch(function () { return null; }); })
         .then(function (res) {
-            if (!res || !res.success) {
-                showSnack(false, ERR);
-                btn.disabled = false;
-                return;
-            }
+            if (!res || !res.success) { showSnack(false, ERR); if (onFail) onFail(); return; }
             // Le serveur a arbitré : on relit plutôt que de deviner la suite.
             window.location.reload();
         })
-        .catch(function () {
-            showSnack(false, ERR);
-            btn.disabled = false;
-        });
+        .catch(function () { showSnack(false, ERR); if (onFail) onFail(); });
+    }
+
+    // Le bouton d'une carte reste direct : on est déjà devant la fournée, on
+    // sait ce qu'on fait et qui on est. C'est l'ordre du panneau, lui, qui se
+    // distribue — et qui demande donc à qui, et pour combien de temps.
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('.bk-act[data-next]');
+        if (!btn || !btn.dataset.next) return;
+        btn.disabled = true;
+        advance(btn.dataset.id, btn.dataset.next, null, function () { btn.disabled = false; });
     });
+
+    // ── Attribuer un ordre ───────────────────────────────────────────────
+    var sheet = document.getElementById('bkAssign');
+    if (sheet) {
+        var TIME_STEP = 5;                       // l'atelier ne raisonne pas à la minute
+        var A = {
+            planned: {{ (translations.order_planned | default('Planifié : %s min')) | json_encode | raw }},
+            go:      {{ (translations.order_confirm | default('Valider')) | json_encode | raw }}
+        };
+
+        var title = document.getElementById('bkAssignTitle');
+        var sub   = document.getElementById('bkAssignSub');
+        var val   = document.getElementById('bkTimeVal');
+        var hint  = document.getElementById('bkTimeHint');
+        var go    = document.getElementById('bkAssignGo');
+        var spin  = document.getElementById('bkAssignSpin');
+
+        var order = null;      // { id, next }
+        var planned = 0;
+        var minutes = 0;
+        var empId = null;
+
+        function paintTime() {
+            val.textContent = minutes;
+            hint.textContent = minutes === planned ? '' : A.planned.replace('%s', planned);
+        }
+
+        function open(btn) {
+            order   = { id: btn.dataset.id, next: btn.dataset.next };
+            planned = Math.max(0, parseInt(btn.dataset.minutes, 10) || 0);
+            minutes = planned;
+            empId   = null;
+
+            title.textContent = btn.dataset.verb;
+            sub.textContent   = btn.dataset.name;
+            sheet.querySelectorAll('.emp-badge').forEach(function (b) { b.classList.remove('is-active'); });
+            paintTime();
+            go.disabled = false;
+            sheet.hidden = false;
+        }
+
+        function close() { sheet.hidden = true; order = null; }
+
+        document.addEventListener('click', function (e) {
+            var card = e.target.closest('.bk-order[data-next]');
+            if (card && card.dataset.next) { open(card); return; }
+
+            if (sheet.hidden) return;
+
+            if (e.target.closest('#bkAssignClose') || e.target === sheet) { close(); return; }
+
+            var emp = e.target.closest('.emp-badge');
+            if (emp) {
+                // Re-taper le même badge le désélectionne : valider sans nom
+                // reste possible, et c'est mieux qu'attribuer au hasard.
+                var was = emp.classList.contains('is-active');
+                sheet.querySelectorAll('.emp-badge').forEach(function (b) { b.classList.remove('is-active'); });
+                if (!was) { emp.classList.add('is-active'); empId = emp.dataset.empId; }
+                else { empId = null; }
+                return;
+            }
+
+            var step = e.target.closest('.bk-time-step');
+            if (step) {
+                minutes = Math.max(0, minutes + TIME_STEP * (parseInt(step.dataset.step, 10) || 1));
+                paintTime();
+                return;
+            }
+
+            if (e.target.closest('#bkAssignGo') && order) {
+                go.disabled = true;
+                spin.classList.remove('d-none');
+                var body = {};
+                if (empId) body.id_employee = parseInt(empId, 10);
+                // Durée inchangée : on ne l'envoie pas. Le plan du serveur fait
+                // foi tant que personne ne l'a corrigé à la main.
+                if (minutes !== planned) body.allotted_minutes = minutes;
+                advance(order.id, order.next, body, function () {
+                    go.disabled = false;
+                    spin.classList.add('d-none');
+                });
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && !sheet.hidden) close();
+        });
+    }
 
     setInterval(poll, 30000);
     document.addEventListener('visibilitychange', function () { if (!document.hidden) poll(); });

@@ -173,12 +173,32 @@ PATCH /baking/{batchId}
 ```
 
 ```json
-{ "status": "BAKING", "id_employee": 12 }
+{ "status": "BAKING", "id_employee": 12, "allotted_minutes": 25 }
 ```
 
 Un seul champ obligatoire : `status`. Le serveur horodate lui-même le passage —
 deux tablettes peuvent appuyer à quelques secondes d'intervalle, et l'arbitrage
 ne peut pas vivre dans le navigateur.
+
+| champ | rôle | envoyé |
+|---|---|---|
+| `status` | l'étape demandée | toujours |
+| `id_employee` | à qui l'ordre a été attribué | quand quelqu'un a été désigné |
+| `allotted_minutes` | temps imparti à l'étape, corrigé à l'écran | seulement s'il diffère du plan |
+
+**`allotted_minutes` — champ à accepter côté serveur.** Le panneau d'ordres
+permet d'ajuster la durée d'une étape par pas de 5 minutes avant de la lancer :
+une pâte qui a mal poussé prendra dix minutes de plus, et le reste de la
+journée en dépend. Il porte la durée de l'étape que le `status` demandé
+concerne — `prep_minutes` pour `PREPARING`, `cook_minutes` pour `BAKING`,
+`finish_minutes` pour `FINISHING`. Le serveur devrait la persister et
+replanifier les horaires en aval (enfournement, finition, mise en rayon), puis
+renvoyer la fournée à jour.
+
+Le champ n'est **envoyé que s'il a été touché** : sans lui, le plan du serveur
+fait foi, et le comportement est celui d'avant. Un serveur qui l'ignore ne
+casse donc rien — l'écran affichera simplement la durée planifiée au prochain
+rafraîchissement, ce qui est visible et honnête.
 
 Réponse : la fournée mise à jour, dans la forme du `GET`. Le front la réaffiche
 telle quelle plutôt que de deviner le nouvel état.
@@ -190,6 +210,23 @@ mise en rayon de toute la journée.
 
 > **Question ouverte** : faut-il un PIN employé, comme pour les checklists ?
 > Le front est écrit sans. `id_employee` est envoyé quand il est connu.
+
+### D'où vient la liste des employés
+
+```
+GET /shops/{shopId}/employees
+```
+
+Le même endpoint que les checklists. Le front n'en garde que `id`, `name` et
+l'indicateur de présence ; le PIN ne sort jamais du serveur applicatif.
+
+L'indicateur de présence est lu sous plusieurs noms — `on_schedule`,
+`is_on_schedule`, `on_shift`, `is_working`, `is_present`, `scheduled_today` —
+et **son absence n'est pas « personne n'est là »** : quand aucun de ces champs
+n'est servi, toute l'équipe est proposée et l'écran écrit pourquoi. Un filtre
+annoncé mais inopérant tromperait plus qu'il n'aiderait.
+
+Voir docs/ENDPOINTS_EMPLOYES_PLANNING.md.
 
 ---
 

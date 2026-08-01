@@ -37,6 +37,28 @@ function mock_shops(): array
     ];
 }
 
+/**
+ * L'équipe du magasin.
+ *
+ * `on_schedule` est servi ici pour que le filtre « personnel actif » soit
+ * réellement exerçable : un absent (Sofia) et un nom sans deuxième mot (Ali)
+ * y sont volontairement, parce que ce sont les deux cas qui cassent — le
+ * premier le filtre, le second le calcul d'initiales.
+ *
+ * Le PIN reste dans la réponse : c'est le serveur qui le vérifie, et le front
+ * le retire avant d'atteindre la moindre vue (StaffService).
+ */
+function mock_employees(): array
+{
+    return [
+        ['id' => 41, 'name' => 'Nathan Colin',   'pin' => '1234', 'on_schedule' => true],
+        ['id' => 42, 'name' => 'Aïcha Benali',   'pin' => '2345', 'on_schedule' => true],
+        ['id' => 43, 'name' => 'Marek Kowalski', 'pin' => '3456', 'on_schedule' => true],
+        ['id' => 44, 'name' => 'Ali',            'pin' => '4567', 'on_schedule' => true],
+        ['id' => 45, 'name' => 'Sofia Ferreira', 'pin' => '5678', 'on_schedule' => false],
+    ];
+}
+
 function mock_ovens(): array
 {
     return [

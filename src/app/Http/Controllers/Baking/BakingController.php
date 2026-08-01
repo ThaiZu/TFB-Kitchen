@@ -5,11 +5,13 @@ namespace App\Kitchen\app\Http\Controllers\Baking;
 use App\Kitchen\app\Http\Controllers\Controller;
 use App\Kitchen\app\Models\Baking\BakingBatchModel;
 use App\Kitchen\app\Services\Baking\BakingService;
+use App\Kitchen\app\Services\Staff\StaffService;
 
 class BakingController extends Controller
 {
     public function __construct(
-        private BakingService $bakingService
+        private BakingService $bakingService,
+        private StaffService $staffService
     ) {}
 
     /**
@@ -32,9 +34,18 @@ class BakingController extends Controller
                 'now'            => $this->bakingService->nowMinutes(),
                 'now_clock'      => date('H:i'),
                 'window'         => ['from' => 0, 'to' => 60, 'hours' => []],
+                'orders'         => [],
+                'staff'          => [],
+                'staff_available'=> false,
+                'schedule_known' => false,
             ]);
             return;
         }
+
+        // Le personnel actif alimente l'attribution des ordres. Une équipe non
+        // servie ne bloque pas le geste : on valide sans nom plutôt que de
+        // rendre le bouton inerte au milieu du service.
+        $staff = $this->staffService->getEmployees();
 
         $now     = $this->bakingService->nowMinutes($plan['server_time']);
         $active  = $this->bakingService->active($plan['batches']);
@@ -51,6 +62,10 @@ class BakingController extends Controller
             // la fenêtre, au lieu de laisser deux fournées perdues dans la
             // largeur de la matinée.
             'window'         => $this->bakingService->window($shown ?: $active, $now),
+            'orders'         => $this->bakingService->orders($shown),
+            'staff'          => $this->staffService->onDuty($staff),
+            'staff_available'=> $staff !== null,
+            'schedule_known' => $this->staffService->scheduleKnown($staff),
         ]);
     }
 
@@ -105,7 +120,10 @@ class BakingController extends Controller
         $response = $this->bakingService->advance(
             $id,
             $status,
-            isset($input['id_employee']) ? (int)$input['id_employee'] : null
+            isset($input['id_employee']) ? (int)$input['id_employee'] : null,
+            // Le temps imparti ajusté à l'écran : le serveur s'en sert pour
+            // replanifier la suite de la journée. Absent = le plan tient.
+            isset($input['allotted_minutes']) ? max(0, (int)$input['allotted_minutes']) : null
         );
 
         $this->json($response, ($response['success'] ?? false) ? 200 : 502)->send();
@@ -123,6 +141,11 @@ class BakingController extends Controller
             'progress'       => $b->getProgressPercent($now),
             'next_status'    => $b->getNextStatus(),
             'is_waiting'     => $b->isWaiting(),
+            'action'         => $b->getActionKey(),
+            'due'            => $b->getDueClock(),
+            'due_min'        => $b->getDueTime(),
+            'left'           => $b->getMinutesLeft($now),
+            'planned_min'    => $b->getPlannedMinutes(),
             'is_ready_bake'  => $b->isReadyToBake(),
             'prep_start_min' => $b->getPrepStart(),
             'prep_end_min'   => $b->getPrepEnd(),

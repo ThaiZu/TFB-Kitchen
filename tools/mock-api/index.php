@@ -333,6 +333,11 @@ if ($method === 'GET' && $m('/shops/\d+/production/pending-count')) {
     ok(['mep_pending' => $pending, 'rebakes_suggested' => 3]);
 }
 
+// ── Équipe ────────────────────────────────────────────────────────────────
+if ($method === 'GET' && $m('/shops/\d+/employees')) {
+    ok(mock_employees());
+}
+
 // ── Cuisson ───────────────────────────────────────────────────────────────
 if ($method === 'GET' && $m('/shops/\d+/ovens')) {
     ok(mock_ovens());
@@ -372,6 +377,19 @@ if ($method === 'PATCH' && $m('/baking/(\d+)', $vars)) {
                 return $s;
             }
             $b['status'] = $status;
+            // Temps imparti corrigé à l'écran : on le persiste sur l'étape
+            // concernée, pour que la frise et les échéances suivantes suivent.
+            if (isset($in['allotted_minutes'])) {
+                $field = match ($status) {
+                    'BAKING'    => 'cook_minutes',
+                    'FINISHING' => 'finish_minutes',
+                    default     => 'prep_minutes',
+                };
+                $b[$field] = max(0, (int)$in['allotted_minutes']);
+            }
+            if (isset($in['id_employee'])) {
+                $b['id_employee'] = (int)$in['id_employee'];
+            }
             $stamp = ['PREPARING' => 'prep_started_at', 'BAKING' => 'cook_started_at', 'FINISHING' => 'finish_started_at'];
             if (isset($stamp[$status])) {
                 $b[$stamp[$status]] = date('Y-m-d H:i:s');

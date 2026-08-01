@@ -216,6 +216,59 @@ class BakingBatchModel implements JsonSerializable
         return (int)max(0, min(100, round(($nowMinutes - $start) / ($end - $start) * 100)));
     }
 
+    // ── L'ordre à donner ─────────────────────────────────────────────────
+
+    /**
+     * Le geste attendu, en un mot-clé.
+     *
+     * L'écran des cartes le déduisait déjà de l'étape, mais mélangeait deux
+     * choses : « où en est la fournée » et « qu'est-ce qu'on fait ». Le panneau
+     * d'ordres n'a besoin que de la seconde.
+     */
+    public function getActionKey(): ?string
+    {
+        return match ($this->status) {
+            self::STATUS_PLANNED       => 'start_prep',
+            self::STATUS_PREPARING     => 'prep_done',
+            self::STATUS_READY_TO_BAKE => 'bake',
+            self::STATUS_BAKING        => 'out',
+            self::STATUS_FINISHING     => 'finish_done',
+            default                    => null,
+        };
+    }
+
+    /**
+     * L'heure à laquelle le geste doit être fait.
+     *
+     * Différent de getStageEnd() sur un seul cas, et il compte : une fournée
+     * qui n'a pas commencé est due à l'heure de début de préparation, pas à sa
+     * fin. Trier là-dessus fait remonter « commencer dans 3 min » au-dessus de
+     * « terminer dans 20 ».
+     */
+    public function getDueTime(): int
+    {
+        return $this->status === self::STATUS_PLANNED ? $this->prepStart : $this->getStageEnd();
+    }
+
+    public function getDueClock(): string { return self::toClock($this->getDueTime()); }
+
+    /** Minutes restantes ; négatif = en retard. */
+    public function getMinutesLeft(int $nowMinutes): int { return $this->getDueTime() - $nowMinutes; }
+
+    /**
+     * Temps imparti par défaut : la durée planifiée de l'étape que l'ordre
+     * concerne. C'est ce chiffre que les boutons « − » et « + » ajustent avant
+     * de valider, quand la réalité de l'atelier s'écarte du plan.
+     */
+    public function getPlannedMinutes(): int
+    {
+        return match ($this->status) {
+            self::STATUS_READY_TO_BAKE, self::STATUS_BAKING => $this->cookMinutes,
+            self::STATUS_FINISHING                          => (int)round($this->getFinishMinutes()),
+            default                                         => $this->prepMinutes,
+        };
+    }
+
     /** Statut à demander pour faire avancer la fournée d'une étape. */
     public function getNextStatus(): ?string
     {

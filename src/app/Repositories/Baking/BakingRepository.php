@@ -51,11 +51,16 @@ class BakingRepository
     }
 
     /** Fait avancer une fournée d'une étape. Le serveur horodate. */
-    public function advance(int $batchId, string $status, ?int $employeeId = null): array
+    public function advance(int $batchId, string $status, ?int $employeeId = null, ?int $allottedMinutes = null): array
     {
         $payload = ['status' => $status];
         if ($employeeId !== null) {
             $payload['id_employee'] = $employeeId;
+        }
+        // N'est envoyé que s'il a été touché : sans ce champ, le serveur garde
+        // sa propre durée planifiée, et c'est le comportement d'avant.
+        if ($allottedMinutes !== null) {
+            $payload['allotted_minutes'] = $allottedMinutes;
         }
         return $this->apiClient->patch("/baking/{$batchId}", $payload);
     }

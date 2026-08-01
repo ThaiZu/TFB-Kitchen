@@ -3,11 +3,15 @@
 namespace App\Kitchen\app\Services\Checklist;
 
 use App\Kitchen\app\Repositories\Checklist\ChecklistRepository;
+use App\Kitchen\app\Services\Staff\StaffService;
 use App\Kitchen\core\Support\GlobalRegistry;
 
 class ChecklistService
 {
-    public function __construct(private ChecklistRepository $checklistRepository) {}
+    public function __construct(
+        private ChecklistRepository $checklistRepository,
+        private StaffService $staffService
+    ) {}
 
     public function getChecklistsForShop(string $date): array
     {
@@ -29,51 +33,14 @@ class ChecklistService
 
     /**
      * Zwraca listę pracowników sklepu tylko z polami id i name (bez PIN).
+     *
+     * La cuisson pose la même question — qui est en atelier — et la réponse ne
+     * doit exister qu'à un endroit : StaffService. Ici on garde la signature
+     * (liste, jamais null) attendue par l'écran des checklists.
      */
     public function getEmployeesForShop(): array
     {
-        $shopId = $this->getShopId();
-        if ($shopId <= 0) {
-            return [];
-        }
-        $employees = $this->checklistRepository->getEmployeesForShop($shopId);
-
-        return array_map(function (array $e) {
-            // Le PIN ne sort jamais d'ici : il ne sert qu'à la vérification
-            // serveur, dans completeTask().
-            $name = (string)($e['name'] ?? '');
-            $parts = preg_split('/\s+/', trim($name)) ?: [];
-            $initials = mb_strtoupper(
-                mb_substr($parts[0] ?? '', 0, 1) . mb_substr($parts[1] ?? '', 0, 1)
-            );
-
-            return [
-                'id'          => $e['id'],
-                'name'        => $name,
-                'initials'    => $initials,
-                // Présence du jour. L'API ne renvoie peut-être aucun de ces
-                // champs : on garde null pour distinguer « pas de service »
-                // de « information non fournie », et l'écran le dit au lieu
-                // de masquer tout le monde.
-                'on_schedule' => self::readOnSchedule($e),
-            ];
-        }, $employees);
-    }
-
-    /**
-     * Lit l'indicateur de présence sous les noms de champs plausibles.
-     * Retourne null si aucun n'est fourni.
-     *
-     * Voir docs/ENDPOINTS_EMPLOYES_PLANNING.md.
-     */
-    private static function readOnSchedule(array $e): ?bool
-    {
-        foreach (['on_schedule', 'is_on_schedule', 'on_shift', 'is_working', 'is_present', 'scheduled_today'] as $key) {
-            if (array_key_exists($key, $e) && $e[$key] !== null && $e[$key] !== '') {
-                return filter_var($e[$key], FILTER_VALIDATE_BOOLEAN);
-            }
-        }
-        return null;
+        return $this->staffService->getEmployees() ?? [];
     }
 
     /**

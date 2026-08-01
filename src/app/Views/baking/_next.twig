@@ -1,0 +1,130 @@
+{# baking/_next.twig — les ordres, juste sous la vue d'ensemble.
+
+   La frise dit où en est la matinée, les cartes disent où en est chaque
+   fournée. Il manquait la question qu'on se pose en entrant dans le fournil :
+   « je fais quoi, là, maintenant ». C'est ce panneau, et il ne répond qu'à
+   ça — un ordre en gros, les deux suivants en petit.
+
+   Trié par échéance seule : un four à vider dans deux minutes passe devant une
+   préparation à lancer dans vingt, quelle que soit l'étape. #}
+{% import "components/_icons.twig" as icons %}
+
+{% set verbs = {
+    'start_prep':  translations.order_start_prep  | default('Commencer la préparation'),
+    'prep_done':   translations.order_prep_done   | default('Terminer la préparation'),
+    'bake':        translations.order_bake        | default('Enfourner'),
+    'out':         translations.order_out         | default('Sortir du four'),
+    'finish_done': translations.order_finish_done | default('Finition terminée')
+} %}
+{% set kinds = { 'start_prep': 'prep', 'prep_done': 'prep', 'bake': 'cook', 'out': 'cook', 'finish_done': 'finish' } %}
+
+{% if orders is not empty %}
+    {% set lead = orders|first %}
+
+    <div class="card mt-3">
+        <div class="card-body">
+            <h2 class="bk-h">{{ translations.order_title | default('Prochaine action') }}</h2>
+
+            {% for b in orders|slice(0, 3) %}
+                {% set k    = kinds[b.actionKey] | default('prep') %}
+                {% set left = b.getMinutesLeft(now) %}
+                <button type="button"
+                        class="bk-order {{ loop.first ? 'is-lead' : '' }} o-{{ k }}"
+                        data-id="{{ b.id }}"
+                        data-next="{{ b.nextStatus }}"
+                        data-verb="{{ verbs[b.actionKey] | default('—') }}"
+                        data-name="{{ b.name | default('—') }}"
+                        data-minutes="{{ b.plannedMinutes }}">
+                    <span class="bk-order-verb">{{ verbs[b.actionKey] | default('—') }}</span>
+                    <span class="bk-order-what">
+                        <b>{{ b.name | default('—') }}</b>
+                        <span>
+                            {{- b.quantity|number_format(0, ',', ' ') }} {{ b.unitName | default('pc') }}
+                            {{- b.ovenName ? ' · ' ~ b.ovenName : '' -}}
+                        </span>
+                    </span>
+                    <span class="bk-order-when">
+                        <b>{{ b.dueClock }}</b>
+                        {# Le retard est l'information la plus utile de l'écran :
+                           il se lit avant l'heure, pas après. #}
+                        <span class="{{ left < 0 ? 'is-late' : (left <= 5 ? 'is-soon' : '') }}">
+                            {%- if left < 0 -%}
+                                {{ translations.order_late | default('en retard de') }} {{ -left }} min
+                            {%- elseif left == 0 -%}
+                                {{ translations.order_now | default('maintenant') }}
+                            {%- else -%}
+                                {{ translations.order_in | default('dans') }} {{ left }} min
+                            {%- endif -%}
+                        </span>
+                    </span>
+                </button>
+            {% endfor %}
+
+            {% if orders|length > 3 %}
+                <p class="bk-more">
+                    {{ translations.order_more | default('+ %s autres fournées en cours')|replace({'%s': orders|length - 3}) }}
+                </p>
+            {% endif %}
+        </div>
+    </div>
+
+    {# ── Attribution ──
+       Un ordre se donne à quelqu'un, avec un temps. Les deux tiennent dans la
+       même feuille parce qu'ils forment un seul geste : « Nathan prend
+       l'enfournement, vingt minutes ». #}
+    <div class="bk-sheet" id="bkAssign" hidden>
+        <div class="bk-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="bkAssignTitle">
+            <header class="bk-sheet-head">
+                <div>
+                    <h2 id="bkAssignTitle">—</h2>
+                    <p id="bkAssignSub">—</p>
+                </div>
+                <button type="button" class="bk-sheet-x" id="bkAssignClose"
+                        aria-label="{{ translations.close | default('Fermer') }}">
+                    {{ icons.svg('x', 18) }}
+                </button>
+            </header>
+
+            <p class="bk-sheet-lbl">{{ translations.order_who | default("Qui s'en occupe ?") }}</p>
+
+            {% if not staff_available %}
+                <p class="emp-note">
+                    {{ translations.staff_not_served | default("L'équipe n'est pas encore servie par l'API : l'ordre peut être validé sans nom.") }}
+                </p>
+            {% elseif staff is empty %}
+                <p class="emp-note">{{ translations.no_employees | default('Aucun employé disponible.') }}</p>
+            {% else %}
+                <div class="emp-grid" id="bkStaff">
+                    {% for e in staff %}
+                        <button type="button" class="emp-badge" data-emp-id="{{ e.id }}">
+                            <span class="emp-initials">{{ e.initials ?: '—' }}</span>
+                            <span class="emp-name">{{ e.name }}</span>
+                        </button>
+                    {% endfor %}
+                </div>
+                {% if not schedule_known %}
+                    {# Un filtre annoncé mais inopérant tromperait : tant que
+                       l'API ne dit pas qui est de service, on montre tout le
+                       monde et on l'écrit. #}
+                    <p class="emp-note">
+                        {{ translations.schedule_not_served | default("L'API ne dit pas encore qui est de service : toute l'équipe est proposée.") }}
+                    </p>
+                {% endif %}
+            {% endif %}
+
+            <p class="bk-sheet-lbl">{{ translations.order_time | default('Temps imparti') }}</p>
+            <div class="bk-time">
+                <button type="button" class="bk-time-step" data-step="-1" aria-label="− 5 min">−</button>
+                <span class="bk-time-val"><b id="bkTimeVal">0</b> min</span>
+                <button type="button" class="bk-time-step" data-step="1" aria-label="+ 5 min">+</button>
+            </div>
+            <p class="bk-sheet-hint" id="bkTimeHint"></p>
+
+            <button type="button" class="bk-sheet-go" id="bkAssignGo">
+                <span id="bkAssignSpin" class="spinner-border spinner-border-sm d-none"></span>
+                {{ icons.svg('check', 19) }}
+                <span id="bkAssignGoLabel">{{ translations.order_confirm | default('Valider') }}</span>
+            </button>
+        </div>
+    </div>
+{% endif %}

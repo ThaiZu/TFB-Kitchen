@@ -106,6 +106,35 @@ class BakingService
     }
 
     /**
+     * La file des ordres : quoi faire, dans l'ordre où ça devient urgent.
+     *
+     * La frise répond à « où en est la matinée », les cartes à « qu'est-ce que
+     * je fais sur cette fournée-là ». Il manquait la question qu'on se pose en
+     * entrant dans le fournil : « je fais quoi, là, maintenant ». D'où un tri
+     * par échéance seule — un four à vider dans deux minutes passe devant une
+     * préparation à lancer dans vingt, quelle que soit l'étape.
+     *
+     * @param BakingBatchModel[] $batches
+     * @return BakingBatchModel[]
+     */
+    public function orders(array $batches): array
+    {
+        $rows = array_values(array_filter(
+            $batches,
+            fn(BakingBatchModel $b) => $b->getActionKey() !== null
+        ));
+
+        usort($rows, function (BakingBatchModel $a, BakingBatchModel $b) {
+            $c = $a->getDueTime() <=> $b->getDueTime();
+            // À échéance égale, ce qui est déjà engagé passe devant : on ne
+            // lance pas une préparation avec un four plein qui attend.
+            return $c !== 0 ? $c : ($a->isWaiting() <=> $b->isWaiting());
+        });
+
+        return $rows;
+    }
+
+    /**
      * Fenêtre temporelle du plan de charge, arrondie à l'heure.
      *
      * Calculée sur les fournées affichées plutôt que fixée à la journée : à
@@ -140,9 +169,9 @@ class BakingService
     }
 
     /** Fait avancer une fournée. Renvoie la réponse brute de l'API. */
-    public function advance(int $batchId, string $status, ?int $employeeId = null): array
+    public function advance(int $batchId, string $status, ?int $employeeId = null, ?int $allottedMinutes = null): array
     {
-        return $this->bakingRepository->advance($batchId, $status, $employeeId);
+        return $this->bakingRepository->advance($batchId, $status, $employeeId, $allottedMinutes);
     }
 
     /**
