@@ -1,20 +1,24 @@
 {# production/index.twig
    Écran de pilotage de la journée d'atelier, sur tablette posée près du four.
 
-   UN module, quatre questions, derrière un seul toggle :
-     · MEP      — ce qu'on prépare pour demain, ce qu'on valide de la veille
-     · Besoins  — ce que le magasin réclame (les périodes en seconde rangée)
-     · Planning — ce que l'atelier fabrique : frise, fournées, validations
-     · Stock    — ce qu'il reste, face à ce qui va partir
+   UN module, DEUX moments :
+     · Ce qui manque — décider : le tableau de travail de la période, et au
+       pied de page les trois choses qu'on consulte sans y agir (stock,
+       minimums de vitrine, MEP de demain)
+     · L'atelier     — exécuter : ordres, frise, fournées, validations
 
-   « Production » et « Plan de production » étaient deux entrées de menu qui se
-   disputaient le même mot et le même vocabulaire d'étapes. Elles répondaient
-   pourtant à deux questions distinctes — décider, exécuter — que le toggle
-   nomme désormais.
+   Il y avait quatre onglets de même rang. C'était trois de trop : deux d'entre
+   eux ne servent qu'à consulter, et la MEP n'est pas une destination mais un
+   moment — un bandeau le matin quand il y a à valider, une ligne le soir quand
+   il y a à encoder. Quatre portes obligeaient à choisir avant d'avoir vu la
+   première quantité.
 
-   Et le panneau « Prochaine action » vit sur les quatre : on ne peut pas se
-   perdre quand le prochain geste est en haut de l'écran, quel que soit
-   l'onglet ouvert, et qu'il se valide sans en changer.
+   Le parcours du produit (veille → fabriqué → rayon → vente) reste, mais en
+   une ligne : il ne s'apprend qu'une fois, et passé le premier jour ce n'est
+   plus une explication, c'est un repère.
+
+   Le panneau « Prochaine action » vit dans « L'atelier » et nulle part
+   ailleurs : c'est le fil de la production, pas celui du magasin.
 
    Chaque bloc de données distingue trois états, et ce n'est pas du zèle : une
    liste vide affichée à la place d'un endpoint muet ferait ouvrir le magasin
@@ -48,6 +52,107 @@
     .pr-sectors .cat-chip.is-on {
         background: var(--c-encre, #1F4F6B); border-color: var(--c-encre, #1F4F6B); color: #fff;
     }
+
+    /* ── Deux moments ────────────────────────────────────────────────────
+       Le métier n'a que deux temps : décider, exécuter. Deux cibles hautes de
+       76 px se visent avec un doigt fariné et se lisent sans les compter. */
+    .pr-two {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+        background: var(--c-bg-2, #F4EFE8);
+        border: 1px solid var(--c-line, rgba(36,26,22,.09));
+        border-radius: var(--r-lg, 18px); padding: 6px;
+    }
+    .pr-two-t {
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+        min-height: 76px; padding: 9px 8px; border-radius: var(--r-md, 13px);
+        text-decoration: none; text-align: center; color: var(--c-muted, #7a7168);
+        -webkit-tap-highlight-color: transparent;
+    }
+    .pr-two-t b { font-size: 1.02rem; font-weight: 800; line-height: 1.15; }
+    .pr-two-t small { font-size: .7rem; font-weight: 600; opacity: .85; }
+    .pr-two-t:active { background: rgba(0,0,0,.04); }
+    .pr-two-t.is-active {
+        background: var(--c-primary, #8D1D2C); color: #fff;
+        box-shadow: 0 6px 14px -8px rgba(141,29,44,.7);
+    }
+    .pr-two-n {
+        margin-top: 4px; padding: 2px 9px; border-radius: 999px;
+        background: #fff; color: var(--c-primary, #8D1D2C);
+        font-size: .68rem; font-weight: 800; white-space: nowrap;
+    }
+    .pr-two-t.is-active .pr-two-n { background: rgba(255,255,255,.22); color: #fff; }
+
+    /* ── Le parcours, en une ligne ───────────────────────────────────────
+       La bande à quatre cartes disait la même chose mais prenait un demi-écran
+       avant le premier chiffre. Ce parcours ne s'apprend qu'une fois : passé le
+       premier jour, ce n'est plus une explication, c'est un repère — et un
+       repère se met en marge. */
+    .pr-rail {
+        display: flex; align-items: center; gap: 6px;
+        margin: 12px 2px 0; font-size: .72rem; color: var(--c-muted, #7a7168);
+    }
+    .pr-rail-i {
+        display: inline-flex; align-items: center; gap: 5px; flex: 0 0 auto;
+        text-decoration: none; color: inherit;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .pr-rail-i b {
+        width: 19px; height: 19px; border-radius: 50%; flex: 0 0 auto;
+        display: inline-flex; align-items: center; justify-content: center;
+        background: var(--c-bg-2, #F4EFE8); color: var(--c-muted, #7a7168);
+        font-size: .62rem; font-weight: 800;
+    }
+    .pr-rail-i.is-shelf b { background: #e3f0e6; color: var(--c-vert, #2D7A3E); }
+    .pr-rail-i.is-on { color: var(--c-ink, #241f1c); font-weight: 700; }
+    .pr-rail-i.is-on b { background: var(--c-primary, #8D1D2C); color: #fff; }
+    .pr-rail-i.is-shelf.is-on b { background: var(--c-vert, #2D7A3E); color: #fff; }
+    .pr-rail-s { flex: 1 1 auto; height: 1px; background: var(--c-line-2, rgba(36,26,22,.14)); }
+    /* Sous 560 px, les traits de liaison mangent les libellés : on garde les
+       étapes, on rend les traits élastiques au minimum. */
+    @media (max-width: 560px) {
+        .pr-rail { gap: 4px; font-size: .66rem; }
+        .pr-rail-s { min-width: 6px; }
+    }
+
+    /* ── Le chemin du retour ─────────────────────────────────────────────
+       Stock, minimums et MEP ne sont plus des onglets : sans ce lien, on y
+       arriverait sans savoir comment en sortir. */
+    .pr-back {
+        display: inline-flex; align-items: center; gap: 5px;
+        margin-top: 14px; padding: 8px 13px 8px 9px;
+        border: 1px solid var(--c-line-2, rgba(36,26,22,.14));
+        border-radius: 999px; background: #fff;
+        color: var(--c-ink, #241f1c); text-decoration: none;
+        font-size: .8rem; font-weight: 700;
+    }
+
+    /* ── Les chiffres, au pied de la page ────────────────────────────────
+       On les consulte, on n'y agit presque jamais. Chaque ligne porte son
+       compte : c'est souvent la seule chose qu'on venait chercher. */
+    .pr-more { margin-top: 26px; }
+    .pr-more-row {
+        display: flex; align-items: center; gap: 11px;
+        min-height: 58px; padding: 10px 13px; margin-bottom: 8px;
+        background: var(--c-surface, #fff);
+        border: 1px solid var(--c-line, rgba(36,26,22,.09));
+        border-radius: var(--r-md, 13px);
+        text-decoration: none; color: var(--c-ink, #241f1c);
+        -webkit-tap-highlight-color: transparent;
+    }
+    .pr-more-row:active { background: var(--c-bg-2, #F4EFE8); }
+    .pr-more-ic {
+        flex: 0 0 auto; width: 34px; height: 34px; border-radius: var(--r-md, 13px);
+        display: inline-flex; align-items: center; justify-content: center;
+        background: var(--c-bg-2, #F4EFE8); color: var(--c-muted, #7a7168);
+    }
+    .pr-more-txt { flex: 1; min-width: 0; }
+    .pr-more-txt b { display: block; font-size: .88rem; font-weight: 700; line-height: 1.2; }
+    .pr-more-txt small { display: block; margin-top: 1px; font-size: .68rem; color: var(--c-muted, #7a7168); }
+    .pr-more-n {
+        flex: 0 0 auto; font-size: .72rem; font-weight: 700;
+        color: var(--c-muted, #7a7168); white-space: nowrap;
+    }
+    .pr-more-row .lc-icon { color: var(--c-line-2, rgba(36,26,22,.3)); flex: 0 0 auto; }
 
     /* ── La bande de flux ────────────────────────────────────────────────
        Quatre onglets ne disent pas dans quel ordre les choses arrivent. Cette
@@ -600,7 +705,10 @@
        Il reprend les commandes de la mise en rayon — même pas de fournée, même
        gabarit — parce que c'est la même arithmétique. */
     .pr-launch { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .pr-launch .mep-ctl { flex: 1 1 150px; }
+    /* min-width:0 : sans lui, la rangée refuse de descendre sous la largeur de
+       ses deux boutons plus le champ, et déborde la tuile de 24 px entre 780 et
+       1200 px — le « + » passait sous la bordure. */
+    .pr-launch .mep-ctl { flex: 1 1 150px; min-width: 0; }
     .pr-launch .mep-qty { width: auto; flex: 1 1 auto; min-width: 0; }
     .pr-launch-go {
         flex: 1 1 150px; min-height: 52px;
@@ -617,7 +725,7 @@
     .pr-tile-sub b { color: var(--c-ink, #241f1c); font-weight: 800; }
 
     .pr-shelf { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .pr-shelf .mep-ctl { flex: 1 1 150px; }
+    .pr-shelf .mep-ctl { flex: 1 1 150px; min-width: 0; }
     .pr-shelf .mep-qty { width: auto; flex: 1 1 auto; min-width: 0; }
     .pr-shelf-go {
         flex: 1 1 130px; min-height: 52px;
@@ -791,51 +899,67 @@
 
 {% block content %}
 
-    {# ── Toggle ──
-       La MEP en tête : c'est par elle que la journée commence, et rien ne se
-       vend avant elle. #}
-    {# Un module, quatre questions. « Besoins » (ce que le magasin réclame),
-       « Planning » (ce que l'atelier fabrique), « MEP » (ce qu'on prépare pour
-       demain) et « Stock » (ce qu'il reste). Les périodes ne sont pas une
-       cinquième question : ce sont les moments de « Besoins », d'où une
-       seconde rangée qui n'apparaît que là. #}
+    {# ── Deux moments, pas quatre portes ──
+       Le métier n'a que deux temps : voir ce qui manque, et l'exécuter. Quatre
+       onglets de même rang obligeaient à choisir entre quatre portes avant de
+       voir la première quantité — et deux d'entre elles (stock, minimums) ne
+       servent qu'à consulter. Elles descendent au pied de « Ce qui manque »,
+       et la MEP redevient ce qu'elle est : un bandeau quand il y a à valider,
+       une ligne à consulter quand il n'y a rien.
+
+       Les périodes ne sont pas un troisième moment : ce sont les heures de
+       « Ce qui manque », d'où une rangée de pastilles qui n'apparaît que là. #}
     {% set period_keys = periods|map(p => p.key) %}
     {% set on_needs = active_view in period_keys %}
     {% set on_shop  = active_view in ['stock', 'minimums'] %}
+    {% set on_side  = on_shop or active_view == 'mep' %}
+    {% set needs_href = ROOT ~ '/production?view=' ~ (on_needs ? active_view : periods|first.key) ~ sector_qs %}
 
     {# Le secteur avant tout le reste : c'est le filtre le plus large, et tout
-       ce qui suit en dépend — jusqu'aux compteurs de la bande de flux. #}
+       ce qui suit en dépend — jusqu'aux compteurs. #}
     {% include "production/_sectors.twig" %}
 
-    <nav class="pr-toggle" aria-label="{{ translations.production_title | default('Production') }}"
-         style="grid-template-columns: repeat(3, minmax(0, 1fr));">
-        <a class="pr-tab {{ active_view == 'mep' ? 'is-active' : '' }}"
-           href="{{ ROOT }}/production?view=mep{{ sector_qs }}"
-           {{ active_view == 'mep' ? 'aria-current="page"' : '' }}>
-            {{ translations.prod_view_mep | default('MEP') }}
-            <small>{{ translations.mep_sub_hint | default('Valider / préparer') }}</small>
-        </a>
-        <a class="pr-tab {{ on_needs ? 'is-active' : '' }}"
-           href="{{ ROOT }}/production?view={{ active_view in period_keys ? active_view : periods|first.key }}{{ sector_qs }}"
+    <nav class="pr-two" aria-label="{{ translations.production_title | default('Production') }}">
+        <a class="pr-two-t {{ on_needs ? 'is-active' : '' }}" href="{{ needs_href }}"
            {{ on_needs ? 'aria-current="page"' : '' }}>
-            {{ translations.prod_view_needs | default('Besoins') }}
-            <small>{{ translations.prod_view_needs_hint | default('Ce qui manque') }}</small>
+            <b>{{ translations.prod_view_needs_hint | default('Ce qui manque') }}</b>
+            <small>{{ translations.prod_view_decide | default('décider') }}</small>
+            {% if tab_needs is not null %}
+                <span class="pr-two-n">
+                    {{ tab_needs }}
+                    {{ tab_needs > 1
+                        ? (translations.prod_view_needs_n | default('produits'))
+                        : (translations.prod_view_needs_1 | default('produit')) }}
+                </span>
+            {% endif %}
         </a>
-        <a class="pr-tab {{ active_view == 'planning' ? 'is-active' : '' }}"
+        <a class="pr-two-t {{ active_view == 'planning' ? 'is-active' : '' }}"
            href="{{ ROOT }}/production?view=planning{{ sector_qs }}"
            {{ active_view == 'planning' ? 'aria-current="page"' : '' }}>
-            {{ translations.prod_view_planning | default('Planning') }}
-            <small>{{ translations.prod_view_planning_hint | default("L'atelier") }}</small>
-        </a>
-        <a class="pr-tab pr-tab-stock {{ on_shop ? 'is-active' : '' }}"
-           href="{{ ROOT }}/production?view=stock{{ sector_qs }}"
-           {{ on_shop ? 'aria-current="page"' : '' }}>
-            {{ icons.svg('package', 17) }}
-            {{ translations.prod_view_stock | default('Stock (live)') }}
+            <b>{{ translations.prod_view_workshop | default("L'atelier") }}</b>
+            <small>{{ translations.prod_view_execute | default('exécuter') }}</small>
+            {% if flow.in_progress is not null %}
+                <span class="pr-two-n">
+                    {{ flow.in_progress }}
+                    {{ flow.in_progress > 1
+                        ? (translations.prod_view_batches_n | default('fournées'))
+                        : (translations.prod_view_batches_1 | default('fournée')) }}
+                </span>
+            {% endif %}
         </a>
     </nav>
 
-    {% include "production/_flow.twig" %}
+    {% include "production/_rail.twig" %}
+
+    {# Stock, minimums et MEP ne sont plus des onglets : on y arrive depuis le
+       pied de « Ce qui manque ». Le chemin du retour doit donc être écrit,
+       sinon on se retrouve dans une pièce sans porte. #}
+    {% if on_side %}
+        <a class="pr-back" href="{{ needs_href }}">
+            {{ icons.svg('chevron-left', 17) }}
+            {{ translations.prod_back | default('Retour à « Ce qui manque »') }}
+        </a>
+    {% endif %}
 
     {% if on_needs %}
         <nav class="pr-periods" aria-label="{{ translations.prod_view_needs | default('Besoins') }}">
@@ -887,6 +1011,7 @@
         {% include "production/_mep.twig" %}
     {% else %}
         <div class="mt-3">{% include "production/_period.twig" %}</div>
+        {% include "production/_more.twig" %}
     {% endif %}
 
 {% endblock %}

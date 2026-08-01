@@ -5,6 +5,8 @@ namespace App\Kitchen\app\Http\Controllers\Production;
 use App\Kitchen\app\Http\Controllers\Controller;
 use App\Kitchen\app\Models\Production\MepLineModel;
 use App\Kitchen\app\Models\Production\OrderLineModel;
+use App\Kitchen\app\Models\Production\ProductionProductModel;
+use App\Kitchen\app\Models\Production\StockLineModel;
 use App\Kitchen\app\Models\Baking\BakingBatchModel;
 use App\Kitchen\app\Services\Baking\BakingService;
 use App\Kitchen\app\Services\Production\ForecastService;
@@ -75,6 +77,11 @@ class ProductionController extends Controller
         // elle qui empêche de se perdre, pas le panneau d'ordres — lequel ne
         // concerne que l'atelier et reste donc dans le planning.
         $data['flow'] = $this->flowData($today, $sector);
+
+        // Le compteur de l'onglet « Ce qui manque ». Il vit sur les deux
+        // onglets, donc il se calcule aussi quand on regarde l'atelier — c'est
+        // pour ça que le profil de ventes est mémorisé le temps de la requête.
+        $data['tab_needs'] = $this->needsCount($today, $sector);
 
         if ($view === 'planning') {
             $data += $this->planningData($today, $sector);
@@ -163,6 +170,79 @@ class ProductionController extends Controller
             'on_sale'     => $stock === null ? null
                 : count(array_filter($stock, fn($s) => $s->getQuantity() > 0)),
         ];
+    }
+
+    /**
+     * Combien de produits attendent un geste — le compteur de l'onglet.
+     *
+     * Un produit compte une fois, qu'il manque ET soit à porter en rayon :
+     * c'est un produit dont on va s'occuper, pas deux. Le compteur porte sur
+     * les périodes qui restent à faire, pas sur celle qui est ouverte — un
+     * badge d'onglet décrit l'onglet, pas la pastille qu'on a tapée dedans,
+     * sinon il change sous le doigt sans que rien n'ait bougé.
+     *
+     * @return int|null null = catalogue non servi ; l'onglet n'affiche alors
+     *         aucun nombre plutôt qu'un zéro qui voudrait dire « rien à faire ».
+     */
+    private function needsCount(string $today, ?string $sector): ?int
+    {
+        $products = $this->productionService->productsInSector($sector);
+        if ($products === null) {
+            return null;
+        }
+
+        $keys = array_map(
+            fn($p) => $p->getKey(),
+            $this->productionService->upcomingPeriods($this->outlookService)
+        );
+
+        $shown = array_values(array_filter(
+            $products,
+            fn($p) => $p->isActive() && array_intersect($keys, $p->getPeriods()) !== []
+        ));
+
+        $orders  = $this->orders($today, $sector);
+        $due     = $this->orderBook->dueForProducts(
+            $orders['lines'],
+            $shown,
+            ForecastService::minutesOf(date('H:i')),
+            (int)round((float)$this->productionService->getParams()['forecast_hours'] * 60)
+        );
+        $tension = $this->productionService->tension(
+            $shown,
+            $this->productionService->getStock(),
+            $today,
+            null,
+            $due
+        );
+
+        $ids = [];
+        foreach ($shown as $p) {
+            $t = $tension['map'][$p->getIdProduct()] ?? null;
+            if ($t !== null && $t['projected'] !== null && $t['projected'] < 0) {
+                $ids[$p->getIdProduct()] = true;
+            }
+        }
+
+        // Ce qui est produit mais pas encore porté attend un geste au même
+        // titre que ce qui manque : c'est même le plus rapide à rendre.
+        $mep = $this->productionService->getMep($today);
+        if ($mep !== null) {
+            $sectorIds = $this->productionService->sectorIds($sector);
+            $lines     = $this->productionService->filterToSector(
+                $mep['lines'],
+                fn(MepLineModel $l) => $l->getIdProduct(),
+                $sector,
+                $sectorIds
+            );
+            foreach ($lines as $l) {
+                if ($l->getRemainingToShelf() > 0 && $l->getIdProduct() !== null) {
+                    $ids[$l->getIdProduct()] = true;
+                }
+            }
+        }
+
+        return count($ids);
     }
 
     /**
@@ -274,7 +354,7 @@ class ProductionController extends Controller
                 'orders'             => [],
                 'orders_counts'      => $this->orderBook->counts([]),
                 'board'              => null,
-            ];
+            ] + $this->moreCounts($today, $sector, null, $this->productionService->getStock(), []);
         }
 
         $periodProducts = array_values(array_filter(
@@ -319,6 +399,58 @@ class ProductionController extends Controller
             'orders_counts'      => $this->orderBook->counts($orders['lines']),
             'now_minutes'        => ForecastService::minutesOf(date('H:i')),
             'board'              => $this->boardService->build($periodProducts, $lines, $stages, $tension['map']),
+        ] + $this->moreCounts($today, $sector, $products, $stock, $orders['lines']);
+    }
+
+    /**
+     * Les trois lignes du pied de page : stock, minimums, MEP de demain.
+     *
+     * Chacune porte son compte parce que c'est souvent la seule chose qu'on
+     * venait y chercher — savoir combien de produits sont sous leur plancher
+     * n'exige pas d'ouvrir le tableau qui les liste.
+     *
+     * @param ProductionProductModel[]|null $products
+     * @param StockLineModel[]|null         $stock
+     * @param OrderLineModel[]              $orders
+     *
+     * @return array{stock_ref_count: ?int, min_below_count: ?int, mep_next_count: ?int}
+     */
+    private function moreCounts(string $today, ?string $sector, ?array $products, ?array $stock, array $orders): array
+    {
+        $min = null;
+        if ($products !== null && $stock !== null) {
+            $focus  = $this->productionService->currentPeriodKey();
+            $counts = $this->minimumService->counts(
+                $this->minimumService->rows($products, $stock, [], $this->productionService->getPeriods(), $focus)
+            );
+            $min = $counts[MinimumService::SHORT];
+        }
+
+        // La MEP de demain : ce qui est déjà encodé. Zéro est une information
+        // — « personne n'a encore rien noté pour demain » — donc on l'écrit,
+        // contrairement à une source non servie.
+        $draft = $this->productionService->getMep(date('Y-m-d', strtotime($today . ' +1 day')));
+        $next  = null;
+        if ($draft !== null) {
+            $next = count($this->productionService->filterToSector(
+                $draft['lines'],
+                fn(MepLineModel $l) => $l->getIdProduct(),
+                $sector,
+                $this->productionService->sectorIds($sector)
+            ));
+        }
+
+        $mine = $stock === null ? null : $this->productionService->filterToSector(
+            $stock,
+            fn(StockLineModel $l) => $l->getIdProduct(),
+            $sector,
+            $this->productionService->sectorIds($sector)
+        );
+
+        return [
+            'stock_ref_count' => $mine === null ? null : count($mine),
+            'min_below_count' => $min,
+            'mep_next_count'  => $next,
         ];
     }
 

@@ -6,6 +6,7 @@ use App\Kitchen\app\Models\Production\MepLineModel;
 use App\Kitchen\app\Models\Production\OrderLineModel;
 use App\Kitchen\app\Models\Production\PeriodModel;
 use App\Kitchen\app\Models\Production\ProductionProductModel;
+use App\Kitchen\app\Models\Production\SalesProfileModel;
 use App\Kitchen\app\Models\Production\StockLineModel;
 use App\Kitchen\app\Repositories\Production\ProductionRepository;
 use App\Kitchen\core\Support\GlobalRegistry;
@@ -32,6 +33,7 @@ class ProductionService
      */
     private array $mepCache = [];
     private array $ordersCache = [];
+    private array $profileCache = [];
     private bool $productsLoaded = false;
     private ?array $productsCache = null;
     private bool $stockLoaded = false;
@@ -188,6 +190,30 @@ class ProductionService
     public function filterToSector(array $items, callable $idOf, ?string $sector, array $ids): array
     {
         return $this->sectorService->keepIn($items, $idOf, $sector, $ids);
+    }
+
+    // ── Profil de ventes ─────────────────────────────────────────────────
+
+    /**
+     * Le profil de ventes du jour, une seule fois par requête.
+     *
+     * Trois calculs le demandent — la tension du tableau de travail, les
+     * propositions de recuisson, la perspective de stock — et depuis que le
+     * compteur des onglets se calcule sur toutes les vues, il est demandé même
+     * quand on regarde l'atelier. Un agrégat sur six semaines n'est pas une
+     * requête qu'on refait trois fois sur une connexion de magasin.
+     */
+    private function profile(?string $date = null): ?SalesProfileModel
+    {
+        $date = $date ?? date('Y-m-d');
+
+        if (!array_key_exists($date, $this->profileCache)) {
+            $shopId = $this->getShopId();
+            $this->profileCache[$date] = $shopId > 0
+                ? $this->salesProvider->getProfile($shopId, $date, (int)$this->getParams()['history_weeks'], true, 30)
+                : null;
+        }
+        return $this->profileCache[$date];
     }
 
     // ── Commandes ────────────────────────────────────────────────────────
@@ -407,12 +433,8 @@ class ProductionService
             return ['available' => false, 'samples' => null, 'suggestions' => []];
         }
 
-        $shopId = $this->getShopId();
-        $params = $this->getParams();
-
-        $profile = $shopId > 0
-            ? $this->salesProvider->getProfile($shopId, $date ?? date('Y-m-d'), (int)$params['history_weeks'], true, 30)
-            : null;
+        $params  = $this->getParams();
+        $profile = $this->profile($date);
 
         if ($profile === null) {
             return ['available' => false, 'samples' => null, 'suggestions' => []];
@@ -440,11 +462,8 @@ class ProductionService
      */
     public function tension(array $products, ?array $stock, ?string $date = null, ?string $time = null, array $orders = []): array
     {
-        $shopId  = $this->getShopId();
         $params  = $this->getParams();
-        $profile = $shopId > 0
-            ? $this->salesProvider->getProfile($shopId, $date ?? date('Y-m-d'), (int)$params['history_weeks'], true, 30)
-            : null;
+        $profile = $this->profile($date);
 
         return [
             'available' => $profile !== null,
@@ -481,11 +500,8 @@ class ProductionService
         $now       = ForecastService::minutesOf($time ?? date('H:i'));
         $horizons  = $outlook->horizons($this->getPeriods(), $now);
 
-        $shopId  = $this->getShopId();
         $params  = $this->getParams();
-        $profile = $shopId > 0
-            ? $this->salesProvider->getProfile($shopId, $date ?? date('Y-m-d'), (int)$params['history_weeks'], true, 30)
-            : null;
+        $profile = $this->profile($date);
 
         $rows = $outlook->rows($stock ?? [], $products ?? [], $profile, $horizons, $orders1, $orders2);
 
