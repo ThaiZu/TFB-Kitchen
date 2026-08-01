@@ -1,8 +1,20 @@
 {# production/index.twig
    Écran de pilotage de la journée d'atelier, sur tablette posée près du four.
 
-   Quatre vues derrière un toggle : les trois périodes (mise en place et
-   produits à sortir) et le stock live (ce qui reste, ce qu'il faut recuire).
+   UN module, quatre questions, derrière un seul toggle :
+     · MEP      — ce qu'on prépare pour demain, ce qu'on valide de la veille
+     · Besoins  — ce que le magasin réclame (les périodes en seconde rangée)
+     · Planning — ce que l'atelier fabrique : frise, fournées, validations
+     · Stock    — ce qu'il reste, face à ce qui va partir
+
+   « Production » et « Plan de production » étaient deux entrées de menu qui se
+   disputaient le même mot et le même vocabulaire d'étapes. Elles répondaient
+   pourtant à deux questions distinctes — décider, exécuter — que le toggle
+   nomme désormais.
+
+   Et le panneau « Prochaine action » vit sur les quatre : on ne peut pas se
+   perdre quand le prochain geste est en haut de l'écran, quel que soit
+   l'onglet ouvert, et qu'il se valide sans en changer.
 
    Chaque bloc de données distingue trois états, et ce n'est pas du zèle : une
    liste vide affichée à la place d'un endpoint muet ferait ouvrir le magasin
@@ -14,6 +26,9 @@
 
 {% block head %}
 <style>
+{# Le planning fait partie du même module : ses styles viennent avec, pour que
+   les ordres et la frise s'affichent ici comme là-bas. #}
+{% include "baking/_styles.twig" %}
     /* ── Toggle quatre positions ─────────────────────────────────────────
        Un select cacherait trois vues sur quatre derrière un tap. Quatre
        cibles visibles, hautes de 54 px, se visent avec un doigt fariné. */
@@ -353,6 +368,22 @@
     .cat-filters-2 .cat-chip.is-on {
         background: var(--c-ink, #241f1c); border-color: var(--c-ink, #241f1c); color: #fff;
     }
+    /* Les périodes sont les moments de « Besoins », pas des sections du
+       module : une rangée de pastilles sous le toggle, pas un cinquième
+       onglet de même poids. */
+    .pr-periods { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .pr-periods .cat-chip {
+        display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+        min-height: 46px; padding: 4px 18px; border-radius: 999px;
+        border: 1px solid var(--c-line-2, rgba(36,26,22,.14)); background: #fff;
+        text-decoration: none; color: var(--c-muted, #7a7168);
+        font-size: .86rem; font-weight: 700; line-height: 1.15;
+    }
+    .pr-periods .cat-chip small { font-size: .64rem; font-weight: 600; opacity: .8; }
+    .pr-periods .cat-chip.is-on {
+        background: var(--c-primary, #8D1D2C); border-color: var(--c-primary, #8D1D2C); color: #fff;
+    }
+
     .stk-empty-filter { margin: 18px 0 0; text-align: center; color: var(--c-muted, #7a7168); font-size: .86rem; }
 
     /* ── Tableau de travail d'une période ────────────────────────────────
@@ -612,25 +643,34 @@
     {# ── Toggle ──
        La MEP en tête : c'est par elle que la journée commence, et rien ne se
        vend avant elle. #}
-    {# Autant de colonnes que d'onglets réellement affichés : les périodes
-       passées ont quitté la barre, et une grille figée à quatre laisserait un
-       trou à leur place. #}
+    {# Un module, quatre questions. « Besoins » (ce que le magasin réclame),
+       « Planning » (ce que l'atelier fabrique), « MEP » (ce qu'on prépare pour
+       demain) et « Stock » (ce qu'il reste). Les périodes ne sont pas une
+       cinquième question : ce sont les moments de « Besoins », d'où une
+       seconde rangée qui n'apparaît que là. #}
+    {% set period_keys = periods|map(p => p.key) %}
+    {% set on_needs = active_view in period_keys %}
+
     <nav class="pr-toggle" aria-label="{{ translations.production_title | default('Production') }}"
-         style="grid-template-columns: repeat({{ tabs|length + 1 }}, minmax(0, 1fr));">
+         style="grid-template-columns: repeat(3, minmax(0, 1fr));">
         <a class="pr-tab {{ active_view == 'mep' ? 'is-active' : '' }}"
            href="{{ ROOT }}/production?view=mep"
            {{ active_view == 'mep' ? 'aria-current="page"' : '' }}>
             {{ translations.prod_view_mep | default('MEP') }}
             <small>{{ translations.mep_sub_hint | default('Valider / préparer') }}</small>
         </a>
-        {% for p in tabs %}
-            <a class="pr-tab {{ active_view == p.key ? 'is-active' : '' }}"
-               href="{{ ROOT }}/production?view={{ p.key }}"
-               {{ active_view == p.key ? 'aria-current="page"' : '' }}>
-                {{ translations['period_' ~ p.key] ?? (p.label ?? p.key) }}
-                <small>{{ p.start }} – {{ p.end }}</small>
-            </a>
-        {% endfor %}
+        <a class="pr-tab {{ on_needs ? 'is-active' : '' }}"
+           href="{{ ROOT }}/production"
+           {{ on_needs ? 'aria-current="page"' : '' }}>
+            {{ translations.prod_view_needs | default('Besoins') }}
+            <small>{{ translations.prod_view_needs_hint | default('Ce qui manque') }}</small>
+        </a>
+        <a class="pr-tab {{ active_view == 'planning' ? 'is-active' : '' }}"
+           href="{{ ROOT }}/production?view=planning"
+           {{ active_view == 'planning' ? 'aria-current="page"' : '' }}>
+            {{ translations.prod_view_planning | default('Planning') }}
+            <small>{{ translations.prod_view_planning_hint | default("L'atelier") }}</small>
+        </a>
         <a class="pr-tab pr-tab-stock {{ active_view == 'stock' ? 'is-active' : '' }}"
            href="{{ ROOT }}/production?view=stock"
            {{ active_view == 'stock' ? 'aria-current="page"' : '' }}>
@@ -639,7 +679,27 @@
         </a>
     </nav>
 
-    {% if active_view == 'stock' %}
+    {% if on_needs %}
+        <nav class="pr-periods" aria-label="{{ translations.prod_view_needs | default('Besoins') }}">
+            {% for p in tabs %}
+                <a class="cat-chip {{ active_view == p.key ? 'is-on' : '' }}"
+                   href="{{ ROOT }}/production?view={{ p.key }}"
+                   {{ active_view == p.key ? 'aria-current="page"' : '' }}>
+                    {{ translations['period_' ~ p.key] ?? (p.label ?? p.key) }}
+                    <small>{{ p.start }} – {{ p.end }}</small>
+                </a>
+            {% endfor %}
+        </nav>
+    {% endif %}
+
+    {# Le prochain geste, partout. On ne peut pas se perdre quand ce qu'il y a
+       à faire est en haut de l'écran, quel que soit l'onglet ouvert. #}
+    {% include "baking/_next.twig" %}
+
+    {% if active_view == 'planning' %}
+        {% include "baking/_gantt.twig" %}
+        {% include "baking/_cards.twig" %}
+    {% elseif active_view == 'stock' %}
         {% set p1_label = horizons.p1.key ? (translations['period_' ~ horizons.p1.key] | default(horizons.p1.key)) : '' %}
         {% set p2_label = horizons.p2.key ? (translations['period_' ~ horizons.p2.key] | default(horizons.p2.key)) : '' %}
         {% include "production/_stock.twig" %}
@@ -652,11 +712,13 @@
 {% endblock %}
 
 {% block scripts %}
+{# Les ordres vivent sur tous les écrans : leur script aussi. #}
+{% include "baking/_scripts.twig" %}
 {% if active_view == 'stock' %}
     {% include "production/_stock_scripts.twig" %}
 {% elseif active_view == 'mep' %}
     {% include "production/_mep_scripts.twig" %}
-{% else %}
+{% elseif active_view != 'planning' %}
     {% include "production/_period_scripts.twig" %}
 {% endif %}
 {% endblock %}

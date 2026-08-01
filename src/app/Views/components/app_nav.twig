@@ -7,6 +7,8 @@
    le layout, donc aucune vue n'a à la passer). #}
 {% import "components/_icons.twig" as icons %}
 
+{# Une seule entrée pour la production : besoins, planning, MEP et stock sont
+   quatre questions du même module, pas quatre modules. #}
 {% set items = items ?? [
     {
         key:   'dashboard',
@@ -22,25 +24,11 @@
         wip:   true
     },
     {
-        key:      'stock',
-        label:    translations.stock ?? 'Stock',
-        icon:     'package',
-        href:     '#',
-        disabled: true
-    },
-    {
         key:      'objectives',
         label:    translations.objectives_bonuses ?? 'Objectifs & Primes',
         icon:     'target',
         href:     '#',
         disabled: true
-    },
-    {
-        key:   'baking',
-        label: translations.baking ?? 'Planning production',
-        icon:  'flame',
-        href:  ROOT ~ '/baking',
-        wip:   true
     },
     {
         key:   'checklists',

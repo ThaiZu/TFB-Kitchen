@@ -4,10 +4,12 @@ namespace App\Kitchen\app\Http\Controllers\Production;
 
 use App\Kitchen\app\Http\Controllers\Controller;
 use App\Kitchen\app\Models\Production\MepLineModel;
+use App\Kitchen\app\Models\Baking\BakingBatchModel;
 use App\Kitchen\app\Services\Baking\BakingService;
 use App\Kitchen\app\Services\Production\ProductionBoardService;
 use App\Kitchen\app\Services\Production\ProductionService;
 use App\Kitchen\app\Services\Production\StockOutlookService;
+use App\Kitchen\app\Services\Staff\StaffService;
 
 class ProductionController extends Controller
 {
@@ -18,7 +20,8 @@ class ProductionController extends Controller
         // qui dériverait : une seule source de vérité pour « où en est ce
         // produit », partagée avec le module Cuisson.
         private BakingService $bakingService,
-        private StockOutlookService $outlookService
+        private StockOutlookService $outlookService,
+        private StaffService $staffService
     ) {}
 
     /**
@@ -44,6 +47,12 @@ class ProductionController extends Controller
             'today'       => $today,
             'params'      => $this->productionService->getParams(),
         ];
+
+        // Le prochain geste est présent sur TOUS les écrans du module : quel
+        // que soit l'onglet ouvert, on sait quoi faire et on peut le valider
+        // sans changer de vue. C'est ça qui empêche de se perdre, plus que le
+        // regroupement lui-même.
+        $data += $this->planningData($today, $view === 'planning');
 
         if ($view === 'stock') {
             $products = $this->productionService->getProducts();
@@ -72,6 +81,70 @@ class ProductionController extends Controller
         }
 
         $this->view('production/index', $data);
+    }
+
+    /**
+     * Le planning de l'atelier : frise, ordres, cartes.
+     *
+     * Servi en entier sur l'onglet Planning ; réduit aux ordres et à la feuille
+     * d'attribution partout ailleurs — c'est le fil conducteur du module, pas
+     * une vue parmi d'autres.
+     */
+    private function planningData(string $today, bool $full): array
+    {
+        $plan = $this->bakingService->getPlan($today);
+
+        if ($plan === null) {
+            return [
+                'plan_served'    => false,
+                'orders'         => [],
+                'plan'           => [],
+                'batches'        => [],
+                'ovens'          => [],
+                'counts'         => ['all' => 0, 'prep' => 0, 'cook' => 0, 'finish' => 0],
+                'staff'          => [],
+                'staff_available'=> false,
+                'schedule_known' => false,
+                'now'            => $this->bakingService->nowMinutes(),
+                'now_clock'      => date('H:i'),
+                'window'         => ['from' => 0, 'to' => 60, 'hours' => []],
+                'active_stage'   => 'all',
+                'focus_batch'    => null,
+            ];
+        }
+
+        $stage   = $full ? $this->readStage() : 'all';
+        $now     = $this->bakingService->nowMinutes($plan['server_time']);
+        $active  = $this->bakingService->active($plan['batches']);
+        $shown   = $this->bakingService->filterByStage($active, $stage);
+        $dayPlan = $this->bakingService->dayPlan($plan['batches'], $stage);
+        $staff   = $this->staffService->getEmployees();
+
+        return [
+            'plan_served'    => true,
+            // Hors de l'onglet Planning, les ordres se lisent sur toute la
+            // journée : filtrer sur une étape qu'on n'a pas choisie ici
+            // masquerait le geste le plus urgent.
+            'orders'         => $this->bakingService->orders($full ? $shown : $active),
+            'plan'           => $full ? $dayPlan : [],
+            'batches'        => $full ? $shown : [],
+            'ovens'          => $full ? $this->bakingService->ovens($dayPlan) : [],
+            'counts'         => $this->bakingService->countByStage($active),
+            'staff'          => $this->staffService->onDuty($staff),
+            'staff_available'=> $staff !== null,
+            'schedule_known' => $this->staffService->scheduleKnown($staff),
+            'now'            => $now,
+            'now_clock'      => BakingBatchModel::toClock($now),
+            'window'         => $this->bakingService->window($dayPlan ?: $active, $now, true),
+            'active_stage'   => $stage,
+            'focus_batch'    => ($f = (int)($_GET['focus'] ?? 0)) > 0 ? $f : null,
+        ];
+    }
+
+    private function readStage(): string
+    {
+        $stage = (string)($_GET['stage'] ?? '');
+        return in_array($stage, BakingService::STAGES, true) ? $stage : 'all';
     }
 
     /**
@@ -400,6 +473,7 @@ class ProductionController extends Controller
         $allowed = array_map(fn($p) => $p->getKey(), $periods);
         $allowed[] = 'stock';
         $allowed[] = 'mep';
+        $allowed[] = 'planning';
 
         $view = (string)($_GET['view'] ?? '');
         if (in_array($view, $allowed, true)) {

@@ -20,63 +20,25 @@ class BakingController extends Controller
      * Toujours pour aujourd'hui : pas de sélecteur de date, une cuisine ne
      * cuit pas pour hier.
      */
+    /**
+     * GET /baking — conservé, mais redirige.
+     *
+     * Le planning est devenu un onglet de Production : un seul module, quatre
+     * questions. L'ancienne adresse reste vivante parce qu'elle circule déjà —
+     * les tuiles de période y pointaient, et un lien mort vaut moins qu'une
+     * redirection d'une ligne.
+     */
     public function index(): void
     {
-        $stage = $this->readStage();
-        $plan  = $this->bakingService->getPlan();
-
-        if ($plan === null) {
-            $this->view('baking/index', [
-                'plan_available' => false,
-                'active_stage'   => $stage,
-                'batches'        => [],
-                'counts'         => ['all' => 0, 'prep' => 0, 'cook' => 0, 'finish' => 0],
-                'now'            => $this->bakingService->nowMinutes(),
-                'now_clock'      => date('H:i'),
-                'window'         => ['from' => 0, 'to' => 60, 'hours' => []],
-                'plan'           => [],
-                'ovens'          => [],
-                'orders'         => [],
-                'staff'          => [],
-                'staff_available'=> false,
-                'schedule_known' => false,
-                'focus_batch'    => null,
-            ]);
-            return;
+        $params = ['view' => 'planning'];
+        foreach (['stage', 'focus'] as $k) {
+            if (!empty($_GET[$k])) {
+                $params[$k] = (string)$_GET[$k];
+            }
         }
 
-        // Le personnel actif alimente l'attribution des ordres. Une équipe non
-        // servie ne bloque pas le geste : on valide sans nom plutôt que de
-        // rendre le bouton inerte au milieu du service.
-        $staff = $this->staffService->getEmployees();
-
-        $now     = $this->bakingService->nowMinutes($plan['server_time']);
-        $active  = $this->bakingService->active($plan['batches']);
-        $shown   = $this->bakingService->filterByStage($active, $stage);
-        $dayPlan = $this->bakingService->dayPlan($plan['batches'], $stage);
-
-        $this->view('baking/index', [
-            'plan_available' => true,
-            'active_stage'   => $stage,
-            'batches'        => $shown,
-            'counts'         => $this->bakingService->countByStage($active),
-            'now'            => $now,
-            'now_clock'      => BakingBatchModel::toClock($now),
-            // La frise ne garde que ce qui reste à faire, et se cadre sur
-            // l'heure en cours : ce qui se pilote, c'est ce qui vient.
-            'plan'           => $dayPlan,
-            // Les fours du plan, pour filtrer par poste : on est rarement aux
-            // trois à la fois.
-            'ovens'          => $this->bakingService->ovens($dayPlan),
-            'window'         => $this->bakingService->window($dayPlan ?: $active, $now, true),
-            'orders'         => $this->bakingService->orders($shown),
-            'staff'          => $this->staffService->onDuty($staff),
-            'staff_available'=> $staff !== null,
-            'schedule_known' => $this->staffService->scheduleKnown($staff),
-            // Arrivée depuis une tuile de Production : la fournée visée est
-            // mise en avant plutôt que laissée à chercher dans la liste.
-            'focus_batch'    => $this->readFocus(),
-        ]);
+        header('Location: ' . ROOT . '/production?' . http_build_query($params), true, 302);
+        exit;
     }
 
     /**

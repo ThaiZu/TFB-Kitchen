@@ -11,23 +11,30 @@
    maintenir deux fois le même rendu. #}
 <script>
 (function () {
+    // Le panneau d'ordres vit sur tous les écrans du module, la frise seulement
+    // sur l'onglet Planning. Le script sert les deux : il ne s'arrête que s'il
+    // n'y a ni l'un ni l'autre.
     var gantt = document.getElementById('bkGantt');
-    if (!gantt) return;
+    var sheet = document.getElementById('bkAssign');
+    if (!gantt && !sheet) return;
 
     var ROOT  = {{ ROOT | json_encode | raw }};
-    var STAGE = gantt.dataset.stage;
+    var STAGE = gantt ? gantt.dataset.stage : 'all';
     var URL   = ROOT + '/ajax/baking' + (STAGE !== 'all' ? '?stage=' + STAGE : '');
     var ERR   = {{ (translations.baking_error | default("L'étape n'a pas pu être enregistrée.")) | json_encode | raw }};
 
-    var FROM = parseInt(gantt.dataset.from, 10);
-    var TO   = parseInt(gantt.dataset.to, 10);
+    var FROM = gantt ? parseInt(gantt.dataset.from, 10) : 0;
+    var TO   = gantt ? parseInt(gantt.dataset.to, 10) : 60;
     var SPAN = (TO - FROM) || 60;
 
     // Signature de l'état affiché : elle seule décide s'il faut recharger.
     function signature(batches) {
         return batches.map(function (b) { return b.id + ':' + b.status; }).join(',');
     }
-    var current = {{ batches|map(b => b.id ~ ':' ~ b.status)|join(',')|json_encode|raw }};
+    // Signature de ce qui est affiché : sur les écrans sans frise, ce sont les
+    // ordres qui font foi — c'est eux qu'il faudra relire si un collègue avance
+    // une fournée.
+    var current = {{ (batches is not empty ? batches : orders)|map(b => b.id ~ ':' ~ b.status)|join(',')|json_encode|raw }};
 
     function paintNow(now, clock) {
         var line = document.getElementById('bkNow');
@@ -127,7 +134,6 @@
     });
 
     // ── Attribuer un ordre ───────────────────────────────────────────────
-    var sheet = document.getElementById('bkAssign');
     if (sheet) {
         var TIME_STEP = 5;                       // l'atelier ne raisonne pas à la minute
         var A = {
