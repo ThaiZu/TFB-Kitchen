@@ -1,0 +1,74 @@
+{# production/_flow.twig — comment un produit circule, en une bande.
+
+   Quatre onglets ne disent pas dans quel ordre les choses arrivent. Cette
+   bande le dit : on prépare la veille, on fabrique, on porte en rayon — et
+   c'est CE geste-là qui met le stock du magasin en vente — puis on vend.
+
+   Chaque étape compte ce qui l'attend et mène à son onglet : c'est à la fois
+   le mode d'emploi et la navigation, donc personne n'a à apprendre l'un pour
+   se servir de l'autre. #}
+{% import "components/_icons.twig" as icons %}
+
+{% set steps = [
+    {
+        key:   'mep',
+        num:   '1',
+        label: translations.flow_1 | default('Préparé la veille'),
+        hint:  translations.flow_1_hint | default("on note ce qu'on prépare"),
+        href:  ROOT ~ '/production?view=mep',
+        n:     flow.to_validate,
+        unit:  translations.flow_1_unit | default('à valider'),
+        on:    active_view == 'mep'
+    },
+    {
+        key:   'planning',
+        num:   '2',
+        label: translations.flow_2 | default('Fabriqué'),
+        hint:  translations.flow_2_hint | default('préparation, cuisson, finition'),
+        href:  ROOT ~ '/production?view=planning',
+        n:     flow.in_progress,
+        unit:  translations.flow_2_unit | default('en cours'),
+        on:    active_view == 'planning'
+    },
+    {
+        key:   'shelf',
+        num:   '3',
+        label: translations.flow_3 | default('Mis en rayon'),
+        hint:  translations.flow_3_hint | default("c'est ici que le stock monte"),
+        href:  ROOT ~ '/production',
+        n:     flow.to_shelf,
+        unit:  translations.flow_3_unit | default('à porter'),
+        on:    active_view in periods|map(p => p.key)
+    },
+    {
+        key:   'stock',
+        num:   '4',
+        label: translations.flow_4 | default('En vente'),
+        hint:  translations.flow_4_hint | default('la caisse peut le vendre'),
+        href:  ROOT ~ '/production?view=stock',
+        n:     flow.on_sale,
+        unit:  translations.flow_4_unit | default('en stock'),
+        on:    active_view == 'stock'
+    }
+] %}
+
+<nav class="pr-flow" aria-label="{{ translations.flow_title | default('Parcours du produit') }}">
+    {% for s in steps %}
+        <a class="pr-flow-step f-{{ s.key }} {{ s.on ? 'is-on' : '' }}" href="{{ s.href }}">
+            <span class="pr-flow-num">{{ s.num }}</span>
+            <span class="pr-flow-txt">
+                <b>{{ s.label }}</b>
+                <small>{{ s.hint }}</small>
+            </span>
+            {% if s.n is not null %}
+                <span class="pr-flow-n">
+                    <b>{{ s.n|number_format(0, ',', ' ') }}</b>
+                    <span>{{ s.unit }}</span>
+                </span>
+            {% endif %}
+        </a>
+        {% if not loop.last %}
+            <span class="pr-flow-arrow" aria-hidden="true">{{ icons.svg('chevron-right', 16) }}</span>
+        {% endif %}
+    {% endfor %}
+</nav>

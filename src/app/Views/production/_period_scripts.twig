@@ -69,13 +69,23 @@
             val = Math.min(Math.max(0, parseFloat(tile.dataset.remaining) || 0), val);
         }
         input.value = String(val);
+        paintEffect(input);
     });
+
+    // Le bouton dit ce qu'il va faire au stock, et le chiffre suit la saisie :
+    // « En rayon » ne se comprend qu'une fois qu'on sait que c'est ce geste-là
+    // qui met le produit en vente.
+    function paintEffect(input) {
+        var out = input.closest('.pr-shelf').querySelector('.pr-shelf-fx-n');
+        if (out) out.textContent = String(Math.max(0, parseFloat(input.value) || 0));
+    }
 
     document.addEventListener('input', function (e) {
         var input = e.target.closest('#prBoard .pr-shelf-qty');
         if (!input) return;
         var max = Math.max(0, parseFloat(input.closest('.pr-tile').dataset.remaining) || 0);
         if ((parseFloat(input.value) || 0) > max) input.value = String(max);
+        paintEffect(input);
     });
 
     // ── Programmer une fournée ──

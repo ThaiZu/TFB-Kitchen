@@ -70,11 +70,21 @@
     <div id="prBoard">
         {% for key, rows in board.buckets %}
             {% if rows is not empty %}
-                <section class="pr-bucket b-{{ key }}">
-                    <h2 class="pr-cat-title">
-                        <i class="pr-dot d-{{ key }}"></i>
-                        {{ bucket_labels[key] }}<span class="pr-cat-count">{{ rows|length }}</span>
-                    </h2>
+                {# « Rien en cours » n'appelle aucun geste : replié, il reste
+                   consultable sans encombrer la liste de ce qu'il y a à faire. #}
+                <section class="pr-bucket b-{{ key }}" {{ key == 'idle' ? 'data-fold="1"' : '' }}>
+                    {% if key == 'idle' %}
+                        <details class="pr-fold">
+                            <summary class="pr-cat-title">
+                                <i class="pr-dot d-{{ key }}"></i>
+                                {{ bucket_labels[key] }}<span class="pr-cat-count">{{ rows|length }}</span>
+                            </summary>
+                    {% else %}
+                        <h2 class="pr-cat-title">
+                            <i class="pr-dot d-{{ key }}"></i>
+                            {{ bucket_labels[key] }}<span class="pr-cat-count">{{ rows|length }}</span>
+                        </h2>
+                    {% endif %}
 
                     <div class="pr-tiles">
                         {% for r in rows %}
@@ -196,11 +206,17 @@
                                             {{ icons.svg('store', 17) }}
                                             {{ translations.shelf_go | default('En rayon') }}
                                         </button>
+                                        <p class="pr-shelf-fx">
+                                            {{ translations.shelf_effect | default('met') }}
+                                            <b>+<span class="pr-shelf-fx-n">{{ r.remaining|number_format(0, ',', ' ') }}</span></b>
+                                            {{ translations.shelf_effect_2 | default('au stock du magasin, en vente') }}
+                                        </p>
                                     </div>
                                 {% endif %}
                             </article>
                         {% endfor %}
                     </div>
+                    {% if key == 'idle' %}</details>{% endif %}
                 </section>
             {% endif %}
         {% endfor %}

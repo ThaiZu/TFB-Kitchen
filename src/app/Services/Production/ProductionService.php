@@ -21,6 +21,20 @@ class ProductionService
     private ?array $configCache = null;
     private bool $configLoaded = false;
 
+    /**
+     * Mémoire de la requête.
+     *
+     * Un même écran demande la MEP, le catalogue et le stock depuis plusieurs
+     * endroits — le bandeau de flux, la vue de période, le tableau. Sans ça,
+     * une page vaut trois fois le même appel réseau, sur une tablette de
+     * magasin et une connexion de magasin.
+     */
+    private array $mepCache = [];
+    private bool $productsLoaded = false;
+    private ?array $productsCache = null;
+    private bool $stockLoaded = false;
+    private ?array $stockCache = null;
+
     public function __construct(
         private ProductionRepository $productionRepository,
         private ForecastService $forecastService,
@@ -112,8 +126,12 @@ class ProductionService
     /** @return ProductionProductModel[]|null null = catalogue non servi */
     public function getProducts(): ?array
     {
-        $shopId = $this->getShopId();
-        return $shopId > 0 ? $this->productionRepository->getProducts($shopId) : null;
+        if (!$this->productsLoaded) {
+            $this->productsLoaded = true;
+            $shopId = $this->getShopId();
+            $this->productsCache = $shopId > 0 ? $this->productionRepository->getProducts($shopId) : null;
+        }
+        return $this->productsCache;
     }
 
     /**
@@ -146,8 +164,11 @@ class ProductionService
     /** @return array{date: string, status: string, prepared_at: ?string, lines: MepLineModel[]}|null */
     public function getMep(string $date): ?array
     {
-        $shopId = $this->getShopId();
-        return $shopId > 0 ? $this->productionRepository->getMep($shopId, $date) : null;
+        if (!array_key_exists($date, $this->mepCache)) {
+            $shopId = $this->getShopId();
+            $this->mepCache[$date] = $shopId > 0 ? $this->productionRepository->getMep($shopId, $date) : null;
+        }
+        return $this->mepCache[$date];
     }
 
     /**
@@ -269,14 +290,19 @@ class ProductionService
      */
     public function getStock(): ?array
     {
+        if ($this->stockLoaded) {
+            return $this->stockCache;
+        }
+        $this->stockLoaded = true;
+
         $shopId = $this->getShopId();
         if ($shopId <= 0) {
-            return null;
+            return $this->stockCache = null;
         }
 
         $stock = $this->productionRepository->getStock($shopId);
         if ($stock === null) {
-            return null;
+            return $this->stockCache = null;
         }
 
         usort($stock, function (StockLineModel $a, StockLineModel $b) {
@@ -284,7 +310,7 @@ class ProductionService
             return $c !== 0 ? $c : strcasecmp((string)$a->getName(), (string)$b->getName());
         });
 
-        return $stock;
+        return $this->stockCache = $stock;
     }
 
     // ── Recuissons ───────────────────────────────────────────────────────

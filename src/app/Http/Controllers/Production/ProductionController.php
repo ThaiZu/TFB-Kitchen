@@ -48,13 +48,15 @@ class ProductionController extends Controller
             'params'      => $this->productionService->getParams(),
         ];
 
-        // Le prochain geste est présent sur TOUS les écrans du module : quel
-        // que soit l'onglet ouvert, on sait quoi faire et on peut le valider
-        // sans changer de vue. C'est ça qui empêche de se perdre, plus que le
-        // regroupement lui-même.
-        $data += $this->planningData($today, $view === 'planning');
+        // La bande de flux dit dans quel ordre les choses arrivent, et compte
+        // ce qui attend à chaque étape. Elle est sur les quatre écrans : c'est
+        // elle qui empêche de se perdre, pas le panneau d'ordres — lequel ne
+        // concerne que l'atelier et reste donc dans le planning.
+        $data['flow'] = $this->flowData($today);
 
-        if ($view === 'stock') {
+        if ($view === 'planning') {
+            $data += $this->planningData($today);
+        } elseif ($view === 'stock') {
             $products = $this->productionService->getProducts();
             $stock    = $this->productionService->getStock();
             $rebakes  = $this->productionService->getRebakeSuggestions($products, $stock, $today);
@@ -84,13 +86,47 @@ class ProductionController extends Controller
     }
 
     /**
+     * Les quatre compteurs de la bande de flux.
+     *
+     * Tout vient d'appels déjà faits ailleurs sur la page — la MEP, le plan et
+     * le stock sont mémorisés le temps de la requête. Une bande d'orientation
+     * ne doit rien coûter, sinon elle finit par sauter au premier arbitrage de
+     * performance.
+     *
+     * @return array{to_validate: ?int, in_progress: ?int, to_shelf: ?int, on_sale: ?int}
+     *         null = source non servie ; l'étape n'affiche alors aucun nombre
+     *         plutôt qu'un zéro qui voudrait dire « rien à faire ».
+     */
+    private function flowData(string $today): array
+    {
+        $mep   = $this->productionService->getMep($today);
+        $plan  = $this->bakingService->getPlan($today);
+        $stock = $this->productionService->getStock();
+
+        $lines = $mep['lines'] ?? [];
+
+        return [
+            'to_validate' => $mep === null ? null
+                : count(array_filter($lines, fn(MepLineModel $l) => $l->isPending())),
+            'in_progress' => $plan === null ? null
+                : count($this->bakingService->active($plan['batches'])),
+            // Produit, constaté, mais pas encore porté : c'est exactement ce
+            // que l'étape 3 attend de nous.
+            'to_shelf'    => $mep === null ? null
+                : count(array_filter($lines, fn(MepLineModel $l) => $l->getRemainingToShelf() > 0)),
+            'on_sale'     => $stock === null ? null
+                : count(array_filter($stock, fn($s) => $s->getQuantity() > 0)),
+        ];
+    }
+
+    /**
      * Le planning de l'atelier : frise, ordres, cartes.
      *
-     * Servi en entier sur l'onglet Planning ; réduit aux ordres et à la feuille
-     * d'attribution partout ailleurs — c'est le fil conducteur du module, pas
-     * une vue parmi d'autres.
+     * Le panneau d'ordres vit ici et nulle part ailleurs : c'est le fil de
+     * l'atelier, pas celui du magasin. Sur la MEP ou le stock, il proposerait
+     * un geste qui n'a rien à voir avec l'écran ouvert.
      */
-    private function planningData(string $today, bool $full): array
+    private function planningData(string $today): array
     {
         $plan = $this->bakingService->getPlan($today);
 
@@ -113,7 +149,7 @@ class ProductionController extends Controller
             ];
         }
 
-        $stage   = $full ? $this->readStage() : 'all';
+        $stage   = $this->readStage();
         $now     = $this->bakingService->nowMinutes($plan['server_time']);
         $active  = $this->bakingService->active($plan['batches']);
         $shown   = $this->bakingService->filterByStage($active, $stage);
@@ -122,13 +158,10 @@ class ProductionController extends Controller
 
         return [
             'plan_served'    => true,
-            // Hors de l'onglet Planning, les ordres se lisent sur toute la
-            // journée : filtrer sur une étape qu'on n'a pas choisie ici
-            // masquerait le geste le plus urgent.
-            'orders'         => $this->bakingService->orders($full ? $shown : $active),
-            'plan'           => $full ? $dayPlan : [],
-            'batches'        => $full ? $shown : [],
-            'ovens'          => $full ? $this->bakingService->ovens($dayPlan) : [],
+            'orders'         => $this->bakingService->orders($shown),
+            'plan'           => $dayPlan,
+            'batches'        => $shown,
+            'ovens'          => $this->bakingService->ovens($dayPlan),
             'counts'         => $this->bakingService->countByStage($active),
             'staff'          => $this->staffService->onDuty($staff),
             'staff_available'=> $staff !== null,

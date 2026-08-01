@@ -29,6 +29,78 @@
 {# Le planning fait partie du même module : ses styles viennent avec, pour que
    les ordres et la frise s'affichent ici comme là-bas. #}
 {% include "baking/_styles.twig" %}
+    /* ── La bande de flux ────────────────────────────────────────────────
+       Quatre onglets ne disent pas dans quel ordre les choses arrivent. Cette
+       bande le dit, et compte ce qui attend à chaque étape : mode d'emploi et
+       navigation dans le même objet, pour n'avoir à en apprendre qu'un. */
+    .pr-flow {
+        display: flex; align-items: stretch; gap: 4px; flex-wrap: wrap;
+        margin-top: 12px;
+    }
+    .pr-flow-step {
+        flex: 1 1 190px; display: flex; align-items: center; gap: 10px;
+        min-height: 62px; padding: 9px 13px;
+        border: 1px solid var(--c-line, rgba(36,26,22,.09));
+        border-radius: var(--r-md, 13px); background: var(--c-surface, #fff);
+        text-decoration: none; color: var(--c-ink, #241f1c);
+        -webkit-tap-highlight-color: transparent;
+    }
+    .pr-flow-num {
+        flex: 0 0 auto; width: 24px; height: 24px; border-radius: 50%;
+        display: inline-flex; align-items: center; justify-content: center;
+        background: var(--c-bg-2, #F4EFE8); color: var(--c-muted, #7a7168);
+        font-size: .74rem; font-weight: 800;
+    }
+    .pr-flow-txt { flex: 1; min-width: 0; }
+    .pr-flow-txt b { display: block; font-size: .84rem; font-weight: 700; line-height: 1.2; }
+    .pr-flow-txt small { display: block; margin-top: 1px; font-size: .66rem; color: var(--c-muted, #7a7168); line-height: 1.25; }
+    .pr-flow-n { flex: 0 0 auto; text-align: right; line-height: 1.1; }
+    .pr-flow-n b { display: block; font-size: 1.05rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .pr-flow-n span { display: block; font-size: .6rem; color: var(--c-muted, #7a7168); }
+    .pr-flow-arrow {
+        flex: 0 0 auto; display: flex; align-items: center;
+        color: var(--c-line-2, rgba(36,26,22,.22));
+    }
+    /* L'étape 3 est celle qui met le stock en vente : elle porte le vert du
+       bouton « En rayon », pour que le lien entre les deux se voie sans
+       l'avoir lu. */
+    .pr-flow-step.f-shelf .pr-flow-num { background: #e3f0e6; color: var(--c-vert, #2D7A3E); }
+    .pr-flow-step.is-on {
+        border-color: var(--c-ink, #241f1c);
+        box-shadow: inset 0 0 0 1px var(--c-ink, #241f1c);
+    }
+    .pr-flow-step.is-on .pr-flow-num { background: var(--c-ink, #241f1c); color: #fff; }
+    .pr-flow-step.f-shelf.is-on {
+        border-color: var(--c-vert, #2D7A3E);
+        box-shadow: inset 0 0 0 1px var(--c-vert, #2D7A3E);
+    }
+    .pr-flow-step.f-shelf.is-on .pr-flow-num { background: var(--c-vert, #2D7A3E); color: #fff; }
+    /* Sous 720 px, les flèches sautent : la bande se lit alors de haut en bas,
+       et une flèche horizontale entre deux lignes empilées ment. */
+    @media (max-width: 720px) {
+        .pr-flow-arrow { display: none; }
+        .pr-flow-step { flex-basis: calc(50% - 2px); }
+    }
+
+    /* Ce qui n'appelle aucun geste se replie : la page ne garde que ce qu'il y
+       a à faire, et le reste tient à un tap. */
+    .pr-fold > summary, .bk-later > summary {
+        cursor: pointer; list-style: none;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .pr-fold > summary::-webkit-details-marker,
+    .bk-later > summary::-webkit-details-marker { display: none; }
+    .pr-fold > summary::after, .bk-later > summary::after {
+        content: '▾'; margin-left: 2px; font-size: .8rem; opacity: .55;
+    }
+    .pr-fold[open] > summary::after, .bk-later[open] > summary::after { content: '▴'; }
+    .bk-later { margin-top: 16px; }
+    .bk-later > summary {
+        font-size: .72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+        color: var(--c-muted, #7a7168);
+    }
+    .bk-later[open] > summary { margin-bottom: 10px; }
+
     /* ── Toggle quatre positions ─────────────────────────────────────────
        Un select cacherait trois vues sur quatre derrière un tap. Quatre
        cibles visibles, hautes de 54 px, se visent avec un doigt fariné. */
@@ -484,6 +556,13 @@
         -webkit-tap-highlight-color: transparent;
     }
     .pr-shelf-go:active { transform: scale(.995); }
+    /* Le geste dit son effet. « En rayon » ne se comprend qu'une fois qu'on
+       sait que c'est lui qui crédite le stock du magasin — alors on l'écrit,
+       sous le bouton, avec le chiffre qui va bouger. */
+    .pr-shelf-fx {
+        flex: 1 1 100%; margin: 0; text-align: center;
+        font-size: .72rem; color: var(--c-vert, #2D7A3E); font-weight: 700;
+    }
     .pr-shelf-go[disabled] { opacity: .55; cursor: default; }
 
     /* Ce qui manque à l'écran se lit à l'écran : une liste triée sur un stock
@@ -679,6 +758,8 @@
         </a>
     </nav>
 
+    {% include "production/_flow.twig" %}
+
     {% if on_needs %}
         <nav class="pr-periods" aria-label="{{ translations.prod_view_needs | default('Besoins') }}">
             {% for p in tabs %}
@@ -692,11 +773,11 @@
         </nav>
     {% endif %}
 
-    {# Le prochain geste, partout. On ne peut pas se perdre quand ce qu'il y a
-       à faire est en haut de l'écran, quel que soit l'onglet ouvert. #}
-    {% include "baking/_next.twig" %}
-
     {% if active_view == 'planning' %}
+        {# Le panneau d'ordres est le fil de l'atelier : il n'a de sens que là.
+           Sur la MEP ou le stock, il proposerait un geste sans rapport avec
+           l'écran ouvert. Ailleurs, c'est la bande de flux qui oriente. #}
+        {% include "baking/_next.twig" %}
         {% include "baking/_gantt.twig" %}
         {% include "baking/_cards.twig" %}
     {% elseif active_view == 'stock' %}
@@ -712,13 +793,13 @@
 {% endblock %}
 
 {% block scripts %}
-{# Les ordres vivent sur tous les écrans : leur script aussi. #}
-{% include "baking/_scripts.twig" %}
-{% if active_view == 'stock' %}
+{% if active_view == 'planning' %}
+    {% include "baking/_scripts.twig" %}
+{% elseif active_view == 'stock' %}
     {% include "production/_stock_scripts.twig" %}
 {% elseif active_view == 'mep' %}
     {% include "production/_mep_scripts.twig" %}
-{% elseif active_view != 'planning' %}
+{% else %}
     {% include "production/_period_scripts.twig" %}
 {% endif %}
 {% endblock %}

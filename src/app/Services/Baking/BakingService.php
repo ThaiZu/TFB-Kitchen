@@ -15,6 +15,9 @@ class BakingService
         BakingBatchModel::STAGE_FINISH,
     ];
 
+    /** Mémoire de la requête : l'écran Production lit le plan deux fois. */
+    private array $planCache = [];
+
     public function __construct(
         private BakingRepository $bakingRepository
     ) {}
@@ -32,11 +35,14 @@ class BakingService
      */
     public function getPlan(?string $date = null): ?array
     {
-        $shopId = $this->getShopId();
-        if ($shopId <= 0) {
-            return null;
+        $date = $date ?? date('Y-m-d');
+        if (!array_key_exists($date, $this->planCache)) {
+            $shopId = $this->getShopId();
+            $this->planCache[$date] = $shopId > 0
+                ? $this->bakingRepository->getPlan($shopId, $date)
+                : null;
         }
-        return $this->bakingRepository->getPlan($shopId, $date ?? date('Y-m-d'));
+        return $this->planCache[$date];
     }
 
     /**
