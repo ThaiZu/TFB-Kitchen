@@ -1,0 +1,8 @@
+Ce fichier active le serveur bouchon sur le serveur de test au prochain
+déploiement : les modules Production et Cuisson y sont servis avec des données
+de démonstration, le reste étant relayé vers l'API réelle.
+
+Le supprimer et pousser suffit à revenir à l'API réelle seule.
+
+Sans effet sur la branche master : le workflow refuse d'activer le bouchon en
+production, quel que soit le déclencheur.

@@ -151,10 +151,20 @@ jobs:
           APP_DIR='${{ vars.APP_DIR || '/var/www/app/pwa_kitchen' }}'
           PORT='${{ vars.MOCK_API_PORT || '8090' }}'
           REAL='${{ vars.REAL_API_BASE || 'https://atelierby.tfbuddy.com/api/v1' }}'
-          # Lu dans les deux onglets : « Variables » est le bon endroit, mais
-          # créer USE_MOCK_API en « Secrets » est une confusion fréquente, et
-          # vars. ne verrait alors rien.
+          # Trois déclencheurs, du plus visible au moins visible :
+          #   1. le fichier tools/mock-api/ENABLED, versionné — on voit dans le
+          #      diff qui l'a activé et quand, et on le désactive par un commit ;
+          #   2. la variable de dépôt USE_MOCK_API ;
+          #   3. le secret du même nom (mauvais onglet, mais fréquent).
+          # Le fichier existe parce qu'un réglage qu'on ne peut pas relire ne se
+          # diagnostique pas : la valeur d'un secret est invisible, y compris
+          # pour qui débogue le workflow.
           USE_RAW='${{ vars.USE_MOCK_API || secrets.USE_MOCK_API || 'false' }}'
+          if [ -f tools/mock-api/ENABLED ]; then USE_RAW='true'; fi
+          # Garde-fou : jamais sur la branche de production, quel que soit le
+          # déclencheur. Un fichier marqueur fusionné par erreur ne doit pas
+          # brancher le vrai site sur un serveur de démonstration.
+          if [ '${{ github.ref_name }}' = 'master' ]; then USE_RAW='false'; fi
           sshpass -e ssh -p ${{ vars.SSH_PORT || '22' }} \
             -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
             "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
