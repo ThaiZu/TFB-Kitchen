@@ -85,8 +85,13 @@
                                      data-remaining="{{ r.remaining }}"
                                      data-batch="{{ p.effectiveBatchSize }}">
 
+                                {# La tuile mène à la cuisson, pas à la fiche
+                                   technique : depuis cet écran on veut voir où
+                                   en est la fournée, pas relire la recette. Le
+                                   lien pointe la fournée précise quand elle
+                                   existe, le module entier sinon. #}
                                 <a class="pr-tile-head"
-                                   href="{{ p.idProduct ? ROOT ~ '/knowledge/products/' ~ p.idProduct : '#' }}">
+                                   href="{{ ROOT }}/baking{{ r.batch ? '?focus=' ~ r.batch.id : '' }}">
                                     {% if p.hasMainPhoto %}
                                         <img class="pr-thumb" src="{{ p.mainPhotoUrl }}" alt="" loading="lazy">
                                     {% else %}

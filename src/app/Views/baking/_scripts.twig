@@ -219,6 +219,14 @@
         });
     }
 
+    // Arrivée depuis une tuile de Production : on amène la fournée visée sous
+    // les yeux. La frise reste en haut de page, donc on vise la carte — c'est
+    // elle qui porte le bouton d'action.
+    var focused = document.querySelector('.bk-card.is-focus');
+    if (focused) {
+        focused.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+
     setInterval(poll, 30000);
     document.addEventListener('visibilitychange', function () { if (!document.hidden) poll(); });
 })();

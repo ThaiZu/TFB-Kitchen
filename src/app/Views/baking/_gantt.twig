@@ -23,7 +23,7 @@
             <div id="bkRows">
                 {% for b in batches %}
                     {% set pcs = { 'prep': b.prepStart, 'cook': b.cookStart, 'finish': b.finishStart } %}
-                    <div class="bk-row {{ b.isWaiting ? 'is-waiting' : '' }}" data-id="{{ b.id }}">
+                    <div class="bk-row {{ b.isWaiting ? 'is-waiting' : '' }} {{ focus_batch == b.id ? 'is-focus' : '' }}" data-id="{{ b.id }}">
                         <div class="bk-rowname">
                             <b>{{ b.name | default('—') }}</b>
                             <span>

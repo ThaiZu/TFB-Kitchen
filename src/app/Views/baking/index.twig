@@ -248,6 +248,15 @@
     .bk-card.k-cook   { border-left-color: #8D1D2C; }
     .bk-card.k-finish { border-left-color: #C17A2A; }
     .bk-card.is-waiting { opacity: .62; }
+    /* Arrivée depuis une tuile de Production : la fournée visée se signale au
+       lieu de se laisser chercher. Un anneau, pas une couleur — le liseré de
+       gauche dit déjà l'étape, et deux signaux de couleur se contrediraient. */
+    .bk-card.is-focus {
+        box-shadow: 0 0 0 3px var(--c-secondary, #F2C9A0), var(--sh-2, 0 6px 18px -10px rgba(0,0,0,.3));
+        border-color: var(--c-secondary, #F2C9A0);
+    }
+    .bk-row.is-focus { opacity: 1; }
+    .bk-row.is-focus .bk-rowname b { text-decoration: underline; text-underline-offset: 3px; }
 
     .bk-top { display: flex; align-items: flex-start; gap: 12px; }
     .bk-name { flex: 1; min-width: 0; }

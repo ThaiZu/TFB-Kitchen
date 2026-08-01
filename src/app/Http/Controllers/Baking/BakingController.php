@@ -38,6 +38,7 @@ class BakingController extends Controller
                 'staff'          => [],
                 'staff_available'=> false,
                 'schedule_known' => false,
+                'focus_batch'    => null,
             ]);
             return;
         }
@@ -66,6 +67,9 @@ class BakingController extends Controller
             'staff'          => $this->staffService->onDuty($staff),
             'staff_available'=> $staff !== null,
             'schedule_known' => $this->staffService->scheduleKnown($staff),
+            // Arrivée depuis une tuile de Production : la fournée visée est
+            // mise en avant plutôt que laissée à chercher dans la liste.
+            'focus_batch'    => $this->readFocus(),
         ]);
     }
 
@@ -154,6 +158,13 @@ class BakingController extends Controller
             'finish_end_min' => $b->getFinishEnd(),
             'shelf_min'      => $b->getShelfTime(),
         ];
+    }
+
+    /** Fournée à mettre en avant, quand on arrive d'un autre écran. */
+    private function readFocus(): ?int
+    {
+        $focus = (int)($_GET['focus'] ?? 0);
+        return $focus > 0 ? $focus : null;
     }
 
     private function readStage(): string
