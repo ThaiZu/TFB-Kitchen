@@ -210,7 +210,102 @@ CREATE TABLE pro_baking_batch (
 `status` suit la chaîne `PLANNED → PREPARING → READY_TO_BAKE → BAKING →
 FINISHING → DONE`, et **seul le pas suivant est accepté** (§3.13).
 
-### 2.6 Table de MEP
+Les trois durées — `prep_minutes`, `cook_minutes`, `finish_minutes` — ne se
+saisissent pas ici : elles sont **calculées depuis la recette** au moment où la
+fournée est programmée. Voir §2.6, qui donne la table des étapes et la règle de
+cumul.
+
+### 2.6 Nouvelle table — les étapes de préparation
+
+**C'est une table de back-office : la PWA ne la lit jamais.** Elle sert à
+construire `pro_baking_batch` au moment où une fournée est programmée. Le front
+ne connaît que **trois** étapes — préparation, cuisson, finition — parce que sa
+frise a trois segments et son vocabulaire trois couleurs. La recette, elle, en
+a autant qu'il faut.
+
+```sql
+CREATE TABLE pro_product_step (
+    id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    id_product   INT UNSIGNED NOT NULL,
+    id_shop      INT UNSIGNED NULL COMMENT 'NULL = recette réseau ; renseigné = variante d''un magasin',
+    position     SMALLINT     NOT NULL COMMENT 'ordre d''exécution : 1, 2, 3…',
+    stage        VARCHAR(8)   NOT NULL COMMENT 'prep | cook | finish — le regroupement vu par la PWA',
+    label        VARCHAR(64)  NOT NULL COMMENT 'Pétrissage, Pointage, Façonnage, Nappage…',
+    minutes      DECIMAL(6,2) NOT NULL,
+    is_per_piece TINYINT(1)   NOT NULL DEFAULT 0 COMMENT 'minutes × quantité au lieu de minutes',
+    is_waiting   TINYINT(1)   NOT NULL DEFAULT 0 COMMENT 'pointage, apprêt : ça dure sans occuper personne',
+    temperature  SMALLINT     NULL COMMENT 'quand stage = cook',
+    UNIQUE KEY uq_step (id_product, id_shop, position),
+    KEY ix_product (id_product)
+);
+```
+
+`id_shop` est optionnel : si toutes les boutiques du réseau suivent la même
+recette, laissez-le à `NULL` partout — ou retirez la colonne.
+
+#### Les minutes sont-elles cumulables ? Oui, avec deux réserves
+
+**Elles s'additionnent dans leur étape.** Pétrissage 15 + Pointage 60 +
+Façonnage 20 = 95 minutes de `prep`. C'est cette somme qui part dans
+`pro_baking_batch.prep_minutes`.
+
+```
+minutes(étape)  = is_per_piece ? minutes × quantité : minutes
+
+prep_minutes    = Σ minutes(étape) où stage = 'prep'
+cook_minutes    = Σ minutes(étape) où stage = 'cook'
+finish_minutes  = Σ minutes(étape) où stage = 'finish'
+```
+
+**Réserve 1 — `is_per_piece` multiplie avant d'additionner.** Un nappage d'une
+minute la pièce sur 36 éclairs fait 36 minutes, pas 1. C'est exactement ce que
+le front appelle déjà `finish_type: PIECE` (§3.11) ; si **toutes** les étapes
+de finition d'un produit sont à la pièce, servez `finish_type: "PIECE"` et
+`finish_per_piece_minutes` = la somme des minutes unitaires. Si elles sont
+mélangées, servez `finish_type: "LOT"` avec le total déjà multiplié — le front
+n'a pas besoin de connaître le détail, il a besoin d'une durée juste.
+
+**Réserve 2 — `is_waiting` ne se soustrait pas, mais il ne se cumule pas non
+plus côté ressources.** Un pointage de 60 minutes allonge le délai comme les
+autres : il compte dans `prep_minutes`. En revanche il n'occupe ni un opérateur
+ni un four, et c'est ce qui permet au back-office de placer une seconde fournée
+sur le même four pendant ce temps-là. *La PWA ne lit pas ce champ* — c'est
+votre ordonnanceur qui en a besoin, pas l'écran.
+
+#### Conséquence : `production_lead_minutes` est un champ **calculé**
+
+Le lead du produit (§3.2) n'est pas une saisie : c'est la somme de toute la
+chaîne, attentes comprises.
+
+```
+production_lead_minutes = prep_minutes + cook_minutes + finish_minutes + shelf_delay_minutes
+                          ↑ calculées sur une quantité de référence = batch_size
+```
+
+La quantité de référence compte : avec des étapes à la pièce, le lead dépend de
+la taille de fournée. Prendre `batch_size` donne le délai d'**une** fournée,
+qui est l'unité dans laquelle l'atelier décide.
+
+Un lead sous-estimé fait décider trop tard : la fenêtre de projection
+(`forecast_hours + lead`) regarde alors moins loin que la réalité, et le manque
+se découvre vitrine vide. C'est le seul champ dérivé du module, et c'est celui
+qu'il ne faut pas laisser à 0 « en attendant ».
+
+#### La fournée garde sa propre copie, et c'est voulu
+
+`pro_baking_batch` ne pointe pas vers `pro_product_step` : il **recopie** les
+minutes au moment de la programmation. Une recette corrigée à 14 h ne doit pas
+déplacer une fournée déjà au four, et le `allotted_minutes` du
+`PATCH /baking/{id}` (§3.13) corrige la fournée — **jamais la recette**.
+
+Autrement dit : `pro_product_step` fait foi pour *planifier*,
+`pro_baking_batch` fait foi pour *ce qui est en cours*.
+
+`finish_label` de la fournée reprend le libellé de l'étape de finition — celui
+de la première quand il y en a plusieurs. C'est le mot qui apparaît sur le
+bouton : « Ressuage terminé », « Glaçage terminé ».
+
+### 2.7 Table de MEP
 
 ```sql
 CREATE TABLE pro_mep_line (
@@ -309,7 +404,7 @@ champs sont en gras.
 | `periods` | dans quelle pastille de période le produit apparaît, et s'il compte dans le badge « N produits » de l'onglet | le produit n'apparaît dans aucune période |
 | `batch_size` | **l'arrondi de toutes les quantités proposées** — à produire, à recuire, à remonter au plancher — et le pas des boutons − / + | lot de 1, signalé à l'écran |
 | `unit_name` | le suffixe « 48 pc » | rien n'est suffixé |
-| `production_lead_minutes` | élargit **deux** fenêtres : celle des ventes projetées et celle des commandes prises en compte. Un pain à 30 min de cuisson se décide 30 min plus tôt | 0 |
+| `production_lead_minutes` | élargit **deux** fenêtres : celle des ventes projetées et celle des commandes prises en compte. Un pain à 30 min de cuisson se décide 30 min plus tôt. **Champ calculé** — somme de toute la chaîne, voir §2.6 | 0 : le manque se découvre vitrine vide |
 | `is_active` | un produit inactif ne s'affiche, ne se propose et ne se compte nulle part | actif |
 | **`is_pdb`** | la liste du sélecteur « Ajouter » de la MEP du lendemain, et les catégories qui y apparaissent | `false` ⇒ sélecteur vide |
 | **`is_pdm`** | l'appartenance à l'écran Minimums : lui seul y entre | `false` ⇒ absent du tableau |
@@ -579,7 +674,7 @@ premier. La PWA les remonte en tête, en rouge.
 | `batches[].id_product` | relie la fournée au produit : **c'est par lui que l'écran Besoins sait qu'un produit est en cuisson**, et que le filtre secteur s'applique | la fournée n'apparaît sur aucune tuile de produit |
 | `batches[].quantity` / `unit_name` | le gros chiffre de la carte, et la quantité pré-remplie de la mise en magasin | 0 |
 | `batches[].id_oven` / `oven_name` | les lignes de la frise et le filtre « Four 1 · 2 · 3 » | tout dans une ligne unique |
-| `batches[].temperature` | affichée sur la carte, sous l'étape de cuisson | rien |
+| `batches[].temperature` | affichée sur la carte, sous l'étape de cuisson ; vient de l'étape `cook` de la recette (§2.6) | rien |
 | `batches[].prep_start` + `prep_minutes` | le segment bleu de la frise et l'échéance de l'ordre « Commencer la préparation » | segment absent |
 | `batches[].cook_start` + `cook_minutes` | le segment rouge et l'heure de sortie du four | segment absent |
 | `batches[].finish_type` | `LOT` (durée fixe) ou `PIECE` (durée × quantité). **Un nappage de 36 éclairs ne dure pas comme un ressuage de plaque** | `LOT` |
@@ -713,7 +808,9 @@ navigateur. **Ce n'est pas bloquant** — à faire quand le reste tourne.
    ventes. À ce stade l'écran « Ce qui manque » affiche déjà les vrais chiffres.
 2. **Le cycle du jour** — 3.3 MEP, 3.5 validation, 3.8 batches. Le magasin peut
    ouvrir, valider et mettre en vente.
-3. **L'atelier** — 3.10 fours, 3.11 plan, 3.12 création, 3.13 avancement.
+3. **L'atelier** — 3.10 fours, 3.11 plan, 3.12 création, 3.13 avancement. C'est
+   là que `pro_product_step` (§2.6) devient nécessaire : sans recette, le
+   serveur n'a pas de quoi calculer les horaires d'une fournée.
 4. **Les commandes** — 3.9. L'écran fonctionne sans, il l'écrit quand elles
    manquent.
 5. **Le reste** — 3.4 encodage MEP, 3.14 compteurs, §5 réserve partagée.
