@@ -76,4 +76,20 @@ define('APP_NAME', $_ENV['APP_NAME']);
 define('APP_DESC', $_ENV['APP_DESC']);
 
 
+/**
+ * Version servie.
+ *
+ * Le déploiement écrit BUILD à la racine (sha court + horodatage). Sans ce
+ * fichier — en local, ou si le déploiement n'a pas tourné — on le dit plutôt
+ * que d'afficher une version inventée.
+ *
+ * Sert à répondre à « je ne vois aucun changement » : la page porte le commit
+ * qu'elle sert, et le workflow vérifie qu'elle porte bien celui qu'il vient
+ * de pousser.
+ */
+define('APP_BUILD', (function () {
+    $f = __DIR__ . '/../BUILD';
+    return is_file($f) ? trim((string)file_get_contents($f)) : 'dev';
+})());
+
 const DEBUG = true;

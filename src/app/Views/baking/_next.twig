@@ -37,6 +37,9 @@
                         data-name="{{ b.name | default('—') }}"
                         data-minutes="{{ b.plannedMinutes }}"
                         data-stage="{{ k }}"
+                        data-product="{{ b.idProduct }}"
+                        data-qty="{{ b.quantity|number_format(0, '.', '') }}"
+                        data-unit="{{ b.unitName | default('pc') }}"
                         data-meta="{{ b.quantity|number_format(0, ',', ' ') }} {{ b.unitName | default('pc') }}
                                    {{- b.ovenName ? ' · ' ~ b.ovenName : '' }} · {{ b.dueClock }}">
                     <span class="bk-order-verb">{{ verbs[b.actionKey] | default('—') }}</span>
@@ -141,6 +144,51 @@
             <span id="bkAssignSpin" class="spinner-border spinner-border-sm d-none"></span>
             {{ icons.svg('check', 19) }}
             <span id="bkAssignGoLabel">{{ translations.order_confirm | default('Valider') }}</span>
+        </button>
+    </div>
+
+    {# ── Second temps : la dernière étape vient d'être validée ──
+       Une fournée finie ne sert à rien tant qu'elle est en cuisine. Plutôt que
+       de renvoyer l'équipe chercher le produit dans un autre écran, la feuille
+       enchaîne : le geste suivant est là, la quantité pré-remplie, et c'est
+       lui qui met le stock en vente. #}
+    <div class="bk-sheet-panel bk-shelf-panel" id="bkShelfStep" hidden
+         role="dialog" aria-modal="true" aria-labelledby="bkShelfTitle">
+        <header class="bk-sheet-head">
+            <p class="bk-sheet-kicker">{{ translations.shelf_step_kicker | default('Fournée terminée') }}</p>
+            <button type="button" class="bk-sheet-x" id="bkShelfClose"
+                    aria-label="{{ translations.close | default('Fermer') }}">
+                {{ icons.svg('x', 18) }}
+            </button>
+        </header>
+
+        <div class="bk-recall f-shelf">
+            <span class="bk-recall-verb" id="bkShelfTitle">
+                {{ translations.shelf_step_title | default('Mettre en magasin') }}
+            </span>
+            <span class="bk-recall-what">
+                <b id="bkShelfName">—</b>
+                <span>{{ translations.shelf_step_hint | default("c'est ce geste qui met le produit en vente") }}</span>
+            </span>
+        </div>
+
+        <p class="bk-sheet-lbl">{{ translations.shelf_step_qty | default('Quantité mise en rayon') }}</p>
+        <div class="bk-time">
+            <button type="button" class="bk-time-step" data-shelf-step="-1" aria-label="−">−</button>
+            <span class="bk-time-val">
+                <b id="bkShelfQty">0</b> <span id="bkShelfUnit">pc</span>
+            </span>
+            <button type="button" class="bk-time-step" data-shelf-step="1" aria-label="+">+</button>
+        </div>
+        <p class="bk-sheet-hint" id="bkShelfHint"></p>
+
+        <button type="button" class="bk-sheet-go bk-sheet-go-shelf" id="bkShelfGo">
+            <span id="bkShelfSpin" class="spinner-border spinner-border-sm d-none"></span>
+            {{ icons.svg('store', 19) }}
+            {{ translations.shelf_step_go | default('Mettre en magasin') }}
+        </button>
+        <button type="button" class="bk-sheet-later" id="bkShelfLater">
+            {{ translations.shelf_step_later | default('Plus tard') }}
         </button>
     </div>
 </div>

@@ -101,6 +101,9 @@
                         data-name="{{ b.name | default('—') }}"
                         data-minutes="{{ b.plannedMinutes }}"
                         data-stage="{{ k }}"
+                        data-product="{{ b.idProduct }}"
+                        data-qty="{{ b.quantity|number_format(0, '.', '') }}"
+                        data-unit="{{ b.unitName | default('pc') }}"
                         data-meta="{{ b.quantity|number_format(0, ',', ' ') }} {{ b.unitName | default('pc') }}
                                    {{- b.ovenName ? ' · ' ~ b.ovenName : '' }} · {{ b.stageEndClock }}">{{ action }}</button>
             {% endif %}

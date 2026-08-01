@@ -97,7 +97,7 @@
             .catch(function () { /* réseau de magasin : on retentera dans 30 s */ });
     }
 
-    function advance(id, status, body, onFail) {
+    function advance(id, status, body, onDone, onFail) {
         fetch(ROOT + '/ajax/baking/' + id, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -107,7 +107,9 @@
         .then(function (r) { return r.json().catch(function () { return null; }); })
         .then(function (res) {
             if (!res || !res.success) { showSnack(false, ERR); if (onFail) onFail(); return; }
-            // Le serveur a arbitré : on relit plutôt que de deviner la suite.
+            // Le serveur a arbitré. Sauf enchaînement demandé, on relit plutôt
+            // que de deviner la suite.
+            if (onDone) { onDone(); return; }
             window.location.reload();
         })
         .catch(function () { showSnack(false, ERR); if (onFail) onFail(); });
@@ -150,10 +152,41 @@
         var go    = document.getElementById('bkAssignGo');
         var spin  = document.getElementById('bkAssignSpin');
 
-        var order = null;      // { id, next }
+        var order = null;      // { id, next, product, qty, unit, name }
         var planned = 0;
         var minutes = 0;
         var empId = null;
+
+        // ── Second temps : mettre en magasin ──
+        // La dernière étape validée laisse une fournée finie en cuisine. Le
+        // geste qui la met en vente s'enchaîne ici, quantité pré-remplie, au
+        // lieu d'attendre que quelqu'un pense à changer d'écran.
+        var shelfStep = document.getElementById('bkShelfStep');
+        var SH = {
+            err: {{ (translations.shelf_error   | default("La mise en rayon n'a pas pu être enregistrée.")) | json_encode | raw }},
+            ok:  {{ (translations.shelf_success | default('Mis en rayon : les produits sont en vente.')) | json_encode | raw }},
+            made:{{ (translations.shelf_step_made | default('Fournée de %s')) | json_encode | raw }}
+        };
+        var shelfQty = 0;
+        var shelfMax = 0;
+
+        function paintShelf() {
+            document.getElementById('bkShelfQty').textContent = shelfQty;
+            var hint = document.getElementById('bkShelfHint');
+            hint.textContent = shelfQty === shelfMax ? '' : SH.made.replace('%s', shelfMax);
+            document.getElementById('bkShelfGo').disabled = shelfQty <= 0;
+        }
+
+        function openShelf() {
+            shelfMax = Math.max(0, parseFloat(order.qty) || 0);
+            shelfQty = shelfMax;
+            document.getElementById('bkShelfName').textContent = order.name || '';
+            document.getElementById('bkShelfUnit').textContent = order.unit || 'pc';
+            paintShelf();
+            document.querySelector('#bkAssign .bk-sheet-panel:not(.bk-shelf-panel)').hidden = true;
+            shelfStep.hidden = false;
+            document.getElementById('bkShelfSpin').classList.add('d-none');
+        }
 
         function paintTime() {
             val.textContent = minutes;
@@ -161,7 +194,14 @@
         }
 
         function open(btn) {
-            order   = { id: btn.dataset.id, next: btn.dataset.next };
+            order = {
+                id:      btn.dataset.id,
+                next:    btn.dataset.next,
+                product: btn.dataset.product,
+                qty:     btn.dataset.qty,
+                unit:    btn.dataset.unit,
+                name:    btn.dataset.name
+            };
             planned = Math.max(0, parseInt(btn.dataset.minutes, 10) || 0);
             minutes = planned;
             empId   = null;
@@ -177,6 +217,8 @@
             sheet.querySelectorAll('.emp-badge').forEach(function (b) { b.classList.remove('is-active'); });
             paintTime();
             go.disabled = false;
+            if (shelfStep) shelfStep.hidden = true;
+            document.querySelector('#bkAssign .bk-sheet-panel:not(.bk-shelf-panel)').hidden = false;
             sheet.hidden = false;
         }
 
@@ -191,6 +233,52 @@
             if (sheet.hidden) return;
 
             if (e.target.closest('#bkAssignClose') || e.target === sheet) { close(); return; }
+
+            // « Plus tard » ferme sans porter : la fournée reste à mettre en
+            // rayon, et l'écran Besoins la reprendra.
+            if (e.target.closest('#bkShelfClose') || e.target.closest('#bkShelfLater')) {
+                window.location.reload();
+                return;
+            }
+
+            var sstep = e.target.closest('[data-shelf-step]');
+            if (sstep) {
+                var by = (parseInt(sstep.dataset.shelfStep, 10) || 1);
+                // Par pas de 1 : on porte ce qu'on a dans les mains, pas des
+                // fournées entières — il en reste souvent au chaud.
+                shelfQty = Math.max(0, Math.min(shelfMax, shelfQty + by));
+                paintShelf();
+                return;
+            }
+
+            if (e.target.closest('#bkShelfGo') && order && shelfQty > 0) {
+                var sgo = document.getElementById('bkShelfGo');
+                sgo.disabled = true;
+                document.getElementById('bkShelfSpin').classList.remove('d-none');
+                fetch(ROOT + '/ajax/production/shelf', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ id_product: parseInt(order.product, 10), quantity: shelfQty })
+                })
+                .then(function (r) { return r.json().catch(function () { return null; }); })
+                .then(function (res) {
+                    if (!res || !res.success) {
+                        showSnack(false, SH.err);
+                        sgo.disabled = false;
+                        document.getElementById('bkShelfSpin').classList.add('d-none');
+                        return;
+                    }
+                    showSnack(true, SH.ok);
+                    window.location.reload();
+                })
+                .catch(function () {
+                    showSnack(false, SH.err);
+                    sgo.disabled = false;
+                    document.getElementById('bkShelfSpin').classList.add('d-none');
+                });
+                return;
+            }
 
             var emp = e.target.closest('.emp-badge');
             if (emp) {
@@ -218,7 +306,14 @@
                 // Durée inchangée : on ne l'envoie pas. Le plan du serveur fait
                 // foi tant que personne ne l'a corrigé à la main.
                 if (minutes !== planned) body.allotted_minutes = minutes;
-                advance(order.id, order.next, body, function () {
+
+                // Dernière étape (DONE) : on enchaîne sur la mise en magasin
+                // au lieu de recharger. Le produit vient d'être fini, il ne
+                // manque plus que le plateau à porter.
+                var last = String(order.next).toUpperCase() === 'DONE' && order.product;
+                var next = last ? openShelf : null;
+
+                advance(order.id, order.next, body, next, function () {
                     go.disabled = false;
                     spin.classList.add('d-none');
                 });

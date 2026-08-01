@@ -83,6 +83,10 @@ class Controller
 
         $data['ROOT'] = ROOT;
         $data['shared_files_url'] = SHARED_FILES_URL;
+        // Toutes les pages portent la version servie : c'est ce qui permet de
+        // distinguer « la fonctionnalité n'y est pas » de « le navigateur
+        // montre une page d'hier ».
+        $data['app_build'] = APP_BUILD;
         $data['current_path'] = '/' . trim($_GET['url'] ?? '', '/');
 
         // Jeśli istnieje plik .twig, renderuj przez Twig

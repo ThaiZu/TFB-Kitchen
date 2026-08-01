@@ -117,6 +117,14 @@ jobs:
                echo 'Aucun .htaccess sur le serveur (premier déploiement).'; \
              fi"
 
+      # La version part avec le code : sans elle, rien dans la page ne dit
+      # quel commit est servi, et un cache de navigateur devient indiscernable
+      # d'un déploiement qui n'a pas eu lieu.
+      - name: Stamp the build
+        run: |
+          printf '%s %s' "$(git rev-parse --short HEAD)" "$(date -u +%Y-%m-%dT%H:%MZ)" > BUILD
+          echo "BUILD = $(cat BUILD)"
+
       - name: Deploy app → APP_DIR (rsync)
         env:
           SSHPASS: ${{ secrets.SSH_PASSWORD }}
@@ -253,6 +261,14 @@ jobs:
           # et config/app.php a DEBUG=true. On regarde donc le contenu.
           echo "== contenu servi =="
           body=$(curl -s "$BASE/")
+          # La preuve que la page servie vient bien de CE déploiement : elle
+          # porte le commit qu'on vient de pousser. Un 200 ne le disait pas.
+          if printf '%s' "$body" | grep -q 'name="app-build" content="${{ github.sha }}'; then
+            echo "  OK — page servie au commit courant"
+          else
+            stamp=$(printf '%s' "$body" | grep -o 'name="app-build" content="[^"]*"' | head -1)
+            echo "  ATTENTION — version servie : ${stamp:-absente} (attendu ${GITHUB_SHA:0:7})"
+          fi
           echo "  octets : $(printf '%s' "$body" | wc -c)"
           if printf '%s' "$body" | grep -qi 'atelier-theme.css'; then
             echo "  OK — la page référence bien la feuille du design system"

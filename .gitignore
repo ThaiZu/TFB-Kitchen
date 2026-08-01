@@ -37,3 +37,6 @@ desktop.ini
 
 # Rendus de test générés hors application (prévisualisation locale)
 /public/__*.html
+
+# Écrit par le déploiement : la version servie, jamais versionnée.
+/BUILD
