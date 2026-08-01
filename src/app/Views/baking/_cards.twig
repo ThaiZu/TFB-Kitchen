@@ -14,7 +14,8 @@
         {# Une fournée qui n'a pas commencé n'est à aucune étape : ni liseré de
            couleur, ni pastille allumée. Elle est là pour dire ce qui arrive. #}
         <article class="bk-card {{ b.isWaiting ? 'is-waiting' : 'k-' ~ k }} {{ focus_batch == b.id ? 'is-focus' : '' }}"
-                 data-id="{{ b.id }}" data-next="{{ b.nextStatus }}">
+                 data-id="{{ b.id }}" data-next="{{ b.nextStatus }}"
+                 data-oven="{{ b.ovenName | default('') }}">
 
             <div class="bk-top">
                 <div class="bk-name">

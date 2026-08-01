@@ -32,6 +32,7 @@
                         class="bk-order {{ loop.first ? 'is-lead' : '' }} o-{{ k }}"
                         data-id="{{ b.id }}"
                         data-next="{{ b.nextStatus }}"
+                        data-oven="{{ b.ovenName | default('') }}"
                         data-verb="{{ verbs[b.actionKey] | default('—') }}"
                         data-name="{{ b.name | default('—') }}"
                         data-minutes="{{ b.plannedMinutes }}"

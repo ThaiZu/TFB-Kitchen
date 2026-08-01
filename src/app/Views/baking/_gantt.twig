@@ -9,7 +9,7 @@
 <div class="card mt-3">
     <div class="card-body">
         <h2 class="bk-h">
-            {{ translations.baking_overview | default("Prévisionnel de la journée") }}
+            {{ translations.baking_overview | default("Ce qu'il reste de la journée") }}
             {%- if active_stage != 'all' %} — {{ translations['stage_' ~ active_stage] | lower }}{% endif %}
         </h2>
 
@@ -23,7 +23,8 @@
             <div id="bkRows">
                 {% for b in plan %}
                     {% set pcs = { 'prep': b.prepStart, 'cook': b.cookStart, 'finish': b.finishStart } %}
-                    <div class="bk-row {{ b.isWaiting ? 'is-waiting' : '' }} {{ focus_batch == b.id ? 'is-focus' : '' }}" data-id="{{ b.id }}">
+                    <div class="bk-row {{ b.isWaiting ? 'is-waiting' : '' }} {{ focus_batch == b.id ? 'is-focus' : '' }}"
+                         data-id="{{ b.id }}" data-oven="{{ b.ovenName | default('') }}">
                         <div class="bk-rowname">
                             <b>{{ b.name | default('—') }}</b>
                             <span>
@@ -38,18 +39,26 @@
                                 {% endif %}
                             {% endfor %}
 
-            {# Chaque étape dit si elle est faite ou seulement prévue :
-                               60 % d'opacité pour l'intention, plein pour le
-                               validé. La frise se remplit au fil de la journée,
-                               et un coup d'œil suffit à voir ce qui reste. #}
+                            {# Chaque étape dit si elle est faite ou seulement
+                               prévue : 60 % d'opacité pour l'intention, plein
+                               pour le validé.
+
+                               La fenêtre commence à l'heure en cours : ce qui
+                               déborde à gauche est coupé plutôt que dessiné en
+                               négatif — une fournée entamée à 6 h se lit alors
+                               depuis le bord, ce qui est exactement ce qu'il en
+                               reste. #}
                             {% for k, start in pcs %}
                                 {% set dur = k == 'prep' ? b.prepEnd - b.prepStart
                                            : (k == 'cook' ? b.cookEnd - b.cookStart : b.finishEnd - b.finishStart) %}
-                                {% if dur > 0 %}
+                                {% set segFrom = start < window.from ? window.from : start %}
+                                {% set segTo   = start + dur %}
+                                {% if dur > 0 and segTo > window.from %}
                                     <div class="bk-seg s-{{ k }}
                                                 {{ b.isStageValidated(k) ? 'is-done' : 'is-planned' }}
-                                                {{ active_stage != 'all' and active_stage != k ? 'is-dim' : '' }}"
-                                         style="left:{{ (start - window.from) / span * 100 }}%;width:{{ dur / span * 100 }}%"
+                                                {{ active_stage != 'all' and active_stage != k ? 'is-dim' : '' }}
+                                                {{ start < window.from ? 'is-clipped' : '' }}"
+                                         style="left:{{ (segFrom - window.from) / span * 100 }}%;width:{{ (segTo - segFrom) / span * 100 }}%"
                                          title="{{ translations['stage_' ~ k] }} — {{ b.isStageValidated(k)
                                                     ? translations.plan_validated | default('validé')
                                                     : translations.plan_forecast | default('prévu') }}"></div>

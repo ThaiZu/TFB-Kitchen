@@ -106,6 +106,26 @@
         .catch(function () { showSnack(false, ERR); if (onFail) onFail(); });
     }
 
+    // ── Filtre par four ──────────────────────────────────────────────────
+    // Masque, ne réordonne pas : la frise garde ses horaires en place, et on
+    // retrouve une fournée au même endroit après avoir relâché le filtre. Les
+    // trois listes suivent ensemble — un ordre affiché pour un four qu'on a
+    // masqué serait une contradiction à l'écran.
+    document.addEventListener('click', function (e) {
+        var chip = e.target.closest('.bk-ovens .cat-chip');
+        if (!chip) return;
+
+        chip.parentNode.querySelectorAll('.cat-chip').forEach(function (c) {
+            c.classList.toggle('is-on', c === chip);
+        });
+
+        var want = chip.dataset.oven || '';
+        document.querySelectorAll('.bk-row[data-oven], .bk-card[data-oven], .bk-order[data-oven]')
+            .forEach(function (el) {
+                el.hidden = !!want && el.dataset.oven !== want;
+            });
+    });
+
     // ── Attribuer un ordre ───────────────────────────────────────────────
     var sheet = document.getElementById('bkAssign');
     if (sheet) {

@@ -135,28 +135,53 @@ class BakingService
     }
 
     /**
-     * Le prévisionnel de la journée : tout, terminé compris, dans l'ordre des
-     * horaires.
+     * Ce qu'il reste à faire de la journée.
      *
-     * Les cartes ne montrent que l'actif — on ne tape pas sur une fournée
-     * finie. La frise, elle, répond à « où en est la journée », et une fournée
-     * sortie à 6 h en fait partie : l'effacer donnerait l'impression qu'on n'a
-     * rien fait de la matinée.
+     * La frise ne garde pas le validé. Une fournée entièrement faite n'appelle
+     * plus rien : la laisser consomme de la hauteur et de la largeur pour du
+     * révolu, et à midi la moitié du plan ne serait plus que de l'archive. Ce
+     * qui se pilote, c'est ce qui vient.
+     *
+     * Le filtre par étape garde les fournées qui la traversent — c'est le
+     * poste qu'on regarde, pas seulement l'instant.
      *
      * @param BakingBatchModel[] $batches
      * @return BakingBatchModel[]
      */
     public function dayPlan(array $batches, string $stage = 'all'): array
     {
-        $rows = in_array($stage, self::STAGES, true)
-            // Filtrer la frise sur une étape garde les fournées qui la
-            // traversent, terminées ou non : c'est le poste qu'on regarde.
-            ? array_values(array_filter($batches, fn(BakingBatchModel $b) => $b->hasStage($stage)))
-            : array_values($batches);
+        $rows = array_values(array_filter(
+            $batches,
+            fn(BakingBatchModel $b) => !$b->isFullyValidated()
+                && (!in_array($stage, self::STAGES, true) || $b->hasStage($stage))
+        ));
 
         usort($rows, fn(BakingBatchModel $a, BakingBatchModel $b) => $a->getPrepStart() <=> $b->getPrepStart());
 
         return $rows;
+    }
+
+    /**
+     * Les fours réellement présents dans le plan.
+     *
+     * Pas la liste du magasin : un four à l'arrêt n'a pas à occuper une
+     * pastille. Ce sont ceux sur lesquels il y a du travail aujourd'hui.
+     *
+     * @param BakingBatchModel[] $batches
+     * @return string[]
+     */
+    public function ovens(array $batches): array
+    {
+        $seen = [];
+        foreach ($batches as $b) {
+            $name = $b->getOvenName();
+            if ($name !== null && $name !== '') {
+                $seen[$name] = true;
+            }
+        }
+        $out = array_keys($seen);
+        usort($out, 'strnatcasecmp');
+        return $out;
     }
 
     /**
@@ -169,13 +194,20 @@ class BakingService
      * @param BakingBatchModel[] $batches
      * @return array{from: int, to: int, hours: string[]}
      */
-    public function window(array $batches, int $nowMinutes): array
+    public function window(array $batches, int $nowMinutes, bool $fromNow = false): array
     {
         $starts = array_map(fn(BakingBatchModel $b) => $b->getPrepStart(), $batches);
         $ends   = array_map(fn(BakingBatchModel $b) => $b->getShelfTime(), $batches);
 
         $from = $starts !== [] ? min($starts) : $nowMinutes - 60;
         $to   = $ends   !== [] ? max($ends)   : $nowMinutes + 120;
+
+        // Cadrée sur ce qui vient : l'heure en cours et la suite. Une fournée
+        // commencée à 6 h tirerait sinon la frise vers un passé qu'on ne pilote
+        // plus, et écraserait l'après-midi sur trois centimètres.
+        if ($fromNow) {
+            $from = max($from, $nowMinutes);
+        }
 
         // L'instant présent doit rester dans le cadre, même quand toutes les
         // fournées visibles sont derrière ou devant.

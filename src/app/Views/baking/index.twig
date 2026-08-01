@@ -8,10 +8,10 @@
    la journée », les cartes répondent à « qu'est-ce que je fais maintenant ».
    On lit la première debout devant le four, on tape sur les secondes.
 
-   La frise porte la journée entière, terminé compris, avec la distinction qui
-   compte : 60 % d'opacité pour ce qui est prévu, plein pour ce qui est validé.
-   Les cartes, elles, ne gardent que l'actif — on ne tape pas sur une fournée
-   finie.
+   La frise ne garde pas le validé et se cadre sur l'heure en cours : ce qui se
+   pilote, c'est ce qui vient. Sur ce qui reste, elle distingue l'intention du
+   fait — 60 % d'opacité pour ce qui est prévu, plein pour ce qui est déjà
+   validé sur une fournée encore en route.
 
    Une ligne par fournée dans la frise, pas une par ressource : la ligne EST le
    cycle du produit — préparation, cuisson, finition bout à bout — et sa
@@ -53,6 +53,21 @@
     .bk-f-finish.is-on { background: #C17A2A; }
     .i-prep { background: #1F4F6B; } .i-cook { background: #8D1D2C; } .i-finish { background: #C17A2A; }
 
+    /* Les fours, sous les étapes : subordonnés, comme les catégories sous les
+       états dans l'écran Stock. Même grammaire d'un écran à l'autre. */
+    .bk-ovens { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 8px; }
+    .bk-ovens .cat-chip {
+        min-height: 36px; padding: 0 14px; border-radius: 999px;
+        border: 1px solid var(--c-line-2, rgba(36,26,22,.14)); background: #fff;
+        font-family: inherit; font-size: .8rem; font-weight: 600;
+        color: var(--c-muted, #7a7168); cursor: pointer; white-space: nowrap;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .bk-ovens .cat-chip.is-on {
+        background: var(--c-ink, #241f1c); border-color: var(--c-ink, #241f1c); color: #fff;
+    }
+    .bk-row[hidden], .bk-card[hidden], .bk-order[hidden] { display: none; }
+
     /* ── Frise ── */
     .bk-g { position: relative; }
     .bk-ruler { display: flex; margin-left: 190px; padding-bottom: 6px; margin-bottom: 4px;
@@ -73,6 +88,10 @@
     .bk-seg.s-prep   { background: #1F4F6B; border-radius: 6px 0 0 6px; }
     .bk-seg.s-cook   { background: #8D1D2C; }
     .bk-seg.s-finish { background: #C17A2A; border-radius: 0 6px 6px 0; }
+    /* Coupée au bord gauche : le coin droit reste arrondi, le gauche non — la
+       forme dit qu'elle a commencé avant le cadre. Après les trois couleurs
+       d'étape : même spécificité, c'est l'ordre qui tranche. */
+    .bk-seg.is-clipped { border-top-left-radius: 0; border-bottom-left-radius: 0; }
     /* Prévision ou réalité. Toute la frise est du prévisionnel tant que
        personne n'a validé : à 60 % elle se lit comme une intention, en plein
        comme un fait. La journée se remplit sous les yeux, et ce qui reste pâle
@@ -370,7 +389,7 @@
         <div>
             <h3>{{ translations.baking_title | default('Plan de production') }}</h3>
             <p class="text-subtitle text-muted mb-0">
-                {{ translations.baking_subtitle | default('Le prévisionnel de la journée, replanifié en continu') }}
+                {{ translations.baking_subtitle | default('Ce qui reste à produire, replanifié en continu') }}
             </p>
         </div>
         <div class="app-title" style="font-family:var(--font-display);font-size:1.5rem;" id="bkClock">
@@ -399,6 +418,21 @@
             </a>
         {% endfor %}
     </nav>
+
+    {# Seconde rangée : les fours. On est rarement aux trois postes à la fois,
+       et la question « qu'est-ce qui se passe sur le four 3 » ne se pose pas au
+       même moment que « où en sont les finitions ». Les deux filtres se
+       croisent : l'étape reste un lien serveur, le four masque à l'écran. #}
+    {% if ovens|length > 1 %}
+        <nav class="bk-ovens" aria-label="{{ translations.oven_filter | default('Four') }}">
+            <button type="button" class="cat-chip is-on" data-oven="">
+                {{ translations.oven_all | default('Tous les fours') }}
+            </button>
+            {% for o in ovens %}
+                <button type="button" class="cat-chip" data-oven="{{ o }}">{{ o }}</button>
+            {% endfor %}
+        </nav>
+    {% endif %}
 
     {% if not plan_available %}
 

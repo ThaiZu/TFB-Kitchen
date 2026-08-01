@@ -35,6 +35,7 @@ class BakingController extends Controller
                 'now_clock'      => date('H:i'),
                 'window'         => ['from' => 0, 'to' => 60, 'hours' => []],
                 'plan'           => [],
+                'ovens'          => [],
                 'orders'         => [],
                 'staff'          => [],
                 'staff_available'=> false,
@@ -52,6 +53,7 @@ class BakingController extends Controller
         $now     = $this->bakingService->nowMinutes($plan['server_time']);
         $active  = $this->bakingService->active($plan['batches']);
         $shown   = $this->bakingService->filterByStage($active, $stage);
+        $dayPlan = $this->bakingService->dayPlan($plan['batches'], $stage);
 
         $this->view('baking/index', [
             'plan_available' => true,
@@ -60,15 +62,13 @@ class BakingController extends Controller
             'counts'         => $this->bakingService->countByStage($active),
             'now'            => $now,
             'now_clock'      => BakingBatchModel::toClock($now),
-            // La frise montre la journée entière, terminé compris : c'est le
-            // prévisionnel du jour, et une fournée sortie à 6 h fait partie de
-            // ce qu'on a produit. Les cartes, elles, ne gardent que l'actif —
-            // on ne tape pas sur une fournée finie.
-            'plan'           => $this->bakingService->dayPlan($plan['batches'], $stage),
-            'window'         => $this->bakingService->window(
-                $this->bakingService->dayPlan($plan['batches'], $stage) ?: $active,
-                $now
-            ),
+            // La frise ne garde que ce qui reste à faire, et se cadre sur
+            // l'heure en cours : ce qui se pilote, c'est ce qui vient.
+            'plan'           => $dayPlan,
+            // Les fours du plan, pour filtrer par poste : on est rarement aux
+            // trois à la fois.
+            'ovens'          => $this->bakingService->ovens($dayPlan),
+            'window'         => $this->bakingService->window($dayPlan ?: $active, $now, true),
             'orders'         => $this->bakingService->orders($shown),
             'staff'          => $this->staffService->onDuty($staff),
             'staff_available'=> $staff !== null,
