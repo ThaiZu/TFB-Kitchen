@@ -238,7 +238,11 @@
     .emp-note { font-size: .78rem; color: var(--c-muted, #7a7168); margin: 9px 0 0; }
 
     /* ── Cartes ── */
-    .bk-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+    /* Une fournée par rangée. Deux colonnes tenaient plus de cartes à l'écran,
+       mais on ne lit pas cet écran de haut en bas : on cherche UNE fournée, et
+       en deux colonnes l'œil doit balayer en zigzag. Une seule colonne se
+       parcourt d'un doigt, et le bouton d'action reste à la même abscisse. */
+    .bk-list { display: flex; flex-direction: column; gap: 12px; margin-top: 14px; }
     .bk-card {
         background: var(--c-surface, #fff); border: 1px solid var(--c-line, rgba(36,26,22,.09));
         border-left: 5px solid #d8d2c9; border-radius: var(--r-lg, 18px);
@@ -254,6 +258,17 @@
     .bk-card.is-focus {
         box-shadow: 0 0 0 3px var(--c-secondary, #F2C9A0), var(--sh-2, 0 6px 18px -10px rgba(0,0,0,.3));
         border-color: var(--c-secondary, #F2C9A0);
+        animation: bk-found 1.6s ease-out 1;
+    }
+    /* Deux battements, puis plus rien : le temps que l'œil arrive, pas plus.
+       Une animation qui tourne en boucle devant un four finit par se voir
+       davantage que la fournée. */
+    @keyframes bk-found {
+        0%, 100% { box-shadow: 0 0 0 3px var(--c-secondary, #F2C9A0), var(--sh-2, 0 6px 18px -10px rgba(0,0,0,.3)); }
+        35%      { box-shadow: 0 0 0 8px rgba(242,201,160,.45), var(--sh-2, 0 6px 18px -10px rgba(0,0,0,.3)); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .bk-card.is-focus { animation: none; }
     }
     .bk-row.is-focus { opacity: 1; }
     .bk-row.is-focus .bk-rowname b { text-decoration: underline; text-underline-offset: 3px; }
@@ -319,7 +334,6 @@
     .bk-state p { margin: 13px auto 0; max-width: 48ch; color: var(--c-muted, #7a7168); line-height: 1.6; }
 
     @media (max-width: 820px) {
-        .bk-list { grid-template-columns: 1fr; }
         .bk-rowname { width: 124px; flex-basis: 124px; }
         .bk-ruler { margin-left: 136px; }
     }

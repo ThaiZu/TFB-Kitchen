@@ -220,11 +220,28 @@
     }
 
     // Arrivée depuis une tuile de Production : on amène la fournée visée sous
-    // les yeux. La frise reste en haut de page, donc on vise la carte — c'est
-    // elle qui porte le bouton d'action.
+    // les yeux. On vise la carte, pas la ligne de frise — c'est la carte qui
+    // porte le bouton d'action, et c'est donc elle qu'on est venu chercher.
     var focused = document.querySelector('.bk-card.is-focus');
     if (focused) {
-        focused.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        var centre = function () {
+            var r = focused.getBoundingClientRect();
+            // Le milieu utile n'est pas celui de la fenêtre : la barre
+            // d'onglets mange le bas de l'écran, et une carte centrée sur la
+            // fenêtre finit à moitié dessous.
+            var bar   = parseInt(getComputedStyle(document.documentElement)
+                            .getPropertyValue('--app-tabbar-h'), 10) || 72;
+            var libre = window.innerHeight - bar;
+            var top   = r.top + window.pageYOffset - Math.max(12, (libre - r.height) / 2);
+            window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+        };
+        // Après le chargement des images : une vignette qui arrive en retard
+        // décale la liste, et le centrage viserait la carte d'à côté.
+        if (document.readyState === 'complete') {
+            centre();
+        } else {
+            window.addEventListener('load', centre);
+        }
     }
 
     setInterval(poll, 30000);
