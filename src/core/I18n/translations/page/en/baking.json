@@ -26,6 +26,7 @@
   "order_confirm": "Confirm",
   "order_finish_done": "Finishing done",
   "order_in": "in",
+  "order_kicker": "Order to assign",
   "order_late": "late by",
   "order_more": "+ %s more batches running",
   "order_now": "now",

@@ -149,10 +149,30 @@
         padding: 16px 17px calc(16px + env(safe-area-inset-bottom));
         box-shadow: 0 -12px 40px -18px rgba(0,0,0,.5);
     }
-    .bk-sheet-head { display: flex; align-items: flex-start; gap: 12px; }
-    .bk-sheet-head h2 { margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--c-ink, #241f1c); }
-    .bk-sheet-head p { margin: 3px 0 0; font-size: .8rem; color: var(--c-muted, #7a7168); }
-    .bk-sheet-head > div { flex: 1; min-width: 0; }
+    .bk-sheet-head { display: flex; align-items: center; gap: 12px; }
+    .bk-sheet-kicker {
+        flex: 1; min-width: 0; margin: 0;
+        font-size: .7rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+        color: var(--c-muted, #7a7168);
+    }
+
+    /* Le rappel de l'ordre, en grand, juste avant le choix de l'opérateur.
+       Entre le tap et la validation il y a deux listes à parcourir et un
+       réglage : le temps de choisir un nom, on ne sait plus si on enfournait
+       ou si on sortait du four. */
+    .bk-recall {
+        display: flex; flex-direction: column; gap: 4px;
+        margin-top: 10px; padding: 16px 18px;
+        border-radius: var(--r-lg, 18px);
+        background: var(--c-ink, #241f1c); color: #fff;
+    }
+    .bk-recall.o-prep   { background: #1F4F6B; }
+    .bk-recall.o-cook   { background: #8D1D2C; }
+    .bk-recall.o-finish { background: #C17A2A; color: var(--c-on-abricot, #4a2c12); }
+    .bk-recall-verb { font-size: 1.5rem; font-weight: 800; line-height: 1.1; }
+    .bk-recall-what b { font-size: 1.02rem; font-weight: 700; overflow-wrap: anywhere; }
+    .bk-recall-what span { display: block; margin-top: 2px; font-size: .78rem; opacity: .82; }
+    @media (max-width: 420px) { .bk-recall-verb { font-size: 1.28rem; } }
     .bk-sheet-x {
         flex: 0 0 auto; width: 40px; height: 40px; padding: 0;
         display: inline-flex; align-items: center; justify-content: center;

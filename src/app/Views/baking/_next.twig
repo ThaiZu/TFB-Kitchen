@@ -75,15 +75,24 @@
     <div class="bk-sheet" id="bkAssign" hidden>
         <div class="bk-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="bkAssignTitle">
             <header class="bk-sheet-head">
-                <div>
-                    <h2 id="bkAssignTitle">—</h2>
-                    <p id="bkAssignSub">—</p>
-                </div>
+                <p class="bk-sheet-kicker">{{ translations.order_kicker | default('Ordre à donner') }}</p>
                 <button type="button" class="bk-sheet-x" id="bkAssignClose"
                         aria-label="{{ translations.close | default('Fermer') }}">
                     {{ icons.svg('x', 18) }}
                 </button>
             </header>
+
+            {# L'ordre est répété ici, en grand, avant le choix de l'opérateur.
+               Entre le tap et la validation il y a deux listes à parcourir et
+               un réglage : le temps de choisir un nom, on ne sait plus si on
+               enfournait ou si on sortait du four. #}
+            <div class="bk-recall" id="bkRecall">
+                <span class="bk-recall-verb" id="bkAssignTitle">—</span>
+                <span class="bk-recall-what">
+                    <b id="bkAssignSub">—</b>
+                    <span id="bkAssignMeta"></span>
+                </span>
+            </div>
 
             <p class="bk-sheet-lbl">{{ translations.order_who | default("Qui s'en occupe ?") }}</p>
 

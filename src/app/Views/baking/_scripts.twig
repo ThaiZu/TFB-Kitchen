@@ -125,8 +125,10 @@
             go:      {{ (translations.order_confirm | default('Valider')) | json_encode | raw }}
         };
 
-        var title = document.getElementById('bkAssignTitle');
-        var sub   = document.getElementById('bkAssignSub');
+        var recall = document.getElementById('bkRecall');
+        var title  = document.getElementById('bkAssignTitle');
+        var sub    = document.getElementById('bkAssignSub');
+        var meta   = document.getElementById('bkAssignMeta');
         var val   = document.getElementById('bkTimeVal');
         var hint  = document.getElementById('bkTimeHint');
         var go    = document.getElementById('bkAssignGo');
@@ -150,6 +152,19 @@
 
             title.textContent = btn.dataset.verb;
             sub.textContent   = btn.dataset.name;
+
+            // Quantité, four et échéance sont déjà écrits sur l'ordre : on les
+            // recopie plutôt que de les redéclarer en attributs, pour qu'ils ne
+            // puissent pas diverger de ce qui vient d'être tapé.
+            var what = btn.querySelector('.bk-order-what span');
+            var due  = btn.querySelector('.bk-order-when b');
+            meta.textContent = [what && what.textContent.trim(), due && due.textContent.trim()]
+                .filter(Boolean).join(' · ');
+
+            // Le rappel prend la couleur de l'étape, comme l'ordre tapé :
+            // c'est ce qui dit sans lire qu'on est bien sur le même geste.
+            recall.className = 'bk-recall ' + (btn.className.match(/\bo-\w+/) || [''])[0];
+
             sheet.querySelectorAll('.emp-badge').forEach(function (b) { b.classList.remove('is-active'); });
             paintTime();
             go.disabled = false;
