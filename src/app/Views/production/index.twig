@@ -538,7 +538,16 @@
     /* Relancer depuis le tableau des minimums : mêmes commandes qu'ailleurs,
        en plus compact — une cellule de tableau n'a pas la largeur d'une tuile. */
     .min-launch { display: flex; align-items: center; gap: 6px; }
-    .min-launch .mep-qty { width: 74px; min-height: 44px; font-size: .95rem; }
+    /* Le champ ne contient jamais plus de quatre chiffres : il est calibré pour
+       eux, et pour rien d'autre. Sous 780 px, la règle générique de `.mep-qty`
+       passe en `flex: 1 1 auto` — utile dans une tuile pleine largeur, absurde
+       dans une cellule de tableau où elle poussait le bouton « Lancer » hors de
+       l'écran. On rend donc la rangée rigide ici. */
+    .min-launch .mep-ctl { flex: 0 0 auto; width: auto; gap: 6px; }
+    .min-launch .mep-qty {
+        flex: 0 0 auto; width: 62px; min-width: 0; min-height: 44px;
+        padding-left: 2px; padding-right: 2px; font-size: .95rem;
+    }
     .min-launch .mep-step { width: 38px; height: 44px; font-size: 1.15rem; }
     .min-launch .pr-launch-go { flex: 0 0 auto; min-height: 44px; padding: 0 13px; font-size: .82rem; }
 
