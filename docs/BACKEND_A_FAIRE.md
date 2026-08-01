@@ -236,6 +236,12 @@ elle qui dit ce qui reste à porter en rayon. Voir §4.
 
 ## 3. Les endpoints, un par un
 
+Chaque endpoint est suivi d'un tableau **champ par champ** : qui le lit,
+ce qu'il décide à l'écran, et ce qui se passe s'il manque. C'est la colonne
+« si absent » qui compte le plus — elle dit ce qui est vraiment obligatoire et
+ce qui peut attendre une seconde passe. Quelques champs y sont marqués *pas lu
+aujourd'hui* : ne perdez pas de temps à les remplir soigneusement.
+
 Dans tout ce qui suit, `{id}` est l'`id_shop` et les clés de période sont
 celles servies par `production/config` (`morning`, `noon`, `afternoon` par
 défaut).
@@ -258,6 +264,15 @@ heures, une constante partagée serait fausse pour l'un des deux.
   "safety_margin": 0
 }
 ```
+
+| champ | ce qu'il décide | si absent |
+|---|---|---|
+| `periods[].key` | **la clé pivot** : elle relie `periods` du catalogue, `period` des lignes de MEP et des minimums de vitrine. Les trois doivent employer le même vocabulaire | repli sur `PRODUCTION_PERIODS` de `config/app.php` |
+| `periods[].label` | le libellé des pastilles « Matin / Midi / Après-midi » | la clé s'affiche telle quelle |
+| `periods[].start` / `end` | découpe la journée : quel onglet s'ouvre par défaut, quelles périodes sont passées (elles quittent le sélecteur), et les deux horizons de l'écran Stock | repli config |
+| `forecast_hours` | la profondeur de projection : `maintenant → + forecast_hours + lead du produit`. Plus large = on enfourne plus tôt et plus gros | 2 h |
+| `history_weeks` | combien de semaines sont demandées au profil de ventes, **et** le seuil sous lequel l'écran avertit « moyenne sur N journées seulement » | 6 |
+| `safety_margin` | unités gardées en réserve avant de conclure au manque | 0 |
 
 ### 3.2 `GET /shops/{id}/production/products`
 
@@ -286,17 +301,21 @@ champs sont en gras.
 ]
 ```
 
-| champ | rôle | obligatoire |
+| champ | ce qu'il décide | si absent |
 |---|---|---|
-| `id_product` | clé de jointure avec stock, MEP, ventes, commandes | oui |
-| `periods` | un produit peut appartenir à plusieurs périodes | oui |
-| `batch_size` | taille de fournée ; **tout est arrondi à son multiple** | oui |
-| `production_lead_minutes` | délai entre le lancement et la disponibilité | recommandé |
-| `is_active` | un produit inactif ne se produit ni ne se propose | oui |
-| **`is_pdb`** | se prépare la veille | oui |
-| **`is_pdm`** | tenu à un plancher de vitrine | oui |
-| **`pdm_minimums`** | ce plancher, période par période | si `is_pdm` |
-| **`sector`** / **`sector_name`** | l'atelier | recommandé |
+| `id_product` | **la clé de jointure de tout le module** : stock, MEP, ventes, commandes et fournées se recoupent par elle | ligne ignorée |
+| `name` | le nom sur les tuiles, les tableaux et la feuille de validation | « — » |
+| `id_category` / `category_name` | le regroupement des tableaux **et** la rangée de badges de filtre (Besoins, Stock, Minimums) | « — », un seul badge |
+| `periods` | dans quelle pastille de période le produit apparaît, et s'il compte dans le badge « N produits » de l'onglet | le produit n'apparaît dans aucune période |
+| `batch_size` | **l'arrondi de toutes les quantités proposées** — à produire, à recuire, à remonter au plancher — et le pas des boutons − / + | lot de 1, signalé à l'écran |
+| `unit_name` | le suffixe « 48 pc » | rien n'est suffixé |
+| `production_lead_minutes` | élargit **deux** fenêtres : celle des ventes projetées et celle des commandes prises en compte. Un pain à 30 min de cuisson se décide 30 min plus tôt | 0 |
+| `is_active` | un produit inactif ne s'affiche, ne se propose et ne se compte nulle part | actif |
+| **`is_pdb`** | la liste du sélecteur « Ajouter » de la MEP du lendemain, et les catégories qui y apparaissent | `false` ⇒ sélecteur vide |
+| **`is_pdm`** | l'appartenance à l'écran Minimums : lui seul y entre | `false` ⇒ absent du tableau |
+| **`pdm_minimums`** | les colonnes par période du tableau Minimums, et le calcul `à produire = plancher + commandes − stock` | ligne « inconnu », aucune relance proposée |
+| **`sector`** / **`sector_name`** | la barre de secteur et le filtrage de **tous** les écrans, compteurs compris | pas de barre : le magasin n'a qu'un atelier |
+| `main_photo_path` | la vignette de la tuile | pictogramme générique |
 
 `pdm_minimums` se construit depuis `pro_shop_minimum` (§2.2). Si le
 plancher est le même toute la journée, un scalaire `pdm_min: 48` suffit — le
@@ -329,6 +348,18 @@ défaut, la PWA traite le produit comme un lot de 1 et le signale à l'écran.
   ]
 }
 ```
+
+| champ | ce qu'il décide | si absent |
+|---|---|---|
+| `lines[].id` | la clé renvoyée à `mep/validate`, et l'`id_mep_line` du portage en rayon | la ligne ne peut pas être validée |
+| `lines[].id_product` | jointure catalogue et filtrage par secteur | ignorée par le filtre secteur |
+| `lines[].name` / `category_name` | l'affichage et le regroupement par rayon | repli sur la fiche produit |
+| `lines[].period` | dans quelle période la ligne apparaît. **Absente, la ligne est montrée partout** — mieux vaut la voir deux fois que l'oublier à la cuisson | montrée dans toutes les périodes |
+| `lines[].quantity_planned` | pré-remplit le champ de validation | 0 |
+| `lines[].quantity_validated` | ce qui est sorti du four — moitié gauche du « reste à porter » | ligne tenue pour non validée |
+| `lines[].quantity_shelved` | ce qui est déjà en rayon — moitié droite. **C'est ce champ qui fait disparaître une tuile de « À mettre en rayon »** | 0 ⇒ le même plateau est reproposé indéfiniment |
+| `lines[].status` | `PREPARED` déclenche le bandeau rouge et le compteur « à valider » | `PREPARED` |
+| `prepared_at` | la méta « préparée hier à 17 h 40 » | rien n'est affiché |
 
 Appelé pour **aujourd'hui** (ce qu'on valide) et pour **demain** (ce qu'on
 encode). Une date sans MEP renvoie `lines: []` avec un `200` — ce n'est pas une
@@ -384,6 +415,13 @@ n'écrit jamais dans la caisse.
 }
 ```
 
+| champ | ce qu'il décide | si absent |
+|---|---|---|
+| `items[].id_product` | jointure | ligne ignorée |
+| `items[].quantity` | **le stock vendable** : base du manque, du plancher de vitrine, du tri par tension et du delta de l'écran Stock | 0 |
+| `items[].name` / `category_name` / `unit_name` | l'affichage, avec repli sur la fiche produit | repli catalogue |
+| `updated_at` | *pas lu aujourd'hui* — gardez-le pour un futur « stock à jour il y a 3 min » | — |
+
 ### 3.7 `GET /shops/{id}/sales/profile?date=…&weeks=6&weekday_only=1&granularity=30`
 
 **Le seul endpoint de prévision — et il ne prévoit rien** : il renvoie ce qui
@@ -403,6 +441,14 @@ sont faits par la PWA (`ForecastService`, service pur, testable :
   ]
 }
 ```
+
+| champ | ce qu'il décide | si absent |
+|---|---|---|
+| `slots` | l'axe du temps : les heures de début de créneau | aucune projection possible |
+| `products[].id_product` + `expected[]` | la courbe de vente du produit — c'est **la** matière première de tout l'écran | produit inconnu du profil : aucune proposition, et l'écran l'écrit |
+| `granularity_minutes` | la durée d'un créneau, utilisée au prorata quand une fenêtre tombe en plein milieu de l'un d'eux | 30 min |
+| `samples` | déclenche l'avertissement « moyenne sur N journées seulement » quand il est sous `history_weeks` | aucun avertissement |
+| `weeks` / `weekday_only` | *renvoyés en écho, pas lus* — le seuil d'avertissement vient de `production/config` | — |
 
 - `expected` a **exactement autant d'éléments que `slots`**.
 - `samples` = le nombre réel de journées agrégées. S'il est inférieur à
@@ -424,7 +470,12 @@ sont faits par la PWA (`ForecastService`, service pur, testable :
 | `SHELF` | le bouton « En rayon » / « Mettre en magasin » | **stock vendable +quantity**, et `pro_mep_line.quantity_shelved += quantity` si `id_mep_line` est fourni |
 | `REBAKE` | une proposition de recuisson validée | stock vendable +quantity |
 
-`id_mep_line` et `id_employee` sont optionnels.
+| champ envoyé | ce qu'il décide | si absent |
+|---|---|---|
+| `id_product` / `quantity` | le lot lui-même | la PWA n'envoie pas |
+| `source` | **l'effet** — voir le tableau ci-dessus | traité comme `REBAKE` |
+| `id_mep_line` | rattache le portage à sa ligne pour décompter le reste. Sans lui, le serveur devrait recouper sur produit + date, et deux fournées du même produit deviendraient indiscernables | le stock monte, mais le « reste à porter » ne bouge pas — la tuile revient |
+| `id_employee` | qui a porté le plateau | geste non tracé |
 
 **Refus attendu, pas d'écrêtage silencieux :**
 
@@ -457,6 +508,17 @@ ferait croire aux deux qu'elles ont réussi.
   ]
 }
 ```
+
+| champ | ce qu'il décide | si absent |
+|---|---|---|
+| `id_product` | jointure | ligne ignorée |
+| `quantity` | s'ajoute au manque, au plancher de vitrine et au delta du stock | ligne ignorée si ≤ 0 |
+| `channel` | **une étiquette, rien de plus** : il ne change aucun calcul, seulement à qui on devra s'excuser | rangé en « magasin » |
+| `due_time` | la fenêtre dans laquelle la commande compte, le tri du carnet, et le marquage « en retard » en rouge | due tout de suite : comptée partout et remontée en tête |
+| `period` | le repli quand il n'y a pas d'heure (« pour midi ») | voir ci-dessus |
+| `reference` | le numéro que le client a sous les yeux, affiché au carnet | rien |
+| `name` / `category_name` | l'affichage du carnet | « — » |
+| `id_order` | *pas lu aujourd'hui* — à garder pour la traçabilité vers la commande d'origine | — |
 
 `channel` ∈ `shop` | `click` | `delivery`. Le front normalise largement (tout
 ce qui contient `deliver`/`livr` devient `delivery`, `click`/`collect`/`web`
@@ -510,6 +572,23 @@ premier. La PWA les remonte en tête, en rouge.
 }
 ```
 
+| champ | ce qu'il décide | si absent |
+|---|---|---|
+| `server_time` | **l'heure de référence de tout l'écran** : position de la barre du présent, retards, échéances. Une tablette d'atelier dérive ; elle ne doit pas décréter un retard pour autant | l'heure du navigateur, avec sa dérive |
+| `batches[].id` | la clé du PATCH d'avancement, et la fournée mise en avant à l'arrivée depuis « Lancer » | fournée inutilisable |
+| `batches[].id_product` | relie la fournée au produit : **c'est par lui que l'écran Besoins sait qu'un produit est en cuisson**, et que le filtre secteur s'applique | la fournée n'apparaît sur aucune tuile de produit |
+| `batches[].quantity` / `unit_name` | le gros chiffre de la carte, et la quantité pré-remplie de la mise en magasin | 0 |
+| `batches[].id_oven` / `oven_name` | les lignes de la frise et le filtre « Four 1 · 2 · 3 » | tout dans une ligne unique |
+| `batches[].temperature` | affichée sur la carte, sous l'étape de cuisson | rien |
+| `batches[].prep_start` + `prep_minutes` | le segment bleu de la frise et l'échéance de l'ordre « Commencer la préparation » | segment absent |
+| `batches[].cook_start` + `cook_minutes` | le segment rouge et l'heure de sortie du four | segment absent |
+| `batches[].finish_type` | `LOT` (durée fixe) ou `PIECE` (durée × quantité). **Un nappage de 36 éclairs ne dure pas comme un ressuage de plaque** | `LOT` |
+| `batches[].finish_minutes` / `finish_per_piece_minutes` | la longueur du segment ambre, selon `finish_type` | 0 |
+| `batches[].finish_label` | le mot sur le bouton : « Ressuage terminé », « Glaçage terminé » | « Finition terminée » |
+| `batches[].shelf_delay_minutes` | l'**ETA** affiché sur les tuiles de « Ce qui manque » : à quelle heure le produit sera en rayon | ETA collé à la fin de finition |
+| `batches[].status` | l'étape en cours : quel bouton, quelle couleur, et si la fournée est encore active | `PLANNED` |
+| `batches[].*_started_at` | la progression réelle des jauges, par rapport au prévu | jauge calée sur l'horaire prévu |
+
 - **`server_time` fait foi.** Une tablette d'atelier dérive ; l'écran ne doit
   pas décréter un retard pour autant.
 - `status` ∈ `PLANNED` → `PREPARING` → `READY_TO_BAKE` → `BAKING` →
@@ -544,6 +623,12 @@ Noter qu'il n'y a **pas** de `/shops/{id}` ici : l'id de fournée est global.
 ```json
 {"status": "BAKING", "allotted_minutes": 22, "id_employee": 42}
 ```
+
+| champ envoyé | ce qu'il décide | si absent |
+|---|---|---|
+| `status` | l'étape suivante — voir ci-dessous | la PWA n'envoie pas |
+| `allotted_minutes` | le temps corrigé au doigt sur la feuille de validation, à persister sur l'étape concernée pour que la frise et les échéances suivantes suivent | la durée planifiée reste |
+| `id_employee` | qui a fait le geste | geste non tracé |
 
 - `status` : l'étape **suivante**. Le saut d'étape se refuse — enfourner sans
   avoir préparé n'existe pas en atelier :
