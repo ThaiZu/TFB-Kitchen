@@ -43,6 +43,12 @@ parce que ce sont ceux qui cassent en production.
 - **`6700160` (sandwich) est absent de `sales/profile`.** Produit dont on ne
   sait rien : aucune proposition. Le traiter comme « zéro vente » ferait
   enfourner à l'aveugle.
+- **Quatre produits sur sept portent `is_pdb: true`.** Le sélecteur de la MEP
+  du lendemain ne propose que ceux-là, et la catégorie « Traiteur » n'apparaît
+  donc pas dans ses badges : un filtre qui ne mène nulle part n'est pas un
+  filtre. Les tailles de fournée diffèrent exprès — 12 pour la baguette, 24
+  pour le croissant, 6 pour la tarte — parce que c'est le pas des boutons
+  `−` / `+`.
 - **`04b` renvoie une ligne `SKIPPED` avec `quantity_validated: 0`.** Écarter
   une ligne et en produire zéro ne racontent pas la même chose.
 - **`04b` et `07b` renvoient le stock résultant.** Le front réaffiche un chiffre

@@ -89,11 +89,13 @@
         gap: 10px;
     }
     /* La saisie reste le geste : sous 1200 px, deux colonnes plutôt qu'un
-       champ écrasé contre son libellé. */
+       champ écrasé contre son libellé. Sous 780 px on reste à deux — une
+       colonne unique faisait dix écrans de défilement pour trente produits —
+       mais la tuile passe en pile : le nom au-dessus, la commande dessous. */
     @media (max-width: 1200px) { .mep-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    @media (max-width: 780px)  { .mep-grid { grid-template-columns: 1fr; } }
 
     .mep-line {
+        position: relative;
         display: flex; align-items: center; gap: 12px;
         background: var(--c-surface, #fff);
         border: 1px solid var(--c-line, rgba(36,26,22,.09));
@@ -106,6 +108,9 @@
     .mep-line-txt { flex: 1; min-width: 0; }
     .mep-line-name { display: block; font-size: .95rem; font-weight: 700; color: var(--c-ink, #241f1c); line-height: 1.3; overflow-wrap: anywhere; }
     .mep-line-sub { display: block; margin-top: 3px; font-size: .74rem; color: var(--c-muted, #7a7168); }
+    /* Les commandes tiennent ensemble : sur écran large elles restent à droite
+       du nom, sur tablette étroite elles descendent d'un bloc. */
+    .mep-ctl { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; }
     /* 96 px et 52 px de haut : on saisit au pouce, parfois avec un gant. */
     .mep-qty { width: 96px; flex: 0 0 auto; min-height: 52px; text-align: center; font-size: 1.1rem; font-weight: 700; }
     .mep-skip {
@@ -116,6 +121,123 @@
         color: var(--c-muted, #7a7168); cursor: pointer;
     }
     .mep-skip.is-on { background: #f4dfe2; border-color: var(--c-primary, #8D1D2C); color: var(--c-primary, #8D1D2C); }
+
+    /* Pas de fournée : le − et le + montent de 12 en 12 pour un croissant,
+       de 15 en 15 pour une baguette. Taper « 37 » au clavier reste possible,
+       mais ce n'est pas le geste courant. */
+    .mep-step {
+        flex: 0 0 auto; width: 44px; height: 52px; padding: 0;
+        border: 1px solid var(--c-line-2, rgba(36,26,22,.14));
+        border-radius: var(--r-md, 13px); background: var(--c-bg-2, #F4EFE8);
+        color: var(--c-ink, #241f1c); font-size: 1.35rem; font-weight: 700; line-height: 1;
+        cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .mep-step:active { background: var(--c-primary-soft, #f4dfe2); }
+    /* Le retrait est un geste rare : il se loge dans le coin plutôt que dans
+       la rangée des commandes, qui doit rester lisible au pouce. */
+    .mep-del {
+        position: absolute; top: -7px; right: -7px; z-index: 2;
+        width: 26px; height: 26px; padding: 0;
+        display: inline-flex; align-items: center; justify-content: center;
+        border: 1px solid var(--c-line-2, rgba(36,26,22,.14));
+        border-radius: 50%; background: #fff;
+        color: var(--c-muted, #7a7168); cursor: pointer;
+        box-shadow: var(--sh-1, 0 1px 2px rgba(0,0,0,.04));
+    }
+    .mep-del:active { background: #f4dfe2; color: var(--c-primary, #8D1D2C); }
+
+    @media (max-width: 780px) {
+        .mep-line { flex-direction: column; align-items: stretch; gap: 9px; padding: 10px 11px; }
+        .mep-ctl { width: 100%; gap: 6px; }
+        .mep-qty { width: auto; flex: 1 1 auto; min-width: 0; font-size: 1rem; }
+        .mep-step { width: 38px; }
+        .mep-skip { width: 46px; }
+    }
+
+    /* ── Filtre par catégorie ────────────────────────────────────────────
+       La liste reste triée par catégorie puis par produit ; les badges ne
+       réordonnent rien, ils masquent. Un ordre qui bouge se relit, un ordre
+       stable se retrouve. */
+    .cat-filters {
+        display: flex; gap: 7px; overflow-x: auto; scrollbar-width: none;
+        padding: 2px 2px 8px; margin: 0 -2px 4px;
+    }
+    .cat-filters::-webkit-scrollbar { display: none; }
+    .cat-chip {
+        flex: 0 0 auto; min-height: 38px; padding: 0 15px;
+        border: 1px solid var(--c-line-2, rgba(36,26,22,.14));
+        border-radius: 999px; background: #fff;
+        color: var(--c-muted, #7a7168);
+        font-family: inherit; font-size: .82rem; font-weight: 700;
+        cursor: pointer; white-space: nowrap;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .cat-chip.is-on {
+        background: var(--c-primary, #8D1D2C); border-color: var(--c-primary, #8D1D2C);
+        color: #fff;
+    }
+
+    /* ── Composer la MEP de demain ─────────────────────────────────────── */
+    .mep-add {
+        display: flex; align-items: center; justify-content: center; gap: 9px;
+        width: 100%; min-height: 52px; margin-bottom: 6px;
+        border: 1px dashed var(--c-primary, #8D1D2C);
+        border-radius: var(--r-md, 13px);
+        background: var(--c-primary-soft, #f4dfe2);
+        color: var(--c-primary, #8D1D2C);
+        font-family: inherit; font-size: .95rem; font-weight: 800; cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .mep-add:active { transform: scale(.995); }
+    .mep-empty {
+        display: flex; flex-direction: column; align-items: center; gap: 8px;
+        padding: 30px 20px; text-align: center;
+        color: var(--c-muted, #7a7168);
+    }
+    .mep-empty p { margin: 0; font-size: .87rem; }
+
+    /* Le sélecteur est plein écran : la liste peut faire cent produits, et une
+       petite boîte centrée obligerait à défiler dans un cadre de 300 px. */
+    .mep-picker {
+        position: fixed; inset: 0; z-index: 1080;
+        background: rgba(31,20,16,.45);
+        display: flex; align-items: flex-end; justify-content: center;
+    }
+    .mep-picker[hidden] { display: none; }
+    .mep-picker-panel {
+        display: flex; flex-direction: column;
+        width: 100%; max-width: 780px; max-height: 92vh;
+        background: var(--c-bg, #EAE4DC);
+        border-radius: var(--r-xl, 24px) var(--r-xl, 24px) 0 0;
+        padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+        box-shadow: 0 -12px 40px -18px rgba(0,0,0,.5);
+    }
+    .mep-picker-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .mep-picker-head h2 { flex: 1; margin: 0; font-size: 1.02rem; font-weight: 800; color: var(--c-ink, #241f1c); }
+    .mep-picker-close {
+        flex: 0 0 auto; width: 40px; height: 40px; padding: 0;
+        display: inline-flex; align-items: center; justify-content: center;
+        border: 1px solid var(--c-line-2, rgba(36,26,22,.14));
+        border-radius: var(--r-md, 13px); background: #fff;
+        color: var(--c-muted, #7a7168); cursor: pointer;
+    }
+    .mep-picker-list { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .mep-picker-list .pr-cat:first-child { margin-top: 0; }
+    .mep-pick-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    @media (min-width: 620px) { .mep-pick-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    .mep-pick {
+        display: flex; flex-direction: column; align-items: flex-start; gap: 3px;
+        min-height: 60px; padding: 10px 13px; text-align: left;
+        border: 1px solid var(--c-line, rgba(36,26,22,.09));
+        border-radius: var(--r-md, 13px); background: var(--c-surface, #fff);
+        font-family: inherit; color: var(--c-ink, #241f1c); cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .mep-pick b { font-size: .9rem; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
+    .mep-pick small { font-size: .72rem; color: var(--c-muted, #7a7168); }
+    /* Déjà dans la MEP : le tap ajoute une fournée de plus, il ne crée pas un
+       doublon. Le badge le dit avant le geste. */
+    .mep-pick.is-in { border-color: var(--c-primary, #8D1D2C); background: var(--c-primary-soft, #f4dfe2); }
 
     /* Barre d'action collée en bas : la liste est longue, le bouton ne doit
        pas obliger à remonter. */

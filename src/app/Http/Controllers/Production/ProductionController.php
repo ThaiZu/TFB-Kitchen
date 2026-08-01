@@ -81,13 +81,21 @@ class ProductionController extends Controller
         $sub = ($_GET['mep'] ?? '') === 'afternoon' ? 'afternoon' : 'morning';
 
         if ($sub === 'morning') {
-            $mep = $this->productionService->getMep($today);
+            $mep     = $this->productionService->getMep($today);
+            $lines   = $mep['lines'] ?? [];
+            $pending = array_values(array_filter($lines, fn(MepLineModel $l) => $l->isPending()));
+
             return [
-                'mep_sub'         => 'morning',
-                'mep_available'   => $mep !== null,
-                'mep_status'      => $mep['status'] ?? null,
-                'mep_prepared_at' => $mep['prepared_at'] ?? null,
-                'mep_lines'       => $mep['lines'] ?? [],
+                'mep_sub'            => 'morning',
+                'mep_available'      => $mep !== null,
+                'mep_status'         => $mep['status'] ?? null,
+                'mep_prepared_at'    => $mep['prepared_at'] ?? null,
+                'mep_lines'          => $lines,
+                'mep_pending'        => $pending,
+                // Groupées par catégorie : une MEP arrive dans l'ordre de
+                // saisie de la veille, on la relit dans l'ordre du magasin.
+                'mep_by_category'    => $this->productionService->mepLinesByCategory($lines),
+                'mep_pending_by_cat' => $this->productionService->mepLinesByCategory($pending),
             ];
         }
 
@@ -97,22 +105,55 @@ class ProductionController extends Controller
         // était plutôt que de repartir de zéro à chaque ouverture.
         $draft    = $this->productionService->getMep($tomorrow);
 
-        $quantities = [];
-        foreach ($draft['lines'] ?? [] as $line) {
-            if ($line->getIdProduct() !== null) {
-                $quantities[$line->getIdProduct()] = $line->getQuantityPlanned();
+        // Le sélecteur ne propose que ce qui se prépare la veille : sur deux
+        // cents références, en proposer dix fait choisir au lieu de chercher.
+        $pdb = $products !== null
+            ? $this->productionService->pdbProductsByCategory($products)
+            : [];
+
+        $byId = [];
+        foreach ($products ?? [] as $p) {
+            if ($p->getIdProduct() !== null) {
+                $byId[$p->getIdProduct()] = $p;
             }
         }
+
+        // Les lignes déjà encodées, enrichies de la fiche produit : c'est elle
+        // qui porte le pas de fournée (12 pour un croissant, 15 pour une
+        // baguette), et la ligne de MEP ne le transporte pas.
+        $rows = [];
+        foreach ($draft['lines'] ?? [] as $line) {
+            $id      = $line->getIdProduct();
+            $product = $id !== null ? ($byId[$id] ?? null) : null;
+            $cat     = $line->getCategoryName() ?: ($product?->getCategoryName() ?? '—');
+
+            $rows[$cat][] = [
+                'id_product' => $id,
+                'name'       => $line->getName() ?? $product?->getName() ?? '—',
+                'unit_name'  => $line->getUnitName() ?? $product?->getUnitName(),
+                'batch_size' => $product !== null ? $product->getEffectiveBatchSize() : 1.0,
+                'quantity'   => $line->getQuantityPlanned(),
+            ];
+        }
+
+        // Une ligne encodée hier sur un produit qu'on ne prépare plus la veille
+        // reste affichée : la retirer de l'écran ne la retire pas de la MEP.
+        $categories = array_values(array_unique(array_merge(array_keys($pdb), array_keys($rows))));
+        usort($categories, 'strnatcasecmp');
+
+        foreach ($rows as &$group) {
+            usort($group, fn($a, $b) => strcasecmp((string)$a['name'], (string)$b['name']));
+        }
+        unset($group);
 
         return [
             'mep_sub'            => 'afternoon',
             'tomorrow'           => $tomorrow,
             'products_available' => $products !== null,
-            'catalog'            => $products !== null
-                ? $this->productionService->groupAllByCategory($products)
-                : [],
+            'pdb_catalog'        => $pdb,
+            'mep_next_categories'=> $categories,
+            'mep_next_rows'      => $rows,
             'draft_available'    => $draft !== null,
-            'draft_quantities'   => $quantities,
         ];
     }
 

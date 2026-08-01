@@ -193,6 +193,47 @@ class ProductionService
         return $groups;
     }
 
+    /**
+     * Lignes de MEP groupées par catégorie, chaque groupe trié par nom.
+     *
+     * Une MEP arrive dans l'ordre où elle a été saisie la veille ; on la lit
+     * dans l'ordre du magasin — viennoiserie ensemble, boulangerie ensemble.
+     *
+     * @param MepLineModel[] $lines
+     * @return array<string, MepLineModel[]>
+     */
+    public function mepLinesByCategory(array $lines): array
+    {
+        $groups = [];
+        foreach ($lines as $l) {
+            $groups[$l->getCategoryName() ?: '—'][] = $l;
+        }
+        ksort($groups, SORT_NATURAL | SORT_FLAG_CASE);
+        foreach ($groups as &$g) {
+            usort($g, fn($a, $b) => strcasecmp((string)$a->getName(), (string)$b->getName()));
+        }
+        unset($g);
+        return $groups;
+    }
+
+    /**
+     * Les produits qui se préparent la veille, groupés par catégorie.
+     *
+     * Ce sont les seuls candidats de la MEP du lendemain : proposer les deux
+     * cents références du catalogue pour en retenir dix ferait chercher au
+     * lieu de choisir.
+     *
+     * @param ProductionProductModel[] $products
+     * @return array<string, ProductionProductModel[]>
+     */
+    public function pdbProductsByCategory(array $products): array
+    {
+        return $this->groupAllByCategory(array_values(array_filter(
+            $products,
+            fn(ProductionProductModel $p) => $p->isPdb()
+        )));
+    }
+
     /** @param array<int, array{id: int, quantity: float, skipped?: bool}> $lines */
     public function validateMep(string $date, array $lines): array
     {

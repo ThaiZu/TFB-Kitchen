@@ -52,27 +52,31 @@ function mock_ovens(): array
  * Trois cas limites y sont volontairement représentés, parce que ce sont ceux
  * qui cassent : un produit sans taille de fournée, un produit inactif, et un
  * produit absent du profil de ventes.
+ *
+ * `is_pdb` — « prep day before » — dit si le produit se façonne la veille.
+ * Seuls ceux-là sont proposés à l'encodage de la MEP du lendemain : la
+ * pâtisserie du jour et le traiteur restent hors du sélecteur.
  */
 function mock_products(): array
 {
     return [
         ['id_product' => 6700106, 'name' => 'Croissant pur beurre',      'id_category' => 12, 'category_name' => 'Viennoiserie',
-         'periods' => ['morning', 'noon'], 'batch_size' => 24, 'unit_name' => 'pc', 'production_lead_minutes' => 40, 'is_active' => true],
+         'periods' => ['morning', 'noon'], 'batch_size' => 24, 'unit_name' => 'pc', 'production_lead_minutes' => 40, 'is_active' => true, 'is_pdb' => true],
         ['id_product' => 6700110, 'name' => 'Pain au chocolat',          'id_category' => 12, 'category_name' => 'Viennoiserie',
-         'periods' => ['morning', 'noon'], 'batch_size' => 24, 'unit_name' => 'pc', 'production_lead_minutes' => 40, 'is_active' => true],
+         'periods' => ['morning', 'noon'], 'batch_size' => 24, 'unit_name' => 'pc', 'production_lead_minutes' => 40, 'is_active' => true, 'is_pdb' => true],
         ['id_product' => 6700120, 'name' => 'Baguette tradition',        'id_category' => 14, 'category_name' => 'Boulangerie',
-         'periods' => ['morning', 'noon', 'afternoon'], 'batch_size' => 12, 'unit_name' => 'pc', 'production_lead_minutes' => 20, 'is_active' => true],
+         'periods' => ['morning', 'noon', 'afternoon'], 'batch_size' => 12, 'unit_name' => 'pc', 'production_lead_minutes' => 20, 'is_active' => true, 'is_pdb' => true],
         ['id_product' => 6700130, 'name' => 'Tarte au citron meringuée', 'id_category' => 16, 'category_name' => 'Pâtisserie',
-         'periods' => ['noon', 'afternoon'], 'batch_size' => 6, 'unit_name' => 'pc', 'production_lead_minutes' => 0, 'is_active' => true],
+         'periods' => ['noon', 'afternoon'], 'batch_size' => 6, 'unit_name' => 'pc', 'production_lead_minutes' => 0, 'is_active' => true, 'is_pdb' => true],
         // Pas de batch_size : la proposition tombe à l'unité, et l'écran le dit.
         ['id_product' => 6700140, 'name' => 'Macaron pistache',          'id_category' => 16, 'category_name' => 'Pâtisserie',
-         'periods' => ['afternoon'], 'unit_name' => 'pc', 'production_lead_minutes' => 0, 'is_active' => true],
+         'periods' => ['afternoon'], 'unit_name' => 'pc', 'production_lead_minutes' => 0, 'is_active' => true, 'is_pdb' => false],
         // Inactif : jamais affiché, jamais proposé, même à stock zéro.
         ['id_product' => 6700150, 'name' => 'Bûche de Noël',             'id_category' => 16, 'category_name' => 'Pâtisserie',
-         'periods' => ['afternoon'], 'batch_size' => 4, 'unit_name' => 'pc', 'production_lead_minutes' => 0, 'is_active' => false],
+         'periods' => ['afternoon'], 'batch_size' => 4, 'unit_name' => 'pc', 'production_lead_minutes' => 0, 'is_active' => false, 'is_pdb' => false],
         // Absent du profil de ventes : aucune recuisson proposée.
         ['id_product' => 6700160, 'name' => 'Sandwich club',             'id_category' => 18, 'category_name' => 'Traiteur',
-         'periods' => ['noon'], 'batch_size' => 10, 'unit_name' => 'pc', 'production_lead_minutes' => 0, 'is_active' => true],
+         'periods' => ['noon'], 'batch_size' => 10, 'unit_name' => 'pc', 'production_lead_minutes' => 0, 'is_active' => true, 'is_pdb' => false],
     ];
 }
 

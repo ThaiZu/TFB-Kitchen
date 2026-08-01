@@ -24,6 +24,7 @@ class ProductionProductModel implements JsonSerializable
     private ?string $unitName;
     private int $leadMinutes;
     private bool $isActive;
+    private bool $isPdb;
     private ?string $mainPhotoPath;
 
     public function __construct(array $d)
@@ -40,7 +41,26 @@ class ProductionProductModel implements JsonSerializable
         $this->unitName     = $d['unit_name'] ?? null;
         $this->leadMinutes  = max(0, (int)($d['production_lead_minutes'] ?? 0));
         $this->isActive     = !isset($d['is_active']) || (bool)$d['is_active'];
+        $this->isPdb        = self::readPdb($d);
         $this->mainPhotoPath = $d['main_photo_path'] ?? ($d['photos']['main_photo_path'] ?? null);
+    }
+
+    /**
+     * « Préparé la veille » — pdb, prep day before.
+     *
+     * Le catalogue de la base de connaissances porte déjà
+     * `is_prepared_before_sales`, qui dit la même chose ; on l'accepte en
+     * repli plutôt que d'exiger un nouveau champ là où l'information existe.
+     * Voir docs/ENDPOINTS_PRODUCTION.md.
+     */
+    private static function readPdb(array $d): bool
+    {
+        foreach (['is_pdb', 'is_prep_day_before', 'prep_day_before', 'is_prepared_before_sales'] as $k) {
+            if (array_key_exists($k, $d) && $d[$k] !== null) {
+                return (bool)$d[$k];
+            }
+        }
+        return false;
     }
 
     /**
@@ -77,6 +97,8 @@ class ProductionProductModel implements JsonSerializable
     public function getUnitName(): ?string { return $this->unitName; }
     public function getLeadMinutes(): int { return $this->leadMinutes; }
     public function isActive(): bool { return $this->isActive; }
+    /** Se prépare la veille : seuls ces produits entrent dans la MEP de demain. */
+    public function isPdb(): bool { return $this->isPdb; }
 
     public function belongsTo(string $periodKey): bool
     {
@@ -108,6 +130,7 @@ class ProductionProductModel implements JsonSerializable
             'unit_name' => $this->unitName,
             'production_lead_minutes' => $this->leadMinutes,
             'is_active' => $this->isActive,
+            'is_pdb' => $this->isPdb,
             'main_photo_path' => $this->mainPhotoPath,
         ];
     }

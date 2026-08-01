@@ -109,6 +109,7 @@ GET /shops/{shopId}/production/products
     "unit_name": "pc",
     "production_lead_minutes": 40,
     "is_active": true,
+    "is_pdb": true,
     "main_photo_path": "r2://products/6700106/main.jpg"
   }
 ]
@@ -121,11 +122,32 @@ GET /shops/{shopId}/production/products
 | `batch_size` | taille de fournée ; la proposition est arrondie à son multiple supérieur | oui |
 | `production_lead_minutes` | temps entre la validation et la disponibilité à la vente | recommandé |
 | `is_active` | un produit inactif ne se produit pas et ne se propose pas | oui |
-| `id_category` / `category_name` | regroupement dans la vue période | recommandé |
+| `is_pdb` | « prep day before » : le produit se prépare la veille | oui |
+| `id_category` / `category_name` | regroupement dans la vue période **et filtre par badges** | oui |
 
 **`batch_size` est structurant.** Sans lui, la seule proposition honnête serait
 « il manque 17 croissants », alors que le four sort des plaques de 24. À défaut,
 la PWA traite le produit comme un batch de 1 et le signale.
+
+**`is_pdb` — champ à ajouter en base.** L'encodage de la MEP du lendemain
+n'ouvre plus sur le catalogue entier : on compose la liste avec un bouton
+« Ajouter », et le sélecteur ne propose que les produits marqués `is_pdb`. Sur
+deux cents références, en proposer dix fait choisir au lieu de chercher — et
+une catégorie sans aucun produit `is_pdb` n'apparaît pas dans les badges, parce
+qu'un filtre qui ne mène nulle part n'est pas un filtre.
+
+> **Migration attendue côté back-office** : une colonne booléenne
+> `is_pdb` sur la table produit (défaut `false`), exposée telle quelle par
+> `GET /shops/{shopId}/production/products`, et éditable dans la fiche produit.
+> Le front accepte en repli les noms `is_prep_day_before`, `prep_day_before` et
+> `is_prepared_before_sales` — ce dernier existe déjà sur la fiche technique et
+> dit la même chose ; si le back-office choisit de le réutiliser plutôt que
+> d'ajouter une colonne, rien ne change côté PWA. Champ absent = `false`, donc
+> un déploiement sans migration donne un sélecteur vide, pas une erreur.
+
+**`batch_size` sert aussi de pas de saisie.** Dans la MEP du lendemain, les
+boutons `−` et `+` montent de 12 en 12 pour une baguette, de 24 en 24 pour un
+croissant. Un `batch_size` absent ramène le pas à 1.
 
 **`production_lead_minutes` ferme un trou réel.** Une recuisson validée à 15 h 00
 avec 40 minutes de cuisson ne couvre pas les ventes de 15 h 00 à 15 h 40. La
