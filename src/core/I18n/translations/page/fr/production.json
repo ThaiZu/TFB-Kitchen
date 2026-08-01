@@ -1,5 +1,11 @@
 {
   "board_due": "Échéance",
+  "board_eta": "ETA",
+  "board_launch": "Lancer la production",
+  "board_launch_error": "La fournée n'a pas pu être programmée.",
+  "board_launch_qty": "Quantité à produire",
+  "board_launch_success": "Fournée programmée : elle est passée en préparation.",
+  "board_min_batch": "minimum une fournée de",
   "board_no_forecast": "le profil de ventes n'est pas servi : le classement se fait sur le stock seul",
   "board_no_plan": "le plan de cuisson n'est pas servi : aucune étape n'est connue",
   "board_no_stock": "le stock live n'est pas servi",

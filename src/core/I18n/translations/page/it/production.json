@@ -1,5 +1,11 @@
 {
   "board_due": "Scadenza",
+  "board_eta": "ETA",
+  "board_launch": "Avvia la produzione",
+  "board_launch_error": "L'infornata non è stata programmata.",
+  "board_launch_qty": "Quantità da produrre",
+  "board_launch_success": "Infornata programmata: è passata in preparazione.",
+  "board_min_batch": "minimo un'infornata da",
   "board_no_forecast": "il profilo di vendita non è fornito: l'ordinamento si basa solo sulla giacenza",
   "board_no_plan": "il piano di cottura non è fornito: nessuna fase è nota",
   "board_no_stock": "la giacenza live non è fornita",

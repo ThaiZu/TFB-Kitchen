@@ -338,13 +338,18 @@
     .pr-tile-head { display: flex; align-items: center; gap: 11px; text-decoration: none; color: inherit; }
     .pr-tile-txt { flex: 1; min-width: 0; }
     .pr-tile-cat { display: block; font-size: .7rem; color: var(--c-muted, #7a7168); margin-top: 2px; }
-
-    /* Les deux chiffres qui décident du classement sont montrés : un ordre
-       dont on ne voit pas la raison ne se conteste pas, et ne se corrige donc
-       jamais. */
-    .pr-facts { display: flex; gap: 16px; flex-wrap: wrap; }
-    .pr-facts > span { font-size: .68rem; color: var(--c-muted, #7a7168); line-height: 1.2; }
-    .pr-facts > span b { display: block; font-size: 1.05rem; font-weight: 800; color: var(--c-ink, #241f1c); }
+    /* ETA : l'heure de finition prévue. Elle vit à droite du nom parce que
+       c'est la seule autre chose qu'on lise sur la tuile, et qu'on la compare
+       d'une tuile à l'autre — une colonne se compare, pas une ligne. */
+    .pr-eta {
+        flex: 0 0 auto; text-align: right; line-height: 1.1;
+        font-variant-numeric: tabular-nums;
+    }
+    .pr-eta b { display: block; font-size: 1.02rem; font-weight: 800; color: var(--c-ink, #241f1c); }
+    .pr-eta small {
+        display: block; margin-top: 1px; font-size: .58rem; font-weight: 800;
+        letter-spacing: .07em; color: var(--c-muted, #7a7168);
+    }
 
     /* La conclusion, en une ligne et une couleur. Elle remplace la projection
        chiffrée : « 138 projeté » demandait de comparer à la taille de fournée
@@ -360,6 +365,27 @@
     .lv-tight   { background: #fdf1e2; color: #8a5312; }
     .lv-ok      { background: #eaf4ec; color: #1d5a2c; }
     .lv-unknown { background: var(--c-bg-2, #F4EFE8); color: var(--c-muted, #7a7168); font-style: italic; font-weight: 600; }
+    /* La quantité proposée EST un minimum : c'est une fournée entière, parce
+       qu'un four ne sort pas dix-sept croissants. Le dire évite qu'on la prenne
+       pour le besoin exact et qu'on la rabote. */
+    .pr-need-sub { display: block; margin-top: 2px; font-size: .68rem; font-weight: 600; opacity: .78; }
+
+    /* Programmer la fournée : le geste qui transforme un constat en travail.
+       Il reprend les commandes de la mise en rayon — même pas de fournée, même
+       gabarit — parce que c'est la même arithmétique. */
+    .pr-launch { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .pr-launch .mep-ctl { flex: 1 1 150px; }
+    .pr-launch .mep-qty { width: auto; flex: 1 1 auto; min-width: 0; }
+    .pr-launch-go {
+        flex: 1 1 150px; min-height: 52px;
+        display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+        border: 0; border-radius: var(--r-md, 13px);
+        background: var(--c-primary, #8D1D2C); color: #fff;
+        font-family: inherit; font-size: .92rem; font-weight: 800; cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .pr-launch-go:active { transform: scale(.995); }
+    .pr-launch-go[disabled] { opacity: .55; cursor: default; }
 
     .pr-tile-sub { margin: 0; font-size: .74rem; color: var(--c-muted, #7a7168); }
     .pr-tile-sub b { color: var(--c-ink, #241f1c); font-weight: 800; }
@@ -390,7 +416,6 @@
     @media (max-width: 780px) {
         .pr-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .pr-tile { padding: 10px 11px; }
-        .pr-facts { gap: 10px; }
         .pr-shelf .mep-ctl,
         .pr-shelf-go { flex: 1 1 100%; }
     }

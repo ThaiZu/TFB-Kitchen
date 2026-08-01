@@ -166,6 +166,43 @@ la barre de progression devient indicative. Le contrat vaut dans les deux cas.
 
 ---
 
+## 2 bis. Programmer une fournée
+
+```
+POST /shops/{shopId}/baking
+```
+
+```json
+{ "id_product": 6700106, "quantity": 24, "source": "SHORTFALL", "id_employee": 41 }
+```
+
+**Endpoint à créer.** C'est le pendant de la boucle ouverte par l'écran de
+production : quand une tuile annonce « À produire 24 pc », ce POST crée la
+fournée. Elle entre au plan, et le produit bascule aussitôt en préparation,
+puis cuisson, puis finition — au lieu d'être découvert en rupture vitrine
+vide.
+
+| champ | rôle | envoyé |
+|---|---|---|
+| `id_product` | le produit | toujours |
+| `quantity` | multiple de la taille de fournée, ajusté à l'écran | toujours |
+| `source` | `SHORTFALL` — programmée depuis un manque constaté | toujours |
+| `id_employee` | qui l'a demandée | quand il est connu |
+
+**Le front n'envoie aucun horaire, et n'en veut aucun en retour qu'il aurait
+choisi.** La PWA ne connaît ni l'occupation des fours, ni les fournées des
+autres postes, ni les temps de repos. Elle dit quoi et combien ; c'est le
+serveur qui place la fournée — four, `prep_start`, `cook_start`, durées — et
+qui renvoie la fournée complète, dans la forme du `GET`. Un front qui
+inventerait un créneau produirait un plan que le back-office contredirait à la
+requête suivante.
+
+`quantity` est déjà un multiple de la taille de fournée : l'écran l'arrondit au
+lot supérieur avant de l'afficher, et les boutons `−` / `+` montent par lot.
+Le serveur peut la réarrondir, mais il ne devrait pas avoir à la refuser.
+
+---
+
 ## 3. Faire avancer une fournée
 
 ```

@@ -18,6 +18,12 @@ return function (RouteCollector $r) {
         'method'     => 'ajaxPlan',
     ]);
 
+    // Programmation d'une fournée, depuis un manque constaté en production.
+    $r->addRoute('POST', '/ajax/baking', [
+        'controller' => $controller,
+        'method'     => 'ajaxCreate',
+    ]);
+
     // Passage d'une fournée à l'étape suivante.
     $r->addRoute('PATCH', '/ajax/baking/{id:\d+}', [
         'controller' => $controller,

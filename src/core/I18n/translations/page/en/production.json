@@ -1,5 +1,11 @@
 {
   "board_due": "Due",
+  "board_eta": "ETA",
+  "board_launch": "Start production",
+  "board_launch_error": "The batch could not be scheduled.",
+  "board_launch_qty": "Quantity to produce",
+  "board_launch_success": "Batch scheduled: it has moved to prep.",
+  "board_min_batch": "minimum one batch of",
   "board_no_forecast": "the sales profile is not served: ordering falls back to stock alone",
   "board_no_plan": "the baking plan is not served: no stage is known",
   "board_no_stock": "live stock is not served",

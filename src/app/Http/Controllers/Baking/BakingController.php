@@ -106,6 +106,37 @@ class BakingController extends Controller
     }
 
     /**
+     * POST /ajax/baking
+     *
+     * Corps : { id_product, quantity, id_employee? }
+     *
+     * Programme une fournée. Appelé depuis l'écran de production quand une
+     * tuile annonce un manque : la fournée entre au plan, et le produit passe
+     * aussitôt en « préparation ». C'est le serveur qui choisit le four et les
+     * horaires — la PWA ne connaît pas l'occupation des fours.
+     */
+    public function ajaxCreate(): void
+    {
+        $input = json_decode(file_get_contents('php://input') ?: '', true);
+
+        $idProduct = (int)($input['id_product'] ?? 0);
+        $quantity  = (float)($input['quantity'] ?? 0);
+
+        if ($idProduct <= 0 || $quantity <= 0) {
+            $this->json(['success' => false, 'description' => 'invalid_payload'], 400)->send();
+            return;
+        }
+
+        $response = $this->bakingService->planBatch(
+            $idProduct,
+            $quantity,
+            isset($input['id_employee']) ? (int)$input['id_employee'] : null
+        );
+
+        $this->json($response, ($response['success'] ?? false) ? 200 : 502)->send();
+    }
+
+    /**
      * PATCH /ajax/baking/{id}
      *
      * Corps : { status } — ou rien, et l'étape suivante est déduite.

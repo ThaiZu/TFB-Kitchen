@@ -1,5 +1,11 @@
 {
   "board_due": "Deadline",
+  "board_eta": "ETA",
+  "board_launch": "Productie starten",
+  "board_launch_error": "Het baksel kon niet worden ingepland.",
+  "board_launch_qty": "Te produceren hoeveelheid",
+  "board_launch_success": "Baksel ingepland: het staat nu in voorbereiding.",
+  "board_min_batch": "minimaal één baksel van",
   "board_no_forecast": "het verkoopprofiel wordt niet geleverd: de volgorde gaat alleen op voorraad",
   "board_no_plan": "het bakplan wordt niet geleverd: geen enkele fase is bekend",
   "board_no_stock": "de live voorraad wordt niet geleverd",

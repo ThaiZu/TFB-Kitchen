@@ -1,5 +1,11 @@
 {
   "board_due": "Termin",
+  "board_eta": "ETA",
+  "board_launch": "Uruchom produkcję",
+  "board_launch_error": "Nie udało się zaplanować wypieku.",
+  "board_launch_qty": "Ilość do wyprodukowania",
+  "board_launch_success": "Wypiek zaplanowany: przeszedł do przygotowania.",
+  "board_min_batch": "minimum jeden wypiek po",
   "board_no_forecast": "profil sprzedaży nie jest podawany: kolejność opiera się tylko na stanie",
   "board_no_plan": "plan pieczenia nie jest podawany: żaden etap nie jest znany",
   "board_no_stock": "stan magazynowy na żywo nie jest podawany",

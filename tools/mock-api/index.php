@@ -390,6 +390,69 @@ if ($method === 'GET' && $m('/shops/\d+/baking')) {
     ]);
 }
 
+// Programmer une fournée depuis un manque constaté en production.
+// C'est le serveur qui place la fournée : ici, au plus tôt — dans dix minutes,
+// sur un four au hasard. Un vrai back-office tiendrait compte de l'occupation.
+if ($method === 'POST' && $m('/shops/\d+/baking')) {
+    $in  = body();
+    $idp = (int)($in['id_product'] ?? 0);
+    $qty = (float)($in['quantity'] ?? 0);
+    if ($idp <= 0 || $qty <= 0) {
+        ko('invalid_payload', 422);
+    }
+
+    $produit = null;
+    foreach (mock_products() as $p) {
+        if ((int)$p['id_product'] === $idp) {
+            $produit = $p;
+        }
+    }
+    if ($produit === null) {
+        ko('product_not_found', 404);
+    }
+
+    $now       = now_minutes();
+    $prepStart = $now + 10;
+    $prep      = 15;
+    $cook      = max(10, (int)($produit['production_lead_minutes'] ?? 20));
+    $clock     = fn(int $m) => sprintf('%02d:%02d', intdiv(max(0, $m), 60) % 24, max(0, $m) % 60);
+    $ovens     = mock_ovens();
+    $four      = $ovens[$idp % count($ovens)];
+
+    $batch = [
+        'id'                       => random_int(7000, 7999),
+        'id_product'               => $idp,
+        'name'                     => $produit['name'],
+        'category_name'            => $produit['category_name'],
+        'quantity'                 => $qty,
+        'unit_name'                => $produit['unit_name'] ?? 'pc',
+        'id_oven'                  => $four['id'],
+        'oven_name'                => $four['name'],
+        'temperature'              => 180,
+        'prep_start'               => $clock($prepStart),
+        'prep_minutes'             => $prep,
+        'cook_start'               => $clock($prepStart + $prep + 5),
+        'cook_minutes'             => $cook,
+        'finish_type'              => 'LOT',
+        'finish_label'             => 'Refroidissement',
+        'finish_minutes'           => 10,
+        'finish_per_piece_minutes' => 0,
+        'shelf_delay_minutes'      => 5,
+        'status'                   => 'PLANNED',
+        'source'                   => strtoupper((string)($in['source'] ?? 'SHORTFALL')),
+        'prep_started_at'          => null,
+        'cook_started_at'          => null,
+        'finish_started_at'        => null,
+    ];
+
+    mutate(function (array $s) use ($batch) {
+        $s['batches'][] = $batch;
+        return $s;
+    });
+
+    ok($batch);
+}
+
 if ($method === 'PATCH' && $m('/baking/(\d+)', $vars)) {
     $id     = (int)$vars[1];
     $in     = body();

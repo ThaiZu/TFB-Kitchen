@@ -159,6 +159,8 @@ class BakingBatchModel implements JsonSerializable
     public function getPrepStartClock(): string { return self::toClock($this->prepStart); }
     public function getCookStartClock(): string { return self::toClock($this->cookStart); }
     public function getFinishStartClock(): string { return self::toClock($this->getFinishStart()); }
+    /** Fin de finition : l'ETA du produit, avant le délai de mise en rayon. */
+    public function getFinishEndClock(): string { return self::toClock($this->getFinishEnd()); }
 
     // ── Étape en cours ───────────────────────────────────────────────────
     public function getStage(): string

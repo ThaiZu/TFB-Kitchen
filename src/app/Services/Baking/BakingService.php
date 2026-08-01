@@ -168,6 +168,36 @@ class BakingService
         return ['from' => $from, 'to' => $to, 'hours' => $hours];
     }
 
+    /**
+     * Programme une fournée pour combler un manque constaté.
+     *
+     * L'écran de production voit qu'il manquera 24 croissants ; ce geste crée
+     * la fournée correspondante, qui apparaît aussitôt dans le plan de cuisson
+     * et fait passer le produit en « préparation ». Anticiper, c'est ça : on
+     * ne découvre pas la rupture au moment où la vitrine est vide.
+     */
+    public function planBatch(int $idProduct, float $quantity, ?int $employeeId = null): array
+    {
+        $shopId = $this->getShopId();
+        if ($shopId <= 0) {
+            return ['success' => false, 'description' => 'shop_unknown'];
+        }
+
+        $payload = [
+            'id_product' => $idProduct,
+            'quantity'   => $quantity,
+            // Dit au serveur d'où vient la demande : une fournée programmée
+            // depuis un manque constaté ne se planifie pas comme une fournée
+            // de routine, elle est attendue au plus tôt.
+            'source'     => 'SHORTFALL',
+        ];
+        if ($employeeId !== null) {
+            $payload['id_employee'] = $employeeId;
+        }
+
+        return $this->bakingRepository->createBatch($shopId, $payload);
+    }
+
     /** Fait avancer une fournée. Renvoie la réponse brute de l'API. */
     public function advance(int $batchId, string $status, ?int $employeeId = null, ?int $allottedMinutes = null): array
     {

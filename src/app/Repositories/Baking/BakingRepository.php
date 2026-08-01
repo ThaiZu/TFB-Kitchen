@@ -50,6 +50,18 @@ class BakingRepository
         ];
     }
 
+    /**
+     * Programme une fournée.
+     *
+     * C'est le serveur qui décide du four et des horaires : la PWA ne connaît
+     * ni l'occupation des fours, ni les fournées des autres postes. Elle dit
+     * quoi et combien ; le plan de charge, c'est le back-office.
+     */
+    public function createBatch(int $shopId, array $payload): array
+    {
+        return $this->apiClient->post("/shops/{$shopId}/baking", $payload);
+    }
+
     /** Fait avancer une fournée d'une étape. Le serveur horodate. */
     public function advance(int $batchId, string $status, ?int $employeeId = null, ?int $allottedMinutes = null): array
     {
