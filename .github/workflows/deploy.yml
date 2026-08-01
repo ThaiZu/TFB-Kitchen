@@ -127,6 +127,79 @@ jobs:
             -e "ssh -p ${{ vars.SSH_PORT || '22' }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
             ./ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:$APP_DIR/"
 
+      # ── Serveur d'API bouchon (optionnel) ────────────────────────────────
+      # Activé par la variable de dépôt USE_MOCK_API = true.
+      #
+      # Les endpoints de Production et Cuisson n'existent pas encore côté
+      # back-office : sans cela, ces deux écrans n'affichent que leur état
+      # « pas encore servi par l'API ». Le bouchon les sert avec des données de
+      # démonstration et RELAIE tout le reste vers l'API réelle — sinon on
+      # verrait les nouveaux modules au prix du tableau de bord, des
+      # checklists, des commandes et de la base de connaissances.
+      #
+      # Il écoute sur 127.0.0.1 : joignable par l'app PHP sur la même machine,
+      # jamais depuis Internet. C'est ce qui rend acceptable un service qui
+      # n'authentifie rien — mais cela reste réservé à ce serveur de test.
+      #
+      # Pour revenir à l'API réelle : passer USE_MOCK_API à false (ou la
+      # supprimer) et relancer le workflow. Le .htaccess du dépôt reprend la
+      # main et le processus est arrêté.
+      - name: Mock API — start or stop, then point .htaccess at it
+        env:
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          APP_DIR='${{ vars.APP_DIR || '/var/www/app/pwa_kitchen' }}'
+          PORT='${{ vars.MOCK_API_PORT || '8090' }}'
+          REAL='${{ vars.REAL_API_BASE || 'https://atelierby.tfbuddy.com/api/v1' }}'
+          USE='${{ vars.USE_MOCK_API || 'false' }}'
+          sshpass -e ssh -p ${{ vars.SSH_PORT || '22' }} \
+            -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "APP_DIR='$APP_DIR' PORT='$PORT' REAL='$REAL' USE='$USE' bash -s" << 'REMOTE'
+          set -e
+          HT="$APP_DIR/public/.htaccess"
+
+          # Toujours repartir d'un processus propre : le rsync vient de
+          # remplacer le code du bouchon, l'ancien tournerait sur l'ancien.
+          pkill -f "tools/mock-api/index.php" 2>/dev/null || true
+          sleep 1
+
+          if [ "$USE" != "true" ]; then
+            echo "USE_MOCK_API != true — bouchon arrêté, .htaccess du dépôt conservé."
+            grep -n 'KITCHEN_API_BASE' "$HT" || true
+            exit 0
+          fi
+
+          command -v php >/dev/null || { echo "php CLI absent du serveur — bouchon impossible"; exit 1; }
+
+          cd "$APP_DIR"
+          # PHP_CLI_SERVER_WORKERS : le serveur intégré traite une requête à la
+          # fois. Comme le bouchon relaie lui-même vers l'API réelle, un seul
+          # ouvrier ferait la queue derrière chaque appel relayé.
+          PHP_CLI_SERVER_WORKERS=4 MOCK_API_PASSTHROUGH="$REAL" \
+            setsid nohup php -S 127.0.0.1:"$PORT" tools/mock-api/index.php \
+            > "$APP_DIR/mock-api.log" 2>&1 < /dev/null &
+          sleep 2
+
+          # Vérifier AVANT de basculer le .htaccess : un bouchon muet couplé à
+          # un .htaccess déjà basculé casserait le site entier.
+          code=$(curl -s -o /dev/null -m 5 -w '%{http_code}' "http://127.0.0.1:$PORT/public/shops" || echo 000)
+          echo "  bouchon /public/shops → HTTP $code"
+          if [ "$code" != "200" ]; then
+            echo "  le bouchon ne répond pas — .htaccess laissé sur l'API réelle"
+            tail -20 "$APP_DIR/mock-api.log" || true
+            exit 1
+          fi
+          code=$(curl -s -o /dev/null -m 15 -w '%{http_code}' "http://127.0.0.1:$PORT/shops/1/baking" || echo 000)
+          echo "  bouchon /shops/1/baking → HTTP $code"
+
+          sed -i "s#^SetEnv KITCHEN_API_BASE .*#SetEnv KITCHEN_API_BASE http://127.0.0.1:$PORT#" "$HT"
+          grep -n 'KITCHEN_API_BASE' "$HT"
+          echo "  OK — l'app pointe sur le bouchon, qui relaie le reste vers $REAL"
+          echo "  NOTE : le processus ne survit pas à un redémarrage du serveur ;"
+          echo "         relancer ce workflow le remet en route."
+          REMOTE
+
       - name: Verify served page + theme assets on the server
         env:
           SSHPASS: ${{ secrets.SSH_PASSWORD }}
