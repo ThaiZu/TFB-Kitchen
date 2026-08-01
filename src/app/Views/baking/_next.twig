@@ -18,6 +18,20 @@
 } %}
 {% set kinds = { 'start_prep': 'prep', 'prep_done': 'prep', 'bake': 'cook', 'out': 'cook', 'finish_done': 'finish' } %}
 
+{# ── La réserve ──
+   Une fournée gardée en réserve est terminée : elle a donc quitté la frise et
+   les ordres, et plus rien à l'écran ne rappelle qu'elle attend d'être portée.
+   Sans cette bande, « garder en réserve » voulait dire « oublier ».
+
+   Elle vit sur la tablette qui a le plateau dans les mains (sessionStorage),
+   et pas côté serveur : une autre tablette n'a pas à être avertie d'un plateau
+   qu'elle ne voit pas, et le serveur n'a rien à enregistrer tant que le produit
+   n'est pas en vente. #}
+<div class="bk-reserve mt-3" id="bkReserve" hidden data-today="{{ today | default('') }}">
+    <p class="bk-reserve-t">{{ translations.reserve_title | default('En réserve — pas encore en vente') }}</p>
+    <div id="bkReserveList"></div>
+</div>
+
 {% if orders is not empty %}
     {% set lead = orders|first %}
 
@@ -156,8 +170,12 @@
          role="dialog" aria-modal="true" aria-labelledby="bkShelfTitle">
         <header class="bk-sheet-head">
             <p class="bk-sheet-kicker">{{ translations.shelf_step_kicker | default('Fournée terminée') }}</p>
+            {# La croix et « garder en réserve » sont la même sortie : deux
+               libellés pour un seul geste laissaient croire à deux issues, dont
+               une qui aurait annulé quelque chose. Rien n'est annulable ici —
+               la fournée est faite. #}
             <button type="button" class="bk-sheet-x" id="bkShelfClose"
-                    aria-label="{{ translations.close | default('Fermer') }}">
+                    aria-label="{{ translations.shelf_step_later | default('Garder en réserve') }}">
                 {{ icons.svg('x', 18) }}
             </button>
         </header>
@@ -187,8 +205,17 @@
             {{ icons.svg('store', 19) }}
             {{ translations.shelf_step_go | default('Mettre en magasin') }}
         </button>
+        {# « Plus tard » ne disait pas ce qu'il laissait derrière lui, et pesait
+           autant que l'enregistrement : même taille, même forme, un bouton
+           plein contre un bouton plein. Or l'un met le produit en vente et
+           l'autre ne fait rien. Il devient un lien, et il écrit sa
+           conséquence — c'est la seule information qui manquait pour choisir. #}
         <button type="button" class="bk-sheet-later" id="bkShelfLater">
-            {{ translations.shelf_step_later | default('Plus tard') }}
+            {# Le soulignement ne porte que sur le libellé : appliqué au bouton
+               entier, il barre aussi la conséquence, qui n'est pas cliquable et
+               se met alors à ressembler à un second lien. #}
+            <span class="bk-later-lbl">{{ translations.shelf_step_later | default('Garder en réserve') }}</span>
+            <small>{{ translations.shelf_step_later_hint | default("le produit ne sera pas en vente — rappel gardé en haut de l'atelier") }}</small>
         </button>
     </div>
 </div>

@@ -235,6 +235,64 @@
     }
     .bk-sheet-go[disabled] { opacity: .55; cursor: default; }
 
+    /* ── Le second temps : mettre en magasin ─────────────────────────────
+       Le rouge est la couleur de la production ; le vert est celui de la mise
+       en vente, partout ailleurs dans l'application. Un bouton « En rayon »
+       rouge rompait ce lien au seul endroit où il compte le plus. */
+    .bk-recall.f-shelf { background: var(--c-vert, #2D7A3E); }
+    .bk-sheet-go-shelf { background: var(--c-vert, #2D7A3E); }
+
+    /* Enregistrer et remettre à plus tard ne sont pas deux options de même
+       poids : l'une met le produit en vente, l'autre ne fait rien. Deux
+       boutons pleins côte à côte le laissaient croire. */
+    .bk-sheet-later {
+        display: block; width: 100%; margin-top: 10px; padding: 11px 8px;
+        border: 0; background: none;
+        color: var(--c-muted, #7a7168);
+        font-family: inherit; font-size: .84rem; font-weight: 700;
+        cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    /* Le soulignement ne porte que sur le libellé : posé sur le bouton, il
+       barrerait aussi la conséquence — qui n'est pas cliquable et passerait
+       pour un second lien. Une décoration ne se retire pas sur un descendant. */
+    .bk-later-lbl { text-decoration: underline; text-underline-offset: 3px; }
+    .bk-sheet-later small {
+        display: block; margin-top: 3px; font-size: .72rem; font-weight: 500;
+        opacity: .8;
+    }
+
+    /* ── La réserve ──────────────────────────────────────────────────────
+       Une fournée gardée en réserve n'est pas en vente, et rien ailleurs ne le
+       rappelle : la fournée est terminée, elle a donc quitté la frise et les
+       ordres. Sans cette bande, « plus tard » voulait dire « jamais ». */
+    .bk-reserve {
+        background: #fff;
+        border: 1px solid var(--c-vert, #2D7A3E);
+        border-left: 4px solid var(--c-vert, #2D7A3E);
+        border-radius: var(--r-lg, 18px); padding: 13px 15px; margin-bottom: 14px;
+    }
+    .bk-reserve[hidden] { display: none; }
+    .bk-reserve-t {
+        margin: 0 0 9px; font-size: .72rem; font-weight: 800;
+        letter-spacing: .06em; text-transform: uppercase; color: var(--c-vert, #2D7A3E);
+    }
+    .bk-reserve-row {
+        display: flex; align-items: center; gap: 11px;
+        padding: 8px 0; border-top: 1px solid var(--c-line, rgba(36,26,22,.07));
+    }
+    .bk-reserve-row:first-of-type { border-top: 0; }
+    .bk-reserve-x { flex: 1; min-width: 0; }
+    .bk-reserve-x b { display: block; font-size: .92rem; font-weight: 700; overflow-wrap: anywhere; }
+    .bk-reserve-x small { display: block; margin-top: 1px; font-size: .72rem; color: var(--c-muted, #7a7168); }
+    .bk-reserve-go {
+        flex: 0 0 auto; min-height: 44px; padding: 0 15px;
+        display: inline-flex; align-items: center; gap: 7px;
+        border: 0; border-radius: var(--r-md, 13px);
+        background: var(--c-vert, #2D7A3E); color: #fff;
+        font-family: inherit; font-size: .85rem; font-weight: 800;
+        cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+
     /* Badges d'employés : mêmes que ceux des checklists, à dessein — c'est le
        même geste, « je dis qui l'a fait ». */
     .emp-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 9px; }

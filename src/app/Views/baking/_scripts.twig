@@ -170,6 +170,76 @@
         var shelfQty = 0;
         var shelfMax = 0;
 
+        // ── La réserve ──
+        // Une fournée terminée mais pas portée a quitté la frise et les ordres :
+        // sans trace, « garder en réserve » voudrait dire « oublier ». On la
+        // garde sur CETTE tablette — c'est elle qui a le plateau dans les mains,
+        // et le serveur n'a rien à enregistrer tant que rien n'est en vente.
+        var resBox  = document.getElementById('bkReserve');
+        var RES_KEY = 'kitchen.shelfReserve';
+        var TODAY   = resBox ? (resBox.dataset.today || '') : '';
+        var RES = {
+            title: {{ (translations.reserve_go | default('Mettre en magasin')) | json_encode | raw }}
+        };
+
+        function resLoad() {
+            try {
+                var raw = JSON.parse(window.sessionStorage.getItem(RES_KEY) || '[]');
+                // Une réserve d'hier n'a plus de sens : le plateau a été porté,
+                // vendu ou jeté, mais il n'attend plus personne.
+                return Array.isArray(raw) ? raw.filter(function (e) { return e && e.day === TODAY; }) : [];
+            } catch (err) { return []; }
+        }
+
+        function resSave(list) {
+            try { window.sessionStorage.setItem(RES_KEY, JSON.stringify(list)); } catch (err) {}
+        }
+
+        function resPaint() {
+            if (!resBox) return;
+            var list = resLoad();
+            var box  = document.getElementById('bkReserveList');
+            box.textContent = '';
+
+            list.forEach(function (e) {
+                var row = document.createElement('div');
+                row.className = 'bk-reserve-row';
+
+                var txt = document.createElement('span');
+                txt.className = 'bk-reserve-x';
+                var b = document.createElement('b');
+                b.textContent = e.name || '—';
+                var s = document.createElement('small');
+                s.textContent = e.qty + ' ' + (e.unit || 'pc');
+                txt.appendChild(b); txt.appendChild(s);
+
+                var go = document.createElement('button');
+                go.type = 'button';
+                go.className = 'bk-reserve-go';
+                go.dataset.reserve = e.id;
+                go.textContent = RES.title;
+
+                row.appendChild(txt); row.appendChild(go);
+                box.appendChild(row);
+            });
+
+            resBox.hidden = list.length === 0;
+        }
+
+        function resAdd(entry) {
+            var list = resLoad().filter(function (e) { return e.id !== entry.id; });
+            list.push(entry);
+            resSave(list);
+            resPaint();
+        }
+
+        function resDrop(id) {
+            resSave(resLoad().filter(function (e) { return e.id !== id; }));
+            resPaint();
+        }
+
+        resPaint();
+
         function paintShelf() {
             document.getElementById('bkShelfQty').textContent = shelfQty;
             var hint = document.getElementById('bkShelfHint');
@@ -230,14 +300,43 @@
             var trigger = e.target.closest('.bk-order[data-next], .bk-act[data-next]');
             if (trigger && trigger.dataset.next) { open(trigger); return; }
 
+            // La réserve vit hors de la feuille : ce clic doit être traité
+            // avant la sortie anticipée ci-dessous, qui ignore tout quand la
+            // feuille est fermée — et elle l'est forcément à ce moment-là.
+            var back = e.target.closest('[data-reserve]');
+            if (back) {
+                var entry = resLoad().filter(function (x) { return x.id === back.dataset.reserve; })[0];
+                if (entry) {
+                    order = { id: entry.id, next: 'DONE', product: entry.product,
+                              qty: entry.qty, unit: entry.unit, name: entry.name };
+                    openShelf();
+                    sheet.hidden = false;
+                }
+                return;
+            }
+
             if (sheet.hidden) return;
 
             if (e.target.closest('#bkAssignClose') || e.target === sheet) { close(); return; }
 
-            // « Plus tard » ferme sans porter : la fournée reste à mettre en
-            // rayon, et l'écran Besoins la reprendra.
+            // « Garder en réserve » : rien n'est enregistré côté serveur, donc
+            // rien à recharger — un rechargement ferait clignoter l'écran et
+            // perdrait le défilement pour aucune donnée neuve. On ferme, et on
+            // laisse la trace qui manquait.
             if (e.target.closest('#bkShelfClose') || e.target.closest('#bkShelfLater')) {
-                window.location.reload();
+                if (order && order.product) {
+                    resAdd({
+                        id:   String(order.id),
+                        day:  TODAY,
+                        name: order.name || '',
+                        // La quantité affichée au moment où on renonce : c'est
+                        // celle qu'on a devant soi, pas la fournée théorique.
+                        qty:  shelfQty > 0 ? shelfQty : shelfMax,
+                        unit: order.unit || 'pc',
+                        product: order.product
+                    });
+                }
+                close();
                 return;
             }
 
@@ -270,6 +369,9 @@
                         return;
                     }
                     showSnack(true, SH.ok);
+                    // Porté : la réserve n'a plus lieu d'être, et il ne faut
+                    // surtout pas la laisser reproposer le même plateau.
+                    resDrop(String(order.id));
                     window.location.reload();
                 })
                 .catch(function () {
