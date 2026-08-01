@@ -151,13 +151,23 @@ jobs:
           APP_DIR='${{ vars.APP_DIR || '/var/www/app/pwa_kitchen' }}'
           PORT='${{ vars.MOCK_API_PORT || '8090' }}'
           REAL='${{ vars.REAL_API_BASE || 'https://atelierby.tfbuddy.com/api/v1' }}'
-          USE='${{ vars.USE_MOCK_API || 'false' }}'
+          # Lu dans les deux onglets : « Variables » est le bon endroit, mais
+          # créer USE_MOCK_API en « Secrets » est une confusion fréquente, et
+          # vars. ne verrait alors rien.
+          USE_RAW='${{ vars.USE_MOCK_API || secrets.USE_MOCK_API || 'false' }}'
           sshpass -e ssh -p ${{ vars.SSH_PORT || '22' }} \
             -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
             "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
-            "APP_DIR='$APP_DIR' PORT='$PORT' REAL='$REAL' USE='$USE' bash -s" << 'REMOTE'
+            "APP_DIR='$APP_DIR' PORT='$PORT' REAL='$REAL' USE_RAW='$USE_RAW' bash -s" << 'REMOTE'
           set -e
           HT="$APP_DIR/public/.htaccess"
+
+          # « True », « TRUE », « 1 », « yes », un espace en trop : tout cela
+          # veut dire oui. Seule la valeur normalisée est affichée — si le
+          # réglage vient d'un secret, sa valeur brute ne doit pas fuir au log.
+          USE=$(printf '%s' "$USE_RAW" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')
+          case "$USE" in true|1|yes|on) USE=true ;; *) USE=false ;; esac
+          echo "USE_MOCK_API (normalisé) = $USE  [longueur brute : ${#USE_RAW}]"
 
           # Toujours repartir d'un processus propre : le rsync vient de
           # remplacer le code du bouchon, l'ancien tournerait sur l'ancien.
