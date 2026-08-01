@@ -34,7 +34,10 @@
                         data-next="{{ b.nextStatus }}"
                         data-verb="{{ verbs[b.actionKey] | default('—') }}"
                         data-name="{{ b.name | default('—') }}"
-                        data-minutes="{{ b.plannedMinutes }}">
+                        data-minutes="{{ b.plannedMinutes }}"
+                        data-stage="{{ k }}"
+                        data-meta="{{ b.quantity|number_format(0, ',', ' ') }} {{ b.unitName | default('pc') }}
+                                   {{- b.ovenName ? ' · ' ~ b.ovenName : '' }} · {{ b.dueClock }}">
                     <span class="bk-order-verb">{{ verbs[b.actionKey] | default('—') }}</span>
                     <span class="bk-order-what">
                         <b>{{ b.name | default('—') }}</b>
@@ -68,72 +71,75 @@
         </div>
     </div>
 
-    {# ── Attribution ──
-       Un ordre se donne à quelqu'un, avec un temps. Les deux tiennent dans la
-       même feuille parce qu'ils forment un seul geste : « Nathan prend
-       l'enfournement, vingt minutes ». #}
-    <div class="bk-sheet" id="bkAssign" hidden>
-        <div class="bk-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="bkAssignTitle">
-            <header class="bk-sheet-head">
-                <p class="bk-sheet-kicker">{{ translations.order_kicker | default('Ordre à donner') }}</p>
-                <button type="button" class="bk-sheet-x" id="bkAssignClose"
-                        aria-label="{{ translations.close | default('Fermer') }}">
-                    {{ icons.svg('x', 18) }}
-                </button>
-            </header>
-
-            {# L'ordre est répété ici, en grand, avant le choix de l'opérateur.
-               Entre le tap et la validation il y a deux listes à parcourir et
-               un réglage : le temps de choisir un nom, on ne sait plus si on
-               enfournait ou si on sortait du four. #}
-            <div class="bk-recall" id="bkRecall">
-                <span class="bk-recall-verb" id="bkAssignTitle">—</span>
-                <span class="bk-recall-what">
-                    <b id="bkAssignSub">—</b>
-                    <span id="bkAssignMeta"></span>
-                </span>
-            </div>
-
-            <p class="bk-sheet-lbl">{{ translations.order_who | default("Qui s'en occupe ?") }}</p>
-
-            {% if not staff_available %}
-                <p class="emp-note">
-                    {{ translations.staff_not_served | default("L'équipe n'est pas encore servie par l'API : l'ordre peut être validé sans nom.") }}
-                </p>
-            {% elseif staff is empty %}
-                <p class="emp-note">{{ translations.no_employees | default('Aucun employé disponible.') }}</p>
-            {% else %}
-                <div class="emp-grid" id="bkStaff">
-                    {% for e in staff %}
-                        <button type="button" class="emp-badge" data-emp-id="{{ e.id }}">
-                            <span class="emp-initials">{{ e.initials ?: '—' }}</span>
-                            <span class="emp-name">{{ e.name }}</span>
-                        </button>
-                    {% endfor %}
-                </div>
-                {% if not schedule_known %}
-                    {# Un filtre annoncé mais inopérant tromperait : tant que
-                       l'API ne dit pas qui est de service, on montre tout le
-                       monde et on l'écrit. #}
-                    <p class="emp-note">
-                        {{ translations.schedule_not_served | default("L'API ne dit pas encore qui est de service : toute l'équipe est proposée.") }}
-                    </p>
-                {% endif %}
-            {% endif %}
-
-            <p class="bk-sheet-lbl">{{ translations.order_time | default('Temps imparti') }}</p>
-            <div class="bk-time">
-                <button type="button" class="bk-time-step" data-step="-1" aria-label="− 5 min">−</button>
-                <span class="bk-time-val"><b id="bkTimeVal">0</b> min</span>
-                <button type="button" class="bk-time-step" data-step="1" aria-label="+ 5 min">+</button>
-            </div>
-            <p class="bk-sheet-hint" id="bkTimeHint"></p>
-
-            <button type="button" class="bk-sheet-go" id="bkAssignGo">
-                <span id="bkAssignSpin" class="spinner-border spinner-border-sm d-none"></span>
-                {{ icons.svg('check', 19) }}
-                <span id="bkAssignGoLabel">{{ translations.order_confirm | default('Valider') }}</span>
-            </button>
-        </div>
-    </div>
 {% endif %}
+
+{# ── Attribution ──
+   Un ordre se donne à quelqu'un, avec un temps. Les deux tiennent dans la même
+   feuille parce qu'ils forment un seul geste : « Nathan prend l'enfournement,
+   vingt minutes ». Une seule feuille pour tout l'écran — le bouton d'une carte
+   ouvre exactement la même, sinon deux chemins pour la même action donneraient
+   deux enregistrements différents, l'un avec un nom et l'autre sans. #}
+<div class="bk-sheet" id="bkAssign" hidden>
+    <div class="bk-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="bkAssignTitle">
+        <header class="bk-sheet-head">
+            <p class="bk-sheet-kicker">{{ translations.order_kicker | default('Ordre à donner') }}</p>
+            <button type="button" class="bk-sheet-x" id="bkAssignClose"
+                    aria-label="{{ translations.close | default('Fermer') }}">
+                {{ icons.svg('x', 18) }}
+            </button>
+        </header>
+
+        {# L'ordre est répété ici, en grand, avant le choix de l'opérateur.
+           Entre le tap et la validation il y a deux listes à parcourir et
+           un réglage : le temps de choisir un nom, on ne sait plus si on
+           enfournait ou si on sortait du four. #}
+        <div class="bk-recall" id="bkRecall">
+            <span class="bk-recall-verb" id="bkAssignTitle">—</span>
+            <span class="bk-recall-what">
+                <b id="bkAssignSub">—</b>
+                <span id="bkAssignMeta"></span>
+            </span>
+        </div>
+
+        <p class="bk-sheet-lbl">{{ translations.order_who | default("Qui s'en occupe ?") }}</p>
+
+        {% if not staff_available %}
+            <p class="emp-note">
+                {{ translations.staff_not_served | default("L'équipe n'est pas encore servie par l'API : l'ordre peut être validé sans nom.") }}
+            </p>
+        {% elseif staff is empty %}
+            <p class="emp-note">{{ translations.no_employees | default('Aucun employé disponible.') }}</p>
+        {% else %}
+            <div class="emp-grid" id="bkStaff">
+                {% for e in staff %}
+                    <button type="button" class="emp-badge" data-emp-id="{{ e.id }}">
+                        <span class="emp-initials">{{ e.initials ?: '—' }}</span>
+                        <span class="emp-name">{{ e.name }}</span>
+                    </button>
+                {% endfor %}
+            </div>
+            {% if not schedule_known %}
+                {# Un filtre annoncé mais inopérant tromperait : tant que
+                   l'API ne dit pas qui est de service, on montre tout le
+                   monde et on l'écrit. #}
+                <p class="emp-note">
+                    {{ translations.schedule_not_served | default("L'API ne dit pas encore qui est de service : toute l'équipe est proposée.") }}
+                </p>
+            {% endif %}
+        {% endif %}
+
+        <p class="bk-sheet-lbl">{{ translations.order_time | default('Temps imparti') }}</p>
+        <div class="bk-time">
+            <button type="button" class="bk-time-step" data-step="-1" aria-label="− 5 min">−</button>
+            <span class="bk-time-val"><b id="bkTimeVal">0</b> min</span>
+            <button type="button" class="bk-time-step" data-step="1" aria-label="+ 5 min">+</button>
+        </div>
+        <p class="bk-sheet-hint" id="bkTimeHint"></p>
+
+        <button type="button" class="bk-sheet-go" id="bkAssignGo">
+            <span id="bkAssignSpin" class="spinner-border spinner-border-sm d-none"></span>
+            {{ icons.svg('check', 19) }}
+            <span id="bkAssignGoLabel">{{ translations.order_confirm | default('Valider') }}</span>
+        </button>
+    </div>
+</div>

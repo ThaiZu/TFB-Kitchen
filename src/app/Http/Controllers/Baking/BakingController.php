@@ -34,6 +34,7 @@ class BakingController extends Controller
                 'now'            => $this->bakingService->nowMinutes(),
                 'now_clock'      => date('H:i'),
                 'window'         => ['from' => 0, 'to' => 60, 'hours' => []],
+                'plan'           => [],
                 'orders'         => [],
                 'staff'          => [],
                 'staff_available'=> false,
@@ -59,10 +60,15 @@ class BakingController extends Controller
             'counts'         => $this->bakingService->countByStage($active),
             'now'            => $now,
             'now_clock'      => BakingBatchModel::toClock($now),
-            // La frise se cadre sur ce qui est affiché : filtrer resserre aussi
-            // la fenêtre, au lieu de laisser deux fournées perdues dans la
-            // largeur de la matinée.
-            'window'         => $this->bakingService->window($shown ?: $active, $now),
+            // La frise montre la journée entière, terminé compris : c'est le
+            // prévisionnel du jour, et une fournée sortie à 6 h fait partie de
+            // ce qu'on a produit. Les cartes, elles, ne gardent que l'actif —
+            // on ne tape pas sur une fournée finie.
+            'plan'           => $this->bakingService->dayPlan($plan['batches'], $stage),
+            'window'         => $this->bakingService->window(
+                $this->bakingService->dayPlan($plan['batches'], $stage) ?: $active,
+                $now
+            ),
             'orders'         => $this->bakingService->orders($shown),
             'staff'          => $this->staffService->onDuty($staff),
             'staff_available'=> $staff !== null,

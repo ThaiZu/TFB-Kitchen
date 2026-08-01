@@ -106,16 +106,6 @@
         .catch(function () { showSnack(false, ERR); if (onFail) onFail(); });
     }
 
-    // Le bouton d'une carte reste direct : on est déjà devant la fournée, on
-    // sait ce qu'on fait et qui on est. C'est l'ordre du panneau, lui, qui se
-    // distribue — et qui demande donc à qui, et pour combien de temps.
-    document.addEventListener('click', function (e) {
-        var btn = e.target.closest('.bk-act[data-next]');
-        if (!btn || !btn.dataset.next) return;
-        btn.disabled = true;
-        advance(btn.dataset.id, btn.dataset.next, null, function () { btn.disabled = false; });
-    });
-
     // ── Attribuer un ordre ───────────────────────────────────────────────
     var sheet = document.getElementById('bkAssign');
     if (sheet) {
@@ -150,20 +140,13 @@
             minutes = planned;
             empId   = null;
 
-            title.textContent = btn.dataset.verb;
-            sub.textContent   = btn.dataset.name;
+            title.textContent = btn.dataset.verb || '';
+            sub.textContent   = btn.dataset.name || '';
+            meta.textContent  = (btn.dataset.meta || '').replace(/\s+/g, ' ').trim();
 
-            // Quantité, four et échéance sont déjà écrits sur l'ordre : on les
-            // recopie plutôt que de les redéclarer en attributs, pour qu'ils ne
-            // puissent pas diverger de ce qui vient d'être tapé.
-            var what = btn.querySelector('.bk-order-what span');
-            var due  = btn.querySelector('.bk-order-when b');
-            meta.textContent = [what && what.textContent.trim(), due && due.textContent.trim()]
-                .filter(Boolean).join(' · ');
-
-            // Le rappel prend la couleur de l'étape, comme l'ordre tapé :
-            // c'est ce qui dit sans lire qu'on est bien sur le même geste.
-            recall.className = 'bk-recall ' + (btn.className.match(/\bo-\w+/) || [''])[0];
+            // Le rappel prend la couleur de l'étape : c'est ce qui dit sans
+            // lire qu'on est bien sur le geste qu'on vient de taper.
+            recall.className = 'bk-recall o-' + (btn.dataset.stage || 'prep');
 
             sheet.querySelectorAll('.emp-badge').forEach(function (b) { b.classList.remove('is-active'); });
             paintTime();
@@ -173,9 +156,11 @@
 
         function close() { sheet.hidden = true; order = null; }
 
+        // Un seul chemin : ordre du panneau ou bouton de carte, c'est la même
+        // feuille et le même enregistrement.
         document.addEventListener('click', function (e) {
-            var card = e.target.closest('.bk-order[data-next]');
-            if (card && card.dataset.next) { open(card); return; }
+            var trigger = e.target.closest('.bk-order[data-next], .bk-act[data-next]');
+            if (trigger && trigger.dataset.next) { open(trigger); return; }
 
             if (sheet.hidden) return;
 

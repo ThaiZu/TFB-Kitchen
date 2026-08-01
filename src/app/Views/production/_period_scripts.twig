@@ -103,9 +103,12 @@
         .then(function (res) {
             if (!res || !res.success) { fail(MSG.launchErr); go.disabled = false; return; }
             showSnack(true, MSG.launchOk);
-            // C'est le serveur qui a choisi le four et les horaires : on relit
-            // le plan plutôt que d'inventer une place à la fournée.
-            window.location.reload();
+            // On enchaîne sur le plan de production, la fournée mise en avant :
+            // c'est là que le travail continue, et rester sur la liste
+            // obligerait à aller la chercher. Le serveur a choisi le four et
+            // les horaires, on ne les devine pas.
+            var id = res.inserted_id;
+            window.location = ROOT + '/baking' + (id > 0 ? '?focus=' + id : '');
         })
         .catch(function () { fail(MSG.launchErr); go.disabled = false; });
     });

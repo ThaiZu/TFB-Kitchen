@@ -1,8 +1,17 @@
-{# baking/index.twig — module Cuisson.
+{# baking/index.twig — module Plan de production.
+
+   « Cuisson » était trop étroit : un ressuage, un nappage, un dressage ne
+   passent pas au four, et la moitié du plan ne cuit jamais. C'est le plan de
+   production de la journée.
 
    Deux lectures superposées, et c'est délibéré : la frise répond à « où en est
-   la matinée », les cartes répondent à « qu'est-ce que je fais maintenant ».
+   la journée », les cartes répondent à « qu'est-ce que je fais maintenant ».
    On lit la première debout devant le four, on tape sur les secondes.
+
+   La frise porte la journée entière, terminé compris, avec la distinction qui
+   compte : 60 % d'opacité pour ce qui est prévu, plein pour ce qui est validé.
+   Les cartes, elles, ne gardent que l'actif — on ne tape pas sur une fournée
+   finie.
 
    Une ligne par fournée dans la frise, pas une par ressource : la ligne EST le
    cycle du produit — préparation, cuisson, finition bout à bout — et sa
@@ -14,7 +23,7 @@
 {% extends "layouts/base.twig" %}
 {% import "components/_icons.twig" as icons %}
 
-{% block title %}{{ translations.baking_title | default('Cuisson') }}{% endblock %}
+{% block title %}{{ translations.baking_title | default('Plan de production') }}{% endblock %}
 
 {% block head %}
 <style>
@@ -50,7 +59,10 @@
                 border-bottom: 1px solid var(--c-line, rgba(36,26,22,.08)); }
     .bk-ruler div { flex: 1; font-size: .68rem; font-weight: 700; color: var(--c-muted, #7a7168); }
     .bk-row { display: flex; align-items: center; gap: 12px; padding: 4px 0; }
-    .bk-row.is-waiting { opacity: .4; }
+    /* Le retrait de la ligne était le seul signal « pas commencé » ; les
+       segments le disent maintenant à 60 %. Cumulés, les deux tombaient à 24 %
+       d'opacité et la fournée devenait illisible. */
+    .bk-row.is-waiting { opacity: .8; }
     .bk-rowname { width: 178px; flex: 0 0 178px; min-width: 0; }
     .bk-rowname b { display: block; font-size: .84rem; font-weight: 700; line-height: 1.2;
                     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -61,9 +73,17 @@
     .bk-seg.s-prep   { background: #1F4F6B; border-radius: 6px 0 0 6px; }
     .bk-seg.s-cook   { background: #8D1D2C; }
     .bk-seg.s-finish { background: #C17A2A; border-radius: 0 6px 6px 0; }
+    /* Prévision ou réalité. Toute la frise est du prévisionnel tant que
+       personne n'a validé : à 60 % elle se lit comme une intention, en plein
+       comme un fait. La journée se remplit sous les yeux, et ce qui reste pâle
+       est exactement ce qui reste à faire. */
+    .bk-seg.is-planned { opacity: .6; }
+    .bk-seg.is-done    { opacity: 1; }
     /* Hors filtre, l'étape s'efface au lieu de disparaître : la fournée garde
-       sa place, et on voit le contexte qui justifie l'horaire. */
+       sa place, et on voit le contexte qui justifie l'horaire. Ça l'emporte
+       sur l'opacité de prévision — les deux se cumuleraient sinon. */
     .bk-seg.is-dim { opacity: .16; }
+    .bk-shelf.is-planned { opacity: .6; }
     .bk-shelf {
         position: absolute; top: 3px; height: 24px; display: flex; align-items: center; padding: 0 9px;
         border-radius: 999px; background: var(--c-secondary, #F2C9A0); color: var(--c-on-abricot, #4a2c12);
@@ -77,6 +97,11 @@
                  font-size: .72rem; color: var(--c-muted, #7a7168); }
     .bk-legend span { display: inline-flex; align-items: center; gap: 6px; }
     .bk-sw { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
+    .bk-legend-sep {
+        padding-left: 14px; border-left: 1px solid var(--c-line-2, rgba(36,26,22,.14));
+    }
+    .bk-sw-planned { background: var(--c-ink, #241f1c); opacity: .6; }
+    .bk-sw-done    { background: var(--c-ink, #241f1c); margin-left: 8px; }
 
     /* ── Ordres ──────────────────────────────────────────────────────────
        Un ordre par ligne, le premier en gros. On ne lit pas une liste ici :
@@ -343,9 +368,9 @@
 {% block page_heading %}
     <div class="page-heading d-flex align-items-end justify-content-between gap-3 flex-wrap">
         <div>
-            <h3>{{ translations.baking_title | default('Cuisson') }}</h3>
+            <h3>{{ translations.baking_title | default('Plan de production') }}</h3>
             <p class="text-subtitle text-muted mb-0">
-                {{ translations.baking_subtitle | default('Replanifié en continu') }}
+                {{ translations.baking_subtitle | default('Le prévisionnel de la journée, replanifié en continu') }}
             </p>
         </div>
         <div class="app-title" style="font-family:var(--font-display);font-size:1.5rem;" id="bkClock">
@@ -363,7 +388,7 @@
         { key: 'cook',   label: translations.stage_cook  | default('Cuisson') },
         { key: 'finish', label: translations.stage_finish| default('Finition') }
     ] %}
-    <nav class="bk-filters" aria-label="{{ translations.baking_title | default('Cuisson') }}">
+    <nav class="bk-filters" aria-label="{{ translations.baking_title | default('Plan de production') }}">
         {% for s in stages %}
             <a class="bk-f bk-f-{{ s.key }} {{ active_stage == s.key ? 'is-on' : '' }}"
                href="{{ ROOT }}/baking{{ s.key == 'all' ? '' : '?stage=' ~ s.key }}"

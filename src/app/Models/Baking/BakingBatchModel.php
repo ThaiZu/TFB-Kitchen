@@ -218,6 +218,56 @@ class BakingBatchModel implements JsonSerializable
         return (int)max(0, min(100, round(($nowMinutes - $start) / ($end - $start) * 100)));
     }
 
+    // ── Prévision ou réalité ─────────────────────────────────────────────
+
+    /** Rang du statut dans le cycle, pour comparer deux avancements. */
+    private function rank(): int
+    {
+        return match ($this->status) {
+            self::STATUS_PREPARING     => 1,
+            self::STATUS_READY_TO_BAKE => 2,
+            self::STATUS_BAKING        => 3,
+            self::STATUS_FINISHING     => 4,
+            self::STATUS_DONE          => 5,
+            default                    => 0,   // PLANNED
+        };
+    }
+
+    /**
+     * Cette étape a-t-elle été validée ?
+     *
+     * Toute la frise est du prévisionnel tant que personne n'a validé. Une
+     * étape validée cesse d'être une intention et devient un fait — c'est la
+     * différence que l'écran montre en pleine opacité, le reste à 60 %.
+     *
+     * Le statut fait autorité, pas l'horloge : une cuisson dont l'heure est
+     * passée mais que personne n'a lancée reste une prévision.
+     */
+    public function isStageValidated(string $stage): bool
+    {
+        return match ($stage) {
+            // La préparation est validée dès qu'on a annoncé « prête à cuire ».
+            self::STAGE_PREP   => $this->rank() >= 2,
+            self::STAGE_COOK   => $this->rank() >= 4,
+            self::STAGE_FINISH => $this->rank() >= 5,
+            default            => false,
+        };
+    }
+
+    /** L'étape existe dans cette fournée (durée non nulle). */
+    public function hasStage(string $stage): bool
+    {
+        return match ($stage) {
+            self::STAGE_PREP   => $this->prepMinutes > 0,
+            self::STAGE_COOK   => $this->cookMinutes > 0,
+            self::STAGE_FINISH => $this->getFinishMinutes() > 0,
+            default            => false,
+        };
+    }
+
+    /** Fournée entièrement validée : la journée est faite pour celle-là. */
+    public function isFullyValidated(): bool { return $this->rank() >= 5; }
+
     // ── L'ordre à donner ─────────────────────────────────────────────────
 
     /**

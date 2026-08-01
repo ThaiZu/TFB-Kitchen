@@ -450,7 +450,10 @@ if ($method === 'POST' && $m('/shops/\d+/baking')) {
         return $s;
     });
 
-    ok($batch);
+    // `inserted_id` en tête : ApiClient::post() écarte le corps et ne remonte
+    // que message / inserted_id. Sans lui, l'écran ne saurait pas quelle
+    // fournée mettre en avant à l'arrivée.
+    ok(['inserted_id' => $batch['id'], 'message' => 'batch_planned'] + $batch);
 }
 
 if ($method === 'PATCH' && $m('/baking/(\d+)', $vars)) {

@@ -135,6 +135,31 @@ class BakingService
     }
 
     /**
+     * Le prévisionnel de la journée : tout, terminé compris, dans l'ordre des
+     * horaires.
+     *
+     * Les cartes ne montrent que l'actif — on ne tape pas sur une fournée
+     * finie. La frise, elle, répond à « où en est la journée », et une fournée
+     * sortie à 6 h en fait partie : l'effacer donnerait l'impression qu'on n'a
+     * rien fait de la matinée.
+     *
+     * @param BakingBatchModel[] $batches
+     * @return BakingBatchModel[]
+     */
+    public function dayPlan(array $batches, string $stage = 'all'): array
+    {
+        $rows = in_array($stage, self::STAGES, true)
+            // Filtrer la frise sur une étape garde les fournées qui la
+            // traversent, terminées ou non : c'est le poste qu'on regarde.
+            ? array_values(array_filter($batches, fn(BakingBatchModel $b) => $b->hasStage($stage)))
+            : array_values($batches);
+
+        usort($rows, fn(BakingBatchModel $a, BakingBatchModel $b) => $a->getPrepStart() <=> $b->getPrepStart());
+
+        return $rows;
+    }
+
+    /**
      * Fenêtre temporelle du plan de charge, arrondie à l'heure.
      *
      * Calculée sur les fournées affichées plutôt que fixée à la journée : à

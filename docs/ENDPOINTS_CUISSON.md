@@ -201,6 +201,13 @@ requête suivante.
 lot supérieur avant de l'afficher, et les boutons `−` / `+` montent par lot.
 Le serveur peut la réarrondir, mais il ne devrait pas avoir à la refuser.
 
+**La réponse doit porter `inserted_id`** — l'identifiant de la fournée créée, à
+la racine, à côté de la fournée elle-même. C'est le seul champ que le client
+HTTP de la PWA remonte d'un POST, et l'écran s'en sert pour enchaîner
+directement sur le plan avec la nouvelle fournée mise en avant. Sans lui, le
+lancement fonctionne mais retombe sur le plan entier, à charge pour l'équipe
+d'y retrouver sa fournée.
+
 ---
 
 ## 3. Faire avancer une fournée

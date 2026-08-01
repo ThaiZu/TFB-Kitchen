@@ -8,8 +8,8 @@
 
 <div class="card mt-3">
     <div class="card-body">
-        <h2 class="pr-cat-title" style="font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--c-muted);margin:0 0 12px;">
-            {{ translations.baking_overview | default("Vue d'ensemble") }}
+        <h2 class="bk-h">
+            {{ translations.baking_overview | default("Prévisionnel de la journée") }}
             {%- if active_stage != 'all' %} — {{ translations['stage_' ~ active_stage] | lower }}{% endif %}
         </h2>
 
@@ -21,7 +21,7 @@
             </div>
 
             <div id="bkRows">
-                {% for b in batches %}
+                {% for b in plan %}
                     {% set pcs = { 'prep': b.prepStart, 'cook': b.cookStart, 'finish': b.finishStart } %}
                     <div class="bk-row {{ b.isWaiting ? 'is-waiting' : '' }} {{ focus_batch == b.id ? 'is-focus' : '' }}" data-id="{{ b.id }}">
                         <div class="bk-rowname">
@@ -38,16 +38,26 @@
                                 {% endif %}
                             {% endfor %}
 
+            {# Chaque étape dit si elle est faite ou seulement prévue :
+                               60 % d'opacité pour l'intention, plein pour le
+                               validé. La frise se remplit au fil de la journée,
+                               et un coup d'œil suffit à voir ce qui reste. #}
                             {% for k, start in pcs %}
                                 {% set dur = k == 'prep' ? b.prepEnd - b.prepStart
                                            : (k == 'cook' ? b.cookEnd - b.cookStart : b.finishEnd - b.finishStart) %}
                                 {% if dur > 0 %}
-                                    <div class="bk-seg s-{{ k }} {{ active_stage != 'all' and active_stage != k ? 'is-dim' : '' }}"
-                                         style="left:{{ (start - window.from) / span * 100 }}%;width:{{ dur / span * 100 }}%"></div>
+                                    <div class="bk-seg s-{{ k }}
+                                                {{ b.isStageValidated(k) ? 'is-done' : 'is-planned' }}
+                                                {{ active_stage != 'all' and active_stage != k ? 'is-dim' : '' }}"
+                                         style="left:{{ (start - window.from) / span * 100 }}%;width:{{ dur / span * 100 }}%"
+                                         title="{{ translations['stage_' ~ k] }} — {{ b.isStageValidated(k)
+                                                    ? translations.plan_validated | default('validé')
+                                                    : translations.plan_forecast | default('prévu') }}"></div>
                                 {% endif %}
                             {% endfor %}
 
-                            <div class="bk-shelf" style="left:{{ (b.shelfTime - window.from) / span * 100 }}%">
+                            <div class="bk-shelf {{ b.isFullyValidated ? 'is-done' : 'is-planned' }}"
+                                 style="left:{{ (b.shelfTime - window.from) / span * 100 }}%">
                                 {{ b.shelfClock }}
                             </div>
                         </div>
@@ -67,6 +77,10 @@
             <span><i class="bk-sw" style="background:#8D1D2C"></i>{{ translations.stage_cook | default('Cuisson')|lower }}</span>
             <span><i class="bk-sw" style="background:#C17A2A"></i>{{ translations.stage_finish | default('Finition')|lower }}</span>
             <span><i class="bk-sw" style="background:var(--c-secondary,#F2C9A0);border-radius:999px"></i>{{ translations.baking_shelf_legend | default('mise en rayon') }}</span>
+            <span class="bk-legend-sep">
+                <i class="bk-sw bk-sw-planned"></i>{{ translations.plan_forecast | default('prévu') }}
+                <i class="bk-sw bk-sw-done"></i>{{ translations.plan_validated | default('validé') }}
+            </span>
         </div>
     </div>
 </div>

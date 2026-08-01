@@ -86,8 +86,19 @@
                                                     : translations.baking_btn_finish_done | default('Finition terminée'))
                               : b.isReadyToBake ? translations.baking_btn_bake     | default('Enfourner')
                                                 : translations.baking_btn_prep_done| default('Préparation terminée') %}
+                {# Même geste que dans le panneau d'ordres : qui s'en occupe, en
+                   combien de temps, puis on valide. Deux chemins pour la même
+                   action donnaient deux enregistrements différents — l'un avec
+                   un nom, l'autre sans. #}
                 <button type="button" class="bk-act a-{{ k }}"
-                        data-id="{{ b.id }}" data-next="{{ b.nextStatus }}">{{ action }}</button>
+                        data-id="{{ b.id }}"
+                        data-next="{{ b.nextStatus }}"
+                        data-verb="{{ action }}"
+                        data-name="{{ b.name | default('—') }}"
+                        data-minutes="{{ b.plannedMinutes }}"
+                        data-stage="{{ k }}"
+                        data-meta="{{ b.quantity|number_format(0, ',', ' ') }} {{ b.unitName | default('pc') }}
+                                   {{- b.ovenName ? ' · ' ~ b.ovenName : '' }} · {{ b.stageEndClock }}">{{ action }}</button>
             {% endif %}
         </article>
     {% endfor %}
