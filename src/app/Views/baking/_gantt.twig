@@ -1,0 +1,72 @@
+{# baking/_gantt.twig — plan de charge simplifié.
+
+   Une ligne par fournée. Les trois étapes se suivent bout à bout, puis la
+   pastille de mise en rayon : la longueur de la ligne dit combien de temps
+   sépare le début du travail de la vente. #}
+{% set span = window.to - window.from %}
+{% set span = span > 0 ? span : 60 %}
+
+<div class="card mt-3">
+    <div class="card-body">
+        <h2 class="pr-cat-title" style="font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--c-muted);margin:0 0 12px;">
+            {{ translations.baking_overview | default("Vue d'ensemble") }}
+            {%- if active_stage != 'all' %} — {{ translations['stage_' ~ active_stage] | lower }}{% endif %}
+        </h2>
+
+        <div class="bk-g" id="bkGantt"
+             data-from="{{ window.from }}" data-to="{{ window.to }}" data-stage="{{ active_stage }}">
+
+            <div class="bk-ruler">
+                {% for h in window.hours %}<div>{{ h }}</div>{% endfor %}
+            </div>
+
+            <div id="bkRows">
+                {% for b in batches %}
+                    {% set pcs = { 'prep': b.prepStart, 'cook': b.cookStart, 'finish': b.finishStart } %}
+                    <div class="bk-row {{ b.isWaiting ? 'is-waiting' : '' }}" data-id="{{ b.id }}">
+                        <div class="bk-rowname">
+                            <b>{{ b.name | default('—') }}</b>
+                            <span>
+                                {{- b.ovenName ? b.ovenName ~ ' · ' : '' }}
+                                {{- b.quantity|number_format(0, ',', ' ') }} {{ b.unitName | default('pc') -}}
+                            </span>
+                        </div>
+                        <div class="bk-track">
+                            {% for h in window.hours %}
+                                {% if not loop.first %}
+                                    <i class="tick" style="left:{{ (loop.index0 * 60) / span * 100 }}%"></i>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% for k, start in pcs %}
+                                {% set dur = k == 'prep' ? b.prepEnd - b.prepStart
+                                           : (k == 'cook' ? b.cookEnd - b.cookStart : b.finishEnd - b.finishStart) %}
+                                {% if dur > 0 %}
+                                    <div class="bk-seg s-{{ k }} {{ active_stage != 'all' and active_stage != k ? 'is-dim' : '' }}"
+                                         style="left:{{ (start - window.from) / span * 100 }}%;width:{{ dur / span * 100 }}%"></div>
+                                {% endif %}
+                            {% endfor %}
+
+                            <div class="bk-shelf" style="left:{{ (b.shelfTime - window.from) / span * 100 }}%">
+                                {{ b.shelfClock }}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            {# La barre du présent traverse toutes les lignes d'un seul trait. #}
+            <div class="bk-now" id="bkNow"
+                 style="left: calc(190px + (100% - 190px) * {{ (now - window.from) / span }})">
+                <b>{{ now_clock }}</b>
+            </div>
+        </div>
+
+        <div class="bk-legend">
+            <span><i class="bk-sw" style="background:#1F4F6B"></i>{{ translations.stage_prep | default('Préparation')|lower }}</span>
+            <span><i class="bk-sw" style="background:#8D1D2C"></i>{{ translations.stage_cook | default('Cuisson')|lower }}</span>
+            <span><i class="bk-sw" style="background:#C17A2A"></i>{{ translations.stage_finish | default('Finition')|lower }}</span>
+            <span><i class="bk-sw" style="background:var(--c-secondary,#F2C9A0);border-radius:999px"></i>{{ translations.baking_shelf_legend | default('mise en rayon') }}</span>
+        </div>
+    </div>
+</div>

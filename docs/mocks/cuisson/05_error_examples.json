@@ -1,0 +1,15 @@
+{
+  "not_found_404": {
+    "success": false,
+    "description": "batch_not_found"
+  },
+  "bad_transition_409": {
+    "success": false,
+    "description": "invalid_transition",
+    "detail": "PLANNED -> BAKING refusé : enfourner sans avoir préparé n'existe pas"
+  },
+  "server_500": {
+    "success": false,
+    "description": "internal_error"
+  }
+}

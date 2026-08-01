@@ -1,0 +1,225 @@
+{# baking/index.twig — module Cuisson.
+
+   Deux lectures superposées, et c'est délibéré : la frise répond à « où en est
+   la matinée », les cartes répondent à « qu'est-ce que je fais maintenant ».
+   On lit la première debout devant le four, on tape sur les secondes.
+
+   Une ligne par fournée dans la frise, pas une par ressource : la ligne EST le
+   cycle du produit — préparation, cuisson, finition bout à bout — et sa
+   longueur dit à elle seule combien de temps sépare le début du travail de la
+   vente. Un plan de charge par four serait plus juste techniquement et
+   illisible sur une tablette d'atelier.
+
+   Contrat d'API : docs/ENDPOINTS_CUISSON.md. #}
+{% extends "layouts/base.twig" %}
+{% import "components/_icons.twig" as icons %}
+
+{% block title %}{{ translations.baking_title | default('Cuisson') }}{% endblock %}
+
+{% block head %}
+<style>
+    /* ── Filtres ─────────────────────────────────────────────────────────
+       Un seul rang de pastilles, cibles de 52 px : on filtre d'un pouce,
+       sans lever les yeux du four. */
+    .bk-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+    .bk-f {
+        display: inline-flex; align-items: center; gap: 8px;
+        min-height: 52px; padding: 0 18px; border-radius: 999px;
+        background: #fff; border: 1px solid var(--c-line-2, rgba(36,26,22,.12));
+        text-decoration: none; color: var(--c-ink, #241f1c);
+        font-weight: 700; font-size: .95rem;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .bk-f .n {
+        font-size: .78rem; font-weight: 800; border-radius: 999px; padding: 2px 9px;
+        background: var(--c-bg-2, #F4EFE8); color: var(--c-muted, #7a7168);
+    }
+    .bk-f i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .bk-f.is-on { color: #fff; border-color: transparent; }
+    .bk-f.is-on .n { background: rgba(255,255,255,.22); color: #fff; }
+    .bk-f.is-on i { background: #fff; }
+    .bk-f-all.is-on    { background: var(--c-ink, #241f1c); }
+    .bk-f-prep.is-on   { background: #1F4F6B; }
+    .bk-f-cook.is-on   { background: #8D1D2C; }
+    .bk-f-finish.is-on { background: #C17A2A; }
+    .i-prep { background: #1F4F6B; } .i-cook { background: #8D1D2C; } .i-finish { background: #C17A2A; }
+
+    /* ── Frise ── */
+    .bk-g { position: relative; }
+    .bk-ruler { display: flex; margin-left: 190px; padding-bottom: 6px; margin-bottom: 4px;
+                border-bottom: 1px solid var(--c-line, rgba(36,26,22,.08)); }
+    .bk-ruler div { flex: 1; font-size: .68rem; font-weight: 700; color: var(--c-muted, #7a7168); }
+    .bk-row { display: flex; align-items: center; gap: 12px; padding: 4px 0; }
+    .bk-row.is-waiting { opacity: .4; }
+    .bk-rowname { width: 178px; flex: 0 0 178px; min-width: 0; }
+    .bk-rowname b { display: block; font-size: .84rem; font-weight: 700; line-height: 1.2;
+                    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bk-rowname span { display: block; font-size: .68rem; color: var(--c-muted, #7a7168); margin-top: 1px; }
+    .bk-track { position: relative; flex: 1; height: 30px; background: #F7F3ED; border-radius: 8px; }
+    .bk-track .tick { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(36,26,22,.06); }
+    .bk-seg { position: absolute; top: 5px; height: 20px; }
+    .bk-seg.s-prep   { background: #1F4F6B; border-radius: 6px 0 0 6px; }
+    .bk-seg.s-cook   { background: #8D1D2C; }
+    .bk-seg.s-finish { background: #C17A2A; border-radius: 0 6px 6px 0; }
+    /* Hors filtre, l'étape s'efface au lieu de disparaître : la fournée garde
+       sa place, et on voit le contexte qui justifie l'horaire. */
+    .bk-seg.is-dim { opacity: .16; }
+    .bk-shelf {
+        position: absolute; top: 3px; height: 24px; display: flex; align-items: center; padding: 0 9px;
+        border-radius: 999px; background: var(--c-secondary, #F2C9A0); color: var(--c-on-abricot, #4a2c12);
+        font-size: .66rem; font-weight: 800; white-space: nowrap;
+    }
+    .bk-now { position: absolute; top: 22px; bottom: 0; width: 2px; background: var(--c-ink, #241f1c); z-index: 3; }
+    .bk-now b { position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
+                background: var(--c-ink, #241f1c); color: #fff; font-size: .6rem; font-weight: 800;
+                padding: 2px 7px; border-radius: 999px; }
+    .bk-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 12px;
+                 font-size: .72rem; color: var(--c-muted, #7a7168); }
+    .bk-legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .bk-sw { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
+
+    /* ── Cartes ── */
+    .bk-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+    .bk-card {
+        background: var(--c-surface, #fff); border: 1px solid var(--c-line, rgba(36,26,22,.09));
+        border-left: 5px solid #d8d2c9; border-radius: var(--r-lg, 18px);
+        padding: 15px 17px; box-shadow: var(--sh-1, 0 1px 2px rgba(0,0,0,.04));
+    }
+    .bk-card.k-prep   { border-left-color: #1F4F6B; }
+    .bk-card.k-cook   { border-left-color: #8D1D2C; }
+    .bk-card.k-finish { border-left-color: #C17A2A; }
+    .bk-card.is-waiting { opacity: .62; }
+
+    .bk-top { display: flex; align-items: flex-start; gap: 12px; }
+    .bk-name { flex: 1; min-width: 0; }
+    .bk-name b { display: block; font-size: 1.1rem; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
+    .bk-name span { display: block; font-size: .76rem; color: var(--c-muted, #7a7168); margin-top: 3px; }
+    .bk-qty { flex: 0 0 auto; text-align: right; }
+    .bk-qty b { display: block; font-size: 1.45rem; font-weight: 800; line-height: 1; }
+    .bk-qty span { display: block; font-size: .62rem; text-transform: uppercase; letter-spacing: .05em;
+                   color: var(--c-muted, #7a7168); margin-top: 2px; }
+
+    /* Trois pastilles, une seule allumée : on situe la fournée dans son cycle
+       sans lire une seule heure. */
+    .bk-steps { display: flex; gap: 6px; margin-top: 12px; }
+    .bk-st {
+        flex: 1; min-height: 40px; border-radius: 11px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        background: var(--c-bg-2, #F4EFE8); color: #b3aaa0; font-size: .73rem; font-weight: 700;
+    }
+    .bk-st em { font-style: normal; font-size: .61rem; font-weight: 700; opacity: .9; }
+    .bk-st.is-done { color: #8d8479; background: #e9e2d8; }
+    .bk-st.is-done .ok { color: #2D7A3E; font-weight: 800; }
+    .bk-st.is-on { color: #fff; }
+    .bk-st.is-on.p-prep   { background: #1F4F6B; }
+    .bk-st.is-on.p-cook   { background: #8D1D2C; }
+    .bk-st.is-on.p-finish { background: #C17A2A; }
+
+    .bk-when { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-top: 11px; }
+    .bk-when .l { font-size: .83rem; color: var(--c-muted, #7a7168); }
+    .bk-when .l b { color: var(--c-ink, #241f1c); font-weight: 800; }
+    .bk-when .r { font-size: .77rem; color: var(--c-muted, #7a7168); }
+    .bk-when .r b { color: #2D7A3E; font-weight: 800; }
+
+    .bk-prog { height: 6px; border-radius: 3px; background: #ece5da; overflow: hidden; margin-top: 8px; }
+    .bk-prog > i { display: block; height: 100%; border-radius: 3px; }
+    .k-prep .bk-prog > i   { background: #1F4F6B; }
+    .k-cook .bk-prog > i   { background: #8D1D2C; }
+    .k-finish .bk-prog > i { background: #C17A2A; }
+
+    .bk-act {
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        width: 100%; min-height: 52px; margin-top: 12px; border: 0; border-radius: var(--r-md, 13px);
+        font-family: inherit; font-size: .97rem; font-weight: 800; cursor: pointer; color: #fff;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .bk-act:active { transform: scale(.995); }
+    .bk-act[disabled] { opacity: .55; cursor: default; }
+    .a-prep   { background: #1F4F6B; } .a-prep:hover   { background: #173d53; color: #fff; }
+    .a-cook   { background: #8D1D2C; } .a-cook:hover   { background: #74101f; color: #fff; }
+    .a-finish { background: #C17A2A; } .a-finish:hover { background: #a56420; color: #fff; }
+    .a-wait { background: #fff; color: var(--c-muted, #7a7168);
+              border: 1px dashed var(--c-line-2, rgba(36,26,22,.2)); font-weight: 700; }
+
+    .bk-tag { display: inline-block; border-radius: 999px; padding: 2px 9px;
+              font-size: .66rem; font-weight: 800; margin-left: 6px; }
+    .bk-tag-piece { background: #dff0e4; color: #1d5a2c; }
+    .bk-tag-lot   { background: #EFE9E1; color: #6b6259; }
+
+    .bk-state { text-align: center; padding: 36px 22px; }
+    .bk-state .lc-icon { color: var(--c-muted, #7a7168); opacity: .45; }
+    .bk-state p { margin: 13px auto 0; max-width: 48ch; color: var(--c-muted, #7a7168); line-height: 1.6; }
+
+    @media (max-width: 820px) {
+        .bk-list { grid-template-columns: 1fr; }
+        .bk-rowname { width: 124px; flex-basis: 124px; }
+        .bk-ruler { margin-left: 136px; }
+    }
+</style>
+{% endblock %}
+
+{% block page_heading %}
+    <div class="page-heading d-flex align-items-end justify-content-between gap-3 flex-wrap">
+        <div>
+            <h3>{{ translations.baking_title | default('Cuisson') }}</h3>
+            <p class="text-subtitle text-muted mb-0">
+                {{ translations.baking_subtitle | default('Replanifié en continu') }}
+            </p>
+        </div>
+        <div class="app-title" style="font-family:var(--font-display);font-size:1.5rem;" id="bkClock">
+            {{ now_clock }}
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+
+    {# ── Filtres ── #}
+    {% set stages = [
+        { key: 'all',    label: translations.filter_all  | default('Tout') },
+        { key: 'prep',   label: translations.stage_prep  | default('Préparation') },
+        { key: 'cook',   label: translations.stage_cook  | default('Cuisson') },
+        { key: 'finish', label: translations.stage_finish| default('Finition') }
+    ] %}
+    <nav class="bk-filters" aria-label="{{ translations.baking_title | default('Cuisson') }}">
+        {% for s in stages %}
+            <a class="bk-f bk-f-{{ s.key }} {{ active_stage == s.key ? 'is-on' : '' }}"
+               href="{{ ROOT }}/baking{{ s.key == 'all' ? '' : '?stage=' ~ s.key }}"
+               {{ active_stage == s.key ? 'aria-current="page"' : '' }}>
+                {% if s.key != 'all' %}<i class="i-{{ s.key }}"></i>{% endif %}
+                {{ s.label }}
+                <span class="n" data-count="{{ s.key }}">{{ counts[s.key] ?? 0 }}</span>
+            </a>
+        {% endfor %}
+    </nav>
+
+    {% if not plan_available %}
+
+        <div class="card mt-3">
+            <div class="card-body bk-state">
+                {{ icons.svg('flame', 40) }}
+                <p>{{ translations.baking_not_served | default("Le plan de cuisson n'est pas encore servi par l'API. L'écran est prêt : il s'affichera dès que l'endpoint répondra.") }}</p>
+            </div>
+        </div>
+
+    {% elseif batches is empty %}
+
+        <div class="card mt-3">
+            <div class="card-body bk-state">
+                {{ icons.svg('check-check', 40) }}
+                <p>{{ translations.baking_empty | default('Aucune fournée en cours.') }}</p>
+            </div>
+        </div>
+
+    {% else %}
+
+        {% include "baking/_gantt.twig" %}
+        {% include "baking/_cards.twig" %}
+
+    {% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+    {% if plan_available %}{% include "baking/_scripts.twig" %}{% endif %}
+{% endblock %}

@@ -1,0 +1,103 @@
+{# baking/_scripts.twig — l'écran vit tout seul.
+
+   Le plan bouge en continu : une fournée sortie du four par un collègue doit
+   disparaître de la tablette d'à côté sans que personne ne rafraîchisse. On
+   sonde toutes les 30 secondes.
+
+   Deux régimes, volontairement : tant que rien ne change d'état, on déplace la
+   barre du présent et les jauges — pas de rechargement, pas de scintillement
+   sous les doigts. Dès qu'une fournée change de statut, la page se relit : le
+   serveur arbitre, et réécrire les cartes en JavaScript reviendrait à
+   maintenir deux fois le même rendu. #}
+<script>
+(function () {
+    var gantt = document.getElementById('bkGantt');
+    if (!gantt) return;
+
+    var ROOT  = {{ ROOT | json_encode | raw }};
+    var STAGE = gantt.dataset.stage;
+    var URL   = ROOT + '/ajax/baking' + (STAGE !== 'all' ? '?stage=' + STAGE : '');
+    var ERR   = {{ (translations.baking_error | default("L'étape n'a pas pu être enregistrée.")) | json_encode | raw }};
+
+    var FROM = parseInt(gantt.dataset.from, 10);
+    var TO   = parseInt(gantt.dataset.to, 10);
+    var SPAN = (TO - FROM) || 60;
+
+    // Signature de l'état affiché : elle seule décide s'il faut recharger.
+    function signature(batches) {
+        return batches.map(function (b) { return b.id + ':' + b.status; }).join(',');
+    }
+    var current = {{ batches|map(b => b.id ~ ':' ~ b.status)|join(',')|json_encode|raw }};
+
+    function paintNow(now, clock) {
+        var line = document.getElementById('bkNow');
+        if (line) {
+            var r = Math.max(0, Math.min(1, (now - FROM) / SPAN));
+            line.style.left = 'calc(190px + (100% - 190px) * ' + r + ')';
+            var lbl = line.querySelector('b');
+            if (lbl) lbl.textContent = clock;
+        }
+        var head = document.getElementById('bkClock');
+        if (head) head.textContent = clock;
+    }
+
+    function paintCounts(counts) {
+        Object.keys(counts || {}).forEach(function (k) {
+            var el = document.querySelector('.n[data-count="' + k + '"]');
+            if (el) el.textContent = counts[k];
+        });
+    }
+
+    function paintProgress(batches) {
+        batches.forEach(function (b) {
+            var card = document.querySelector('.bk-card[data-id="' + b.id + '"] .bk-prog > i');
+            if (card) card.style.width = b.progress + '%';
+        });
+    }
+
+    function poll() {
+        if (document.hidden) return;
+        fetch(URL, { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (d) {
+                if (!d || !d.success) return;
+                if (signature(d.batches) !== current) { window.location.reload(); return; }
+                paintNow(d.now, d.now_clock);
+                paintCounts(d.counts);
+                paintProgress(d.batches);
+            })
+            .catch(function () { /* réseau de magasin : on retentera dans 30 s */ });
+    }
+
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('.bk-act[data-next]');
+        if (!btn || !btn.dataset.next) return;
+
+        btn.disabled = true;
+
+        fetch(ROOT + '/ajax/baking/' + btn.dataset.id, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ status: btn.dataset.next })
+        })
+        .then(function (r) { return r.json().catch(function () { return null; }); })
+        .then(function (res) {
+            if (!res || !res.success) {
+                showSnack(false, ERR);
+                btn.disabled = false;
+                return;
+            }
+            // Le serveur a arbitré : on relit plutôt que de deviner la suite.
+            window.location.reload();
+        })
+        .catch(function () {
+            showSnack(false, ERR);
+            btn.disabled = false;
+        });
+    });
+
+    setInterval(poll, 30000);
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) poll(); });
+})();
+</script>
