@@ -149,7 +149,7 @@ jobs:
           SSHPASS: ${{ secrets.SSH_PASSWORD }}
         run: |
           APP_DIR='${{ vars.APP_DIR || '/var/www/app/pwa_kitchen' }}'
-          PORT='${{ vars.MOCK_API_PORT || '8090' }}'
+          PORT='${{ vars.MOCK_API_PORT || '8791' }}'
           REAL='${{ vars.REAL_API_BASE || 'https://atelierby.tfbuddy.com/api/v1' }}'
           # Trois déclencheurs, du plus visible au moins visible :
           #   1. le fichier tools/mock-api/ENABLED, versionné — on voit dans le
@@ -184,6 +184,17 @@ jobs:
           pkill -f "tools/mock-api/index.php" 2>/dev/null || true
           sleep 1
 
+          # Le port peut être occupé par un tout autre service du serveur —
+          # c'est arrivé avec 8090. Le détecter ici donne un message utile,
+          # au lieu d'un 404 mystérieux quelques lignes plus bas.
+          if command -v ss >/dev/null 2>&1; then
+            if ss -ltn 2>/dev/null | grep -qE "127\\.0\\.0\\.1:$PORT|\\*:$PORT"; then
+              echo "  le port $PORT est déjà occupé par un autre service"
+              echo "  définir la variable de dépôt MOCK_API_PORT sur un port libre"
+              exit 1
+            fi
+          fi
+
           if [ "$USE" != "true" ]; then
             echo "USE_MOCK_API != true — bouchon arrêté, .htaccess du dépôt conservé."
             grep -n 'KITCHEN_API_BASE' "$HT" || true
@@ -207,6 +218,7 @@ jobs:
           echo "  bouchon /public/shops → HTTP $code"
           if [ "$code" != "200" ]; then
             echo "  le bouchon ne répond pas — .htaccess laissé sur l'API réelle"
+            echo "  (un 404 ici signale souvent qu'un AUTRE service occupe le port $PORT)"
             tail -20 "$APP_DIR/mock-api.log" || true
             exit 1
           fi
