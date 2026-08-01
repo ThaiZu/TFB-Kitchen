@@ -78,7 +78,21 @@
     }
     .mep-sub a.is-active small { color: #7a1524; }
 
-    /* ── Saisie des quantités ────────────────────────────────────────── */
+    /* ── Saisie des quantités ──────────────────────────────────────────
+       Une ligne par produit sur toute la largeur laissait un vide de 800 px
+       entre le nom et le champ : on parcourait quarante lignes pour saisir
+       quarante nombres. Trois par rangée rapprochent le nom de sa case et
+       tiennent la liste dans un écran. */
+    .mep-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+    }
+    /* La saisie reste le geste : sous 1200 px, deux colonnes plutôt qu'un
+       champ écrasé contre son libellé. */
+    @media (max-width: 1200px) { .mep-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 780px)  { .mep-grid { grid-template-columns: 1fr; } }
+
     .mep-line {
         display: flex; align-items: center; gap: 12px;
         background: var(--c-surface, #fff);

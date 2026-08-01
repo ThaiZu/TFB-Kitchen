@@ -48,7 +48,7 @@
                     <span>{{ translations.mep_nothing_pending | default('Toute la MEP du jour est validée.') }}</span>
                 </div>
 
-                <div class="pr-rows">
+                <div class="mep-grid">
                     {% for l in mep_lines %}
                         <div class="mep-line is-filled">
                             <span class="mep-line-txt">
@@ -90,7 +90,7 @@
             {# La saisie tient dans la page plutôt que dans une modale : la
                liste peut faire quarante lignes, et une modale scrollable sur
                tablette se ferme au moindre appui à côté. #}
-            <div class="pr-rows" id="mepValidateList">
+            <div class="mep-grid" id="mepValidateList">
                 {% for l in pending %}
                     <div class="mep-line is-filled" data-line-id="{{ l.id }}">
                         <span class="mep-line-txt">
@@ -163,7 +163,7 @@
                     <h2 class="pr-cat-title">
                         {{ category }}<span class="pr-cat-count">{{ items|length }}</span>
                     </h2>
-                    <div class="pr-rows">
+                    <div class="mep-grid">
                         {% for p in items %}
                             {% set qty = draft_quantities[p.idProduct] ?? 0 %}
                             <div class="mep-line {{ qty > 0 ? 'is-filled' : '' }}" data-product-id="{{ p.idProduct }}">
