@@ -95,9 +95,13 @@
         <div class="stk-head">
             <h2 class="pr-cat-title mb-0">
                 {{ translations.stock_title | default('Stock live') }}
-                <span class="pr-cat-count">{{ stock|length }}</span>
+                <span class="pr-cat-count">{{ outlook|length }}</span>
             </h2>
-            <p class="stk-hint">{{ translations.stock_sorted_hint | default('Trié du plus bas au plus haut.') }}</p>
+            {% if p1_label %}
+                <p class="stk-hint">
+                    {{ translations.outlook_hint | default('Ce qu\'il reste, face à ce qui va partir.') }}
+                </p>
+            {% endif %}
         </div>
 
         {% if not stock_available %}
@@ -107,7 +111,7 @@
                     <p>{{ translations.stock_not_served | default("Le stock live n'est pas encore servi par l'API.") }}</p>
                 </div>
             </div>
-        {% elseif stock is empty %}
+        {% elseif outlook is empty %}
             <div class="card">
                 <div class="card-body pr-state">
                     {{ icons.svg('package', 38) }}
@@ -115,25 +119,94 @@
                 </div>
             </div>
         {% else %}
-            <div class="pr-rows" id="stockList">
-                {% for s in stock %}
-                    <div class="stk-row {{ s.quantity <= 0 ? 'is-out' : (s.quantity <= 5 ? 'is-low' : '') }}">
-                        <span class="pr-row-txt">
-                            <span class="pr-row-name">{{ s.name | default('—') }}</span>
-                            {% if s.categoryName %}
-                                <span class="pr-row-meta"><span>{{ s.categoryName }}</span></span>
-                            {% endif %}
-                        </span>
-                        {% if s.quantity <= 0 %}
-                            <span class="pr-pill pill-pending">{{ translations.stock_out | default('Rupture') }}</span>
-                        {% endif %}
-                        <span class="stk-qty">
-                            <b>{{ s.quantity|number_format(0, ',', ' ') }}</b>
-                            <span>{{ s.unitName | default('') }}</span>
-                        </span>
-                    </div>
-                {% endfor %}
+
+            {% if not outlook_available %}
+                <p class="rbk-warn mb-2">
+                    {{ icons.svg('alert-triangle', 15) }}
+                    {{ translations.outlook_no_forecast | default("Le profil de ventes n'est pas servi : seul le stock est affiché, sans projection.") }}
+                </p>
+            {% endif %}
+
+            {# Trois questions, trois filtres. « Combien il en reste » ne se
+               décide pas ; « est-ce que ça tient » et « en ai-je trop fait »,
+               si. #}
+            <div class="cat-filters" data-target="#stockTable">
+                <button type="button" class="cat-chip is-on" data-flag="">
+                    {{ translations.filter_all | default('Tout') }}
+                    <span class="n">{{ outlook_counts.all }}</span>
+                </button>
+                <button type="button" class="cat-chip ck-out1" data-flag="out_p1">
+                    {{ (translations.outlook_out_p1 | default('Rupture fin %s'))|replace({'%s': p1_label|lower}) }}
+                    <span class="n">{{ outlook_counts.out_p1 }}</span>
+                </button>
+                {% if p2_label %}
+                    <button type="button" class="cat-chip ck-out2" data-flag="out_p2">
+                        {{ (translations.outlook_out_p2 | default('Rupture fin %s'))|replace({'%s': p2_label|lower}) }}
+                        <span class="n">{{ outlook_counts.out_p2 }}</span>
+                    </button>
+                {% endif %}
+                <button type="button" class="cat-chip ck-over" data-flag="over">
+                    {{ translations.outlook_over | default('Surproduction') }}
+                    <span class="n">{{ outlook_counts.over }}</span>
+                </button>
             </div>
+
+            <div class="stk-table-wrap">
+                <table class="stk-table" id="stockTable">
+                    <thead>
+                        <tr>
+                            <th>{{ translations.outlook_category | default('Catégorie') }}</th>
+                            <th>{{ translations.outlook_product | default('Produit') }}</th>
+                            <th class="num">{{ translations.rebake_stock | default('Stock') }}</th>
+                            <th class="num">{{ translations.outlook_sales | default('Ventes') }} {{ p1_label|lower }}</th>
+                            <th class="num">{{ translations.outlook_delta | default('Delta') }} {{ p1_label|lower }}</th>
+                            {% if p2_label %}
+                                <th class="num">{{ translations.outlook_sales | default('Ventes') }} {{ p2_label|lower }}</th>
+                                <th class="num">{{ translations.outlook_delta | default('Delta') }} {{ p2_label|lower }}</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in outlook %}
+                            <tr data-flag="{{ r.flag }}">
+                                <td class="cat">{{ r.category }}</td>
+                                <td class="name">{{ r.name }}</td>
+                                <td class="num"><b>{{ r.stock|number_format(0, ',', ' ') }}</b></td>
+                                <td class="num soft">
+                                    {%- if r.expected_1 is not null -%}
+                                        {{ r.expected_1|number_format(0, ',', ' ') }}
+                                    {%- else -%}—{%- endif -%}
+                                </td>
+                                <td class="num">
+                                    {%- if r.delta_1 is not null -%}
+                                        <span class="dlt {{ r.delta_1 < 0 ? 'is-neg' : '' }}">
+                                            {{- r.delta_1 > 0 ? '+' : '' }}{{ r.delta_1|round(0, 'floor')|number_format(0, ',', ' ') -}}
+                                        </span>
+                                    {%- else -%}—{%- endif -%}
+                                </td>
+                                {% if p2_label %}
+                                    <td class="num soft">
+                                        {%- if r.expected_2 is not null -%}
+                                            {{ r.expected_2|number_format(0, ',', ' ') }}
+                                        {%- else -%}—{%- endif -%}
+                                    </td>
+                                    <td class="num">
+                                        {%- if r.delta_2 is not null -%}
+                                            <span class="dlt {{ r.delta_2 < 0 ? 'is-neg' : (r.flag == 'over' ? 'is-over' : '') }}">
+                                                {{- r.delta_2 > 0 ? '+' : '' }}{{ r.delta_2|round(0, 'floor')|number_format(0, ',', ' ') -}}
+                                            </span>
+                                        {%- else -%}—{%- endif -%}
+                                    </td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="stk-empty-filter d-none" id="stockNoMatch">
+                {{ translations.outlook_none | default('Aucun produit dans ce filtre.') }}
+            </p>
         {% endif %}
     </section>
 </div>

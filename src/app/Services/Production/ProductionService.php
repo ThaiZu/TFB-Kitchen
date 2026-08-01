@@ -341,6 +341,35 @@ class ProductionService
         ];
     }
 
+    /**
+     * Le stock lu vers l'avant, pour le tableau de l'écran Stock.
+     *
+     * @param StockLineModel[]|null         $stock
+     * @param ProductionProductModel[]|null $products
+     *
+     * @return array{available: bool, rows: array, counts: array, horizons: array}
+     */
+    public function stockOutlook(?array $stock, ?array $products, StockOutlookService $outlook, ?string $date = null, ?string $time = null): array
+    {
+        $now       = ForecastService::minutesOf($time ?? date('H:i'));
+        $horizons  = $outlook->horizons($this->getPeriods(), $now);
+
+        $shopId  = $this->getShopId();
+        $params  = $this->getParams();
+        $profile = $shopId > 0
+            ? $this->salesProvider->getProfile($shopId, $date ?? date('Y-m-d'), (int)$params['history_weeks'], true, 30)
+            : null;
+
+        $rows = $outlook->rows($stock ?? [], $products ?? [], $profile, $horizons);
+
+        return [
+            'available' => $profile !== null,
+            'rows'      => $rows,
+            'counts'    => $outlook->counts($rows),
+            'horizons'  => $horizons,
+        ];
+    }
+
     // ── Mise en rayon ────────────────────────────────────────────────────
 
     /**

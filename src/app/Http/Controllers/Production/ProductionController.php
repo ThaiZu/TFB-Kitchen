@@ -7,6 +7,7 @@ use App\Kitchen\app\Models\Production\MepLineModel;
 use App\Kitchen\app\Services\Baking\BakingService;
 use App\Kitchen\app\Services\Production\ProductionBoardService;
 use App\Kitchen\app\Services\Production\ProductionService;
+use App\Kitchen\app\Services\Production\StockOutlookService;
 
 class ProductionController extends Controller
 {
@@ -16,7 +17,8 @@ class ProductionController extends Controller
         // L'étape d'un produit vient du plan de cuisson, pas d'un second champ
         // qui dériverait : une seule source de vérité pour « où en est ce
         // produit », partagée avec le module Cuisson.
-        private BakingService $bakingService
+        private BakingService $bakingService,
+        private StockOutlookService $outlookService
     ) {}
 
     /**
@@ -44,6 +46,9 @@ class ProductionController extends Controller
             $products = $this->productionService->getProducts();
             $stock    = $this->productionService->getStock();
             $rebakes  = $this->productionService->getRebakeSuggestions($products, $stock, $today);
+            // Le stock lu vers l'avant : ce n'est pas « combien il en reste »
+            // qui se décide, c'est « est-ce que ça tient jusqu'au bout ».
+            $outlook  = $this->productionService->stockOutlook($stock, $products, $this->outlookService, $today);
 
             $data += [
                 'stock_available'   => $stock !== null,
@@ -51,6 +56,10 @@ class ProductionController extends Controller
                 'rebakes'           => $rebakes['suggestions'],
                 'rebakes_available' => $rebakes['available'],
                 'rebakes_samples'   => $rebakes['samples'],
+                'outlook'           => $outlook['rows'],
+                'outlook_available' => $outlook['available'],
+                'outlook_counts'    => $outlook['counts'],
+                'horizons'          => $outlook['horizons'],
             ];
         } elseif ($view === 'mep') {
             $data += $this->mepData($today);

@@ -304,6 +304,46 @@
         background: var(--c-bg-2, #F4EFE8); color: var(--c-ink, #241f1c);
         font-size: .7rem; line-height: 21px; text-align: center;
     }
+    /* ── Stock : le tableau de perspective ───────────────────────────────
+       Un tableau parce que la question est comparative : ce n'est pas « ce
+       produit tient-il » mais « lesquels ne tiennent pas ». Des colonnes
+       alignées se balaient d'un regard, une liste de cartes non. */
+    .stk-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 10px; }
+    .stk-table {
+        width: 100%; border-collapse: separate; border-spacing: 0;
+        background: var(--c-surface, #fff);
+        border: 1px solid var(--c-line, rgba(36,26,22,.09));
+        border-radius: var(--r-lg, 18px); overflow: hidden;
+        font-size: .86rem;
+    }
+    .stk-table th {
+        position: sticky; top: 0; z-index: 1;
+        padding: 11px 12px; text-align: left; white-space: nowrap;
+        background: var(--c-bg-2, #F4EFE8); color: var(--c-muted, #7a7168);
+        font-size: .68rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
+    }
+    .stk-table td { padding: 11px 12px; border-top: 1px solid var(--c-line, rgba(36,26,22,.07)); }
+    .stk-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .stk-table .cat { color: var(--c-muted, #7a7168); font-size: .78rem; white-space: nowrap; }
+    .stk-table .name { font-weight: 700; color: var(--c-ink, #241f1c); }
+    .stk-table .soft { color: var(--c-muted, #7a7168); }
+    .stk-table tr[hidden] { display: none; }
+    /* Le delta est la colonne qu'on lit : elle porte le signe et la couleur.
+       Le reste du tableau est là pour qu'on puisse la contester. */
+    .dlt { font-weight: 800; color: var(--c-vert, #2D7A3E); }
+    .dlt.is-neg  { color: var(--c-primary, #8D1D2C); }
+    .dlt.is-over { color: var(--c-ambre, #C17A2A); }
+    .cat-chip .n {
+        margin-left: 7px; padding: 1px 7px; border-radius: 999px;
+        background: var(--c-bg-2, #F4EFE8); color: var(--c-muted, #7a7168);
+        font-size: .7rem; font-weight: 800;
+    }
+    .cat-chip.is-on .n { background: rgba(255,255,255,.22); color: #fff; }
+    .ck-out1.is-on { background: var(--c-primary, #8D1D2C); border-color: var(--c-primary, #8D1D2C); }
+    .ck-out2.is-on { background: var(--c-ambre, #C17A2A); border-color: var(--c-ambre, #C17A2A); }
+    .ck-over.is-on { background: var(--c-encre, #1F4F6B); border-color: var(--c-encre, #1F4F6B); }
+    .stk-empty-filter { margin: 18px 0 0; text-align: center; color: var(--c-muted, #7a7168); font-size: .86rem; }
+
     /* ── Tableau de travail d'une période ────────────────────────────────
        Sections par geste attendu, tuiles triées par tension. Les couleurs
        sont celles du module Cuisson : c'est le même vocabulaire, il ne doit
@@ -585,6 +625,8 @@
     </nav>
 
     {% if active_view == 'stock' %}
+        {% set p1_label = horizons.p1.key ? (translations['period_' ~ horizons.p1.key] | default(horizons.p1.key)) : '' %}
+        {% set p2_label = horizons.p2.key ? (translations['period_' ~ horizons.p2.key] | default(horizons.p2.key)) : '' %}
         {% include "production/_stock.twig" %}
     {% elseif active_view == 'mep' %}
         {% include "production/_mep.twig" %}

@@ -41,21 +41,44 @@
         return Number(v || 0).toFixed(d || 0).replace('.', ',');
     }
 
+    // Le tableau de perspective se calcule côté serveur — deltas, seuils de
+    // rupture, surproduction. Le réécrire ici reviendrait à maintenir deux
+    // fois la même arithmétique, et deux vérités finiraient par diverger. On
+    // relit la page quand les quantités bougent, et seulement alors.
+    var stockSig = null;
     function paintStock(items) {
-        var list = document.getElementById('stockList');
-        if (!list) return;
-        list.innerHTML = items.map(function (s) {
-            var q = Number(s.quantity || 0);
-            var cls = q <= 0 ? 'is-out' : (q <= 5 ? 'is-low' : '');
-            return '<div class="stk-row ' + cls + '">' +
-                '<span class="pr-row-txt"><span class="pr-row-name">' + esc(s.name || '—') + '</span>' +
-                (s.category_name ? '<span class="pr-row-meta"><span>' + esc(s.category_name) + '</span></span>' : '') +
-                '</span>' +
-                (q <= 0 ? '<span class="pr-pill pill-pending">' + esc(T.out) + '</span>' : '') +
-                '<span class="stk-qty"><b>' + num(q) + '</b><span>' + esc(s.unit_name || '') + '</span></span>' +
-                '</div>';
-        }).join('');
+        var sig = items.map(function (s) { return s.id_product + ':' + s.quantity; }).join(',');
+        if (stockSig === null) { stockSig = sig; return; }
+        if (sig !== stockSig) { window.location.reload(); }
     }
+
+    // ── Filtres du tableau ──
+    // Trois questions qui se posent vraiment : qu'est-ce qui ne tient pas
+    // jusqu'à la fin du service, qu'est-ce qui ne tient pas le service
+    // suivant, et de quoi en a-t-on fait trop.
+    document.addEventListener('click', function (e) {
+        var chip = e.target.closest('.cat-filters[data-target="#stockTable"] .cat-chip');
+        if (!chip) return;
+
+        var table = document.getElementById('stockTable');
+        var none  = document.getElementById('stockNoMatch');
+        if (!table) return;
+
+        chip.parentNode.querySelectorAll('.cat-chip').forEach(function (c) {
+            c.classList.toggle('is-on', c === chip);
+        });
+
+        var want  = chip.dataset.flag || '';
+        var shown = 0;
+        table.querySelectorAll('tbody tr').forEach(function (tr) {
+            var ok = !want || tr.dataset.flag === want;
+            tr.hidden = !ok;
+            if (ok) shown++;
+        });
+
+        table.hidden = shown === 0;
+        if (none) none.classList.toggle('d-none', shown > 0);
+    });
 
     function paintRebakes(items) {
         var list  = document.getElementById('rebakeList');
