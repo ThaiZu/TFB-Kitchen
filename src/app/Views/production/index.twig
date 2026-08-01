@@ -342,11 +342,24 @@
     /* Les deux chiffres qui décident du classement sont montrés : un ordre
        dont on ne voit pas la raison ne se conteste pas, et ne se corrige donc
        jamais. */
-    .pr-facts { display: flex; gap: 14px; flex-wrap: wrap; }
+    .pr-facts { display: flex; gap: 16px; flex-wrap: wrap; }
     .pr-facts > span { font-size: .68rem; color: var(--c-muted, #7a7168); line-height: 1.2; }
-    .pr-facts > span b { display: block; font-size: .95rem; font-weight: 800; color: var(--c-ink, #241f1c); }
-    .pr-facts .is-short b { color: var(--c-primary, #8D1D2C); }
-    .pr-facts .is-unknown { font-style: italic; }
+    .pr-facts > span b { display: block; font-size: 1.05rem; font-weight: 800; color: var(--c-ink, #241f1c); }
+
+    /* La conclusion, en une ligne et une couleur. Elle remplace la projection
+       chiffrée : « 138 projeté » demandait de comparer à la taille de fournée
+       pour savoir quoi faire, alors que la seule question est « je lance ou
+       pas ». Le vert et l'orange ne portent pas de nombre, parce qu'il n'y a
+       rien à lancer — un chiffre y ferait croire au contraire. */
+    .pr-need {
+        margin: 0; padding: 8px 12px; border-radius: var(--r-md, 13px);
+        font-size: .82rem; font-weight: 700; text-align: center;
+    }
+    .pr-need b { font-size: 1rem; font-weight: 800; }
+    .lv-short   { background: var(--c-primary-soft, #f4dfe2); color: var(--c-primary, #8D1D2C); }
+    .lv-tight   { background: #fdf1e2; color: #8a5312; }
+    .lv-ok      { background: #eaf4ec; color: #1d5a2c; }
+    .lv-unknown { background: var(--c-bg-2, #F4EFE8); color: var(--c-muted, #7a7168); font-style: italic; font-weight: 600; }
 
     .pr-tile-sub { margin: 0; font-size: .74rem; color: var(--c-muted, #7a7168); }
     .pr-tile-sub b { color: var(--c-ink, #241f1c); font-weight: 800; }

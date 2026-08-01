@@ -4,6 +4,7 @@
   "board_no_plan": "plan pieczenia nie jest podawany: żaden etap nie jest znany",
   "board_no_stock": "stan magazynowy na żywo nie jest podawany",
   "board_sales_unknown": "Sprzedaż nieznana",
+  "board_to_produce": "Do wyprodukowania",
   "bucket_idle": "Nic w toku",
   "bucket_shelf": "Do wystawienia",
   "cat_all": "Wszystkie",

@@ -103,29 +103,37 @@
                                     </span>
                                 </a>
 
-                                {# Les deux chiffres qui décident de l'ordre de la
-                                   liste sont montrés : un classement dont on ne
-                                   voit pas la raison ne se conteste pas. #}
+                                {# Deux chiffres, et une seule conclusion.
+                                   Stock, ventes prévues, puis ce qu'il faut en
+                                   faire — la projection intermédiaire était un
+                                   troisième nombre à soustraire de tête pour
+                                   arriver à la même réponse. #}
                                 <div class="pr-facts">
                                     <span>
                                         <b>{{ r.stock|number_format(0, ',', ' ') }}</b>
                                         {{ translations.rebake_stock | default('Stock') }}
                                     </span>
-                                    {% if r.expected is not null %}
-                                        <span>
-                                            <b>{{ r.expected|number_format(0, ',', ' ') }}</b>
-                                            {{ translations.rebake_expected | default('Ventes prévues') }}
-                                        </span>
-                                        <span class="{{ r.projected < 0 ? 'is-short' : '' }}">
-                                            <b>{{ r.projected|round(0, 'floor')|number_format(0, ',', ' ') }}</b>
-                                            {{ translations.rebake_projected | default('Projeté') }}
-                                        </span>
-                                    {% else %}
-                                        <span class="is-unknown">
-                                            {{ translations.board_sales_unknown | default('Ventes inconnues') }}
-                                        </span>
-                                    {% endif %}
+                                    <span>
+                                        <b>
+                                            {%- if r.expected is not null -%}
+                                                {{ r.expected|number_format(0, ',', ' ') }}
+                                            {%- else -%}—{%- endif -%}
+                                        </b>
+                                        {{ translations.rebake_expected | default('Ventes prévues') }}
+                                    </span>
                                 </div>
+
+                                <p class="pr-need lv-{{ r.level }}">
+                                    {%- if r.level == 'short' -%}
+                                        {{ translations.board_to_produce | default('À produire') }}
+                                        <b>{{ r.to_produce|number_format(0, ',', ' ') }}</b>
+                                        {%- if p.unitName %} {{ p.unitName }}{% endif %}
+                                    {%- elseif r.level == 'unknown' -%}
+                                        {{ translations.board_sales_unknown | default('Ventes inconnues') }}
+                                    {%- else -%}
+                                        —
+                                    {%- endif -%}
+                                </p>
 
                                 {% if key == 'shelf' %}
                                     {# La mise en rayon : le geste de cette section.

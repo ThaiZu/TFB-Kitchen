@@ -133,9 +133,45 @@ check('sans fournée ni reste à porter : rien en cours', $ids('idle'), [5]);
 check('compteur de mises en rayon', $b['to_shelf'], 1);
 check('catégories triées, une seule fois chacune', $b['categories'], ['Boulangerie', 'Pâtisserie', 'Viennoiserie']);
 
+// ── La conclusion de la tuile : couleur et quantité à produire ────────────
+// Sans MEP ni plan : tout tombe dans la même section, on n'observe que la
+// conclusion et le tri.
+$b2 = $board->build($products, [], [], $tension);
+
+$row = fn(string $k, int $id) => current(array_filter(
+    $b2['buckets'][$k],
+    fn($r) => $r['product']->getIdProduct() === $id
+)) ?: [];
+
+// 2 : stock 4, ventes 40 → −36. Fournée de 12 → trois fournées.
+check('manque : quantité arrondie à la fournée', $row('idle', 2)['to_produce'] ?? null, 36.0);
+check('manque : niveau rouge',                   $row('idle', 2)['level'] ?? null, 'short');
+// 4 : stock 2, ventes 8 → −6. Fournée de 6 → une fournée.
+check('un seul lot suffit',                      $row('idle', 4)['to_produce'] ?? null, 6.0);
+// 1 : stock 40, ventes 8 → 32, fournée 24 → plus d'une fournée de marge.
+check('de la marge : rien à produire',           $row('idle', 1)['to_produce'] ?? null, 0.0);
+check('de la marge : niveau vert',               $row('idle', 1)['level'] ?? null, 'ok');
+// 3 : stock 30, ventes 8 → 22, fournée 10 → deux fournées de marge.
+check('marge confortable malgré un petit lot',   $row('idle', 3)['level'] ?? null, 'ok');
+// 5 : absent du profil.
+// `??` confondrait « null » et « clé absente », ce qui est justement la
+// distinction testée : inconnu n'est pas zéro.
+$inconnu = $row('idle', 5);
+check('ventes inconnues : la clé existe',              array_key_exists('to_produce', $inconnu), true);
+check('ventes inconnues : rien à produire, pas zéro',  $inconnu['to_produce'], null);
+check('ventes inconnues : aucune couleur',       $row('idle', 5)['level'] ?? null, 'unknown');
+
+// Ça passe, mais à moins d'une fournée près : orange, et toujours rien à
+// lancer — un chiffre ici ferait croire le contraire.
+$serre = $board->build(
+    [$p(9, 'Brioche', 'Viennoiserie', 20)],
+    [], [],
+    [9 => ['stock' => 15.0, 'expected' => 3.0, 'projected' => 12.0]]
+);
+check('marge inférieure à une fournée : orange', $serre['buckets']['idle'][0]['level'], 'tight');
+check('orange : rien à produire',                $serre['buckets']['idle'][0]['to_produce'], 0.0);
+
 // ── Le tri à l'intérieur d'une section ────────────────────────────────────
-// Tout dans la même section, pour ne mesurer que le tri.
-$b2  = $board->build($products, [], [], $tension);
 check(
     // 2 : 4−40 = −36 · 4 : 2−8 = −6 · 3 : 30−8 = 22 · 1 : 40−8 = 32 · 5 : inconnu
     'la rupture la plus profonde d\'abord, ventes inconnues en dernier',

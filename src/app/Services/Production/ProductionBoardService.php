@@ -106,14 +106,16 @@ class ProductionBoardService
             $categories[$category] = true;
 
             $buckets[$bucket][] = [
-                'product'   => $p,
-                'line'      => $line,
-                'batch'     => $stages[$id]['batch'] ?? null,
-                'category'  => $category,
-                'remaining' => $remaining,
-                'stock'     => $t['stock'],
-                'expected'  => $t['expected'],
-                'projected' => $t['projected'],
+                'product'    => $p,
+                'line'       => $line,
+                'batch'      => $stages[$id]['batch'] ?? null,
+                'category'   => $category,
+                'remaining'  => $remaining,
+                'stock'      => $t['stock'],
+                'expected'   => $t['expected'],
+                'projected'  => $t['projected'],
+                'to_produce' => self::toProduce($t['projected'], $p->getEffectiveBatchSize()),
+                'level'      => self::level($t['projected'], $p->getEffectiveBatchSize()),
             ];
         }
 
@@ -130,6 +132,50 @@ class ProductionBoardService
             'categories' => $categories,
             'to_shelf'   => count($buckets[self::B_SHELF]),
         ];
+    }
+
+    /**
+     * Combien il faudra produire, arrondi à la fournée supérieure.
+     *
+     * null quand on ne sait pas (ventes non servies), 0 quand la projection
+     * tient. « Il manque 17 croissants » n'est pas exécutable devant un four
+     * qui sort des plaques de 24 — c'est le même arrondi que les propositions
+     * de recuisson, et volontairement le même, pour que les deux écrans ne
+     * donnent jamais deux chiffres différents du même besoin.
+     */
+    private static function toProduce(?float $projected, float $batch): ?float
+    {
+        if ($projected === null) {
+            return null;
+        }
+        if ($projected >= 0) {
+            return 0.0;
+        }
+        $batch = $batch > 0 ? $batch : 1.0;
+        return ceil(-$projected / $batch) * $batch;
+    }
+
+    /**
+     * L'état en un mot, pour la couleur.
+     *
+     * - `short`   : ça va manquer, il y a un lot à lancer
+     * - `tight`   : ça passe, mais à moins d'une fournée près — on surveille
+     * - `ok`      : de la marge
+     * - `unknown` : ventes non servies ; aucune couleur ne serait honnête
+     *
+     * La bande orange vaut une fournée et pas un pourcentage : c'est l'unité
+     * dans laquelle l'atelier décide. À moins d'un lot de marge, on ne lance
+     * rien encore mais on ne quitte plus le produit des yeux.
+     */
+    private static function level(?float $projected, float $batch): string
+    {
+        if ($projected === null) {
+            return 'unknown';
+        }
+        if ($projected < 0) {
+            return 'short';
+        }
+        return $projected < ($batch > 0 ? $batch : 1.0) ? 'tight' : 'ok';
     }
 
     /**
