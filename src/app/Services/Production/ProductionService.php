@@ -311,6 +311,70 @@ class ProductionService
         ];
     }
 
+    /**
+     * Stock et ventes prévues par produit, pour classer une liste de travail.
+     *
+     * @param ProductionProductModel[] $products
+     * @param StockLineModel[]|null    $stock
+     *
+     * @return array{available: bool, map: array<int, array{stock: float, expected: ?float, projected: ?float}>}
+     *         available = false quand le profil de ventes n'est pas servi : la
+     *         liste se classe alors sur le stock seul, et l'écran l'écrit.
+     */
+    public function tension(array $products, ?array $stock, ?string $date = null, ?string $time = null): array
+    {
+        $shopId  = $this->getShopId();
+        $params  = $this->getParams();
+        $profile = $shopId > 0
+            ? $this->salesProvider->getProfile($shopId, $date ?? date('Y-m-d'), (int)$params['history_weeks'], true, 30)
+            : null;
+
+        return [
+            'available' => $profile !== null,
+            'map'       => $this->forecastService->tension(
+                $products,
+                $stock ?? [],
+                $profile,
+                ForecastService::minutesOf($time ?? date('H:i')),
+                $params
+            ),
+        ];
+    }
+
+    // ── Mise en rayon ────────────────────────────────────────────────────
+
+    /**
+     * Porte en rayon ce qui a été produit : c'est CE geste qui met en vente.
+     *
+     * La validation de MEP constate ce qui est sorti du four ; elle ne décide
+     * pas de ce que la caisse peut vendre. Entre les deux il y a un plateau à
+     * porter, et parfois une demi-fournée qui reste au chaud en réserve.
+     * Voir docs/ENDPOINTS_PRODUCTION.md.
+     */
+    public function shelve(int $idProduct, float $quantity, ?int $idMepLine = null, ?int $employeeId = null): array
+    {
+        $shopId = $this->getShopId();
+        if ($shopId <= 0) {
+            return ['success' => false, 'description' => 'shop_unknown'];
+        }
+
+        $payload = [
+            'id_product' => $idProduct,
+            'quantity'   => $quantity,
+            'source'     => 'SHELF',
+        ];
+        // Rattacher la ligne permet au serveur de décompter le reste à porter
+        // plutôt que de recouper sur le produit et la date.
+        if ($idMepLine !== null) {
+            $payload['id_mep_line'] = $idMepLine;
+        }
+        if ($employeeId !== null) {
+            $payload['id_employee'] = $employeeId;
+        }
+
+        return $this->productionRepository->createBatch($shopId, $payload);
+    }
+
     /** Valide une recuisson : le lot entre en production, donc en stock. */
     public function createRebake(int $idProduct, float $quantity, ?int $employeeId = null): array
     {

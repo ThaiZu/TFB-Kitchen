@@ -106,6 +106,63 @@ class ForecastService
         return $suggestions;
     }
 
+    /**
+     * Tension par produit : ce qui reste, ce qui va partir, ce qui restera.
+     *
+     * Même arithmétique que suggest(), mais rendue pour TOUS les produits et
+     * sans décision de recuisson — c'est ce qui permet de classer une liste de
+     * travail par urgence plutôt que par ordre alphabétique. Un produit dont on
+     * ne sait rien garde `expected` et `projected` à null : le taire serait le
+     * faire passer pour un produit qui ne se vend pas.
+     *
+     * @param ProductionProductModel[] $products
+     * @param StockLineModel[]         $stockLines
+     * @param array{forecast_hours?: float, safety_margin?: float} $params
+     *
+     * @return array<int, array{stock: float, expected: ?float, projected: ?float}>
+     *         indexé par id_product
+     */
+    public function tension(
+        array $products,
+        array $stockLines,
+        ?SalesProfileModel $profile,
+        int $nowMinutes,
+        array $params = []
+    ): array {
+        $forecastMinutes = (int)round(((float)($params['forecast_hours'] ?? PRODUCTION_FORECAST_HOURS)) * 60);
+        $margin          = (float)($params['safety_margin'] ?? PRODUCTION_SAFETY_MARGIN);
+
+        $stockByProduct = [];
+        foreach ($stockLines as $line) {
+            if ($line->getIdProduct() !== null) {
+                $stockByProduct[$line->getIdProduct()] = $line->getQuantity();
+            }
+        }
+
+        $out = [];
+        foreach ($products as $product) {
+            $id = $product->getIdProduct();
+            if ($id === null) {
+                continue;
+            }
+
+            $stock    = $stockByProduct[$id] ?? 0.0;
+            $expected = $profile?->expectedBetween(
+                $id,
+                $nowMinutes,
+                $nowMinutes + $forecastMinutes + $product->getLeadMinutes()
+            );
+
+            $out[$id] = [
+                'stock'     => $stock,
+                'expected'  => $expected,
+                'projected' => $expected === null ? null : $stock - $expected - $margin,
+            ];
+        }
+
+        return $out;
+    }
+
     /** Minutes depuis minuit, pour une heure « HH:MM ». */
     public static function minutesOf(string $time): int
     {

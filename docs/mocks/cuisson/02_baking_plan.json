@@ -96,7 +96,7 @@
     },
     {
       "id": 5505,
-      "id_product": 6700130,
+      "id_product": 6700190,
       "name": "Chausson aux pommes",
       "category_name": "Viennoiserie",
       "quantity": 36,
@@ -119,7 +119,7 @@
     },
     {
       "id": 5506,
-      "id_product": 6700140,
+      "id_product": 6700200,
       "name": "Pain céréales",
       "category_name": "Boulangerie",
       "quantity": 20,
@@ -165,7 +165,7 @@
     },
     {
       "id": 5508,
-      "id_product": 6700150,
+      "id_product": 6700230,
       "name": "Cookie chocolat",
       "category_name": "Pâtisserie",
       "quantity": 40,
@@ -188,7 +188,7 @@
     },
     {
       "id": 5509,
-      "id_product": 6700160,
+      "id_product": 6700240,
       "name": "Pain de campagne",
       "category_name": "Boulangerie",
       "quantity": 24,

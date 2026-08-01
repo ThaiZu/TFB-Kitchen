@@ -10,6 +10,7 @@
       "period": "morning",
       "quantity_planned": 120,
       "quantity_validated": 118,
+      "quantity_shelved": 59,
       "unit_name": "pc",
       "status": "VALIDATED"
     },
@@ -21,6 +22,7 @@
       "period": "morning",
       "quantity_planned": 80,
       "quantity_validated": 80,
+      "quantity_shelved": 0,
       "unit_name": "pc",
       "status": "VALIDATED"
     },
@@ -32,6 +34,7 @@
       "period": "morning",
       "quantity_planned": 60,
       "quantity_validated": 58,
+      "quantity_shelved": 0,
       "unit_name": "pc",
       "status": "VALIDATED"
     },
@@ -43,6 +46,7 @@
       "period": "noon",
       "quantity_planned": 12,
       "quantity_validated": 0,
+      "quantity_shelved": 0,
       "unit_name": "pc",
       "status": "SKIPPED"
     }

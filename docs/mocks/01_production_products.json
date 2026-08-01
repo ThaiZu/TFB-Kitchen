@@ -107,5 +107,102 @@
     "is_active": true,
     "is_pdb": false,
     "main_photo_path": null
+  },
+  {
+    "id_product": 6700190,
+    "name": "Chausson aux pommes",
+    "id_category": 12,
+    "category_name": "Viennoiserie",
+    "periods": [
+      "morning",
+      "noon"
+    ],
+    "batch_size": 18,
+    "unit_name": "pc",
+    "production_lead_minutes": 20,
+    "is_active": true,
+    "is_pdb": true,
+    "main_photo_path": null
+  },
+  {
+    "id_product": 6700200,
+    "name": "Pain céréales",
+    "id_category": 14,
+    "category_name": "Boulangerie",
+    "periods": [
+      "morning",
+      "noon",
+      "afternoon"
+    ],
+    "batch_size": 10,
+    "unit_name": "pc",
+    "production_lead_minutes": 30,
+    "is_active": true,
+    "is_pdb": true,
+    "main_photo_path": null
+  },
+  {
+    "id_product": 6700210,
+    "name": "Éclair chocolat",
+    "id_category": 16,
+    "category_name": "Pâtisserie",
+    "periods": [
+      "morning",
+      "noon"
+    ],
+    "batch_size": 12,
+    "unit_name": "pc",
+    "production_lead_minutes": 20,
+    "is_active": true,
+    "is_pdb": true,
+    "main_photo_path": null
+  },
+  {
+    "id_product": 6700220,
+    "name": "Chouquette glacée",
+    "id_category": 16,
+    "category_name": "Pâtisserie",
+    "periods": [
+      "morning",
+      "noon"
+    ],
+    "batch_size": 30,
+    "unit_name": "pc",
+    "production_lead_minutes": 15,
+    "is_active": true,
+    "is_pdb": true,
+    "main_photo_path": null
+  },
+  {
+    "id_product": 6700230,
+    "name": "Cookie chocolat",
+    "id_category": 16,
+    "category_name": "Pâtisserie",
+    "periods": [
+      "noon",
+      "afternoon"
+    ],
+    "batch_size": 20,
+    "unit_name": "pc",
+    "production_lead_minutes": 12,
+    "is_active": true,
+    "is_pdb": false,
+    "main_photo_path": null
+  },
+  {
+    "id_product": 6700240,
+    "name": "Pain de campagne",
+    "id_category": 14,
+    "category_name": "Boulangerie",
+    "periods": [
+      "morning",
+      "noon"
+    ],
+    "batch_size": 8,
+    "unit_name": "pc",
+    "production_lead_minutes": 35,
+    "is_active": true,
+    "is_pdb": true,
+    "main_photo_path": null
   }
 ]

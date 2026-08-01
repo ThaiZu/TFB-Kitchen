@@ -4,12 +4,19 @@ namespace App\Kitchen\app\Http\Controllers\Production;
 
 use App\Kitchen\app\Http\Controllers\Controller;
 use App\Kitchen\app\Models\Production\MepLineModel;
+use App\Kitchen\app\Services\Baking\BakingService;
+use App\Kitchen\app\Services\Production\ProductionBoardService;
 use App\Kitchen\app\Services\Production\ProductionService;
 
 class ProductionController extends Controller
 {
     public function __construct(
-        private ProductionService $productionService
+        private ProductionService $productionService,
+        private ProductionBoardService $boardService,
+        // L'étape d'un produit vient du plan de cuisson, pas d'un second champ
+        // qui dériverait : une seule source de vérité pour « où en est ce
+        // produit », partagée avec le module Cuisson.
+        private BakingService $bakingService
     ) {}
 
     /**
@@ -48,24 +55,63 @@ class ProductionController extends Controller
         } elseif ($view === 'mep') {
             $data += $this->mepData($today);
         } else {
-            $products = $this->productionService->getProducts();
-            $mep      = $this->productionService->getMep($today);
-            $lines    = $mep !== null
-                ? $this->productionService->mepLinesForPeriod($mep['lines'], $view)
-                : [];
-
-            $data += [
-                'products_available' => $products !== null,
-                'groups'             => $products !== null
-                    ? $this->productionService->groupByCategory($products, $view)
-                    : [],
-                'mep_available'      => $mep !== null,
-                'mep_lines'          => $lines,
-                'mep_pending_count'  => count(array_filter($lines, fn(MepLineModel $l) => $l->isPending())),
-            ];
+            $data += $this->periodData($today, $view);
         }
 
         $this->view('production/index', $data);
+    }
+
+    /**
+     * Une période de la journée : le tableau de travail.
+     *
+     * Quatre sources se rejoignent ici, et aucune n'est facultative pour la
+     * même raison : le catalogue dit quoi, la MEP dit ce qui est produit, le
+     * plan de cuisson dit où ça en est, le stock et les ventes disent dans
+     * quel ordre s'en occuper. Chacune peut manquer sans casser l'écran —
+     * elle manque alors *visiblement*.
+     */
+    private function periodData(string $today, string $view): array
+    {
+        $products = $this->productionService->getProducts();
+        $mep      = $this->productionService->getMep($today);
+        $lines    = $mep !== null
+            ? $this->productionService->mepLinesForPeriod($mep['lines'], $view)
+            : [];
+
+        if ($products === null) {
+            return [
+                'products_available' => false,
+                'mep_available'      => $mep !== null,
+                'mep_lines'          => $lines,
+                'mep_pending_count'  => count(array_filter($lines, fn(MepLineModel $l) => $l->isPending())),
+                'board'              => null,
+            ];
+        }
+
+        $periodProducts = array_values(array_filter(
+            $products,
+            fn($p) => $p->isActive() && $p->belongsTo($view)
+        ));
+
+        // Le plan de cuisson peut ne pas être servi : les tuiles tombent alors
+        // toutes dans « rien en cours », et l'écran le dit plutôt que de
+        // laisser croire qu'aucune fournée n'est au four.
+        $plan   = $this->bakingService->getPlan($today);
+        $stages = $plan !== null ? $this->boardService->stagesByProduct($plan['batches']) : [];
+
+        $stock   = $this->productionService->getStock();
+        $tension = $this->productionService->tension($periodProducts, $stock, $today);
+
+        return [
+            'products_available' => true,
+            'mep_available'      => $mep !== null,
+            'mep_lines'          => $lines,
+            'mep_pending_count'  => count(array_filter($lines, fn(MepLineModel $l) => $l->isPending())),
+            'plan_available'     => $plan !== null,
+            'stock_available'    => $stock !== null,
+            'forecast_available' => $tension['available'],
+            'board'              => $this->boardService->build($periodProducts, $lines, $stages, $tension['map']),
+        ];
     }
 
     /**
@@ -275,6 +321,37 @@ class ProductionController extends Controller
         }
 
         $response = $this->productionService->saveMep($date, $lines);
+        $this->json($response, ($response['success'] ?? false) ? 200 : 502)->send();
+    }
+
+    /**
+     * POST /ajax/production/shelf
+     *
+     * Corps : { id_product, quantity, id_mep_line?, id_employee? }
+     *
+     * C'est ce geste qui met en vente : la validation de MEP constate ce qui
+     * est sorti du four, la mise en rayon décide de ce que la caisse peut
+     * vendre. Voir docs/ENDPOINTS_PRODUCTION.md.
+     */
+    public function ajaxShelve(): void
+    {
+        $input = json_decode(file_get_contents('php://input') ?: '', true);
+
+        $idProduct = (int)($input['id_product'] ?? 0);
+        $quantity  = (float)($input['quantity'] ?? 0);
+
+        if ($idProduct <= 0 || $quantity <= 0) {
+            $this->json(['success' => false, 'description' => 'invalid_payload'], 400)->send();
+            return;
+        }
+
+        $response = $this->productionService->shelve(
+            $idProduct,
+            $quantity,
+            isset($input['id_mep_line']) ? (int)$input['id_mep_line'] : null,
+            isset($input['id_employee']) ? (int)$input['id_employee'] : null
+        );
+
         $this->json($response, ($response['success'] ?? false) ? 200 : 502)->send();
     }
 

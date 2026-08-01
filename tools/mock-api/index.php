@@ -247,13 +247,16 @@ if ($method === 'POST' && $m('/shops/\d+/mep/validate')) {
             if (!empty($w['skipped'])) {
                 $lines[$i]['status'] = 'SKIPPED';
                 $lines[$i]['quantity_validated'] = 0;
+                $lines[$i]['quantity_shelved']   = 0;
                 continue;
             }
             $qty = max(0, (float)($w['quantity'] ?? 0));
             $lines[$i]['status'] = 'VALIDATED';
             $lines[$i]['quantity_validated'] = $qty;
-            // La quantité réelle, pas la prévue : c'est le stock de départ.
-            $s['stock'][$line['id_product']] = ($s['stock'][$line['id_product']] ?? 0) + $qty;
+            $lines[$i]['quantity_shelved']   = (float)($line['quantity_shelved'] ?? 0);
+            // Le stock vendable n'est PAS crédité ici : valider une MEP
+            // constate ce qui est sorti du four, pas ce que la caisse peut
+            // vendre. C'est la mise en rayon (source SHELF) qui crédite.
         }
         $s['mep'][$date]['lines'] = $lines;
 
@@ -299,8 +302,41 @@ if ($method === 'POST' && $m('/shops/\d+/production/batches')) {
         ko('invalid_payload', 422);
     }
 
-    $s = mutate(function (array $s) use ($idp, $qty) {
+    $lineId = isset($in['id_mep_line']) ? (int)$in['id_mep_line'] : 0;
+
+    // Porter plus que ce qui est sorti du four se refuse ici plutôt que de se
+    // rogner en silence : deux tablettes peuvent porter le même plateau, et un
+    // écrêtage muet ferait croire aux deux qu'elles ont réussi.
+    if ($lineId > 0) {
+        foreach (state()['mep'] as $mep) {
+            foreach ($mep['lines'] as $l) {
+                if ((int)$l['id'] !== $lineId) {
+                    continue;
+                }
+                $reste = (float)($l['quantity_validated'] ?? 0) - (float)($l['quantity_shelved'] ?? 0);
+                if ($qty > $reste) {
+                    ko('shelf_exceeds_produced', 409);
+                }
+            }
+        }
+    }
+
+    $s = mutate(function (array $s) use ($idp, $qty, $lineId) {
         $s['stock'][$idp] = ($s['stock'][$idp] ?? 0) + $qty;
+
+        // Mise en rayon rattachée à une ligne de MEP : on décompte le reste à
+        // porter, sinon l'écran reproposerait indéfiniment le même plateau.
+        if ($lineId > 0) {
+            foreach ($s['mep'] as $date => $mep) {
+                foreach ($mep['lines'] as $i => $l) {
+                    if ((int)$l['id'] !== $lineId) {
+                        continue;
+                    }
+                    $s['mep'][$date]['lines'][$i]['quantity_shelved'] =
+                        (float)($l['quantity_shelved'] ?? 0) + $qty;
+                }
+            }
+        }
         return $s;
     });
 

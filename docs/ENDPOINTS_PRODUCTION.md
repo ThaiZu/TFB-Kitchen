@@ -188,6 +188,7 @@ par en afficher une par erreur au milieu du service.
       "period": "morning",
       "quantity_planned": 120,
       "quantity_validated": null,
+      "quantity_shelved": 0,
       "unit_name": "pc",
       "status": "PREPARED"
     }
@@ -197,6 +198,17 @@ par en afficher une par erreur au milieu du service.
 
 `status` de la MEP : `PREPARED` (à valider) ou `VALIDATED`. Idem par ligne, plus
 `SKIPPED` pour une ligne écartée.
+
+**`quantity_shelved` — champ à ajouter.** Produire et mettre en vente sont deux
+gestes, et entre les deux il y a un plateau à porter — parfois en deux fois,
+parfois avec une moitié gardée en réserve. La ligne porte donc les deux
+chiffres : `quantity_validated` (ce qui est sorti du four) et
+`quantity_shelved` (ce qui est passé en rayon). L'écran de période propose de
+porter la différence, et ne repropose pas ce qui est déjà porté.
+
+Champ absent = `0`, donc un serveur qui ne le suit pas encore reproposera
+indéfiniment le même plateau. C'est visible immédiatement, ce qui vaut mieux
+qu'un `quantity_shelved` deviné qui masquerait le travail restant.
 
 ### Encoder la MEP du lendemain
 
@@ -246,8 +258,13 @@ Une quantité par ligne, éditable : on avait prévu 120 croissants, il en sort
 118. Le stock de départ doit être le réel, pas le prévu — sinon l'écart se
 propage dans toutes les prévisions de la journée.
 
-Réponse : la MEP mise à jour, dans la forme ci-dessus, **et le stock qui en
-résulte**. C'est cette validation qui rend les produits vendables en caisse.
+Réponse : la MEP mise à jour, dans la forme ci-dessus.
+
+> **Changement de sémantique.** Cette validation ne rend plus les produits
+> vendables : elle **constate ce qui est sorti du four**. Le stock vendable est
+> crédité par la mise en rayon (§ 5), pas ici. Le back-office doit donc cesser
+> de créditer le stock sur cet appel — sinon chaque fournée compterait deux
+> fois, une fois à la validation et une fois au portage.
 
 > **À confirmer** : que devient une ligne préparée mais non validée en fin de
 > journée — perte tracée, report sur le lendemain, ou simplement ignorée ? Le
@@ -344,7 +361,7 @@ exclure, donc — et c'est au serveur de le savoir.
 
 ---
 
-## 5. Valider une production (MEP ou recuisson)
+## 5. Mettre en vente : mise en rayon et recuisson
 
 ```
 POST /shops/{shopId}/production/batches
@@ -354,17 +371,38 @@ POST /shops/{shopId}/production/batches
 {
   "id_product": 6700106,
   "quantity": 48,
-  "source": "REBAKE",
+  "source": "SHELF",
+  "id_mep_line": 4401,
   "id_employee": 12
 }
 ```
 
-`source` : `MEP` ou `REBAKE`. Réponse : le lot créé **et le stock du produit
-après application**, pour que l'écran réaffiche un chiffre serveur plutôt que
-sa propre addition.
+| `source` | ce que c'est | effet attendu |
+|---|---|---|
+| `SHELF` | mise en rayon de ce qui a été produit | crédite le stock vendable **et** incrémente `quantity_shelved` de la ligne de MEP |
+| `REBAKE` | recuisson validée depuis l'écran Stock | crédite le stock vendable |
+| `MEP` | valeur historique, avant la séparation produire / mettre en vente | — |
 
-Le serveur arbitre : deux tablettes peuvent valider la même recuisson à
-quelques secondes d'intervalle.
+**C'est ce point d'entrée, et lui seul, qui rend un produit vendable.** La
+validation de MEP (§ 2) ne fait plus que constater la production.
+
+`id_mep_line` rattache le portage à sa ligne : sans lui, le serveur devrait
+recouper sur le produit et la date, et deux fournées du même croissant dans la
+journée deviendraient indiscernables. Il est envoyé dès que la ligne est
+connue ; une mise en rayon sans ligne rattachée reste acceptée et crédite
+simplement le stock.
+
+Réponse : le lot créé **et le stock du produit après application**, pour que
+l'écran réaffiche un chiffre serveur plutôt que sa propre addition. Quand
+`id_mep_line` est fourni, la ligne mise à jour est renvoyée aussi
+(`docs/mocks/10b_shelf_RESPONSE.json`).
+
+**Porter plus que ce qui est sorti du four doit être refusé** — `409
+shelf_exceeds_produced` — et non rogné en silence. Deux tablettes peuvent
+porter le même plateau à quelques secondes d'intervalle : un écrêtage muet
+ferait croire aux deux qu'elles ont réussi, et le rayon compterait une fournée
+qui n'existe pas. Le front plafonne déjà la saisie au reste à porter ; ce
+refus est la seconde barrière, celle qui compte.
 
 ---
 

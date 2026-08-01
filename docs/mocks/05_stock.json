@@ -49,6 +49,48 @@
       "category_name": "Viennoiserie",
       "quantity": 60,
       "unit_name": "pc"
+    },
+    {
+      "id_product": 6700190,
+      "name": "Chausson aux pommes",
+      "category_name": "Viennoiserie",
+      "quantity": 8,
+      "unit_name": "pc"
+    },
+    {
+      "id_product": 6700200,
+      "name": "Pain céréales",
+      "category_name": "Boulangerie",
+      "quantity": 24,
+      "unit_name": "pc"
+    },
+    {
+      "id_product": 6700210,
+      "name": "Éclair chocolat",
+      "category_name": "Pâtisserie",
+      "quantity": 4,
+      "unit_name": "pc"
+    },
+    {
+      "id_product": 6700220,
+      "name": "Chouquette glacée",
+      "category_name": "Pâtisserie",
+      "quantity": 45,
+      "unit_name": "pc"
+    },
+    {
+      "id_product": 6700230,
+      "name": "Cookie chocolat",
+      "category_name": "Pâtisserie",
+      "quantity": 60,
+      "unit_name": "pc"
+    },
+    {
+      "id_product": 6700240,
+      "name": "Pain de campagne",
+      "category_name": "Boulangerie",
+      "quantity": 6,
+      "unit_name": "pc"
     }
   ]
 }

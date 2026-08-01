@@ -28,5 +28,11 @@
     "body": {
       "description": "internal_error"
     }
+  },
+  "shelf_exceeds_produced_409": {
+    "http_status": 409,
+    "body": {
+      "description": "shelf_exceeds_produced"
+    }
   }
 }

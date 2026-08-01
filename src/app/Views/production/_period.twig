@@ -1,20 +1,30 @@
-{# production/_period.twig — une période de la journée.
+{# production/_period.twig — le tableau de travail d'une période.
 
-   En haut, la MEP : c'est la première action du matin, et rien ne se vend
-   avant elle. En dessous, les produits de la période, groupés par catégorie.
+   Une période n'est pas un catalogue : c'est une liste de gestes. Les produits
+   s'y rangent donc par ce qu'ils attendent de nous — mettre en rayon, finir,
+   surveiller le four, préparer — et à l'intérieur de chaque section par
+   tension : ce qui manquera le plus vite d'abord. La catégorie reste, en
+   filtre.
 
-   Reçoit du contrôleur : mep_available, mep_status, mep_lines, mep_prepared_at,
-   products_available, groups. #}
+   Reçoit du contrôleur : board (sections + catégories), mep_lines,
+   products_available, plan_available, stock_available, forecast_available. #}
 {% import "components/_icons.twig" as icons %}
+
+{% set bucket_labels = {
+    'shelf':  translations.bucket_shelf  | default('À mettre en rayon'),
+    'finish': translations.stage_finish  | default('Finition'),
+    'cook':   translations.stage_cook    | default('Cuisson'),
+    'prep':   translations.stage_prep    | default('Préparation'),
+    'idle':   translations.bucket_idle   | default('Rien en cours')
+} %}
 
 {# Rappel de MEP en attente. La validation elle-même vit dans l'onglet MEP :
    ici on ne fait que signaler, parce qu'une période dont la MEP n'est pas
-   validée n'a rien en vente, et que l'écran ne doit pas laisser le découvrir
-   à la caisse. #}
+   validée n'a rien à mettre en rayon. #}
 {% if mep_available and mep_pending_count > 0 %}
     <a href="{{ ROOT }}/production?view=mep&mep=morning" class="mep-banner d-block text-decoration-none mb-3">
         <h2>{{ translations.mep_banner_title | default('MEP de la veille à valider') }}</h2>
-        <p>{{ translations.mep_banner_text | default("Tant que la MEP n'est pas validée, la caisse ne peut pas vendre ces produits.") }}</p>
+        <p>{{ translations.mep_banner_text | default("Tant que la MEP n'est pas validée, rien n'est constaté comme produit — et il n'y a rien à porter en rayon.") }}</p>
         <span class="mep-banner-btn">
             {{ icons.svg('check-check', 19) }}
             {{ translations.mep_go | default('Aller à la MEP') }}
@@ -23,7 +33,6 @@
     </a>
 {% endif %}
 
-{# ── Produits de la période ── #}
 {% if not products_available %}
     <div class="card">
         <div class="card-body pr-state">
@@ -31,7 +40,7 @@
             <p>{{ translations.prod_catalog_not_served | default("Le catalogue de production n'est pas encore servi par l'API.") }}</p>
         </div>
     </div>
-{% elseif groups is empty %}
+{% elseif board is null or board.categories is empty %}
     <div class="card">
         <div class="card-body pr-state">
             {{ icons.svg('package', 38) }}
@@ -39,67 +48,130 @@
         </div>
     </div>
 {% else %}
-    {% for category, items in groups %}
-        <section class="pr-cat">
-            <h2 class="pr-cat-title">
-                {{ category }}<span class="pr-cat-count">{{ items|length }}</span>
-            </h2>
 
-            <div class="pr-rows">
-                {% for p in items %}
-                    {# Le statut de MEP se lit sur la ligne du produit, pas dans
-                       une seconde liste que personne ne rapprocherait. La
-                       recherche est directe : une période compte quelques
-                       dizaines de lignes, pas des milliers. #}
-                    {% set line = mep_lines|filter(l => l.idProduct == p.idProduct)|first|default(null) %}
-                    {% set state = line is null ? '' : (line.isValidated ? 'is-mep-validated' : (line.isPending ? 'is-mep-pending' : '')) %}
+    {# Ce qui manque à l'écran doit se lire à l'écran. Une liste triée sur un
+       stock qu'on n'a pas serait un ordre inventé. #}
+    {% set missing = [] %}
+    {% if not plan_available %}
+        {% set missing = missing|merge([translations.board_no_plan | default("le plan de cuisson n'est pas servi : aucune étape n'est connue")]) %}
+    {% endif %}
+    {% if not stock_available %}
+        {% set missing = missing|merge([translations.board_no_stock | default("le stock live n'est pas servi")]) %}
+    {% endif %}
+    {% if not forecast_available %}
+        {% set missing = missing|merge([translations.board_no_forecast | default("le profil de ventes n'est pas servi : le classement se fait sur le stock seul")]) %}
+    {% endif %}
+    {% if missing is not empty %}
+        <p class="pr-warn">{{ icons.svg('circle-alert', 15) }} {{ missing|join(' · ') }}</p>
+    {% endif %}
 
-                    <a class="pr-row {{ state }}"
-                       href="{{ p.idProduct ? ROOT ~ '/knowledge/products/' ~ p.idProduct : '#' }}">
-                        {% if p.hasMainPhoto %}
-                            <img class="pr-thumb" src="{{ p.mainPhotoUrl }}" alt="" loading="lazy">
-                        {% else %}
-                            <span class="pr-thumb" aria-hidden="true">{{ icons.svg('package', 20) }}</span>
-                        {% endif %}
+    {% include 'production/_cat_filters.twig' with { categories: board.categories, target: '#prBoard' } %}
 
-                        <span class="pr-row-txt">
-                            <span class="pr-row-name">{{ p.name | default('—') }}</span>
-                            <span class="pr-row-meta">
-                                {% if p.hasBatchSize %}
-                                    <span>{{ icons.svg('layers', 13) }}
+    <div id="prBoard">
+        {% for key, rows in board.buckets %}
+            {% if rows is not empty %}
+                <section class="pr-bucket b-{{ key }}">
+                    <h2 class="pr-cat-title">
+                        <i class="pr-dot d-{{ key }}"></i>
+                        {{ bucket_labels[key] }}<span class="pr-cat-count">{{ rows|length }}</span>
+                    </h2>
+
+                    <div class="pr-tiles">
+                        {% for r in rows %}
+                            {% set p = r.product %}
+                            <article class="pr-tile b-{{ key }}" data-cat="{{ r.category }}"
+                                     data-product-id="{{ p.idProduct }}"
+                                     data-line-id="{{ r.line ? r.line.id : '' }}"
+                                     data-remaining="{{ r.remaining }}"
+                                     data-batch="{{ p.effectiveBatchSize }}">
+
+                                <a class="pr-tile-head"
+                                   href="{{ p.idProduct ? ROOT ~ '/knowledge/products/' ~ p.idProduct : '#' }}">
+                                    {% if p.hasMainPhoto %}
+                                        <img class="pr-thumb" src="{{ p.mainPhotoUrl }}" alt="" loading="lazy">
+                                    {% else %}
+                                        <span class="pr-thumb" aria-hidden="true">{{ icons.svg('package', 20) }}</span>
+                                    {% endif %}
+                                    <span class="pr-tile-txt">
+                                        <span class="pr-row-name">{{ p.name | default('—') }}</span>
+                                        <span class="pr-tile-cat">{{ r.category }}</span>
+                                    </span>
+                                </a>
+
+                                {# Les deux chiffres qui décident de l'ordre de la
+                                   liste sont montrés : un classement dont on ne
+                                   voit pas la raison ne se conteste pas. #}
+                                <div class="pr-facts">
+                                    <span>
+                                        <b>{{ r.stock|number_format(0, ',', ' ') }}</b>
+                                        {{ translations.rebake_stock | default('Stock') }}
+                                    </span>
+                                    {% if r.expected is not null %}
+                                        <span>
+                                            <b>{{ r.expected|number_format(0, ',', ' ') }}</b>
+                                            {{ translations.rebake_expected | default('Ventes prévues') }}
+                                        </span>
+                                        <span class="{{ r.projected < 0 ? 'is-short' : '' }}">
+                                            <b>{{ r.projected|round(0, 'floor')|number_format(0, ',', ' ') }}</b>
+                                            {{ translations.rebake_projected | default('Projeté') }}
+                                        </span>
+                                    {% else %}
+                                        <span class="is-unknown">
+                                            {{ translations.board_sales_unknown | default('Ventes inconnues') }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+
+                                {% if key == 'shelf' %}
+                                    {# La mise en rayon : le geste de cette section.
+                                       Pré-rempli au reste à porter, réglable par
+                                       fournée — on porte rarement un plateau et
+                                       demi. #}
+                                    <p class="pr-tile-sub">
+                                        {{ translations.shelf_remaining | default('Reste à porter') }}
+                                        <b>{{ r.remaining|number_format(0, ',', ' ') }}</b>
+                                        {%- if p.unitName %} {{ p.unitName }}{% endif %}
+                                        {%- if r.line and r.line.quantityShelved > 0 %}
+                                            · {{ translations.shelf_done | default('déjà en rayon') }}
+                                            {{ r.line.quantityShelved|number_format(0, ',', ' ') }}
+                                        {%- endif %}
+                                    </p>
+                                    <div class="pr-shelf">
+                                        <span class="mep-ctl">
+                                            <button type="button" class="mep-step" data-step="-1" aria-label="−">−</button>
+                                            <input type="number" class="form-control mep-qty pr-shelf-qty"
+                                                   inputmode="numeric" min="0" step="1"
+                                                   value="{{ r.remaining|number_format(0, '.', '') }}"
+                                                   aria-label="{{ translations.shelf_qty | default('Quantité à mettre en rayon') }} — {{ p.name }}">
+                                            <button type="button" class="mep-step" data-step="1" aria-label="+">+</button>
+                                        </span>
+                                        <button type="button" class="pr-shelf-go">
+                                            {{ icons.svg('store', 17) }}
+                                            {{ translations.shelf_go | default('En rayon') }}
+                                        </button>
+                                    </div>
+                                {% elseif r.batch %}
+                                    <p class="pr-tile-sub">
+                                        {{ translations.board_due | default('Échéance') }}
+                                        <b>{{ r.batch.dueClock }}</b>
+                                        · {{ r.batch.quantity|number_format(0, ',', ' ') }}
+                                        {{- p.unitName ? ' ' ~ p.unitName : '' }}
+                                        {{- r.batch.ovenName ? ' · ' ~ r.batch.ovenName : '' }}
+                                    </p>
+                                {% elseif key == 'idle' and p.hasBatchSize %}
+                                    <p class="pr-tile-sub">
                                         {{ translations.prod_batch | default('Fournée') }}
-                                        {{ p.batchSize|number_format(0, ',', ' ') }}{{ p.unitName ? ' ' ~ p.unitName : '' }}
-                                    </span>
+                                        <b>{{ p.batchSize|number_format(0, ',', ' ') }}</b>
+                                        {%- if p.unitName %} {{ p.unitName }}{% endif %}
+                                    </p>
                                 {% endif %}
-                                {% if p.leadMinutes > 0 %}
-                                    <span>{{ icons.svg('timer', 13) }}
-                                        {{ translations.prod_lead | default('Cuisson') }}
-                                        {{ p.leadMinutes }} {{ translations.prod_unit_min | default('min') }}
-                                    </span>
-                                {% endif %}
-                            </span>
-                        </span>
+                            </article>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endif %}
+        {% endfor %}
+    </div>
 
-                        {% if line %}
-                            {% if line.isValidated %}
-                                <span class="pr-row-qty">
-                                    <b>{{ line.quantityValidated|number_format(0, ',', ' ') }}</b>
-                                    <span>{{ translations.mep_real | default('Réel') }}</span>
-                                </span>
-                                <span class="pr-pill pill-validated">{{ translations.mep_validated | default('MEP validée') }}</span>
-                            {% elseif line.isSkipped %}
-                                <span class="pr-pill pill-skipped">{{ translations.mep_skipped | default('Écartée') }}</span>
-                            {% else %}
-                                <span class="pr-row-qty">
-                                    <b>{{ line.quantityPlanned|number_format(0, ',', ' ') }}</b>
-                                    <span>{{ translations.mep_planned | default('Prévu') }}</span>
-                                </span>
-                                <span class="pr-pill pill-pending">{{ translations.mep_pending | default('À valider') }}</span>
-                            {% endif %}
-                        {% endif %}
-                    </a>
-                {% endfor %}
-            </div>
-        </section>
-    {% endfor %}
+    <div id="prShelfAlert" class="alert mt-3 d-none"></div>
 {% endif %}

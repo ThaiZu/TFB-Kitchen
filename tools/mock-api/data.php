@@ -99,6 +99,22 @@ function mock_products(): array
         // Absent du profil de ventes : aucune recuisson proposée.
         ['id_product' => 6700160, 'name' => 'Sandwich club',             'id_category' => 18, 'category_name' => 'Traiteur',
          'periods' => ['noon'], 'batch_size' => 10, 'unit_name' => 'pc', 'production_lead_minutes' => 0, 'is_active' => true, 'is_pdb' => false],
+        // Les produits du plan de cuisson. Ils DOIVENT porter les mêmes ids
+        // ici et dans mock_baking_batches() : c'est par l'id que l'écran de
+        // période lit l'étape d'un produit, et deux catalogues qui divergent
+        // affichent un four sous le nom d'un autre produit.
+        ['id_product' => 6700190, 'name' => 'Chausson aux pommes',       'id_category' => 12, 'category_name' => 'Viennoiserie',
+         'periods' => ['morning', 'noon'], 'batch_size' => 18, 'unit_name' => 'pc', 'production_lead_minutes' => 20, 'is_active' => true, 'is_pdb' => true],
+        ['id_product' => 6700200, 'name' => 'Pain céréales',             'id_category' => 14, 'category_name' => 'Boulangerie',
+         'periods' => ['morning', 'noon', 'afternoon'], 'batch_size' => 10, 'unit_name' => 'pc', 'production_lead_minutes' => 30, 'is_active' => true, 'is_pdb' => true],
+        ['id_product' => 6700210, 'name' => 'Éclair chocolat',           'id_category' => 16, 'category_name' => 'Pâtisserie',
+         'periods' => ['morning', 'noon'], 'batch_size' => 12, 'unit_name' => 'pc', 'production_lead_minutes' => 20, 'is_active' => true, 'is_pdb' => true],
+        ['id_product' => 6700220, 'name' => 'Chouquette glacée',         'id_category' => 16, 'category_name' => 'Pâtisserie',
+         'periods' => ['morning', 'noon'], 'batch_size' => 30, 'unit_name' => 'pc', 'production_lead_minutes' => 15, 'is_active' => true, 'is_pdb' => true],
+        ['id_product' => 6700230, 'name' => 'Cookie chocolat',           'id_category' => 16, 'category_name' => 'Pâtisserie',
+         'periods' => ['noon', 'afternoon'], 'batch_size' => 20, 'unit_name' => 'pc', 'production_lead_minutes' => 12, 'is_active' => true, 'is_pdb' => false],
+        ['id_product' => 6700240, 'name' => 'Pain de campagne',          'id_category' => 14, 'category_name' => 'Boulangerie',
+         'periods' => ['morning', 'noon'], 'batch_size' => 8, 'unit_name' => 'pc', 'production_lead_minutes' => 35, 'is_active' => true, 'is_pdb' => true],
     ];
 }
 
@@ -107,6 +123,8 @@ function mock_initial_stock(): array
     return [
         6700106 => 10, 6700110 => 60, 6700120 => 30,
         6700130 => 2,  6700140 => 3,  6700150 => 0, 6700160 => 0,
+        6700190 => 8,  6700200 => 24, 6700210 => 4, 6700220 => 45,
+        6700230 => 60, 6700240 => 6,
     ];
 }
 
@@ -192,10 +210,10 @@ function mock_baking_batches(int $nowMinutes): array
         [-40, 6700220, 'Chouquette glacée',    'Pâtisserie',   30, 1, 'Four 1 — Rotatif', 175, 15, 15, ['PIECE', 'Glaçage', 0.5],          5],
         [-20, 6700120, 'Baguette tradition',   'Boulangerie',  48, 3, 'Four 3 — Sole',    240, 20, 22, ['LOT', 'Ressuage', 20],            5],
         [-50, 6700106, 'Croissant pur beurre', 'Viennoiserie', 48, 1, 'Four 1 — Rotatif', 175, 20, 18, ['LOT', 'Refroidissement', 15],     5],
-        [-35, 6700130, 'Chausson aux pommes',  'Viennoiserie', 36, 1, 'Four 1 — Rotatif', 180, 15, 20, ['LOT', 'Refroidissement', 10],     5],
-        [-20, 6700170, 'Pain céréales',        'Boulangerie',  20, 3, 'Four 3 — Sole',    230, 20, 30, ['LOT', 'Ressuage', 25],            5],
+        [-35, 6700190, 'Chausson aux pommes',  'Viennoiserie', 36, 1, 'Four 1 — Rotatif', 180, 15, 20, ['LOT', 'Refroidissement', 10],     5],
+        [-20, 6700200, 'Pain céréales',        'Boulangerie',  20, 3, 'Four 3 — Sole',    230, 20, 30, ['LOT', 'Ressuage', 25],            5],
         [ 10, 6700106, 'Croissant pur beurre', 'Viennoiserie', 48, 1, 'Four 1 — Rotatif', 175, 20, 18, ['LOT', 'Refroidissement', 15],     5],
-        [ 40, 6700180, 'Cookie chocolat',      'Pâtisserie',   40, 2, 'Four 2 — Ventilé', 165, 10, 12, ['LOT', 'Refroidissement', 10],     0],
+        [ 40, 6700230, 'Cookie chocolat',      'Pâtisserie',   40, 2, 'Four 2 — Ventilé', 165, 10, 12, ['LOT', 'Refroidissement', 10],     0],
     ];
 
     $batches = [];

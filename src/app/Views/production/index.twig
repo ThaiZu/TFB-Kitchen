@@ -304,6 +304,84 @@
         background: var(--c-bg-2, #F4EFE8); color: var(--c-ink, #241f1c);
         font-size: .7rem; line-height: 21px; text-align: center;
     }
+    /* ── Tableau de travail d'une période ────────────────────────────────
+       Sections par geste attendu, tuiles triées par tension. Les couleurs
+       sont celles du module Cuisson : c'est le même vocabulaire, il ne doit
+       pas changer de sens en changeant d'écran. */
+    .pr-bucket { margin-top: 22px; }
+    .pr-bucket[hidden] { display: none; }
+    .pr-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex: 0 0 auto; }
+    .d-shelf  { background: var(--c-vert, #2D7A3E); }
+    .d-finish { background: #C17A2A; }
+    .d-cook   { background: #8D1D2C; }
+    .d-prep   { background: #1F4F6B; }
+    .d-idle   { background: var(--c-line-2, rgba(36,26,22,.2)); }
+
+    .pr-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    @media (max-width: 1200px) { .pr-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+    .pr-tile {
+        display: flex; flex-direction: column; gap: 9px;
+        background: var(--c-surface, #fff);
+        border: 1px solid var(--c-line, rgba(36,26,22,.09));
+        border-left: 4px solid var(--c-line-2, rgba(36,26,22,.14));
+        border-radius: var(--r-lg, 18px); padding: 12px 14px;
+        box-shadow: var(--sh-1, 0 1px 2px rgba(0,0,0,.04));
+    }
+    .pr-tile[hidden] { display: none; }
+    .pr-tile.b-shelf  { border-left-color: var(--c-vert, #2D7A3E); }
+    .pr-tile.b-finish { border-left-color: #C17A2A; }
+    .pr-tile.b-cook   { border-left-color: #8D1D2C; }
+    .pr-tile.b-prep   { border-left-color: #1F4F6B; }
+    .pr-tile.b-idle   { opacity: .72; }
+
+    .pr-tile-head { display: flex; align-items: center; gap: 11px; text-decoration: none; color: inherit; }
+    .pr-tile-txt { flex: 1; min-width: 0; }
+    .pr-tile-cat { display: block; font-size: .7rem; color: var(--c-muted, #7a7168); margin-top: 2px; }
+
+    /* Les deux chiffres qui décident du classement sont montrés : un ordre
+       dont on ne voit pas la raison ne se conteste pas, et ne se corrige donc
+       jamais. */
+    .pr-facts { display: flex; gap: 14px; flex-wrap: wrap; }
+    .pr-facts > span { font-size: .68rem; color: var(--c-muted, #7a7168); line-height: 1.2; }
+    .pr-facts > span b { display: block; font-size: .95rem; font-weight: 800; color: var(--c-ink, #241f1c); }
+    .pr-facts .is-short b { color: var(--c-primary, #8D1D2C); }
+    .pr-facts .is-unknown { font-style: italic; }
+
+    .pr-tile-sub { margin: 0; font-size: .74rem; color: var(--c-muted, #7a7168); }
+    .pr-tile-sub b { color: var(--c-ink, #241f1c); font-weight: 800; }
+
+    .pr-shelf { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .pr-shelf .mep-ctl { flex: 1 1 150px; }
+    .pr-shelf .mep-qty { width: auto; flex: 1 1 auto; min-width: 0; }
+    .pr-shelf-go {
+        flex: 1 1 130px; min-height: 52px;
+        display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+        border: 0; border-radius: var(--r-md, 13px);
+        background: var(--c-vert, #2D7A3E); color: #fff;
+        font-family: inherit; font-size: .92rem; font-weight: 800; cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .pr-shelf-go:active { transform: scale(.995); }
+    .pr-shelf-go[disabled] { opacity: .55; cursor: default; }
+
+    /* Ce qui manque à l'écran se lit à l'écran : une liste triée sur un stock
+       qu'on n'a pas serait un ordre inventé. */
+    .pr-warn {
+        display: flex; align-items: flex-start; gap: 7px;
+        margin: 0 0 12px; font-size: .76rem; line-height: 1.45;
+        color: var(--c-ambre, #C17A2A);
+    }
+    .pr-warn svg { flex: 0 0 auto; margin-top: 1px; }
+
+    @media (max-width: 780px) {
+        .pr-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .pr-tile { padding: 10px 11px; }
+        .pr-facts { gap: 10px; }
+        .pr-shelf .mep-ctl,
+        .pr-shelf-go { flex: 1 1 100%; }
+    }
+
     .pr-rows { display: flex; flex-direction: column; gap: 8px; }
     .pr-row {
         display: flex; align-items: center; gap: 12px;
@@ -483,5 +561,7 @@
     {% include "production/_stock_scripts.twig" %}
 {% elseif active_view == 'mep' %}
     {% include "production/_mep_scripts.twig" %}
+{% else %}
+    {% include "production/_period_scripts.twig" %}
 {% endif %}
 {% endblock %}
