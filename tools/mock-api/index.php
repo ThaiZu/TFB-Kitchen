@@ -404,7 +404,60 @@ if ($method === 'POST' && $path === '/__reset') {
 }
 
 // ── Tout le reste ─────────────────────────────────────────────────────────
-// Volontairement 404 : un endpoint absent doit se voir. Renvoyer une liste
-// vide laisserait croire que la donnée manque alors que c'est la route.
+/**
+ * Mode relais, activé par la variable d'environnement MOCK_API_PASSTHROUGH :
+ *
+ *     MOCK_API_PASSTHROUGH=https://atelierby.tfbuddy.com/api/v1 \
+ *     php -S 127.0.0.1:8081 tools/mock-api/index.php
+ *
+ * Ce que le bouchon connaît, il le sert ; tout le reste part vers l'API
+ * réelle. Sans lui, brancher l'app sur le bouchon ferait tomber en 404 le
+ * tableau de bord, les checklists, les commandes et la base de connaissances —
+ * on verrait les nouveaux modules au prix de tous les autres écrans.
+ */
+$upstream = getenv('MOCK_API_PASSTHROUGH') ?: '';
+if ($upstream !== '') {
+    $url = rtrim($upstream, '/') . $_SERVER['REQUEST_URI'];
+
+    $headers = [];
+    foreach (getallheaders() ?: [] as $k => $v) {
+        // Host et Content-Length sont recalculés par curl ; les recopier
+        // ferait échouer la requête.
+        if (!in_array(strtolower($k), ['host', 'content-length'], true)) {
+            $headers[] = "$k: $v";
+        }
+    }
+
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CUSTOMREQUEST  => $method,
+        CURLOPT_HTTPHEADER     => $headers,
+        CURLOPT_TIMEOUT        => 20,
+    ]);
+    if (!in_array($method, ['GET', 'HEAD'], true)) {
+        curl_setopt($ch, CURLOPT_POSTFIELDS, file_get_contents('php://input') ?: '');
+    }
+
+    $body = curl_exec($ch);
+    $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $type = (string)curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+    curl_close($ch);
+
+    if ($body === false) {
+        error_log("[mock-api] relais injoignable : {$method} {$path}");
+        ko('upstream_unreachable', 502);
+    }
+
+    error_log("[mock-api] relayé ({$code}) : {$method} {$path}");
+    http_response_code($code ?: 502);
+    header('Content-Type: ' . ($type ?: 'application/json; charset=utf-8'));
+    echo $body;
+    exit;
+}
+
+// Sans relais, volontairement 404 : un endpoint absent doit se voir. Renvoyer
+// une liste vide laisserait croire que la donnée manque alors que c'est la
+// route.
 error_log("[mock-api] non bouchonné : {$method} {$path}");
 ko('not_mocked', 404);

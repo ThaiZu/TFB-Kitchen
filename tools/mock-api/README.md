@@ -63,6 +63,20 @@ comportement et non contre un serveur complaisant.
 Les appels non couverts sont journalisés sur la sortie d'erreur du serveur —
 c'est la liste de ce qu'il reste à écrire.
 
+## Mode relais — voir les nouveaux modules sans perdre les autres écrans
+
+```bash
+MOCK_API_PASSTHROUGH=https://atelierby.tfbuddy.com/api/v1 \
+  php -S 127.0.0.1:8081 tools/mock-api/index.php
+```
+
+Ce que le bouchon connaît, il le sert ; **tout le reste part vers l'API
+réelle**. Sans cela, brancher l'app sur le bouchon ferait tomber en 404 le
+tableau de bord, les checklists, les commandes et la base de connaissances : on
+verrait Production et Cuisson au prix de tous les autres écrans.
+
+C'est le mode à utiliser pour faire une démonstration complète.
+
 ## Endpoints couverts
 
 **Authentification**
