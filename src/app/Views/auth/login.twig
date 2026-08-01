@@ -11,123 +11,11 @@
     <link rel="stylesheet" href="{{ ROOT }}/assets/css/atelier-theme.css">
     <style>
         html, body { height: 100%; margin: 0; }
+        /* Écran de connexion : le formulaire seul, centré.
+           La colonne de présentation qui occupait la gauche s'adressait à
+           quelqu'un qui découvre le produit — pas à une équipe de cuisine qui
+           se connecte chaque matin sur la même tablette. */
         #auth-root { min-height: 100vh; display: flex; }
-        /* ── LEWA KOLUMNA: kontekst aplikacji ── */
-        .app-brand-col {
-            width: 420px;
-            flex-shrink: 0;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 40px 44px;
-            background:
-                radial-gradient(ellipse 900px 600px at 0% 10%, rgba(242,201,160,.14), transparent 65%),
-                linear-gradient(160deg, #9a2233 0%, #7c1824 55%, #5f1320 100%);
-            color: #fff;
-            position: relative;
-            overflow: hidden;
-        }
-        /* dekoracja tła */
-        .app-brand-col::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.025'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-            pointer-events: none;
-        }
-        .brand-top { position: relative; }
-        .brand-mid  { position: relative; flex: 1; display: flex; flex-direction: column; justify-content: center; }
-        .brand-foot { position: relative; }
-        /* identyfikator aplikacji w nagłówku */
-        .app-id-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: .5rem;
-            padding: .38rem .85rem;
-            border-radius: 999px;
-            border: 1px solid rgba(255,255,255,.2);
-            background: rgba(255,255,255,.08);
-            font-size: .8rem;
-            font-weight: 700;
-            letter-spacing: .06em;
-            text-transform: uppercase;
-            color: rgba(255,255,255,.9);
-        }
-        .app-id-pill .dot {
-            width: 7px; height: 7px;
-            border-radius: 50%;
-            background: #6ec27e;
-            box-shadow: 0 0 6px rgba(110,194,126,.9);
-            flex-shrink: 0;
-        }
-        /* duży tytuł sekcji kuchni */
-        .kitchen-icon-wrap {
-            width: 64px; height: 64px;
-            border-radius: 18px;
-            background: rgba(255,255,255,.1);
-            border: 1px solid rgba(255,255,255,.18);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-            font-size: 1.8rem;
-        }
-        .brand-headline {
-            font-family: var(--font-display);
-            font-size: 2.1rem;
-            font-weight: 400;
-            letter-spacing: .01em;
-            line-height: 1.15;
-            margin: 0 0 10px;
-        }
-        .brand-desc {
-            color: rgba(255,255,255,.7);
-            font-size: .97rem;
-            line-height: 1.6;
-            margin: 0 0 28px;
-        }
-        /* lista możliwości */
-        .feature-list {
-            list-style: none;
-            padding: 0; margin: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .feature-list li {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-        }
-        .feature-list .fi {
-            width: 32px; height: 32px;
-            border-radius: 10px;
-            background: rgba(255,255,255,.1);
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
-            font-size: .95rem;
-        }
-        .feature-list .ft {
-            display: flex; flex-direction: column;
-        }
-        .feature-list .ft strong {
-            font-size: .88rem;
-            font-weight: 700;
-            color: rgba(255,255,255,.95);
-            line-height: 1.2;
-        }
-        .feature-list .ft span {
-            font-size: .78rem;
-            color: rgba(255,255,255,.55);
-            line-height: 1.4;
-        }
-        /* stopka marki */
-        .brand-foot-text {
-            font-size: .78rem;
-            color: rgba(255,255,255,.4);
-        }
-        /* ── PRAWA KOLUMNA: formularz ── */
         .auth-form-col {
             flex: 1;
             min-height: 100vh;
@@ -290,81 +178,12 @@
         }
         /* Widok mobilny */
         @media (max-width: 767.98px) {
-            #auth-root { flex-direction: column; }
-            .app-brand-col {
-                width: 100%;
-                min-height: auto;
-                padding: 24px 20px;
-            }
-            .brand-mid { margin: 20px 0; }
-            .auth-form-col { background: #fff; }
+            .auth-form-col { background: #fff; padding: 24px 18px; }
         }
     </style>
 </head>
 <body>
 <div id="auth-root">
-    {# ════════════════════════════════════════════
-       LEWA KOLUMNA — identyfikacja aplikacji
-       ════════════════════════════════════════════ #}
-    <div class="app-brand-col">
-        {# Nagłówek — identyfikacja systemu #}
-        <div class="brand-top">
-            <span class="app-id-pill">
-                <span class="dot"></span>
-                {{ translations.franchise_ecosystem }}
-            </span>
-        </div>
-        {# Główna treść #}
-        <div class="brand-mid">
-            <div class="kitchen-icon-wrap">
-                <i class="bi bi-shop-window"></i>
-            </div>
-            <h1 class="brand-headline">{{ translations.kitchen_brand_headline }}</h1>
-            <p class="brand-desc">{{ translations.kitchen_brand_subtitle }}</p>
-            <ul class="feature-list">
-                <li>
-                    <div class="fi"><i class="bi bi-list-check"></i></div>
-                    <div class="ft">
-                        <strong>{{ translations.kitchen_production }}</strong>
-                        <span>{{ translations.kitchen_production_desc }}</span>
-                    </div>
-                </li>
-                <li>
-                    <div class="fi"><i class="bi bi-journal-text"></i></div>
-                    <div class="ft">
-                        <strong>{{ translations.kitchen_cards }}</strong>
-                        <span>{{ translations.kitchen_cards_desc }}</span>
-                    </div>
-                </li>
-                <li>
-                    <div class="fi"><i class="bi bi-clipboard-check"></i></div>
-                    <div class="ft">
-                        <strong>{{ translations.kitchen_checklists }}</strong>
-                        <span>{{ translations.kitchen_checklists_desc }}</span>
-                    </div>
-                </li>
-                <li>
-                    <div class="fi"><i class="bi bi-cloud-arrow-down"></i></div>
-                    <div class="ft">
-                        <strong>{{ translations.kitchen_offline }}</strong>
-                        <span>{{ translations.kitchen_offline_desc }}</span>
-                    </div>
-                </li>
-            </ul>
-            <p class="mt-4 mb-0" style="font-size:.8rem; color:rgba(255,255,255,.4);">
-                {{ translations.kitchen_no_access_hint }}
-            </p>
-        </div>
-        {# Stopka #}
-        <div class="brand-foot">
-            <p class="brand-foot-text mb-0">
-                © {{ "now"|date("Y") }} • {{ translations.franchise_ecosystem }}
-            </p>
-        </div>
-    </div>
-    {# ════════════════════════════════════════════
-       PRAWA KOLUMNA — formularz logowania
-       ════════════════════════════════════════════ #}
     <div class="auth-form-col">
         <div class="auth-panel">
             {# Nagłówek panelu — user ZAWSZE wie gdzie jest #}
