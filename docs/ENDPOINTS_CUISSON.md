@@ -11,6 +11,25 @@ le second toute la journée.
 
 ---
 
+## Forme des réponses
+
+**Le corps est renvoyé nu, sans enveloppe.** C'est la convention de toute
+l'application : `ApiClient::get()` construit lui-même
+`['success' => <code HTTP 2xx>, 'data' => <corps décodé>]`. Un serveur qui
+répondrait `{"success": true, "data": {…}}` ferait donc arriver la charge utile
+sous `$response['data']['data']`, et tous les dépôts liraient à côté.
+
+L'échec se dit par le **code HTTP**. Le corps ne porte que le détail, sous
+`description` — la seule clé que `post()` et `patch()` savent remonter.
+
+À noter pour l'écriture du serveur : `ApiClient::post()` et `::patch()`
+**ne remontent pas le corps de la réponse**, seulement `message`,
+`inserted_id`, `description` et le code. Les réponses décrites plus bas pour
+les écritures restent utiles pour l'avenir, mais le front n'en dépend pas : il
+relit systématiquement après une écriture.
+
+---
+
 ## Le principe
 
 Une **fournée** traverse trois étapes, dans cet ordre, et une seule à la fois :
@@ -46,12 +65,15 @@ GET /shops/{shopId}/ovens
 ```
 
 ```json
-{
-  "success": true,
-  "data": [
-    { "id": 1, "name": "Four 1 — Rotatif", "levels": 8, "temp_min": 160, "temp_max": 250 }
-  ]
-}
+[
+  {
+    "id": 1,
+    "name": "Four 1 — Rotatif",
+    "levels": 8,
+    "temp_min": 160,
+    "temp_max": 250
+  }
+]
 ```
 
 Facultatif pour l'écran, qui affiche le nom porté par chaque fournée. Devient
@@ -70,36 +92,33 @@ de date — une cuisine ne cuit pas pour hier.
 
 ```json
 {
-  "success": true,
-  "data": {
-    "date": "2026-08-01",
-    "server_time": "07:20",
-    "batches": [
-      {
-        "id": 5501,
-        "id_product": 6700210,
-        "name": "Éclair chocolat",
-        "category_name": "Pâtisserie",
-        "quantity": 36,
-        "unit_name": "pc",
-        "id_oven": 2,
-        "oven_name": "Four 2 — Ventilé",
-        "temperature": 180,
-        "prep_start": "06:00",
-        "prep_minutes": 30,
-        "cook_start": "06:40",
-        "cook_minutes": 20,
-        "finish_type": "PIECE",
-        "finish_label": "Nappage",
-        "finish_per_piece_minutes": 1,
-        "shelf_delay_minutes": 10,
-        "status": "FINISHING",
-        "prep_started_at": "2026-08-01 06:02:00",
-        "cook_started_at": "2026-08-01 06:41:00",
-        "finish_started_at": "2026-08-01 07:01:00"
-      }
-    ]
-  }
+  "date": "2026-08-01",
+  "server_time": "07:20",
+  "batches": [
+    {
+      "id": 5501,
+      "id_product": 6700210,
+      "name": "Éclair chocolat",
+      "category_name": "Pâtisserie",
+      "quantity": 36,
+      "unit_name": "pc",
+      "id_oven": 2,
+      "oven_name": "Four 2 — Ventilé",
+      "temperature": 180,
+      "prep_start": "06:00",
+      "prep_minutes": 30,
+      "cook_start": "06:40",
+      "cook_minutes": 20,
+      "finish_type": "PIECE",
+      "finish_label": "Nappage",
+      "finish_per_piece_minutes": 1,
+      "shelf_delay_minutes": 10,
+      "status": "FINISHING",
+      "prep_started_at": "2026-08-01 06:02:00",
+      "cook_started_at": "2026-08-01 06:41:00",
+      "finish_started_at": "2026-08-01 07:01:00"
+    }
+  ]
 }
 ```
 
@@ -181,7 +200,11 @@ GET /shops/{shopId}/baking/pending-count
 ```
 
 ```json
-{ "success": true, "data": { "preparing": 1, "baking": 2, "finishing": 3 } }
+{
+  "preparing": 1,
+  "baking": 2,
+  "finishing": 3
+}
 ```
 
 Facultatif — sans lui, l'entrée de menu n'affiche pas de pastille.

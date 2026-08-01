@@ -11,6 +11,25 @@ décrit ici doit être détenu et persisté côté back-office.
 
 ---
 
+## Forme des réponses
+
+**Le corps est renvoyé nu, sans enveloppe.** C'est la convention de toute
+l'application : `ApiClient::get()` construit lui-même
+`['success' => <code HTTP 2xx>, 'data' => <corps décodé>]`. Un serveur qui
+répondrait `{"success": true, "data": {…}}` ferait donc arriver la charge utile
+sous `$response['data']['data']`, et tous les dépôts liraient à côté.
+
+L'échec se dit par le **code HTTP**. Le corps ne porte que le détail, sous
+`description` — la seule clé que `post()` et `patch()` savent remonter.
+
+À noter pour l'écriture du serveur : `ApiClient::post()` et `::patch()`
+**ne remontent pas le corps de la réponse**, seulement `message`,
+`inserted_id`, `description` et le code. Les réponses décrites plus bas pour
+les écritures restent utiles pour l'avenir, mais le front n'en dépend pas : il
+relit systématiquement après une écriture.
+
+---
+
 ## Décisions arrêtées
 
 | Point | Décision |
@@ -35,17 +54,29 @@ GET /shops/{shopId}/production/config
 
 ```json
 {
-  "success": true,
-  "data": {
-    "periods": [
-      { "key": "morning",   "label": "Matin",       "start": "05:00", "end": "11:00" },
-      { "key": "noon",      "label": "Midi",        "start": "11:00", "end": "14:00" },
-      { "key": "afternoon", "label": "Après-midi",  "start": "14:00", "end": "19:00" }
-    ],
-    "forecast_hours": 2,
-    "history_weeks": 6,
-    "safety_margin": 0
-  }
+  "periods": [
+    {
+      "key": "morning",
+      "label": "Matin",
+      "start": "05:00",
+      "end": "11:00"
+    },
+    {
+      "key": "noon",
+      "label": "Midi",
+      "start": "11:00",
+      "end": "14:00"
+    },
+    {
+      "key": "afternoon",
+      "label": "Après-midi",
+      "start": "14:00",
+      "end": "19:00"
+    }
+  ],
+  "forecast_hours": 2,
+  "history_weeks": 6,
+  "safety_margin": 0
 }
 ```
 
@@ -64,23 +95,23 @@ GET /shops/{shopId}/production/products
 ```
 
 ```json
-{
-  "success": true,
-  "data": [
-    {
-      "id_product": 6700106,
-      "name": "Croissant pur beurre",
-      "id_category": 12,
-      "category_name": "Viennoiserie",
-      "periods": ["morning", "noon"],
-      "batch_size": 24,
-      "unit_name": "pc",
-      "production_lead_minutes": 40,
-      "is_active": true,
-      "main_photo_path": "r2://products/6700106/main.jpg"
-    }
-  ]
-}
+[
+  {
+    "id_product": 6700106,
+    "name": "Croissant pur beurre",
+    "id_category": 12,
+    "category_name": "Viennoiserie",
+    "periods": [
+      "morning",
+      "noon"
+    ],
+    "batch_size": 24,
+    "unit_name": "pc",
+    "production_lead_minutes": 40,
+    "is_active": true,
+    "main_photo_path": "r2://products/6700106/main.jpg"
+  }
+]
 ```
 
 | champ | rôle | obligatoire |
@@ -123,25 +154,22 @@ par en afficher une par erreur au milieu du service.
 
 ```json
 {
-  "success": true,
-  "data": {
-    "date": "2026-07-31",
-    "prepared_at": "2026-07-30 18:20:00",
-    "status": "PREPARED",
-    "lines": [
-      {
-        "id": 4401,
-        "id_product": 6700106,
-        "name": "Croissant pur beurre",
-        "category_name": "Viennoiserie",
-        "period": "morning",
-        "quantity_planned": 120,
-        "quantity_validated": null,
-        "unit_name": "pc",
-        "status": "PREPARED"
-      }
-    ]
-  }
+  "date": "2026-07-31",
+  "prepared_at": "2026-07-30 18:20:00",
+  "status": "PREPARED",
+  "lines": [
+    {
+      "id": 4401,
+      "id_product": 6700106,
+      "name": "Croissant pur beurre",
+      "category_name": "Viennoiserie",
+      "period": "morning",
+      "quantity_planned": 120,
+      "quantity_validated": null,
+      "unit_name": "pc",
+      "status": "PREPARED"
+    }
+  ]
 }
 ```
 
@@ -217,19 +245,16 @@ GET /shops/{shopId}/stock
 
 ```json
 {
-  "success": true,
-  "data": {
-    "updated_at": "2026-07-31 10:42:11",
-    "items": [
-      {
-        "id_product": 6700106,
-        "name": "Croissant pur beurre",
-        "category_name": "Viennoiserie",
-        "quantity": 34,
-        "unit_name": "pc"
-      }
-    ]
-  }
+  "updated_at": "2026-07-31 10:42:11",
+  "items": [
+    {
+      "id_product": 6700106,
+      "name": "Croissant pur beurre",
+      "category_name": "Viennoiserie",
+      "quantity": 34,
+      "unit_name": "pc"
+    }
+  ]
 }
 ```
 
@@ -252,17 +277,28 @@ qui s'est vendu, agrégé. La projection est faite par la PWA.
 
 ```json
 {
-  "success": true,
-  "data": {
-    "granularity_minutes": 30,
-    "weeks": 6,
-    "weekday_only": true,
-    "samples": 6,
-    "slots": ["06:00", "06:30", "07:00", "…"],
-    "products": [
-      { "id_product": 6700106, "expected": [0.4, 1.2, 3.8, 5.1, "…"] }
-    ]
-  }
+  "granularity_minutes": 30,
+  "weeks": 6,
+  "weekday_only": true,
+  "samples": 6,
+  "slots": [
+    "06:00",
+    "06:30",
+    "07:00",
+    "…"
+  ],
+  "products": [
+    {
+      "id_product": 6700106,
+      "expected": [
+        0.4,
+        1.2,
+        3.8,
+        5.1,
+        "…"
+      ]
+    }
+  ]
 }
 ```
 
@@ -317,7 +353,10 @@ GET /shops/{shopId}/production/pending-count?date=YYYY-MM-DD
 ```
 
 ```json
-{ "success": true, "data": { "mep_pending": 12, "rebakes_suggested": 3 } }
+{
+  "mep_pending": 12,
+  "rebakes_suggested": 3
+}
 ```
 
 Facultatif — sans lui, l'onglet Production n'affiche simplement pas de pastille.

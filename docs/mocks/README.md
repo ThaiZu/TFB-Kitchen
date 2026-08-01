@@ -1,8 +1,16 @@
-# Mocks — module Production
+# Mocks — modules Production et Cuisson
 
 Un fichier par endpoint, avec la charge utile exacte que le front attend.
-Le contrat en prose est dans `docs/ENDPOINTS_PRODUCTION.md` ; ces fichiers en
-sont la forme exécutable — à servir tels quels pour développer sans back-office.
+Le contrat en prose est dans `docs/ENDPOINTS_PRODUCTION.md` et
+`docs/ENDPOINTS_CUISSON.md` ; ces fichiers en sont la forme exécutable.
+
+**Le corps est nu, sans enveloppe `success`/`data`.** `ApiClient` ajoute
+lui-même cette enveloppe à partir du code HTTP ; la remettre côté serveur
+ferait arriver la charge utile sous `$response['data']['data']`.
+
+Pour tester l'application en vrai plutôt que de lire des fichiers, voir
+`tools/mock-api/` : un serveur qui sert ces endpoints **et garde son état**,
+donc les écrans se traversent au lieu de se regarder.
 
 | Fichier | Endpoint |
 |---|---|
@@ -43,14 +51,14 @@ parce que ce sont ceux qui cassent en production.
 - **`06` a une vraie courbe de journée** — pic du matin, creux de 10 h, pic de
   midi. Un profil plat validerait la mécanique mais pas les propositions.
 
-## Servir les mocks
+## Trois jeux de données, trois usages
 
-```bash
-cd docs/mocks && python3 -m http.server 8080
-```
+| Où | Pour quoi |
+|---|---|
+| `docs/mocks/` | la **forme** attendue de chaque réponse, à lire et à transmettre |
+| `tools/mock-api/` | un **serveur** qui les sert avec état, pour cliquer dans l'app |
+| `tests/fixtures/` | des chiffres **ronds**, calibrés pour que `php bin/forecast-test.php` se recalcule à la main |
 
-Puis, le temps du développement, pointer `KITCHEN_API_BASE` vers un petit
-routeur qui renvoie ces fichiers. Les fixtures de test de la prévision, elles,
-vivent séparément dans `tests/fixtures/` : elles sont calibrées pour que le
-résultat se recalcule à la main (`php bin/forecast-test.php`), là où ces
-mocks-ci visent le réalisme.
+Les mocks visent le réalisme, les fixtures visent la vérifiabilité. Les
+confondre donnerait soit des écrans invraisemblables, soit des assertions
+qu'on ne sait plus contrôler de tête.

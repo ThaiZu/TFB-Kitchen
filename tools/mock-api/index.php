@@ -1,0 +1,410 @@
+<?php
+/**
+ * Serveur d'API bouchon — pour tester les modules Production et Cuisson avant
+ * que le back-office ne serve quoi que ce soit.
+ *
+ *     php -S 127.0.0.1:8081 tools/mock-api/index.php
+ *     KITCHEN_API_BASE=http://127.0.0.1:8081  (voir tools/mock-api/README.md)
+ *
+ * Il garde son état sur disque : valider une MEP augmente le stock, sortir une
+ * fournée du four la fait passer en finition, valider une recuisson recalcule
+ * les propositions. Un jeu de JSON figés montrerait les écrans ; celui-ci
+ * laisse les traverser.
+ *
+ * Une route inconnue répond 404 avec « not_mocked » plutôt qu'une liste vide :
+ * un écran qui se remplit de rien ne dit pas s'il manque une donnée ou un
+ * endpoint.
+ */
+
+require __DIR__ . '/data.php';
+
+const STATE_FILE = __DIR__ . '/.state.json';
+
+// ── Sortie ────────────────────────────────────────────────────────────────
+/**
+ * Le corps est renvoyé NU, sans enveloppe.
+ *
+ * C'est la convention de toute l'application : `ApiClient::get()` construit
+ * lui-même `['success' => <code HTTP 2xx>, 'data' => <corps décodé>]`. Ajouter
+ * un `{"success":…, "data":…}` côté serveur ferait donc arriver la charge utile
+ * sous `$response['data']['data']`, et tous les dépôts liraient à côté.
+ */
+function ok(mixed $data = null, int $code = 200): never
+{
+    http_response_code($code);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    exit;
+}
+
+/**
+ * L'échec se dit par le code HTTP : c'est lui que lit `ApiClient`, qui met
+ * alors `success` à false. Le corps ne porte que le détail, sous `description`
+ * — la clé que `post()` et `patch()` savent remonter.
+ */
+function ko(string $description, int $code = 400): never
+{
+    http_response_code($code);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['description' => $description], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+function body(): array
+{
+    $raw = file_get_contents('php://input') ?: '';
+    $j   = json_decode($raw, true);
+    if (is_array($j)) {
+        return $j;
+    }
+    // Certains appels de l'app passent en multipart ou en form-urlencoded.
+    return $_POST ?: [];
+}
+
+// ── État ──────────────────────────────────────────────────────────────────
+function now_minutes(): int { return (int)date('G') * 60 + (int)date('i'); }
+
+function state(): array
+{
+    static $state = null;
+    if ($state !== null) {
+        return $state;
+    }
+
+    $today = date('Y-m-d');
+    if (is_readable(STATE_FILE)) {
+        $loaded = json_decode((string)file_get_contents(STATE_FILE), true);
+        // L'état ne vaut que pour la journée qui l'a produit : au lendemain,
+        // on repart d'un plan frais plutôt que d'afficher les fournées d'hier.
+        if (is_array($loaded) && ($loaded['date'] ?? null) === $today) {
+            return $state = $loaded;
+        }
+    }
+
+    $tomorrow = date('Y-m-d', strtotime('+1 day'));
+    $state = [
+        'date'    => $today,
+        'stock'   => mock_initial_stock(),
+        'batches' => mock_baking_batches(now_minutes()),
+        'mep'     => [
+            $today    => mock_mep_today($today),
+            $tomorrow => mock_mep_tomorrow($tomorrow),
+        ],
+    ];
+    save($state);
+    return $state;
+}
+
+function save(array $state): void
+{
+    $GLOBALS['__state'] = $state;
+    @file_put_contents(STATE_FILE, json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+}
+
+function mutate(callable $fn): array
+{
+    $s = state();
+    $s = $fn($s);
+    save($s);
+    // Purge le cache statique de state() pour la suite de la requête.
+    return $s;
+}
+
+// ── Jeton d'accès ─────────────────────────────────────────────────────────
+/**
+ * L'application décode le JWT sans en vérifier la signature ; elle n'en lit
+ * que les claims et l'expiration. Un jeton de façade suffit donc — et il
+ * n'expose évidemment rien : ce serveur ne doit jamais quitter un poste de
+ * développement.
+ */
+function fake_jwt(int $shopId, int $hours = 12): string
+{
+    $b64 = fn(array $a) => rtrim(strtr(base64_encode(json_encode($a)), '+/', '-_'), '=');
+    return $b64(['alg' => 'HS256', 'typ' => 'JWT']) . '.' .
+           $b64([
+               'shop_id'   => $shopId,
+               'device_id' => 42,
+               'dv_nm'     => 'Tablette atelier (mock)',
+               'dv_lncd'   => 'fr',
+               'iat'       => time(),
+               'exp'       => time() + $hours * 3600,
+           ]) . '.' .
+           rtrim(strtr(base64_encode('mock-signature'), '+/', '-_'), '=');
+}
+
+// ── Routage ───────────────────────────────────────────────────────────────
+$method = $_SERVER['REQUEST_METHOD'];
+$path   = '/' . trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '', '/');
+$q      = $_GET;
+
+$m = fn(string $pattern, ?array &$vars = null) => (bool)preg_match('#^' . $pattern . '$#', $path, $vars);
+
+// ── Authentification ──────────────────────────────────────────────────────
+if ($method === 'GET' && $path === '/public/shops') {
+    ok(mock_shops());
+}
+
+if ($method === 'POST' && in_array($path, ['/devices/auth/login', '/devices/auth/refresh'], true)) {
+    $in     = body();
+    $shopId = (int)($in['shop_id'] ?? $in['id_shop'] ?? MOCK_SHOP_ID) ?: MOCK_SHOP_ID;
+
+    // Réponse à plat, sans enveloppe : c'est ce que lit LoginRepository.
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode([
+        'access_token'  => fake_jwt($shopId),
+        'refresh_token' => fake_jwt($shopId, 24 * 30),
+    ]);
+    exit;
+}
+
+// ── Production : configuration et catalogue ───────────────────────────────
+if ($method === 'GET' && $m('/shops/\d+/production/config')) {
+    ok([
+        'periods' => [
+            ['key' => 'morning',   'label' => 'Matin',      'start' => '05:00', 'end' => '11:00'],
+            ['key' => 'noon',      'label' => 'Midi',       'start' => '11:00', 'end' => '14:00'],
+            ['key' => 'afternoon', 'label' => 'Après-midi', 'start' => '14:00', 'end' => '19:00'],
+        ],
+        'forecast_hours' => 2,
+        'history_weeks'  => 6,
+        'safety_margin'  => 0,
+    ]);
+}
+
+if ($method === 'GET' && $m('/shops/\d+/production/products')) {
+    ok(mock_products());
+}
+
+// ── Production : MEP ──────────────────────────────────────────────────────
+if ($method === 'GET' && $m('/shops/\d+/mep')) {
+    $date = $q['date'] ?? date('Y-m-d');
+    $s    = state();
+    ok($s['mep'][$date] ?? ['date' => $date, 'prepared_at' => null, 'status' => 'PREPARED', 'lines' => []]);
+}
+
+// Encodage de la MEP d'une date à venir : l'appel remplace ce qui existait.
+if ($method === 'POST' && $m('/shops/\d+/mep')) {
+    $in   = body();
+    $date = (string)($in['date'] ?? date('Y-m-d', strtotime('+1 day')));
+    $byId = [];
+    foreach (mock_products() as $p) {
+        $byId[$p['id_product']] = $p;
+    }
+
+    $s = mutate(function (array $s) use ($in, $date, $byId) {
+        $lines = [];
+        $i = 4600;
+        foreach ($in['lines'] ?? [] as $l) {
+            $idp = (int)($l['id_product'] ?? 0);
+            $qty = (float)($l['quantity'] ?? 0);
+            if ($idp <= 0 || $qty <= 0) {
+                continue;
+            }
+            $p = $byId[$idp] ?? null;
+            $lines[] = [
+                'id'                 => $i++,
+                'id_product'         => $idp,
+                'name'               => $p['name'] ?? ('Produit ' . $idp),
+                'category_name'      => $p['category_name'] ?? null,
+                // La période vient de la fiche produit : c'est le serveur qui
+                // la connaît, pas l'écran de saisie.
+                'period'             => $p['periods'][0] ?? 'morning',
+                'quantity_planned'   => $qty,
+                'quantity_validated' => null,
+                'unit_name'          => $p['unit_name'] ?? 'pc',
+                'status'             => 'PREPARED',
+            ];
+        }
+        $s['mep'][$date] = [
+            'date' => $date, 'prepared_at' => date('Y-m-d H:i:s'),
+            'status' => 'PREPARED', 'lines' => $lines,
+        ];
+        return $s;
+    });
+
+    ok($s['mep'][$date]);
+}
+
+// Validation de la MEP du jour : c'est elle qui alimente le stock.
+if ($method === 'POST' && $m('/shops/\d+/mep/validate')) {
+    $in   = body();
+    $date = (string)($in['date'] ?? date('Y-m-d'));
+
+    $s = mutate(function (array $s) use ($in, $date) {
+        $wanted = [];
+        foreach ($in['lines'] ?? [] as $l) {
+            $wanted[(int)($l['id'] ?? 0)] = $l;
+        }
+
+        // Itération par index, pas par référence : « $s[...] ?? [] » produit
+        // une copie temporaire, et les écritures faites dessus se perdent.
+        $lines = $s['mep'][$date]['lines'] ?? [];
+        foreach ($lines as $i => $line) {
+            $w = $wanted[$line['id']] ?? null;
+            if ($w === null) {
+                continue;
+            }
+            if (!empty($w['skipped'])) {
+                $lines[$i]['status'] = 'SKIPPED';
+                $lines[$i]['quantity_validated'] = 0;
+                continue;
+            }
+            $qty = max(0, (float)($w['quantity'] ?? 0));
+            $lines[$i]['status'] = 'VALIDATED';
+            $lines[$i]['quantity_validated'] = $qty;
+            // La quantité réelle, pas la prévue : c'est le stock de départ.
+            $s['stock'][$line['id_product']] = ($s['stock'][$line['id_product']] ?? 0) + $qty;
+        }
+        $s['mep'][$date]['lines'] = $lines;
+
+        $reste = array_filter($lines, fn($l) => $l['status'] === 'PREPARED');
+        $s['mep'][$date]['status'] = $reste === [] ? 'VALIDATED' : 'PREPARED';
+        return $s;
+    });
+
+    ok($s['mep'][$date] + ['stock' => stock_rows($s)]);
+}
+
+// ── Production : stock et ventes ──────────────────────────────────────────
+function stock_rows(array $s): array
+{
+    $rows = [];
+    foreach (mock_products() as $p) {
+        $rows[] = [
+            'id_product'    => $p['id_product'],
+            'name'          => $p['name'],
+            'category_name' => $p['category_name'],
+            'quantity'      => (float)($s['stock'][$p['id_product']] ?? 0),
+            'unit_name'     => $p['unit_name'] ?? 'pc',
+        ];
+    }
+    usort($rows, fn($a, $b) => $a['quantity'] <=> $b['quantity']);
+    return $rows;
+}
+
+if ($method === 'GET' && $m('/shops/\d+/stock')) {
+    ok(['updated_at' => date('Y-m-d H:i:s'), 'items' => stock_rows(state())]);
+}
+
+if ($method === 'GET' && $m('/shops/\d+/sales/profile')) {
+    ok(mock_sales_profile());
+}
+
+// Lot produit — MEP validée ou recuisson.
+if ($method === 'POST' && $m('/shops/\d+/production/batches')) {
+    $in  = body();
+    $idp = (int)($in['id_product'] ?? 0);
+    $qty = (float)($in['quantity'] ?? 0);
+    if ($idp <= 0 || $qty <= 0) {
+        ko('invalid_payload', 422);
+    }
+
+    $s = mutate(function (array $s) use ($idp, $qty) {
+        $s['stock'][$idp] = ($s['stock'][$idp] ?? 0) + $qty;
+        return $s;
+    });
+
+    $line = null;
+    foreach (stock_rows($s) as $r) {
+        if ($r['id_product'] === $idp) {
+            $line = $r;
+        }
+    }
+
+    ok([
+        'batch' => [
+            'id'          => random_int(9000, 9999),
+            'id_product'  => $idp,
+            'quantity'    => $qty,
+            'source'      => strtoupper((string)($in['source'] ?? 'REBAKE')),
+            'created_at'  => date('Y-m-d H:i:s'),
+            'id_employee' => $in['id_employee'] ?? null,
+        ],
+        // Le stock résultant, pour que l'écran réaffiche un chiffre serveur
+        // au lieu de sa propre addition.
+        'stock' => $line,
+    ]);
+}
+
+if ($method === 'GET' && $m('/shops/\d+/production/pending-count')) {
+    $s = state();
+    $date = date('Y-m-d');
+    $pending = count(array_filter($s['mep'][$date]['lines'] ?? [], fn($l) => $l['status'] === 'PREPARED'));
+    ok(['mep_pending' => $pending, 'rebakes_suggested' => 3]);
+}
+
+// ── Cuisson ───────────────────────────────────────────────────────────────
+if ($method === 'GET' && $m('/shops/\d+/ovens')) {
+    ok(mock_ovens());
+}
+
+if ($method === 'GET' && $m('/shops/\d+/baking')) {
+    $s = state();
+    ok([
+        'date'        => $s['date'],
+        // L'heure du serveur fait foi côté front : une tablette d'atelier
+        // dérive, et l'écran ne doit pas décréter un retard pour autant.
+        'server_time' => date('H:i'),
+        'batches'     => array_values($s['batches']),
+    ]);
+}
+
+if ($method === 'PATCH' && $m('/baking/(\d+)', $vars)) {
+    $id     = (int)$vars[1];
+    $in     = body();
+    $status = strtoupper((string)($in['status'] ?? ''));
+
+    $ordre = ['PLANNED' => 0, 'PREPARING' => 1, 'READY_TO_BAKE' => 2, 'BAKING' => 3, 'FINISHING' => 4, 'DONE' => 5];
+    if (!isset($ordre[$status])) {
+        ko('invalid_status', 422);
+    }
+
+    $found = null;
+    $s = mutate(function (array $s) use ($id, $status, $ordre, &$found) {
+        foreach ($s['batches'] as &$b) {
+            if ((int)$b['id'] !== $id) {
+                continue;
+            }
+            // Enfourner sans avoir préparé n'existe pas en atelier : le saut
+            // d'étape est refusé ici comme il devra l'être côté back-office.
+            if ($ordre[$status] !== ($ordre[$b['status']] ?? 0) + 1) {
+                $found = ['__error' => 'invalid_transition'];
+                return $s;
+            }
+            $b['status'] = $status;
+            $stamp = ['PREPARING' => 'prep_started_at', 'BAKING' => 'cook_started_at', 'FINISHING' => 'finish_started_at'];
+            if (isset($stamp[$status])) {
+                $b[$stamp[$status]] = date('Y-m-d H:i:s');
+            }
+            $found = $b;
+        }
+        unset($b);
+        return $s;
+    });
+
+    if ($found === null) {
+        ko('batch_not_found', 404);
+    }
+    if (isset($found['__error'])) {
+        ko($found['__error'], 409);
+    }
+    ok($found);
+}
+
+if ($method === 'GET' && $m('/shops/\d+/baking/pending-count')) {
+    $s = state();
+    $n = fn(string $st) => count(array_filter($s['batches'], fn($b) => $b['status'] === $st));
+    ok(['preparing' => $n('PREPARING') + $n('READY_TO_BAKE'), 'baking' => $n('BAKING'), 'finishing' => $n('FINISHING')]);
+}
+
+// ── Remise à zéro, pour rejouer un scénario ───────────────────────────────
+if ($method === 'POST' && $path === '/__reset') {
+    @unlink(STATE_FILE);
+    ok(['reset' => true]);
+}
+
+// ── Tout le reste ─────────────────────────────────────────────────────────
+// Volontairement 404 : un endpoint absent doit se voir. Renvoyer une liste
+// vide laisserait croire que la donnée manque alors que c'est la route.
+error_log("[mock-api] non bouchonné : {$method} {$path}");
+ko('not_mocked', 404);

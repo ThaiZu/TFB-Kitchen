@@ -1,15 +1,21 @@
 {
   "not_found_404": {
-    "success": false,
-    "description": "batch_not_found"
+    "http_status": 404,
+    "body": {
+      "description": "batch_not_found"
+    }
   },
   "bad_transition_409": {
-    "success": false,
-    "description": "invalid_transition",
-    "detail": "PLANNED -> BAKING refusé : enfourner sans avoir préparé n'existe pas"
+    "http_status": 409,
+    "body": {
+      "description": "invalid_transition",
+      "detail": "PLANNED -> BAKING refusé : enfourner sans avoir préparé n'existe pas"
+    }
   },
   "server_500": {
-    "success": false,
-    "description": "internal_error"
+    "http_status": 500,
+    "body": {
+      "description": "internal_error"
+    }
   }
 }

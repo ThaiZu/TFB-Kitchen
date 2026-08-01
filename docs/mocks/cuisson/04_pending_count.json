@@ -1,8 +1,5 @@
 {
-  "success": true,
-  "data": {
-    "preparing": 1,
-    "baking": 2,
-    "finishing": 3
-  }
+  "preparing": 1,
+  "baking": 2,
+  "finishing": 3
 }
