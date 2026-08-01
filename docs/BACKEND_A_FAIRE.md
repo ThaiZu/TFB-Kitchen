@@ -75,6 +75,12 @@ décider, mettre en vente). **Priorité 2** = l'atelier et les commandes.
 
 ## 2. Les migrations
 
+Les tables du module portent le préfixe **`pro_`**, comme `mac_` côté panel
+consultant. Là où l'ancien nom répétait déjà le module — « production_batch » —
+le mot redondant saute : `pro_batch`. Seule `product` échappe au préfixe : ce
+n'est pas une table du module, c'est le catalogue partagé, et on ne fait que
+lui ajouter des colonnes.
+
 ### 2.1 Table produit — quatre colonnes
 
 ```sql
@@ -99,7 +105,7 @@ ALTER TABLE product
 ### 2.2 Nouvelle table — les minimums de vitrine
 
 ```sql
-CREATE TABLE product_shop_minimum (
+CREATE TABLE pro_shop_minimum (
     id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     id_shop     INT UNSIGNED NOT NULL,
     id_product  INT UNSIGNED NOT NULL,
@@ -121,7 +127,7 @@ vitrine. D'où `id_shop` dans la clé.
 ### 2.3 Nouvelle table — le carnet de commandes
 
 ```sql
-CREATE TABLE shop_order_line (
+CREATE TABLE pro_order_line (
     id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     id_shop     INT UNSIGNED NOT NULL,
     id_order    INT UNSIGNED NULL     COMMENT 'commande client d''origine',
@@ -149,7 +155,7 @@ condition qu'elle expose une ligne par produit.
 Elle existe peut-être déjà sous un autre nom ; il faut au minimum :
 
 ```sql
-CREATE TABLE production_batch (
+CREATE TABLE pro_batch (
     id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     id_shop     INT UNSIGNED NOT NULL,
     id_product  INT UNSIGNED NOT NULL,
@@ -169,12 +175,12 @@ distinguer permettra plus tard de savoir d'où vient ce qui s'est vendu.
 
 ### 2.5 Table du plan de cuisson
 
-Distincte de la précédente, et c'est volontaire : `production_batch` enregistre
-ce qui **est entré en magasin**, `baking_batch` planifie ce qui **passe au
+Distincte de la précédente, et c'est volontaire : `pro_batch` enregistre
+ce qui **est entré en magasin**, `pro_baking_batch` planifie ce qui **passe au
 four**. Une fournée peut être annulée sans jamais rien créditer.
 
 ```sql
-CREATE TABLE baking_batch (
+CREATE TABLE pro_baking_batch (
     id                       INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     id_shop                  INT UNSIGNED NOT NULL,
     id_product               INT UNSIGNED NOT NULL,
@@ -207,7 +213,7 @@ FINISHING → DONE`, et **seul le pas suivant est accepté** (§3.13).
 ### 2.6 Table de MEP
 
 ```sql
-CREATE TABLE mep_line (
+CREATE TABLE pro_mep_line (
     id                 INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     id_shop            INT UNSIGNED NOT NULL,
     mep_date           DATE         NOT NULL,
@@ -292,7 +298,7 @@ champs sont en gras.
 | **`pdm_minimums`** | ce plancher, période par période | si `is_pdm` |
 | **`sector`** / **`sector_name`** | l'atelier | recommandé |
 
-`pdm_minimums` se construit depuis `product_shop_minimum` (§2.2). Si le
+`pdm_minimums` se construit depuis `pro_shop_minimum` (§2.2). Si le
 plancher est le même toute la journée, un scalaire `pdm_min: 48` suffit — le
 front l'applique à toutes les périodes.
 
@@ -415,7 +421,7 @@ sont faits par la PWA (`ForecastService`, service pur, testable :
 
 | `source` | déclenché par | effet |
 |---|---|---|
-| `SHELF` | le bouton « En rayon » / « Mettre en magasin » | **stock vendable +quantity**, et `mep_line.quantity_shelved += quantity` si `id_mep_line` est fourni |
+| `SHELF` | le bouton « En rayon » / « Mettre en magasin » | **stock vendable +quantity**, et `pro_mep_line.quantity_shelved += quantity` si `id_mep_line` est fourni |
 | `REBAKE` | une proposition de recuisson validée | stock vendable +quantity |
 
 `id_mep_line` et `id_employee` sont optionnels.
@@ -604,7 +610,7 @@ fournil, celle du magasin ne le voit pas.
 **Pour rendre la réserve partagée**, il suffit d'un champ sur la fournée :
 
 ```sql
-ALTER TABLE baking_batch
+ALTER TABLE pro_baking_batch
     ADD COLUMN quantity_shelved DECIMAL(10,2) NOT NULL DEFAULT 0;
 ```
 
