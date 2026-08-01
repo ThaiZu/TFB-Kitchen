@@ -112,32 +112,34 @@
        du nom, sur tablette étroite elles descendent d'un bloc. */
     .mep-ctl { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; }
     /* 96 px et 52 px de haut : on saisit au pouce, parfois avec un gant. */
-    .mep-qty { width: 96px; flex: 0 0 auto; min-height: 52px; text-align: center; font-size: 1.1rem; font-weight: 700; }
-    .mep-skip {
-        flex: 0 0 auto; width: 52px; height: 52px; padding: 0;
-        display: inline-flex; align-items: center; justify-content: center;
-        border: 1px solid var(--c-line-2, rgba(36,26,22,.14));
-        border-radius: var(--r-md, 13px); background: #fff;
-        color: var(--c-muted, #7a7168); cursor: pointer;
+    .mep-qty {
+        width: 96px; flex: 0 0 auto; min-height: 52px; padding-left: 4px; padding-right: 4px;
+        text-align: center; font-size: 1.1rem; font-weight: 700;
     }
-    .mep-skip.is-on { background: #f4dfe2; border-color: var(--c-primary, #8D1D2C); color: var(--c-primary, #8D1D2C); }
-
-    /* Pas de fournée : le − et le + montent de 12 en 12 pour un croissant,
-       de 15 en 15 pour une baguette. Taper « 37 » au clavier reste possible,
-       mais ce n'est pas le geste courant. */
+    /* Les flèches natives font double emploi avec « − » et « + », et elles
+       mangeaient assez de largeur pour couper « 120 » en « 12 » sur mobile. */
+    .mep-qty { -moz-appearance: textfield; appearance: textfield; }
+    .mep-qty::-webkit-outer-spin-button,
+    .mep-qty::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    /* Pas de fournée : le − et le + montent de 12 en 12 pour une baguette, de
+       24 en 24 pour un croissant. En centaines de pièces, monter à l'unité ne
+       veut rien dire ; le clavier reste là pour le chiffre exact. */
     .mep-step {
-        flex: 0 0 auto; width: 44px; height: 52px; padding: 0;
+        flex: 0 0 auto; width: 46px; height: 52px; padding: 0;
         border: 1px solid var(--c-line-2, rgba(36,26,22,.14));
         border-radius: var(--r-md, 13px); background: var(--c-bg-2, #F4EFE8);
         color: var(--c-ink, #241f1c); font-size: 1.35rem; font-weight: 700; line-height: 1;
         cursor: pointer; -webkit-tap-highlight-color: transparent;
     }
     .mep-step:active { background: var(--c-primary-soft, #f4dfe2); }
-    /* Le retrait est un geste rare : il se loge dans le coin plutôt que dans
-       la rangée des commandes, qui doit rester lisible au pouce. */
-    .mep-del {
+    .mep-step[disabled] { opacity: .4; cursor: default; }
+
+    /* Retirer et écarter sont des gestes rares : ils se logent dans le coin
+       plutôt que dans la rangée des commandes, qui ne doit garder que le
+       nombre et ses deux boutons. */
+    .mep-del, .mep-skip {
         position: absolute; top: -7px; right: -7px; z-index: 2;
-        width: 26px; height: 26px; padding: 0;
+        flex: 0 0 auto; width: 28px; height: 28px; padding: 0;
         display: inline-flex; align-items: center; justify-content: center;
         border: 1px solid var(--c-line-2, rgba(36,26,22,.14));
         border-radius: 50%; background: #fff;
@@ -145,13 +147,13 @@
         box-shadow: var(--sh-1, 0 1px 2px rgba(0,0,0,.04));
     }
     .mep-del:active { background: #f4dfe2; color: var(--c-primary, #8D1D2C); }
+    .mep-skip.is-on { background: var(--c-primary, #8D1D2C); border-color: var(--c-primary, #8D1D2C); color: #fff; }
 
     @media (max-width: 780px) {
         .mep-line { flex-direction: column; align-items: stretch; gap: 9px; padding: 10px 11px; }
         .mep-ctl { width: 100%; gap: 6px; }
         .mep-qty { width: auto; flex: 1 1 auto; min-width: 0; font-size: 1rem; }
-        .mep-step { width: 38px; }
-        .mep-skip { width: 46px; }
+        .mep-step { width: 40px; }
     }
 
     /* ── Filtre par catégorie ────────────────────────────────────────────

@@ -94,6 +94,25 @@
         out.textContent = n;
     }
 
+    // ── Pas de fournée ──
+    // On travaille en centaines de pièces : « + » monte d'une plaque entière,
+    // pas d'une unité. Le clavier reste là pour le chiffre exact — 117 parce
+    // que trois ont brûlé — mais ce n'est pas le geste courant.
+    document.addEventListener('click', function (e) {
+        var step = e.target.closest('.mep-step');
+        if (!step) return;
+
+        var row   = step.closest('.mep-line');
+        var input = row.querySelector('.mep-qty');
+        if (!input || input.disabled) return;
+
+        var by = Math.max(1, parseFloat(row.dataset.batch) || 1)
+               * (parseInt(step.dataset.step, 10) || 1);
+        input.value = String(Math.max(0, (parseFloat(input.value) || 0) + by));
+        row.classList.toggle('is-filled', parseFloat(input.value) > 0);
+        refreshCount();
+    });
+
     // ── Écarter une ligne (validation du matin) ──
     // « pas produit » et « produit zéro » ne racontent pas la même chose au
     // serveur : la ligne part en `skipped`, pas en quantité nulle.
@@ -107,6 +126,7 @@
         b.setAttribute('aria-pressed', on ? 'true' : 'false');
         var qty = line.querySelector('.mep-qty');
         if (qty) qty.disabled = on;
+        line.querySelectorAll('.mep-step').forEach(function (s) { s.disabled = on; });
     });
 
     // ── Valider la MEP du jour ──
@@ -221,18 +241,6 @@
                 }
                 var pick = e.target.closest('.mep-pick');
                 if (pick) { addProduct(pick); return; }
-            }
-
-            var step = e.target.closest('#mepNextList .mep-step');
-            if (step) {
-                var row   = step.closest('.mep-line');
-                var input = row.querySelector('.mep-qty');
-                var by    = Math.max(1, parseFloat(row.dataset.batch) || 1)
-                          * (parseInt(step.dataset.step, 10) || 1);
-                input.value = String(Math.max(0, (parseFloat(input.value) || 0) + by));
-                row.classList.toggle('is-filled', parseFloat(input.value) > 0);
-                refreshCount();
-                return;
             }
 
             var del = e.target.closest('#mepNextList .mep-del');

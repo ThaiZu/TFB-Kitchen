@@ -96,6 +96,9 @@ class ProductionController extends Controller
                 // saisie de la veille, on la relit dans l'ordre du magasin.
                 'mep_by_category'    => $this->productionService->mepLinesByCategory($lines),
                 'mep_pending_by_cat' => $this->productionService->mepLinesByCategory($pending),
+                // La ligne de MEP ne porte pas la taille de fournée : elle vient
+                // du catalogue, et c'est elle qui fait le pas des boutons.
+                'mep_batch'          => $this->batchSizes(),
             ];
         }
 
@@ -155,6 +158,25 @@ class ProductionController extends Controller
             'mep_next_rows'      => $rows,
             'draft_available'    => $draft !== null,
         ];
+    }
+
+    /**
+     * Taille de fournée par produit — le pas des boutons « − » et « + ».
+     *
+     * Un catalogue muet ne bloque pas la validation : le pas retombe à 1 et
+     * on saisit au clavier, ce qui reste préférable à un écran vide.
+     *
+     * @return array<int, float>
+     */
+    private function batchSizes(): array
+    {
+        $sizes = [];
+        foreach ($this->productionService->getProducts() ?? [] as $p) {
+            if ($p->getIdProduct() !== null) {
+                $sizes[$p->getIdProduct()] = $p->getEffectiveBatchSize();
+            }
+        }
+        return $sizes;
     }
 
     /**
