@@ -54,6 +54,12 @@ parce que ce sont ceux qui cassent en production.
 - **`04b` et `07b` renvoient le stock résultant.** Le front réaffiche un chiffre
   serveur au lieu de faire sa propre addition : deux tablettes peuvent valider
   à quelques secondes d'intervalle.
+- **`11` mélange les trois canaux et les deux secteurs**, avec une commande sans
+  heure (« pour midi ») et une échue. Un carnet où tout est à l'heure et au même
+  canal ne montrerait ni le tri par retard, ni le repli sur la période.
+- **`12` porte `sector` et `is_pdm`.** Deux ateliers, l'un avec des planchers de
+  vitrine par période, l'autre avec un produit qui ne se fait que sur commande :
+  ce sont les trois cas que l'écran Minimums doit savoir distinguer.
 - **`06` a une vraie courbe de journée** — pic du matin, creux de 10 h, pic de
   midi. Un profil plat validerait la mécanique mais pas les propositions.
 

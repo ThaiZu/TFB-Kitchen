@@ -131,11 +131,19 @@ class StockOutlookService
      * @param StockLineModel[]         $stock
      * @param ProductionProductModel[] $products
      * @param array{p1: array, p2: array} $horizons
+     * @param array<int, float>        $orders1  commandes dues sur P1, par produit
+     * @param array<int, float>        $orders2  commandes dues sur P2, par produit
      *
      * @return array<int, array>
      */
-    public function rows(array $stock, array $products, ?SalesProfileModel $profile, array $horizons): array
-    {
+    public function rows(
+        array $stock,
+        array $products,
+        ?SalesProfileModel $profile,
+        array $horizons,
+        array $orders1 = [],
+        array $orders2 = []
+    ): array {
         $byId = [];
         foreach ($products as $p) {
             if ($p->getIdProduct() !== null) {
@@ -156,9 +164,15 @@ class StockOutlookService
             $e1 = $profile?->expectedBetween($id, $horizons['p1']['from'], $horizons['p1']['to']);
             $e2 = $profile?->expectedBetween($id, $horizons['p2']['from'], $horizons['p2']['to']);
 
+            // Ce qui est commandé partira, profil ou pas : le delta le
+            // soustrait au même titre que les ventes prévues, mais la colonne
+            // reste séparée — on veut pouvoir dire d'où vient le manque.
+            $o1 = (float)($orders1[$id] ?? 0.0);
+            $o2 = (float)($orders2[$id] ?? 0.0);
+
             $known = $e1 !== null;
-            $d1    = $known ? $qty - $e1 : null;
-            $d2    = $known ? $qty - $e1 - ($e2 ?? 0.0) : null;
+            $d1    = $known ? $qty - $e1 - $o1 : null;
+            $d2    = $known ? $qty - $e1 - $o1 - ($e2 ?? 0.0) - $o2 : null;
 
             $rows[] = [
                 'id_product' => $id,
@@ -168,9 +182,11 @@ class StockOutlookService
                 'stock'      => $qty,
                 'expected_1' => $e1,
                 'expected_2' => $e2,
+                'orders_1'   => $o1,
+                'orders_2'   => $o2,
                 'delta_1'    => $d1,
                 'delta_2'    => $d2,
-                'flag'       => self::flag($qty, $e1, $e2, $d1, $d2),
+                'flag'       => self::flag($e1, $e2, $o1, $o2, $d1, $d2),
             ];
         }
 
@@ -194,7 +210,7 @@ class StockOutlookService
      * n'est pas surproduit pour autant — il est hors saison, hors service, ou
      * simplement pas de ce moment de la journée.
      */
-    private static function flag(float $stock, ?float $e1, ?float $e2, ?float $d1, ?float $d2): string
+    private static function flag(?float $e1, ?float $e2, float $o1, float $o2, ?float $d1, ?float $d2): string
     {
         if ($e1 === null) {
             return self::UNKNOWN;
@@ -206,8 +222,8 @@ class StockOutlookService
             return self::OUT_P2;
         }
 
-        $vendu = $e1 + ($e2 ?? 0.0);
-        return $vendu > 0 && $d2 >= $vendu ? self::OVER : self::OK;
+        $sortant = $e1 + ($e2 ?? 0.0) + $o1 + $o2;
+        return $sortant > 0 && $d2 >= $sortant ? self::OVER : self::OK;
     }
 
     /**

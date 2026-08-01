@@ -94,7 +94,7 @@ class ProductionBoardService
             $line      = $lines[$id] ?? null;
             $remaining = $line?->getRemainingToShelf() ?? 0.0;
             $stage     = $stages[$id]['stage'] ?? null;
-            $t         = $tension[$id] ?? ['stock' => 0.0, 'expected' => null, 'projected' => null];
+            $t         = ($tension[$id] ?? []) + ['stock' => 0.0, 'expected' => null, 'ordered' => 0.0, 'projected' => null];
 
             // Ce qui est prêt passe devant son étape : une fournée suivante au
             // four ne dispense pas de porter en rayon celle qui est sortie.
@@ -113,6 +113,11 @@ class ProductionBoardService
                 'remaining'  => $remaining,
                 'stock'      => $t['stock'],
                 'expected'   => $t['expected'],
+                // Ce qui est déjà promis à un client : compté dans la
+                // projection, mais dit à part sur la tuile — « il en manque 24 »
+                // et « il en manque 24 dont 18 commandés » n'appellent pas la
+                // même vigilance.
+                'ordered'    => $t['ordered'],
                 'projected'  => $t['projected'],
                 'to_produce' => self::toProduce($t['projected'], $p->getEffectiveBatchSize()),
                 'level'      => self::level($t['projected'], $p->getEffectiveBatchSize()),

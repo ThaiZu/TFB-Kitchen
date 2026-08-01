@@ -293,6 +293,13 @@ if ($method === 'GET' && $m('/shops/\d+/sales/profile')) {
     ok(mock_sales_profile());
 }
 
+// ── Production : carnet de commandes ──────────────────────────────────────
+// Magasin, click & collect, livraison : une seule route pour les trois canaux,
+// ce sont les mêmes produits et le même four. Le canal voyage sur la ligne.
+if ($method === 'GET' && $m('/shops/\d+/orders')) {
+    ok(['date' => $q['date'] ?? date('Y-m-d'), 'items' => mock_orders(now_minutes())]);
+}
+
 // Lot produit — MEP validée ou recuisson.
 if ($method === 'POST' && $m('/shops/\d+/production/batches')) {
     $in  = body();

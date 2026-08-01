@@ -9,13 +9,17 @@
    se servir de l'autre. #}
 {% import "components/_icons.twig" as icons %}
 
+{# Le secteur ouvert survit à chaque étape du parcours : le boulanger qui suit
+   la bande ne doit pas retomber sur le traiteur au troisième clic. #}
+{% set needs_key = active_view in periods|map(p => p.key) ? active_view : periods|first.key %}
+
 {% set steps = [
     {
         key:   'mep',
         num:   '1',
         label: translations.flow_1 | default('Préparé la veille'),
         hint:  translations.flow_1_hint | default("on note ce qu'on prépare"),
-        href:  ROOT ~ '/production?view=mep',
+        href:  ROOT ~ '/production?view=mep' ~ sector_qs,
         n:     flow.to_validate,
         unit:  translations.flow_1_unit | default('à valider'),
         on:    active_view == 'mep'
@@ -25,7 +29,7 @@
         num:   '2',
         label: translations.flow_2 | default('Fabriqué'),
         hint:  translations.flow_2_hint | default('préparation, cuisson, finition'),
-        href:  ROOT ~ '/production?view=planning',
+        href:  ROOT ~ '/production?view=planning' ~ sector_qs,
         n:     flow.in_progress,
         unit:  translations.flow_2_unit | default('en cours'),
         on:    active_view == 'planning'
@@ -35,7 +39,7 @@
         num:   '3',
         label: translations.flow_3 | default('Mis en rayon'),
         hint:  translations.flow_3_hint | default("c'est ici que le stock monte"),
-        href:  ROOT ~ '/production',
+        href:  ROOT ~ '/production?view=' ~ needs_key ~ sector_qs,
         n:     flow.to_shelf,
         unit:  translations.flow_3_unit | default('à porter'),
         on:    active_view in periods|map(p => p.key)
@@ -45,7 +49,7 @@
         num:   '4',
         label: translations.flow_4 | default('En vente'),
         hint:  translations.flow_4_hint | default('la caisse peut le vendre'),
-        href:  ROOT ~ '/production?view=stock',
+        href:  ROOT ~ '/production?view=stock' ~ sector_qs,
         n:     flow.on_sale,
         unit:  translations.flow_4_unit | default('en stock'),
         on:    active_view == 'stock'

@@ -8,7 +8,7 @@
 {% import "components/_icons.twig" as icons %}
 
 <div class="mt-3" id="stockRoot"
-     data-url="{{ ROOT }}/ajax/production/stock"
+     data-url="{{ ROOT }}/ajax/production/stock{{ sector ? '?sector=' ~ sector|url_encode : '' }}"
      data-rebake-url="{{ ROOT }}/ajax/production/rebake">
 
     {# ── À recuire ── #}
@@ -60,6 +60,9 @@
                         <div class="rbk-why">
                             <span>{{ translations.rebake_stock | default('Stock') }} <b>{{ r.stock|number_format(0, ',', ' ') }}</b></span>
                             <span>{{ translations.rebake_expected | default('Ventes prévues') }} <b>{{ r.expectedSales|number_format(1, ',', ' ') }}</b></span>
+                            {% if r.hasOrders %}
+                                <span>{{ translations.outlook_orders | default('Commandé') }} <b>{{ r.ordered|number_format(0, ',', ' ') }}</b></span>
+                            {% endif %}
                             <span>{{ translations.rebake_projected | default('Projeté') }} <b>{{ r.projected|number_format(1, ',', ' ') }}</b></span>
                             <span>{{ translations.rebake_window | default('Fenêtre') }} <b>{{ r.windowMinutes }} {{ translations.prod_unit_min | default('min') }}</b></span>
                         </div>
@@ -126,6 +129,12 @@
                     {{ translations.outlook_no_forecast | default("Le profil de ventes n'est pas servi : seul le stock est affiché, sans projection.") }}
                 </p>
             {% endif %}
+            {% if orders_available is defined and not orders_available %}
+                <p class="rbk-warn mb-2">
+                    {{ icons.svg('alert-triangle', 15) }}
+                    {{ translations.outlook_no_orders | default("Le carnet de commandes n'est pas servi : magasin, click & collect et livraison ne sont pas déduits du stock.") }}
+                </p>
+            {% endif %}
 
             {# Trois questions, trois filtres. « Combien il en reste » ne se
                décide pas ; « est-ce que ça tient » et « en ai-je trop fait »,
@@ -175,9 +184,15 @@
                             <th>{{ translations.outlook_product | default('Produit') }}</th>
                             <th class="num">{{ translations.rebake_stock | default('Stock') }}</th>
                             <th class="num">{{ translations.outlook_sales | default('Ventes') }} {{ p1_label|lower }}</th>
+                            {# Les commandes ont leur colonne : elles sont
+                               soustraites comme les ventes prévues, mais on doit
+                               pouvoir dire d'où vient le manque — une moyenne se
+                               discute, un plateau promis non. #}
+                            <th class="num">{{ translations.outlook_orders | default('Commandé') }} {{ p1_label|lower }}</th>
                             <th class="num">{{ translations.outlook_delta | default('Delta') }} {{ p1_label|lower }}</th>
                             {% if p2_label %}
                                 <th class="num">{{ translations.outlook_sales | default('Ventes') }} {{ p2_label|lower }}</th>
+                                <th class="num">{{ translations.outlook_orders | default('Commandé') }} {{ p2_label|lower }}</th>
                                 <th class="num">{{ translations.outlook_delta | default('Delta') }} {{ p2_label|lower }}</th>
                             {% endif %}
                         </tr>
@@ -193,6 +208,11 @@
                                         {{ r.expected_1|number_format(0, ',', ' ') }}
                                     {%- else -%}—{%- endif -%}
                                 </td>
+                                <td class="num soft">
+                                    {%- if r.orders_1 > 0 -%}
+                                        {{ r.orders_1|number_format(0, ',', ' ') }}
+                                    {%- else -%}—{%- endif -%}
+                                </td>
                                 <td class="num">
                                     {%- if r.delta_1 is not null -%}
                                         <span class="dlt {{ r.delta_1 < 0 ? 'is-neg' : '' }}">
@@ -204,6 +224,11 @@
                                     <td class="num soft">
                                         {%- if r.expected_2 is not null -%}
                                             {{ r.expected_2|number_format(0, ',', ' ') }}
+                                        {%- else -%}—{%- endif -%}
+                                    </td>
+                                    <td class="num soft">
+                                        {%- if r.orders_2 > 0 -%}
+                                            {{ r.orders_2|number_format(0, ',', ' ') }}
                                         {%- else -%}—{%- endif -%}
                                     </td>
                                     <td class="num">

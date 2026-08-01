@@ -3,6 +3,7 @@
 namespace App\Kitchen\app\Services\Production;
 
 use App\Kitchen\app\Models\Production\MepLineModel;
+use App\Kitchen\app\Models\Production\OrderLineModel;
 use App\Kitchen\app\Models\Production\PeriodModel;
 use App\Kitchen\app\Models\Production\ProductionProductModel;
 use App\Kitchen\app\Models\Production\StockLineModel;
@@ -30,6 +31,7 @@ class ProductionService
      * magasin et une connexion de magasin.
      */
     private array $mepCache = [];
+    private array $ordersCache = [];
     private bool $productsLoaded = false;
     private ?array $productsCache = null;
     private bool $stockLoaded = false;
@@ -38,7 +40,8 @@ class ProductionService
     public function __construct(
         private ProductionRepository $productionRepository,
         private ForecastService $forecastService,
-        private PosSalesProviderInterface $salesProvider
+        private PosSalesProviderInterface $salesProvider,
+        private SectorService $sectorService
     ) {}
 
     private function getShopId(): int
@@ -132,6 +135,77 @@ class ProductionService
             $this->productsCache = $shopId > 0 ? $this->productionRepository->getProducts($shopId) : null;
         }
         return $this->productsCache;
+    }
+
+    // ── Secteurs ─────────────────────────────────────────────────────────
+
+    /**
+     * Les secteurs déclarés au catalogue — boulangerie, traiteur, la suite.
+     *
+     * @return array<int, array{key: string, label: string, count: int}>
+     *         vide quand le magasin n'a qu'un atelier : le sélecteur ne
+     *         s'affiche alors pas du tout.
+     */
+    public function sectors(): array
+    {
+        return $this->sectorService->sectors($this->getProducts() ?? []);
+    }
+
+    /** Le secteur retenu, ou null pour tout le catalogue. */
+    public function resolveSector(?string $requested): ?string
+    {
+        return $this->sectorService->resolve($this->sectors(), $requested);
+    }
+
+    /**
+     * Le catalogue du secteur.
+     *
+     * @return ProductionProductModel[]|null null = catalogue non servi ; le
+     *         filtre ne transforme pas une absence en liste vide.
+     */
+    public function productsInSector(?string $sector): ?array
+    {
+        $products = $this->getProducts();
+        return $products === null ? null : $this->sectorService->filter($products, $sector);
+    }
+
+    /** @return array<int, true> les id_product du secteur */
+    public function sectorIds(?string $sector): array
+    {
+        return $this->sectorService->idsOf($this->getProducts() ?? [], $sector);
+    }
+
+    /**
+     * Ne garde d'une liste que ce qui appartient au secteur — lignes de MEP,
+     * fournées, stock, commandes, tout ce qui ne porte pas la fiche produit.
+     *
+     * @template T
+     * @param  T[] $items
+     * @param  callable(T): ?int $idOf
+     * @param  array<int, true>  $ids  rendu par sectorIds()
+     * @return T[]
+     */
+    public function filterToSector(array $items, callable $idOf, ?string $sector, array $ids): array
+    {
+        return $this->sectorService->keepIn($items, $idOf, $sector, $ids);
+    }
+
+    // ── Commandes ────────────────────────────────────────────────────────
+
+    /**
+     * Les commandes fermes du jour — magasin, click & collect, livraison.
+     *
+     * @return OrderLineModel[]|null null = carnet non servi
+     */
+    public function getOrders(string $date): ?array
+    {
+        if (!array_key_exists($date, $this->ordersCache)) {
+            $shopId = $this->getShopId();
+            $this->ordersCache[$date] = $shopId > 0
+                ? $this->productionRepository->getOrders($shopId, $date)
+                : null;
+        }
+        return $this->ordersCache[$date];
     }
 
     /**
@@ -320,13 +394,14 @@ class ProductionService
      *
      * @param ProductionProductModel[]|null $products
      * @param StockLineModel[]|null         $stock
+     * @param array<int, float>             $orders  commandes dues sur la fenêtre
      *
      * @return array{available: bool, samples: ?int, suggestions: array}
      *         available = false quand le profil de ventes n'est pas servi ;
      *         l'écran l'écrit au lieu de laisser croire qu'il n'y a rien à
      *         recuire.
      */
-    public function getRebakeSuggestions(?array $products, ?array $stock, ?string $date = null, ?string $time = null): array
+    public function getRebakeSuggestions(?array $products, ?array $stock, ?string $date = null, ?string $time = null, array $orders = []): array
     {
         if ($products === null || $stock === null) {
             return ['available' => false, 'samples' => null, 'suggestions' => []];
@@ -348,7 +423,7 @@ class ProductionService
         return [
             'available'   => true,
             'samples'     => $profile->getSamples(),
-            'suggestions' => $this->forecastService->suggest($products, $stock, $profile, $nowMinutes, $params),
+            'suggestions' => $this->forecastService->suggest($products, $stock, $profile, $nowMinutes, $params, $orders),
         ];
     }
 
@@ -357,12 +432,13 @@ class ProductionService
      *
      * @param ProductionProductModel[] $products
      * @param StockLineModel[]|null    $stock
+     * @param array<int, float>        $orders  commandes dues sur la fenêtre
      *
-     * @return array{available: bool, map: array<int, array{stock: float, expected: ?float, projected: ?float}>}
+     * @return array{available: bool, map: array<int, array{stock: float, expected: ?float, ordered: float, projected: ?float}>}
      *         available = false quand le profil de ventes n'est pas servi : la
      *         liste se classe alors sur le stock seul, et l'écran l'écrit.
      */
-    public function tension(array $products, ?array $stock, ?string $date = null, ?string $time = null): array
+    public function tension(array $products, ?array $stock, ?string $date = null, ?string $time = null, array $orders = []): array
     {
         $shopId  = $this->getShopId();
         $params  = $this->getParams();
@@ -377,7 +453,8 @@ class ProductionService
                 $stock ?? [],
                 $profile,
                 ForecastService::minutesOf($time ?? date('H:i')),
-                $params
+                $params,
+                $orders
             ),
         ];
     }
@@ -387,11 +464,20 @@ class ProductionService
      *
      * @param StockLineModel[]|null         $stock
      * @param ProductionProductModel[]|null $products
+     * @param array<int, float>             $orders1  commandes dues sur P1
+     * @param array<int, float>             $orders2  commandes dues sur P2
      *
      * @return array{available: bool, rows: array, counts: array, horizons: array}
      */
-    public function stockOutlook(?array $stock, ?array $products, StockOutlookService $outlook, ?string $date = null, ?string $time = null): array
-    {
+    public function stockOutlook(
+        ?array $stock,
+        ?array $products,
+        StockOutlookService $outlook,
+        ?string $date = null,
+        ?string $time = null,
+        array $orders1 = [],
+        array $orders2 = []
+    ): array {
         $now       = ForecastService::minutesOf($time ?? date('H:i'));
         $horizons  = $outlook->horizons($this->getPeriods(), $now);
 
@@ -401,7 +487,7 @@ class ProductionService
             ? $this->salesProvider->getProfile($shopId, $date ?? date('Y-m-d'), (int)$params['history_weeks'], true, 30)
             : null;
 
-        $rows = $outlook->rows($stock ?? [], $products ?? [], $profile, $horizons);
+        $rows = $outlook->rows($stock ?? [], $products ?? [], $profile, $horizons, $orders1, $orders2);
 
         return [
             'available' => $profile !== null,

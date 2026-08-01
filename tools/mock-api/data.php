@@ -78,43 +78,71 @@ function mock_ovens(): array
  * `is_pdb` — « prep day before » — dit si le produit se façonne la veille.
  * Seuls ceux-là sont proposés à l'encodage de la MEP du lendemain : la
  * pâtisserie du jour et le traiteur restent hors du sélecteur.
+ *
+ * `sector` sépare les deux ateliers du magasin — boulangerie et traiteur. Ce
+ * sont deux équipes et souvent deux pièces, mais une seule vitrine : d'où un
+ * filtre en tête des écrans plutôt qu'un second module.
+ *
+ * `is_pdm` dit que le produit se pilote à un plancher de vitrine plutôt qu'à la
+ * prévision de ventes, et `pdm_minimums` donne ce plancher période par période.
+ * Deux baguettes en rayon ne vendent pas, même si deux baguettes suffisent à la
+ * demande de 16 h.
  */
 function mock_products(): array
 {
     return [
         ['id_product' => 6700106, 'name' => 'Croissant pur beurre',      'id_category' => 12, 'category_name' => 'Viennoiserie',
-         'periods' => ['morning', 'noon'], 'batch_size' => 24, 'unit_name' => 'pc', 'production_lead_minutes' => 40, 'is_active' => true, 'is_pdb' => true],
+         'periods' => ['morning', 'noon'], 'batch_size' => 24, 'unit_name' => 'pc', 'production_lead_minutes' => 40, 'is_active' => true, 'is_pdb' => true, 'sector' => 'bakery', 'sector_name' => 'Boulangerie', 'is_pdm' => true, 'pdm_minimums' => ['morning' => 48, 'noon' => 24, 'afternoon' => 12]],
         ['id_product' => 6700110, 'name' => 'Pain au chocolat',          'id_category' => 12, 'category_name' => 'Viennoiserie',
-         'periods' => ['morning', 'noon'], 'batch_size' => 24, 'unit_name' => 'pc', 'production_lead_minutes' => 40, 'is_active' => true, 'is_pdb' => true],
+         'periods' => ['morning', 'noon'], 'batch_size' => 24, 'unit_name' => 'pc', 'production_lead_minutes' => 40, 'is_active' => true, 'is_pdb' => true, 'sector' => 'bakery', 'sector_name' => 'Boulangerie', 'is_pdm' => true, 'pdm_minimums' => ['morning' => 36, 'noon' => 18, 'afternoon' => 8]],
         ['id_product' => 6700120, 'name' => 'Baguette tradition',        'id_category' => 14, 'category_name' => 'Boulangerie',
-         'periods' => ['morning', 'noon', 'afternoon'], 'batch_size' => 12, 'unit_name' => 'pc', 'production_lead_minutes' => 20, 'is_active' => true, 'is_pdb' => true],
+         'periods' => ['morning', 'noon', 'afternoon'], 'batch_size' => 12, 'unit_name' => 'pc', 'production_lead_minutes' => 20, 'is_active' => true, 'is_pdb' => true, 'sector' => 'bakery', 'sector_name' => 'Boulangerie', 'is_pdm' => true, 'pdm_minimums' => ['morning' => 24, 'noon' => 24, 'afternoon' => 12]],
         ['id_product' => 6700130, 'name' => 'Tarte au citron meringuée', 'id_category' => 16, 'category_name' => 'Pâtisserie',
-         'periods' => ['noon', 'afternoon'], 'batch_size' => 6, 'unit_name' => 'pc', 'production_lead_minutes' => 0, 'is_active' => true, 'is_pdb' => true],
+         'periods' => ['noon', 'afternoon'], 'batch_size' => 6, 'unit_name' => 'pc', 'production_lead_minutes' => 0, 'is_active' => true, 'is_pdb' => true, 'sector' => 'bakery', 'sector_name' => 'Boulangerie', 'is_pdm' => false],
         // Pas de batch_size : la proposition tombe à l'unité, et l'écran le dit.
         ['id_product' => 6700140, 'name' => 'Macaron pistache',          'id_category' => 16, 'category_name' => 'Pâtisserie',
-         'periods' => ['afternoon'], 'unit_name' => 'pc', 'production_lead_minutes' => 0, 'is_active' => true, 'is_pdb' => false],
+         'periods' => ['afternoon'], 'unit_name' => 'pc', 'production_lead_minutes' => 0, 'is_active' => true, 'is_pdb' => false, 'sector' => 'bakery', 'sector_name' => 'Boulangerie', 'is_pdm' => false],
         // Inactif : jamais affiché, jamais proposé, même à stock zéro.
         ['id_product' => 6700150, 'name' => 'Bûche de Noël',             'id_category' => 16, 'category_name' => 'Pâtisserie',
-         'periods' => ['afternoon'], 'batch_size' => 4, 'unit_name' => 'pc', 'production_lead_minutes' => 0, 'is_active' => false, 'is_pdb' => false],
+         'periods' => ['afternoon'], 'batch_size' => 4, 'unit_name' => 'pc', 'production_lead_minutes' => 0, 'is_active' => false, 'is_pdb' => false, 'sector' => 'bakery', 'sector_name' => 'Boulangerie', 'is_pdm' => false],
         // Absent du profil de ventes : aucune recuisson proposée.
         ['id_product' => 6700160, 'name' => 'Sandwich club',             'id_category' => 18, 'category_name' => 'Traiteur',
-         'periods' => ['noon'], 'batch_size' => 10, 'unit_name' => 'pc', 'production_lead_minutes' => 0, 'is_active' => true, 'is_pdb' => false],
+         'periods' => ['noon'], 'batch_size' => 10, 'unit_name' => 'pc', 'production_lead_minutes' => 0, 'is_active' => true, 'is_pdb' => false, 'sector' => 'catering', 'sector_name' => 'Traiteur', 'is_pdm' => true, 'pdm_minimums' => ['morning' => 0, 'noon' => 20, 'afternoon' => 6]],
         // Les produits du plan de cuisson. Ils DOIVENT porter les mêmes ids
         // ici et dans mock_baking_batches() : c'est par l'id que l'écran de
         // période lit l'étape d'un produit, et deux catalogues qui divergent
         // affichent un four sous le nom d'un autre produit.
         ['id_product' => 6700190, 'name' => 'Chausson aux pommes',       'id_category' => 12, 'category_name' => 'Viennoiserie',
-         'periods' => ['morning', 'noon'], 'batch_size' => 18, 'unit_name' => 'pc', 'production_lead_minutes' => 20, 'is_active' => true, 'is_pdb' => true],
+         'periods' => ['morning', 'noon'], 'batch_size' => 18, 'unit_name' => 'pc', 'production_lead_minutes' => 20, 'is_active' => true, 'is_pdb' => true, 'sector' => 'bakery', 'sector_name' => 'Boulangerie', 'is_pdm' => true, 'pdm_minimums' => ['morning' => 18, 'noon' => 9, 'afternoon' => 0]],
         ['id_product' => 6700200, 'name' => 'Pain céréales',             'id_category' => 14, 'category_name' => 'Boulangerie',
-         'periods' => ['morning', 'noon', 'afternoon'], 'batch_size' => 10, 'unit_name' => 'pc', 'production_lead_minutes' => 30, 'is_active' => true, 'is_pdb' => true],
+         'periods' => ['morning', 'noon', 'afternoon'], 'batch_size' => 10, 'unit_name' => 'pc', 'production_lead_minutes' => 30, 'is_active' => true, 'is_pdb' => true, 'sector' => 'bakery', 'sector_name' => 'Boulangerie', 'is_pdm' => true, 'pdm_minimums' => ['morning' => 20, 'noon' => 10, 'afternoon' => 10]],
         ['id_product' => 6700210, 'name' => 'Éclair chocolat',           'id_category' => 16, 'category_name' => 'Pâtisserie',
-         'periods' => ['morning', 'noon'], 'batch_size' => 12, 'unit_name' => 'pc', 'production_lead_minutes' => 20, 'is_active' => true, 'is_pdb' => true],
+         'periods' => ['morning', 'noon'], 'batch_size' => 12, 'unit_name' => 'pc', 'production_lead_minutes' => 20, 'is_active' => true, 'is_pdb' => true, 'sector' => 'bakery', 'sector_name' => 'Boulangerie', 'is_pdm' => false],
         ['id_product' => 6700220, 'name' => 'Chouquette glacée',         'id_category' => 16, 'category_name' => 'Pâtisserie',
-         'periods' => ['morning', 'noon'], 'batch_size' => 30, 'unit_name' => 'pc', 'production_lead_minutes' => 15, 'is_active' => true, 'is_pdb' => true],
+         'periods' => ['morning', 'noon'], 'batch_size' => 30, 'unit_name' => 'pc', 'production_lead_minutes' => 15, 'is_active' => true, 'is_pdb' => true, 'sector' => 'bakery', 'sector_name' => 'Boulangerie', 'is_pdm' => false],
         ['id_product' => 6700230, 'name' => 'Cookie chocolat',           'id_category' => 16, 'category_name' => 'Pâtisserie',
-         'periods' => ['noon', 'afternoon'], 'batch_size' => 20, 'unit_name' => 'pc', 'production_lead_minutes' => 12, 'is_active' => true, 'is_pdb' => false],
+         'periods' => ['noon', 'afternoon'], 'batch_size' => 20, 'unit_name' => 'pc', 'production_lead_minutes' => 12, 'is_active' => true, 'is_pdb' => false, 'sector' => 'bakery', 'sector_name' => 'Boulangerie', 'is_pdm' => true, 'pdm_minimums' => ['morning' => 0, 'noon' => 20, 'afternoon' => 20]],
+        // ── Traiteur ──
+        // Le second atelier. Mêmes écrans, mêmes gestes, mais ses propres
+        // catégories : c'est ce qui rend le sélecteur de secteur utile plutôt
+        // que décoratif — filtrer par catégorie ne suffirait pas, il en faudrait
+        // quatre à cocher.
+        ['id_product' => 6700300, 'name' => 'Sandwich jambon-beurre',    'id_category' => 20, 'category_name' => 'Sandwichs',
+         'periods' => ['morning', 'noon'], 'batch_size' => 10, 'unit_name' => 'pc', 'production_lead_minutes' => 0, 'is_active' => true, 'is_pdb' => false,
+         'sector' => 'catering', 'sector_name' => 'Traiteur', 'is_pdm' => true, 'pdm_minimums' => ['morning' => 6, 'noon' => 24, 'afternoon' => 8]],
+        ['id_product' => 6700310, 'name' => 'Salade César',              'id_category' => 21, 'category_name' => 'Salades',
+         'periods' => ['noon', 'afternoon'], 'batch_size' => 8, 'unit_name' => 'pc', 'production_lead_minutes' => 0, 'is_active' => true, 'is_pdb' => false,
+         'sector' => 'catering', 'sector_name' => 'Traiteur', 'is_pdm' => true, 'pdm_minimums' => ['morning' => 0, 'noon' => 12, 'afternoon' => 6]],
+        ['id_product' => 6700320, 'name' => 'Quiche lorraine',           'id_category' => 22, 'category_name' => 'Traiteur chaud',
+         'periods' => ['noon', 'afternoon'], 'batch_size' => 6, 'unit_name' => 'pc', 'production_lead_minutes' => 45, 'is_active' => true, 'is_pdb' => true,
+         'sector' => 'catering', 'sector_name' => 'Traiteur', 'is_pdm' => false],
+        // Traiteur sans plancher de vitrine : il ne se fait que sur commande,
+        // et c'est le carnet qui le déclenche — pas la présentation.
+        ['id_product' => 6700330, 'name' => 'Plateau apéritif 20 pièces', 'id_category' => 22, 'category_name' => 'Traiteur chaud',
+         'periods' => ['afternoon'], 'batch_size' => 2, 'unit_name' => 'pc', 'production_lead_minutes' => 30, 'is_active' => true, 'is_pdb' => false,
+         'sector' => 'catering', 'sector_name' => 'Traiteur', 'is_pdm' => false],
         ['id_product' => 6700240, 'name' => 'Pain de campagne',          'id_category' => 14, 'category_name' => 'Boulangerie',
-         'periods' => ['morning', 'noon'], 'batch_size' => 8, 'unit_name' => 'pc', 'production_lead_minutes' => 35, 'is_active' => true, 'is_pdb' => true],
+         'periods' => ['morning', 'noon'], 'batch_size' => 8, 'unit_name' => 'pc', 'production_lead_minutes' => 35, 'is_active' => true, 'is_pdb' => true, 'sector' => 'bakery', 'sector_name' => 'Boulangerie', 'is_pdm' => true, 'pdm_minimums' => ['morning' => 16, 'noon' => 8, 'afternoon' => 8]],
     ];
 }
 
@@ -125,6 +153,8 @@ function mock_initial_stock(): array
         6700130 => 2,  6700140 => 3,  6700150 => 0, 6700160 => 0,
         6700190 => 8,  6700200 => 24, 6700210 => 4, 6700220 => 45,
         6700230 => 60, 6700240 => 6,
+        // Traiteur : deux produits sous leur plancher de vitrine, un au-dessus.
+        6700300 => 4,  6700310 => 3,  6700320 => 9, 6700330 => 0,
     ];
 }
 
@@ -137,7 +167,10 @@ function mock_sales_profile(): array
     }
     // Pic du matin, creux de 10 h, pic de midi, fin d'après-midi qui retombe.
     $shape = [0.3,0.6,1.4,2.2,2.6,2.1,1.5,1.0,1.0,1.1,1.6,2.4,2.8,2.2,1.4,0.9,0.8,0.9,1.1,1.3,1.2,0.9,0.6,0.4,0.3,0.2];
-    $rates = [6700106 => 2.3, 6700110 => 1.5, 6700120 => 1.15, 6700130 => 0.58, 6700140 => 0.77];
+    $rates = [
+        6700106 => 2.3, 6700110 => 1.5, 6700120 => 1.15, 6700130 => 0.58, 6700140 => 0.77,
+        6700300 => 1.1, 6700310 => 0.5, 6700320 => 0.35,
+    ];
 
     $products = [];
     foreach ($rates as $id => $r) {
@@ -157,6 +190,53 @@ function mock_sales_profile(): array
     ];
 }
 
+/**
+ * Le carnet de commandes du jour — magasin, click & collect, livraison.
+ *
+ * Calé sur l'heure courante comme le plan de cuisson : à toute heure de la
+ * journée il y a une commande en retard, une pour tout de suite et deux pour
+ * plus tard. Les trois canaux y sont, et les deux secteurs — sinon on ne
+ * verrait jamais que le carnet change en changeant d'atelier.
+ *
+ * Une commande est due : elle s'ajoute aux ventes prévues, elle ne les remplace
+ * pas. C'est ce qui la distingue d'une moyenne, et c'est pour ça qu'elle a sa
+ * propre route plutôt qu'une correction du profil de ventes.
+ */
+function mock_orders(int $nowMinutes): array
+{
+    $clock = fn(int $m) => sprintf('%02d:%02d', intdiv(max(0, $m), 60) % 24, max(0, $m) % 60);
+
+    // [décalage, produit, nom, catégorie, quantité, canal, référence]
+    $book = [
+        [-45, 6700120, 'Baguette tradition',         'Boulangerie',    24, 'shop',     'CMD-1042'],
+        [-10, 6700300, 'Sandwich jambon-beurre',     'Sandwichs',      15, 'click',    'WEB-8817'],
+        [ 20, 6700106, 'Croissant pur beurre',       'Viennoiserie',   36, 'click',    'WEB-8823'],
+        [ 45, 6700330, 'Plateau apéritif 20 pièces', 'Traiteur chaud',  4, 'delivery', 'LIV-2291'],
+        [ 90, 6700310, 'Salade César',               'Salades',        12, 'delivery', 'LIV-2294'],
+        [120, 6700200, 'Pain céréales',              'Boulangerie',    10, 'shop',     'CMD-1051'],
+        // Sans heure : « pour midi », sans plus. C'est la période qui la place.
+        [null, 6700320, 'Quiche lorraine',           'Traiteur chaud',  6, 'shop',     'CMD-1053'],
+    ];
+
+    $rows = [];
+    foreach ($book as $i => $o) {
+        [$off, $idProduct, $name, $cat, $qty, $channel, $ref] = $o;
+        $rows[] = [
+            'id_order'      => 9100 + $i,
+            'id_product'    => $idProduct,
+            'name'          => $name,
+            'category_name' => $cat,
+            'quantity'      => $qty,
+            'channel'       => $channel,
+            'due_time'      => $off === null ? null : $clock($nowMinutes + $off),
+            'period'        => $off === null ? 'noon' : null,
+            'reference'     => $ref,
+            'unit_name'     => 'pc',
+        ];
+    }
+    return $rows;
+}
+
 /** MEP du jour : préparée hier, en attente de validation. */
 function mock_mep_today(string $date): array
 {
@@ -166,13 +246,13 @@ function mock_mep_today(string $date): array
         'status'      => 'PREPARED',
         'lines'       => [
             ['id' => 4401, 'id_product' => 6700106, 'name' => 'Croissant pur beurre', 'category_name' => 'Viennoiserie',
-             'period' => 'morning', 'quantity_planned' => 120, 'quantity_validated' => null, 'unit_name' => 'pc', 'status' => 'PREPARED'],
+             'period' => 'morning', 'quantity_planned' => 120, 'quantity_validated' => null, 'unit_name' => 'pc', 'status' => 'PREPARED', 'sector' => 'bakery', 'sector_name' => 'Boulangerie', 'is_pdm' => true, 'pdm_minimums' => ['morning' => 48, 'noon' => 24, 'afternoon' => 12]],
             ['id' => 4402, 'id_product' => 6700110, 'name' => 'Pain au chocolat', 'category_name' => 'Viennoiserie',
-             'period' => 'morning', 'quantity_planned' => 80, 'quantity_validated' => null, 'unit_name' => 'pc', 'status' => 'PREPARED'],
+             'period' => 'morning', 'quantity_planned' => 80, 'quantity_validated' => null, 'unit_name' => 'pc', 'status' => 'PREPARED', 'sector' => 'bakery', 'sector_name' => 'Boulangerie', 'is_pdm' => true, 'pdm_minimums' => ['morning' => 36, 'noon' => 18, 'afternoon' => 8]],
             ['id' => 4403, 'id_product' => 6700120, 'name' => 'Baguette tradition', 'category_name' => 'Boulangerie',
-             'period' => 'morning', 'quantity_planned' => 60, 'quantity_validated' => null, 'unit_name' => 'pc', 'status' => 'PREPARED'],
+             'period' => 'morning', 'quantity_planned' => 60, 'quantity_validated' => null, 'unit_name' => 'pc', 'status' => 'PREPARED', 'sector' => 'bakery', 'sector_name' => 'Boulangerie', 'is_pdm' => true, 'pdm_minimums' => ['morning' => 24, 'noon' => 24, 'afternoon' => 12]],
             ['id' => 4404, 'id_product' => 6700130, 'name' => 'Tarte au citron meringuée', 'category_name' => 'Pâtisserie',
-             'period' => 'noon', 'quantity_planned' => 12, 'quantity_validated' => null, 'unit_name' => 'pc', 'status' => 'PREPARED'],
+             'period' => 'noon', 'quantity_planned' => 12, 'quantity_validated' => null, 'unit_name' => 'pc', 'status' => 'PREPARED', 'sector' => 'bakery', 'sector_name' => 'Boulangerie', 'is_pdm' => false],
         ],
     ];
 }
@@ -186,9 +266,9 @@ function mock_mep_tomorrow(string $date): array
         'status'      => 'PREPARED',
         'lines'       => [
             ['id' => 4501, 'id_product' => 6700106, 'name' => 'Croissant pur beurre', 'category_name' => 'Viennoiserie',
-             'period' => 'morning', 'quantity_planned' => 144, 'quantity_validated' => null, 'unit_name' => 'pc', 'status' => 'PREPARED'],
+             'period' => 'morning', 'quantity_planned' => 144, 'quantity_validated' => null, 'unit_name' => 'pc', 'status' => 'PREPARED', 'sector' => 'bakery', 'sector_name' => 'Boulangerie', 'is_pdm' => true, 'pdm_minimums' => ['morning' => 48, 'noon' => 24, 'afternoon' => 12]],
             ['id' => 4502, 'id_product' => 6700120, 'name' => 'Baguette tradition', 'category_name' => 'Boulangerie',
-             'period' => 'morning', 'quantity_planned' => 72, 'quantity_validated' => null, 'unit_name' => 'pc', 'status' => 'PREPARED'],
+             'period' => 'morning', 'quantity_planned' => 72, 'quantity_validated' => null, 'unit_name' => 'pc', 'status' => 'PREPARED', 'sector' => 'bakery', 'sector_name' => 'Boulangerie', 'is_pdm' => true, 'pdm_minimums' => ['morning' => 24, 'noon' => 24, 'afternoon' => 12]],
         ],
     ];
 }

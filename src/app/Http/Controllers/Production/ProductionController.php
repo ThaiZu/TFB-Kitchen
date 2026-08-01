@@ -4,8 +4,12 @@ namespace App\Kitchen\app\Http\Controllers\Production;
 
 use App\Kitchen\app\Http\Controllers\Controller;
 use App\Kitchen\app\Models\Production\MepLineModel;
+use App\Kitchen\app\Models\Production\OrderLineModel;
 use App\Kitchen\app\Models\Baking\BakingBatchModel;
 use App\Kitchen\app\Services\Baking\BakingService;
+use App\Kitchen\app\Services\Production\ForecastService;
+use App\Kitchen\app\Services\Production\MinimumService;
+use App\Kitchen\app\Services\Production\OrderBookService;
 use App\Kitchen\app\Services\Production\ProductionBoardService;
 use App\Kitchen\app\Services\Production\ProductionService;
 use App\Kitchen\app\Services\Production\StockOutlookService;
@@ -21,22 +25,35 @@ class ProductionController extends Controller
         // produit », partagée avec le module Cuisson.
         private BakingService $bakingService,
         private StockOutlookService $outlookService,
+        private OrderBookService $orderBook,
+        private MinimumService $minimumService,
         private StaffService $staffService
     ) {}
 
     /**
-     * GET /production[?view=mep|morning|noon|afternoon|stock][&mep=morning|afternoon]
+     * GET /production[?view=mep|morning|noon|afternoon|stock|minimums|planning]
+     *                [&mep=morning|afternoon][&sector=<clé>]
      *
      * L'écran travaille toujours pour aujourd'hui : pas de sélecteur de date.
      * Une cuisine ne produit pas pour hier, et un écran qui peut afficher une
      * autre journée finit par en afficher une par erreur au milieu du service.
      * Seul l'encodage de la MEP regarde demain, et il le dit.
+     *
+     * Le secteur, lui, se choisit : boulangerie et traiteur sont deux ateliers,
+     * deux équipes, souvent deux pièces — mais un seul magasin et exactement
+     * les mêmes questions. Un filtre en tête, donc, et pas un second module :
+     * le boulanger qui passe au traiteur retrouve ses gestes.
      */
     public function index(): void
     {
         $today   = date('Y-m-d');
         $periods = $this->productionService->getPeriods();
         $view    = $this->readView($periods);
+
+        $sectors = $this->productionService->sectors();
+        $sector  = $this->productionService->resolveSector(
+            isset($_GET['sector']) ? (string)$_GET['sector'] : null
+        );
 
         $data = [
             // Le sélecteur ne montre que ce qui reste à faire ; `periods` garde
@@ -46,43 +63,61 @@ class ProductionController extends Controller
             'active_view' => $view,
             'today'       => $today,
             'params'      => $this->productionService->getParams(),
+            'sectors'     => $sectors,
+            'sector'      => $sector,
+            // Les vues construisent leurs liens : le secteur doit survivre à
+            // chaque changement d'onglet, sinon on le reperd à chaque geste.
+            'sector_qs'   => $sector !== null ? '&sector=' . rawurlencode($sector) : '',
         ];
 
         // La bande de flux dit dans quel ordre les choses arrivent, et compte
-        // ce qui attend à chaque étape. Elle est sur les quatre écrans : c'est
+        // ce qui attend à chaque étape. Elle est sur tous les écrans : c'est
         // elle qui empêche de se perdre, pas le panneau d'ordres — lequel ne
         // concerne que l'atelier et reste donc dans le planning.
-        $data['flow'] = $this->flowData($today);
+        $data['flow'] = $this->flowData($today, $sector);
 
         if ($view === 'planning') {
-            $data += $this->planningData($today);
+            $data += $this->planningData($today, $sector);
         } elseif ($view === 'stock') {
-            $products = $this->productionService->getProducts();
-            $stock    = $this->productionService->getStock();
-            $rebakes  = $this->productionService->getRebakeSuggestions($products, $stock, $today);
-            // Le stock lu vers l'avant : ce n'est pas « combien il en reste »
-            // qui se décide, c'est « est-ce que ça tient jusqu'au bout ».
-            $outlook  = $this->productionService->stockOutlook($stock, $products, $this->outlookService, $today);
-
-            $data += [
-                'stock_available'   => $stock !== null,
-                'stock'             => $stock ?? [],
-                'rebakes'           => $rebakes['suggestions'],
-                'rebakes_available' => $rebakes['available'],
-                'rebakes_samples'   => $rebakes['samples'],
-                'outlook'           => $outlook['rows'],
-                'outlook_available' => $outlook['available'],
-                'outlook_counts'    => $outlook['counts'],
-                'outlook_categories'=> $outlook['categories'],
-                'horizons'          => $outlook['horizons'],
-            ];
+            $data += $this->stockData($today, $sector);
+        } elseif ($view === 'minimums') {
+            $data += $this->minimumsData($today, $sector);
         } elseif ($view === 'mep') {
-            $data += $this->mepData($today);
+            $data += $this->mepData($today, $sector);
         } else {
-            $data += $this->periodData($today, $view);
+            $data += $this->periodData($today, $view, $sector);
         }
 
         $this->view('production/index', $data);
+    }
+
+    /**
+     * Les commandes fermes du jour, ramenées au secteur ouvert.
+     *
+     * @return array{available: bool, lines: OrderLineModel[]}
+     *         available = false quand le carnet n'est pas servi. La distinction
+     *         compte : un carnet vide affiché à la place d'un endpoint muet
+     *         ferait produire pile la vitrine, et repartir les clients qui
+     *         avaient commandé.
+     */
+    private function orders(string $today, ?string $sector): array
+    {
+        $lines = $this->productionService->getOrders($today);
+        if ($lines === null) {
+            return ['available' => false, 'lines' => []];
+        }
+
+        $ids = $this->productionService->sectorIds($sector);
+
+        return [
+            'available' => true,
+            'lines'     => $this->productionService->filterToSector(
+                $lines,
+                fn(OrderLineModel $o) => $o->getIdProduct(),
+                $sector,
+                $ids
+            ),
+        ];
     }
 
     /**
@@ -97,19 +132,30 @@ class ProductionController extends Controller
      *         null = source non servie ; l'étape n'affiche alors aucun nombre
      *         plutôt qu'un zéro qui voudrait dire « rien à faire ».
      */
-    private function flowData(string $today): array
+    private function flowData(string $today, ?string $sector = null): array
     {
         $mep   = $this->productionService->getMep($today);
         $plan  = $this->bakingService->getPlan($today);
         $stock = $this->productionService->getStock();
 
-        $lines = $mep['lines'] ?? [];
+        // Les compteurs suivent le secteur ouvert : afficher « 14 à valider »
+        // sur un écran qui n'en montre que trois ferait chercher les onze
+        // autres jusqu'à comprendre qu'ils sont chez le voisin.
+        $ids   = $this->productionService->sectorIds($sector);
+        $keep  = fn(array $rows, callable $idOf) =>
+            $this->productionService->filterToSector($rows, $idOf, $sector, $ids);
+
+        $lines = $keep($mep['lines'] ?? [], fn(MepLineModel $l) => $l->getIdProduct());
+        $stock = $stock === null ? null : $keep($stock, fn($s) => $s->getIdProduct());
+        $batches = $plan === null ? [] : $keep(
+            $this->bakingService->active($plan['batches']),
+            fn(BakingBatchModel $b) => $b->getIdProduct()
+        );
 
         return [
             'to_validate' => $mep === null ? null
                 : count(array_filter($lines, fn(MepLineModel $l) => $l->isPending())),
-            'in_progress' => $plan === null ? null
-                : count($this->bakingService->active($plan['batches'])),
+            'in_progress' => $plan === null ? null : count($batches),
             // Produit, constaté, mais pas encore porté : c'est exactement ce
             // que l'étape 3 attend de nous.
             'to_shelf'    => $mep === null ? null
@@ -126,7 +172,7 @@ class ProductionController extends Controller
      * l'atelier, pas celui du magasin. Sur la MEP ou le stock, il proposerait
      * un geste qui n'a rien à voir avec l'écran ouvert.
      */
-    private function planningData(string $today): array
+    private function planningData(string $today, ?string $sector = null): array
     {
         $plan = $this->bakingService->getPlan($today);
 
@@ -151,9 +197,21 @@ class ProductionController extends Controller
 
         $stage   = $this->readStage();
         $now     = $this->bakingService->nowMinutes($plan['server_time']);
-        $active  = $this->bakingService->active($plan['batches']);
+
+        // Le secteur filtre aussi l'atelier : le traiteur n'a pas à surveiller
+        // les fours de la boulangerie, et une frise qui mélange les deux se lit
+        // deux fois plus longtemps pour moitié moins d'information.
+        $ids     = $this->productionService->sectorIds($sector);
+        $mine    = $this->productionService->filterToSector(
+            $plan['batches'],
+            fn(BakingBatchModel $b) => $b->getIdProduct(),
+            $sector,
+            $ids
+        );
+
+        $active  = $this->bakingService->active($mine);
         $shown   = $this->bakingService->filterByStage($active, $stage);
-        $dayPlan = $this->bakingService->dayPlan($plan['batches'], $stage);
+        $dayPlan = $this->bakingService->dayPlan($mine, $stage);
         $staff   = $this->staffService->getEmployees();
 
         return [
@@ -189,13 +247,22 @@ class ProductionController extends Controller
      * quel ordre s'en occuper. Chacune peut manquer sans casser l'écran —
      * elle manque alors *visiblement*.
      */
-    private function periodData(string $today, string $view): array
+    private function periodData(string $today, string $view, ?string $sector = null): array
     {
-        $products = $this->productionService->getProducts();
+        $products = $this->productionService->productsInSector($sector);
         $mep      = $this->productionService->getMep($today);
-        $lines    = $mep !== null
-            ? $this->productionService->mepLinesForPeriod($mep['lines'], $view)
+        $ids      = $this->productionService->sectorIds($sector);
+
+        $lines = $mep !== null
+            ? $this->productionService->filterToSector(
+                $this->productionService->mepLinesForPeriod($mep['lines'], $view),
+                fn(MepLineModel $l) => $l->getIdProduct(),
+                $sector,
+                $ids
+            )
             : [];
+
+        $orders = $this->orders($today, $sector);
 
         if ($products === null) {
             return [
@@ -203,6 +270,9 @@ class ProductionController extends Controller
                 'mep_available'      => $mep !== null,
                 'mep_lines'          => $lines,
                 'mep_pending_count'  => count(array_filter($lines, fn(MepLineModel $l) => $l->isPending())),
+                'orders_available'   => $orders['available'],
+                'orders'             => [],
+                'orders_counts'      => $this->orderBook->counts([]),
                 'board'              => null,
             ];
         }
@@ -219,7 +289,19 @@ class ProductionController extends Controller
         $stages = $plan !== null ? $this->boardService->stagesByProduct($plan['batches']) : [];
 
         $stock   = $this->productionService->getStock();
-        $tension = $this->productionService->tension($periodProducts, $stock, $today);
+
+        // Les commandes fermes entrent dans le manque, sur la même fenêtre que
+        // les ventes prévues : produire pour la vitrine et découvrir ensuite
+        // qu'un plateau de quarante pièces était promis pour midi, c'est deux
+        // fournées trop tard.
+        $due     = $this->orderBook->dueForProducts(
+            $orders['lines'],
+            $periodProducts,
+            ForecastService::minutesOf(date('H:i')),
+            (int)round((float)$this->productionService->getParams()['forecast_hours'] * 60)
+        );
+
+        $tension = $this->productionService->tension($periodProducts, $stock, $today, null, $due);
 
         return [
             'products_available' => true,
@@ -229,7 +311,137 @@ class ProductionController extends Controller
             'plan_available'     => $plan !== null,
             'stock_available'    => $stock !== null,
             'forecast_available' => $tension['available'],
+            'orders_available'   => $orders['available'],
+            'orders'             => $this->orderBook->upcoming(
+                $orders['lines'],
+                ForecastService::minutesOf(date('H:i'))
+            ),
+            'orders_counts'      => $this->orderBook->counts($orders['lines']),
+            'now_minutes'        => ForecastService::minutesOf(date('H:i')),
             'board'              => $this->boardService->build($periodProducts, $lines, $stages, $tension['map']),
+        ];
+    }
+
+    /**
+     * L'écran Stock : ce qu'il reste, face à ce qui va partir.
+     */
+    private function stockData(string $today, ?string $sector): array
+    {
+        $products = $this->productionService->productsInSector($sector);
+        $ids      = $this->productionService->sectorIds($sector);
+
+        $stock = $this->productionService->getStock();
+        $stock = $stock === null ? null : $this->productionService->filterToSector(
+            $stock,
+            fn($s) => $s->getIdProduct(),
+            $sector,
+            $ids
+        );
+
+        $orders   = $this->orders($today, $sector);
+        $now      = ForecastService::minutesOf(date('H:i'));
+        $horizons = $this->outlookService->horizons($this->productionService->getPeriods(), $now);
+
+        // P1 part de zéro, pas de maintenant : une commande de 9 h 30 lue à
+        // 10 h 40 n'a pas disparu du stock — soit elle a été remise et le stock
+        // le montre déjà, soit elle attend toujours son client, et il faut la
+        // réserver. L'ignorer ferait vendre deux fois le même plateau.
+        $o1 = $this->orderBook->dueBetween($orders['lines'], 0, $horizons['p1']['to']);
+        $o2 = $this->orderBook->dueBetween($orders['lines'], $horizons['p2']['from'], $horizons['p2']['to']);
+
+        $rebakes = $this->productionService->getRebakeSuggestions(
+            $products,
+            $stock,
+            $today,
+            null,
+            $this->orderBook->dueForProducts(
+                $orders['lines'],
+                $products ?? [],
+                $now,
+                (int)round((float)$this->productionService->getParams()['forecast_hours'] * 60)
+            )
+        );
+
+        // Le stock lu vers l'avant : ce n'est pas « combien il en reste » qui se
+        // décide, c'est « est-ce que ça tient jusqu'au bout ».
+        $outlook = $this->productionService->stockOutlook(
+            $stock,
+            $products,
+            $this->outlookService,
+            $today,
+            null,
+            $o1,
+            $o2
+        );
+
+        return [
+            'stock_available'   => $stock !== null,
+            'stock'             => $stock ?? [],
+            'rebakes'           => $rebakes['suggestions'],
+            'rebakes_available' => $rebakes['available'],
+            'rebakes_samples'   => $rebakes['samples'],
+            'outlook'           => $outlook['rows'],
+            'outlook_available' => $outlook['available'],
+            'outlook_counts'    => $outlook['counts'],
+            'outlook_categories'=> $outlook['categories'],
+            'horizons'          => $outlook['horizons'],
+            'orders_available'  => $orders['available'],
+        ];
+    }
+
+    /**
+     * L'écran Minimums : le plancher de vitrine, période par période.
+     *
+     * Une autre question que celle du stock, et c'est pourquoi c'est un autre
+     * tableau. « Est-ce que ça tient » se répond avec les ventes prévues ;
+     * « est-ce que la vitrine est présentable » se répond avec un plancher, qui
+     * ne se discute pas avec une moyenne. Les deux vivent côte à côte sous le
+     * même onglet, parce qu'on les consulte dans la même minute.
+     */
+    private function minimumsData(string $today, ?string $sector): array
+    {
+        $products = $this->productionService->productsInSector($sector);
+        $ids      = $this->productionService->sectorIds($sector);
+        $periods  = $this->productionService->getPeriods();
+        $now      = ForecastService::minutesOf(date('H:i'));
+
+        $stock = $this->productionService->getStock();
+        $stock = $stock === null ? null : $this->productionService->filterToSector(
+            $stock,
+            fn($s) => $s->getIdProduct(),
+            $sector,
+            $ids
+        );
+
+        $orders = $this->orders($today, $sector);
+
+        // La couleur se décide sur la période en cours : c'est la vitrine de
+        // maintenant qu'on regarde en passant devant.
+        $focus = $this->productionService->currentPeriodKey();
+        $bounds = null;
+        foreach ($periods as $p) {
+            if ($p->getKey() === $focus) {
+                $bounds = [ForecastService::minutesOf($p->getStart()), ForecastService::minutesOf($p->getEnd())];
+            }
+        }
+
+        $due = $bounds === null
+            ? []
+            : $this->orderBook->dueInPeriod($orders['lines'], $focus, $bounds[0], $bounds[1]);
+
+        $rows = $products === null
+            ? []
+            : $this->minimumService->rows($products, $stock, $due, $periods, $focus);
+
+        return [
+            'products_available' => $products !== null,
+            'stock_available'    => $stock !== null,
+            'orders_available'   => $orders['available'],
+            'min_rows'           => $rows,
+            'min_counts'         => $this->minimumService->counts($rows),
+            'min_categories'     => $this->minimumService->categories($rows),
+            'min_focus'          => $focus,
+            'now_minutes'        => $now,
         ];
     }
 
@@ -241,13 +453,19 @@ class ProductionController extends Controller
      * demain. Deux gestes opposés — l'un ferme une journée, l'autre en ouvre
      * une — d'où deux écrans plutôt qu'un formulaire à double usage.
      */
-    private function mepData(string $today): array
+    private function mepData(string $today, ?string $sector = null): array
     {
         $sub = ($_GET['mep'] ?? '') === 'afternoon' ? 'afternoon' : 'morning';
+        $ids = $this->productionService->sectorIds($sector);
 
         if ($sub === 'morning') {
             $mep     = $this->productionService->getMep($today);
-            $lines   = $mep['lines'] ?? [];
+            $lines   = $this->productionService->filterToSector(
+                $mep['lines'] ?? [],
+                fn(MepLineModel $l) => $l->getIdProduct(),
+                $sector,
+                $ids
+            );
             $pending = array_values(array_filter($lines, fn(MepLineModel $l) => $l->isPending()));
 
             return [
@@ -268,7 +486,7 @@ class ProductionController extends Controller
         }
 
         $tomorrow = date('Y-m-d', strtotime($today . ' +1 day'));
-        $products = $this->productionService->getProducts();
+        $products = $this->productionService->productsInSector($sector);
         // Un brouillon peut déjà exister : on reprend l'encodage là où il en
         // était plutôt que de repartir de zéro à chaque ouverture.
         $draft    = $this->productionService->getMep($tomorrow);
@@ -290,7 +508,13 @@ class ProductionController extends Controller
         // qui porte le pas de fournée (12 pour un croissant, 15 pour une
         // baguette), et la ligne de MEP ne le transporte pas.
         $rows = [];
-        foreach ($draft['lines'] ?? [] as $line) {
+        $draftLines = $this->productionService->filterToSector(
+            $draft['lines'] ?? [],
+            fn(MepLineModel $l) => $l->getIdProduct(),
+            $sector,
+            $ids
+        );
+        foreach ($draftLines as $line) {
             $id      = $line->getIdProduct();
             $product = $id !== null ? ($byId[$id] ?? null) : null;
             $cat     = $line->getCategoryName() ?: ($product?->getCategoryName() ?? '—');
@@ -353,9 +577,33 @@ class ProductionController extends Controller
     public function ajaxStock(): void
     {
         $today    = date('Y-m-d');
-        $products = $this->productionService->getProducts();
-        $stock    = $this->productionService->getStock();
-        $rebakes  = $this->productionService->getRebakeSuggestions($products, $stock, $today);
+        $sector   = $this->productionService->resolveSector(
+            isset($_GET['sector']) ? (string)$_GET['sector'] : null
+        );
+        $ids      = $this->productionService->sectorIds($sector);
+        $products = $this->productionService->productsInSector($sector);
+
+        $stock = $this->productionService->getStock();
+        $stock = $stock === null ? null : $this->productionService->filterToSector(
+            $stock,
+            fn($s) => $s->getIdProduct(),
+            $sector,
+            $ids
+        );
+
+        $orders  = $this->orders($today, $sector);
+        $rebakes = $this->productionService->getRebakeSuggestions(
+            $products,
+            $stock,
+            $today,
+            null,
+            $this->orderBook->dueForProducts(
+                $orders['lines'],
+                $products ?? [],
+                ForecastService::minutesOf(date('H:i')),
+                (int)round((float)$this->productionService->getParams()['forecast_hours'] * 60)
+            )
+        );
 
         $this->json([
             'success'           => $stock !== null,
@@ -505,6 +753,7 @@ class ProductionController extends Controller
     {
         $allowed = array_map(fn($p) => $p->getKey(), $periods);
         $allowed[] = 'stock';
+        $allowed[] = 'minimums';
         $allowed[] = 'mep';
         $allowed[] = 'planning';
 

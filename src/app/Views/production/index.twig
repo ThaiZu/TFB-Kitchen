@@ -29,6 +29,26 @@
 {# Le planning fait partie du même module : ses styles viennent avec, pour que
    les ordres et la frise s'affichent ici comme là-bas. #}
 {% include "baking/_styles.twig" %}
+    /* ── Secteur de production ───────────────────────────────────────────
+       Boulangerie et traiteur : deux ateliers, un seul magasin, les mêmes
+       écrans. Le sélecteur est en tête de module parce que c'est le filtre le
+       plus large — tout ce qui suit en dépend, y compris les compteurs. */
+    .pr-sectors {
+        display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+        margin-bottom: 12px;
+    }
+    .pr-sectors-lbl {
+        font-size: .68rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+        color: var(--c-muted, #7a7168); margin-right: 2px;
+    }
+    .pr-sectors .cat-chip {
+        display: inline-flex; align-items: center; min-height: 40px;
+        text-decoration: none; line-height: 1;
+    }
+    .pr-sectors .cat-chip.is-on {
+        background: var(--c-encre, #1F4F6B); border-color: var(--c-encre, #1F4F6B); color: #fff;
+    }
+
     /* ── La bande de flux ────────────────────────────────────────────────
        Quatre onglets ne disent pas dans quel ordre les choses arrivent. Cette
        bande le dit, et compte ce qui attend à chaque étape : mode d'emploi et
@@ -458,6 +478,58 @@
 
     .stk-empty-filter { margin: 18px 0 0; text-align: center; color: var(--c-muted, #7a7168); font-size: .86rem; }
 
+    /* La colonne de la période en cours porte la décision : les autres sont là
+       pour préparer la suite de la journée, pas pour être comparées maintenant. */
+    .stk-table th.is-focus { background: var(--c-primary-soft, #f4dfe2); color: #7a1524; }
+    .stk-table td.is-focus { font-weight: 800; color: var(--c-ink, #241f1c); }
+
+    /* Relancer depuis le tableau des minimums : mêmes commandes qu'ailleurs,
+       en plus compact — une cellule de tableau n'a pas la largeur d'une tuile. */
+    .min-launch { display: flex; align-items: center; gap: 6px; }
+    .min-launch .mep-qty { width: 74px; min-height: 44px; font-size: .95rem; }
+    .min-launch .mep-step { width: 38px; height: 44px; font-size: 1.15rem; }
+    .min-launch .pr-launch-go { flex: 0 0 auto; min-height: 44px; padding: 0 13px; font-size: .82rem; }
+
+    /* ── Commandes fermes ────────────────────────────────────────────────
+       Une commande n'est pas une prévision : elle est due, à une heure connue,
+       et personne ne pardonne un plateau manquant. Elle entre donc dans le
+       calcul du manque — et se dit à part, parce que « il en manque 24 » et
+       « il en manque 24 dont 18 commandés » n'appellent pas la même vigilance. */
+    .pr-ord {
+        display: inline-flex; align-items: center; gap: 5px;
+        margin: 0; padding: 3px 9px; border-radius: 999px;
+        background: #e8eef3; color: var(--c-encre, #1F4F6B);
+        font-size: .7rem; font-weight: 800;
+    }
+    .pr-ord svg { flex: 0 0 auto; }
+    .ord-list { display: flex; flex-direction: column; gap: 7px; margin-top: 10px; }
+    .ord-row {
+        display: flex; align-items: center; gap: 11px;
+        background: var(--c-surface, #fff);
+        border: 1px solid var(--c-line, rgba(36,26,22,.09));
+        border-left: 4px solid var(--c-encre, #1F4F6B);
+        border-radius: var(--r-md, 13px); padding: 10px 13px;
+    }
+    .ord-row.is-late { border-left-color: var(--c-primary, #8D1D2C); background: #fdf7f7; }
+    .ord-when {
+        flex: 0 0 auto; min-width: 52px; font-variant-numeric: tabular-nums;
+        font-size: 1rem; font-weight: 800; color: var(--c-ink, #241f1c);
+    }
+    .ord-row.is-late .ord-when { color: var(--c-primary, #8D1D2C); }
+    .ord-txt { flex: 1; min-width: 0; }
+    .ord-txt b { display: block; font-size: .9rem; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
+    .ord-txt small { display: block; margin-top: 2px; font-size: .7rem; color: var(--c-muted, #7a7168); }
+    .ord-qty { flex: 0 0 auto; font-size: 1.15rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+    /* Le canal est une étiquette, pas une catégorie : il ne change rien à
+       l'arithmétique, seulement à qui on devra s'excuser. */
+    .ord-ch {
+        flex: 0 0 auto; border-radius: 999px; padding: 3px 9px;
+        font-size: .66rem; font-weight: 800; white-space: nowrap;
+    }
+    .ch-shop     { background: var(--c-bg-2, #F4EFE8); color: var(--c-muted, #7a7168); }
+    .ch-click    { background: #e8eef3; color: var(--c-encre, #1F4F6B); }
+    .ch-delivery { background: #fdf1e2; color: #8a5312; }
+
     /* ── Tableau de travail d'une période ────────────────────────────────
        Sections par geste attendu, tuiles triées par tension. Les couleurs
        sont celles du module Cuisson : c'est le même vocabulaire, il ne doit
@@ -729,30 +801,35 @@
        seconde rangée qui n'apparaît que là. #}
     {% set period_keys = periods|map(p => p.key) %}
     {% set on_needs = active_view in period_keys %}
+    {% set on_shop  = active_view in ['stock', 'minimums'] %}
+
+    {# Le secteur avant tout le reste : c'est le filtre le plus large, et tout
+       ce qui suit en dépend — jusqu'aux compteurs de la bande de flux. #}
+    {% include "production/_sectors.twig" %}
 
     <nav class="pr-toggle" aria-label="{{ translations.production_title | default('Production') }}"
          style="grid-template-columns: repeat(3, minmax(0, 1fr));">
         <a class="pr-tab {{ active_view == 'mep' ? 'is-active' : '' }}"
-           href="{{ ROOT }}/production?view=mep"
+           href="{{ ROOT }}/production?view=mep{{ sector_qs }}"
            {{ active_view == 'mep' ? 'aria-current="page"' : '' }}>
             {{ translations.prod_view_mep | default('MEP') }}
             <small>{{ translations.mep_sub_hint | default('Valider / préparer') }}</small>
         </a>
         <a class="pr-tab {{ on_needs ? 'is-active' : '' }}"
-           href="{{ ROOT }}/production"
+           href="{{ ROOT }}/production?view={{ active_view in period_keys ? active_view : periods|first.key }}{{ sector_qs }}"
            {{ on_needs ? 'aria-current="page"' : '' }}>
             {{ translations.prod_view_needs | default('Besoins') }}
             <small>{{ translations.prod_view_needs_hint | default('Ce qui manque') }}</small>
         </a>
         <a class="pr-tab {{ active_view == 'planning' ? 'is-active' : '' }}"
-           href="{{ ROOT }}/production?view=planning"
+           href="{{ ROOT }}/production?view=planning{{ sector_qs }}"
            {{ active_view == 'planning' ? 'aria-current="page"' : '' }}>
             {{ translations.prod_view_planning | default('Planning') }}
             <small>{{ translations.prod_view_planning_hint | default("L'atelier") }}</small>
         </a>
-        <a class="pr-tab pr-tab-stock {{ active_view == 'stock' ? 'is-active' : '' }}"
-           href="{{ ROOT }}/production?view=stock"
-           {{ active_view == 'stock' ? 'aria-current="page"' : '' }}>
+        <a class="pr-tab pr-tab-stock {{ on_shop ? 'is-active' : '' }}"
+           href="{{ ROOT }}/production?view=stock{{ sector_qs }}"
+           {{ on_shop ? 'aria-current="page"' : '' }}>
             {{ icons.svg('package', 17) }}
             {{ translations.prod_view_stock | default('Stock (live)') }}
         </a>
@@ -764,13 +841,33 @@
         <nav class="pr-periods" aria-label="{{ translations.prod_view_needs | default('Besoins') }}">
             {% for p in tabs %}
                 <a class="cat-chip {{ active_view == p.key ? 'is-on' : '' }}"
-                   href="{{ ROOT }}/production?view={{ p.key }}"
+                   href="{{ ROOT }}/production?view={{ p.key }}{{ sector_qs }}"
                    {{ active_view == p.key ? 'aria-current="page"' : '' }}>
                     {{ translations['period_' ~ p.key] ?? (p.label ?? p.key) }}
                     <small>{{ p.start }} – {{ p.end }}</small>
                 </a>
             {% endfor %}
         </nav>
+    {% endif %}
+
+    {% if on_shop %}
+        {# Deux questions sur le même rayon, et il ne faut pas les confondre :
+           « est-ce que ça tient jusqu'au bout » se répond avec les ventes
+           prévues, « est-ce que la vitrine est présentable » avec un plancher.
+           Deux tableaux sous le même onglet, parce qu'on les consulte dans la
+           même minute. #}
+        <div class="mep-sub">
+            <a href="{{ ROOT }}/production?view=stock{{ sector_qs }}"
+               class="{{ active_view == 'stock' ? 'is-active' : '' }}">
+                <b>{{ translations.stock_title | default('Stock live') }}</b>
+                <small>{{ translations.stock_sub_hint | default('Face aux ventes prévues') }}</small>
+            </a>
+            <a href="{{ ROOT }}/production?view=minimums{{ sector_qs }}"
+               class="{{ active_view == 'minimums' ? 'is-active' : '' }}">
+                <b>{{ translations.min_title | default('Minimum en magasin') }}</b>
+                <small>{{ translations.min_sub_hint | default('Le plancher de vitrine') }}</small>
+            </a>
+        </div>
     {% endif %}
 
     {% if active_view == 'planning' %}
@@ -784,6 +881,8 @@
         {% set p1_label = horizons.p1.key ? (translations['period_' ~ horizons.p1.key] | default(horizons.p1.key)) : '' %}
         {% set p2_label = horizons.p2.key ? (translations['period_' ~ horizons.p2.key] | default(horizons.p2.key)) : '' %}
         {% include "production/_stock.twig" %}
+    {% elseif active_view == 'minimums' %}
+        {% include "production/_minimums.twig" %}
     {% elseif active_view == 'mep' %}
         {% include "production/_mep.twig" %}
     {% else %}
@@ -797,6 +896,8 @@
     {% include "baking/_scripts.twig" %}
 {% elseif active_view == 'stock' %}
     {% include "production/_stock_scripts.twig" %}
+{% elseif active_view == 'minimums' %}
+    {% include "production/_minimums_scripts.twig" %}
 {% elseif active_view == 'mep' %}
     {% include "production/_mep_scripts.twig" %}
 {% else %}

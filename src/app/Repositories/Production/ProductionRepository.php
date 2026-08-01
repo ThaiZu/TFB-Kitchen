@@ -3,6 +3,7 @@
 namespace App\Kitchen\app\Repositories\Production;
 
 use App\Kitchen\app\Models\Production\MepLineModel;
+use App\Kitchen\app\Models\Production\OrderLineModel;
 use App\Kitchen\app\Models\Production\PeriodModel;
 use App\Kitchen\app\Models\Production\ProductionProductModel;
 use App\Kitchen\app\Models\Production\SalesProfileModel;
@@ -161,6 +162,38 @@ class ProductionRepository
             }
         }
         return $items;
+    }
+
+    /**
+     * Les commandes fermes à honorer sur la journée — magasin, click &
+     * collect, livraison.
+     *
+     * Une seule route pour les trois canaux : ce sont les mêmes produits, les
+     * mêmes fournées et le même four. Le canal ne sert qu'à savoir à qui on
+     * devra s'excuser, et il voyage sur la ligne.
+     *
+     * @return OrderLineModel[]|null null = commandes non servies. La distinction
+     *         compte plus ici qu'ailleurs : un carnet vide affiché à la place
+     *         d'un endpoint muet ferait produire pile la vitrine, et repartir
+     *         les clients qui avaient commandé.
+     */
+    public function getOrders(int $shopId, string $date): ?array
+    {
+        $response = $this->apiClient->where("/shops/{$shopId}/orders", ['date' => $date]);
+        if (!($response['success'] ?? false)) {
+            return null;
+        }
+
+        $data = $response['data'] ?? [];
+        $rows = $data['items'] ?? (is_array($data) ? $data : []);
+
+        $lines = [];
+        foreach (is_array($rows) ? $rows : [] as $row) {
+            if (is_array($row)) {
+                $lines[] = new OrderLineModel($row);
+            }
+        }
+        return $lines;
     }
 
     /** Profil de ventes agrégé — la matière première de la prévision. */

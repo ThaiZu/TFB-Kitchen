@@ -16,8 +16,14 @@ use App\Kitchen\app\Models\Production\StockLineModel;
  *
  *     fenêtre(produit) = [maintenant ; maintenant + forecast_hours + lead]
  *     ventes_prévues   = Σ profil sur la fenêtre
- *     projection       = stock − ventes_prévues − marge
+ *     commandes        = Σ commandes fermes dues sur la fenêtre
+ *     projection       = stock − ventes_prévues − commandes − marge
  *     si projection < 0 : ceil(−projection / batch) × batch
+ *
+ * Les commandes s'ajoutent aux ventes prévues, elles ne s'y substituent pas :
+ * le profil dit ce qui partira probablement, une commande dit ce qui partira à
+ * coup sûr. Un client qui repart sans son plateau coûte plus qu'une fournée de
+ * trop.
  */
 class ForecastService
 {
@@ -27,6 +33,7 @@ class ForecastService
      * @param SalesProfileModel|null   $profile     null = profil non servi : aucune proposition
      * @param int                      $nowMinutes  minutes depuis minuit
      * @param array{forecast_hours?: float, safety_margin?: float} $params
+     * @param array<int, float>        $orders      commandes fermes dues, par produit
      *
      * @return RebakeSuggestionModel[] triées par urgence, la rupture la plus
      *         profonde d'abord
@@ -36,7 +43,8 @@ class ForecastService
         array $stockLines,
         ?SalesProfileModel $profile,
         int $nowMinutes,
-        array $params = []
+        array $params = [],
+        array $orders = []
     ): array {
         if ($profile === null) {
             // Sans profil, toute proposition serait inventée. L'écran affiche
@@ -72,8 +80,9 @@ class ForecastService
 
             $stockLine = $stockByProduct[$id] ?? null;
             $stock     = $stockLine?->getQuantity() ?? 0.0;
+            $ordered   = (float)($orders[$id] ?? 0.0);
 
-            $projected = $stock - $expected - $margin;
+            $projected = $stock - $expected - $ordered - $margin;
             if ($projected >= 0) {
                 continue;
             }
@@ -95,7 +104,8 @@ class ForecastService
                 $qty,
                 $window,
                 $product->getLeadMinutes(),
-                $product->getUnitName() ?? $stockLine?->getUnitName()
+                $product->getUnitName() ?? $stockLine?->getUnitName(),
+                $ordered
             );
         }
 
@@ -118,8 +128,9 @@ class ForecastService
      * @param ProductionProductModel[] $products
      * @param StockLineModel[]         $stockLines
      * @param array{forecast_hours?: float, safety_margin?: float} $params
+     * @param array<int, float>        $orders  commandes fermes dues, par produit
      *
-     * @return array<int, array{stock: float, expected: ?float, projected: ?float}>
+     * @return array<int, array{stock: float, expected: ?float, ordered: float, projected: ?float}>
      *         indexé par id_product
      */
     public function tension(
@@ -127,7 +138,8 @@ class ForecastService
         array $stockLines,
         ?SalesProfileModel $profile,
         int $nowMinutes,
-        array $params = []
+        array $params = [],
+        array $orders = []
     ): array {
         $forecastMinutes = (int)round(((float)($params['forecast_hours'] ?? PRODUCTION_FORECAST_HOURS)) * 60);
         $margin          = (float)($params['safety_margin'] ?? PRODUCTION_SAFETY_MARGIN);
@@ -153,10 +165,15 @@ class ForecastService
                 $nowMinutes + $forecastMinutes + $product->getLeadMinutes()
             );
 
+            // Une commande due se soustrait même quand le profil de ventes
+            // manque : elle ne relève pas de la prévision, elle est déjà due.
+            $ordered = (float)($orders[$id] ?? 0.0);
+
             $out[$id] = [
                 'stock'     => $stock,
                 'expected'  => $expected,
-                'projected' => $expected === null ? null : $stock - $expected - $margin,
+                'ordered'   => $ordered,
+                'projected' => $expected === null ? null : $stock - $expected - $ordered - $margin,
             ];
         }
 

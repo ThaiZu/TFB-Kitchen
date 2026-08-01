@@ -110,6 +110,14 @@ GET /shops/{shopId}/production/products
     "production_lead_minutes": 40,
     "is_active": true,
     "is_pdb": true,
+    "is_pdm": true,
+    "pdm_minimums": {
+      "morning": 48,
+      "noon": 24,
+      "afternoon": 12
+    },
+    "sector": "bakery",
+    "sector_name": "Boulangerie",
     "main_photo_path": "r2://products/6700106/main.jpg"
   }
 ]
@@ -123,6 +131,9 @@ GET /shops/{shopId}/production/products
 | `production_lead_minutes` | temps entre la validation et la disponibilité à la vente | recommandé |
 | `is_active` | un produit inactif ne se produit pas et ne se propose pas | oui |
 | `is_pdb` | « prep day before » : le produit se prépare la veille | oui |
+| `is_pdm` | le produit se pilote à un **plancher de vitrine**, pas à la prévision | oui |
+| `pdm_minimums` | ce plancher, période par période | si `is_pdm` |
+| `sector` / `sector_name` | l'**atelier** qui produit : boulangerie, traiteur, … | recommandé |
 | `id_category` / `category_name` | regroupement dans la vue période **et filtre par badges** | oui |
 
 **`batch_size` est structurant.** Sans lui, la seule proposition honnête serait
@@ -144,6 +155,42 @@ qu'un filtre qui ne mène nulle part n'est pas un filtre.
 > dit la même chose ; si le back-office choisit de le réutiliser plutôt que
 > d'ajouter une colonne, rien ne change côté PWA. Champ absent = `false`, donc
 > un déploiement sans migration donne un sélecteur vide, pas une erreur.
+
+**`sector` sépare les ateliers, pas les rayons.** Boulangerie et traiteur sont
+deux équipes, souvent deux pièces, mais une seule vitrine et exactement les mêmes
+questions : qu'est-ce qui va manquer, qu'est-ce qui est au four, qu'est-ce qui
+part en rayon. La PWA n'ouvre donc pas un second module — elle met un sélecteur
+en tête de Production, et **tous** les écrans le suivent : Besoins, Planning,
+MEP, Stock, Minimums, jusqu'aux compteurs de la bande de flux.
+
+Filtrer par catégorie ne remplacerait pas ce champ : le traiteur a quatre
+catégories à lui, et cocher quatre badges à chaque ouverture n'est pas un
+filtre, c'est une corvée.
+
+> La clé est **libre** : la PWA liste ce que le catalogue porte, elle ne connaît
+> pas de liste fermée. Un troisième secteur (« Boucherie ») s'ajoute côté
+> back-office sans toucher au front. Champ absent partout = le magasin n'a qu'un
+> atelier, et le sélecteur ne s'affiche pas du tout — pas de rubrique « Autre ».
+> Le front accepte en repli `sector_key`, `production_sector` et `id_sector`.
+
+**`is_pdm` — champ à ajouter en base, défaut `false`.** Certains produits ne se
+pilotent pas à la prévision de ventes mais à la **présentation** : une vitrine de
+boulangerie avec deux baguettes ne vend pas, même si deux baguettes suffisent à
+la demande de 16 h. Ces produits-là portent `is_pdm` et un plancher par période ;
+l'écran **Minimums** compare ce plancher au stock du magasin et propose la
+relance, arrondie à la fournée.
+
+> **Migration attendue côté back-office** : une colonne booléenne `is_pdm` sur la
+> table produit (défaut `false`), plus une table de minimums
+> `(id_product, période, quantité)` exposée sous `pdm_minimums`. Le front accepte
+> en repli les noms `has_shop_minimum` / `is_min_stock` pour le booléen,
+> `shop_minimums` / `min_stock_by_period` pour la table, et une valeur unique
+> `pdm_min` quand le plancher est le même toute la journée.
+>
+> **Un plancher absent n'est pas zéro.** Zéro veut dire « on n'en tient pas sur
+> cette période » — un sandwich le matin — et se lit comme une décision ; absent
+> veut dire qu'on ne sait pas, et l'écran l'écrit au lieu de proposer une
+> relance inventée.
 
 **`batch_size` sert aussi de pas de saisie.** Dans la MEP du lendemain, les
 boutons `−` et `+` montent de 12 en 12 pour une baguette, de 24 en 24 pour un
@@ -358,6 +405,78 @@ durée distincte. Des créneaux fixes se somment côté front, une fois.
 **Exclure les jours de fermeture** de la moyenne, ou les compter comme zéro ?
 Les compter comme zéro divise la prévision par deux après un jour férié. À
 exclure, donc — et c'est au serveur de le savoir.
+
+---
+
+## 4 bis. Le carnet de commandes
+
+```
+GET /shops/{shopId}/orders?date=YYYY-MM-DD
+```
+
+Une commande n'est pas une prévision : elle est **due**, à une heure connue, et
+un client qui repart sans son plateau coûte plus cher qu'une fournée de trop.
+Elle s'**ajoute** donc aux ventes prévues — jamais à leur place, jamais fondue
+dans le profil, qui est une moyenne et n'a aucune raison de contenir un plateau
+de quarante pièces commandé hier.
+
+```json
+{
+  "date": "2026-08-01",
+  "items": [
+    {
+      "id_order": 9101,
+      "id_product": 6700300,
+      "name": "Sandwich jambon-beurre",
+      "category_name": "Sandwichs",
+      "quantity": 15,
+      "channel": "click",
+      "due_time": "11:30",
+      "period": null,
+      "reference": "WEB-8817",
+      "unit_name": "pc"
+    }
+  ]
+}
+```
+
+| champ | rôle | obligatoire |
+|---|---|---|
+| `id_product` | clé de jointure ; une ligne sans lui est ignorée | oui |
+| `quantity` | ce qui est dû | oui |
+| `channel` | `shop`, `click`, `delivery` | oui |
+| `due_time` | l'échéance — `HH:MM` ou timestamp complet | recommandé |
+| `period` | repli quand il n'y a pas d'heure (« pour midi ») | sinon |
+| `reference` | le numéro que le client aura sous les yeux | recommandé |
+
+**Une ligne par produit et par commande**, pas une commande imbriquée : la
+production raisonne par produit et par four, et un client qui commande trois
+choses en fait trois fournées différentes.
+
+**Le canal ne change pas l'arithmétique**, seulement à qui on devra s'excuser.
+Les trois passent par la même route, sont comptés de la même façon, et se
+distinguent à l'écran par une étiquette. Le front normalise : tout ce qui
+contient `deliver`/`livr` devient `delivery`, `click`/`collect`/`web`/`online`
+devient `click`, le reste tombe au magasin — une commande mal étiquetée reste
+une commande à honorer, la faire disparaître du calcul serait pire.
+
+**Où ça entre :**
+
+| écran | ce que la commande fait |
+|---|---|
+| Besoins | s'ajoute au manque, sur la **même fenêtre** que les ventes prévues (`forecast_hours` + lead du produit) ; la tuile dit « dont N commandés » |
+| Stock | une colonne par horizon, à côté des ventes prévues ; le delta les soustrait toutes deux |
+| Minimums | s'ajoute au plancher de vitrine : ce qui est promis à un client n'est pas en rayon |
+| Planning | rien : à ce stade la fournée est décidée |
+
+> **`404` = carnet non servi**, et la PWA l'écrit sur chaque écran concerné
+> plutôt que d'afficher un carnet vide. La distinction compte plus ici
+> qu'ailleurs : produire pile la vitrine et découvrir ensuite que quarante
+> pièces étaient promises, c'est deux fournées trop tard.
+
+**Les commandes échues comptent encore.** Une commande de 11 h qu'on lit à 11 h 20
+n'a pas disparu : elle remonte en tête du carnet, en rouge. C'est souvent celle
+qu'on a ratée qu'il faut produire en premier.
 
 ---
 

@@ -26,7 +26,15 @@ class RebakeSuggestionModel implements JsonSerializable
         private float $suggestedQuantity,
         private int $windowMinutes,
         private int $leadMinutes,
-        private ?string $unitName
+        private ?string $unitName,
+        /**
+         * Les commandes fermes dues sur la fenêtre.
+         *
+         * Comptées à part des ventes prévues, et pas fondues dedans : une
+         * commande de 40 sandwichs n'est pas une moyenne, et le voir écrit
+         * change la façon dont on lit la proposition.
+         */
+        private float $ordered = 0.0
     ) {}
 
     public function getIdProduct(): ?int { return $this->idProduct; }
@@ -34,6 +42,9 @@ class RebakeSuggestionModel implements JsonSerializable
     public function getCategoryName(): ?string { return $this->categoryName; }
     public function getStock(): float { return $this->stock; }
     public function getExpectedSales(): float { return $this->expectedSales; }
+    /** Commandes fermes dues sur la fenêtre — s'ajoutent aux ventes prévues. */
+    public function getOrdered(): float { return $this->ordered; }
+    public function hasOrders(): bool { return $this->ordered > 0; }
     /** Stock projeté en fin de fenêtre : négatif, c'est une rupture annoncée. */
     public function getProjected(): float { return $this->projected; }
     public function getDeficit(): float { return $this->deficit; }
@@ -59,6 +70,7 @@ class RebakeSuggestionModel implements JsonSerializable
             'category_name' => $this->categoryName,
             'stock' => $this->stock,
             'expected_sales' => round($this->expectedSales, 2),
+            'ordered' => round($this->ordered, 2),
             'projected' => round($this->projected, 2),
             'deficit' => round($this->deficit, 2),
             'batch_size' => $this->batchSize,

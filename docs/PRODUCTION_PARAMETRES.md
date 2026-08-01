@@ -24,6 +24,28 @@ Deux réglages restent **par produit**, et ne peuvent venir que de l'API
   recuisson validée à 15 h 00 avec 40 minutes de cuisson ne couvre pas les
   ventes de 15 h 00 à 15 h 40.
 
+## Les réglages qui vivent sur le produit
+
+Les quatre ci-dessus sont des réglages de **magasin**. Trois autres se décident
+**produit par produit**, parce qu'ils ne se moyennent pas : deux références du
+même rayon ne se pilotent pas pareil.
+
+| Champ | Ce qu'il change |
+|---|---|
+| `sector` | l'atelier — boulangerie, traiteur. Filtre tous les écrans de Production d'un coup ; absent partout, le sélecteur ne s'affiche pas |
+| `is_pdb` | le produit se prépare la veille : il entre dans le sélecteur de la MEP du lendemain |
+| `is_pdm` + `pdm_minimums` | le produit se pilote à un **plancher de vitrine** par période plutôt qu'à la prévision de ventes |
+
+`is_pdm` et la prévision ne s'excluent pas : un produit peut être sous son
+plancher sans être en rupture annoncée, et l'inverse. Ce sont deux questions
+différentes, elles ont donc deux tableaux — Stock et Minimums — sous le même
+onglet. Voir `docs/ENDPOINTS_PRODUCTION.md` pour la forme exacte des champs et
+la migration attendue côté back-office.
+
+Les **commandes fermes** (`GET /shops/{id}/orders`) ne sont pas un réglage mais
+elles entrent dans la même arithmétique : elles s'ajoutent aux ventes prévues
+sur la même fenêtre, et au plancher de vitrine sur l'écran Minimums.
+
 ## Vérifier la prévision
 
 ```bash
@@ -31,6 +53,10 @@ php bin/forecast-test.php            # jeu de référence + 11 assertions
 php bin/forecast-test.php 15:30      # même jeu, à une autre heure
 php bin/forecast-test.php 10:00 3    # fenêtre de 3 heures
 php bin/forecast-test.php 10:00 2 5  # avec une marge de 5 unités
+
+php bin/sector-test.php              # secteurs, commandes, minimums — 55 assertions
+php bin/board-test.php               # le tableau de travail d'une période
+php bin/outlook-test.php             # les horizons et les filtres de l'écran Stock
 ```
 
 Aucun serveur, aucune API, aucune base : `ForecastService` est une fonction

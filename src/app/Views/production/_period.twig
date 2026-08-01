@@ -22,7 +22,7 @@
    ici on ne fait que signaler, parce qu'une période dont la MEP n'est pas
    validée n'a rien à mettre en rayon. #}
 {% if mep_available and mep_pending_count > 0 %}
-    <a href="{{ ROOT }}/production?view=mep&mep=morning" class="mep-banner d-block text-decoration-none mb-3">
+    <a href="{{ ROOT }}/production?view=mep&mep=morning{{ sector_qs }}" class="mep-banner d-block text-decoration-none mb-3">
         <h2>{{ translations.mep_banner_title | default('MEP de la veille à valider') }}</h2>
         <p>{{ translations.mep_banner_text | default("Tant que la MEP n'est pas validée, rien n'est constaté comme produit — et il n'y a rien à porter en rayon.") }}</p>
         <span class="mep-banner-btn">
@@ -61,8 +61,51 @@
     {% if not forecast_available %}
         {% set missing = missing|merge([translations.board_no_forecast | default("le profil de ventes n'est pas servi : le classement se fait sur le stock seul")]) %}
     {% endif %}
+    {% if orders_available is defined and not orders_available %}
+        {% set missing = missing|merge([translations.board_no_orders | default("le carnet de commandes n'est pas servi : magasin, click & collect et livraison ne sont pas comptés")]) %}
+    {% endif %}
     {% if missing is not empty %}
         <p class="pr-warn">{{ icons.svg('circle-alert', 15) }} {{ missing|join(' · ') }}</p>
+    {% endif %}
+
+    {# Les commandes fermes : elles sont déjà comptées dans le manque de chaque
+       tuile, mais on doit pouvoir les lire — c'est ce qui distingue « il en
+       manque 24 » de « 18 sont promis à quelqu'un ». Repliées : ce n'est pas un
+       geste, c'est une raison. #}
+    {% if orders is not empty %}
+        <details class="pr-fold bk-later">
+            <summary>
+                {{ translations.orders_title | default('Commandes du jour') }}
+                <span class="pr-cat-count">{{ orders|length }}</span>
+            </summary>
+            <div class="ord-list">
+                {% for o in orders %}
+                    {# En retard n'a de sens que si une heure a été promise :
+                       une commande « pour midi » sans heure n'est pas en retard,
+                       elle est imprécise. #}
+                    <div class="ord-row {{ o.dueTime and o.dueMinutes < now_minutes|default(0) ? 'is-late' : '' }}">
+                        <span class="ord-when">
+                            {%- if o.dueTime -%}
+                                {{ o.dueTime }}
+                            {%- else -%}
+                                <small>{{ translations['period_' ~ o.period] ?? (o.period ?: '—') }}</small>
+                            {%- endif -%}
+                        </span>
+                        <span class="ord-txt">
+                            <b>{{ o.name | default('—') }}</b>
+                            <small>
+                                {{- o.categoryName ?: '' -}}
+                                {%- if o.reference %}{{ o.categoryName ? ' · ' : '' }}{{ o.reference }}{% endif -%}
+                            </small>
+                        </span>
+                        <span class="ord-qty">{{ o.quantity|number_format(0, ',', ' ') }}</span>
+                        <span class="ord-ch ch-{{ o.channel }}">
+                            {{ translations['channel_' ~ o.channel] ?? o.channel }}
+                        </span>
+                    </div>
+                {% endfor %}
+            </div>
+        </details>
     {% endif %}
 
     {% include 'production/_cat_filters.twig' with { categories: board.categories, target: '#prBoard' } %}
@@ -101,7 +144,7 @@
                                    lien pointe la fournée précise quand elle
                                    existe, le module entier sinon. #}
                                 <a class="pr-tile-head"
-                                   href="{{ ROOT }}/baking{{ r.batch ? '?focus=' ~ r.batch.id : '' }}">
+                                   href="{{ ROOT }}/production?view=planning{{ sector_qs }}{{ r.batch ? '&focus=' ~ r.batch.id : '' }}">
                                     {% if p.hasMainPhoto %}
                                         <img class="pr-thumb" src="{{ p.mainPhotoUrl }}" alt="" loading="lazy">
                                     {% else %}
@@ -155,6 +198,20 @@
                                         —
                                     {%- endif -%}
                                 </p>
+
+                                {# Une part du manque est déjà promise à
+                                   quelqu'un : le dire change la façon dont on
+                                   arbitre, parce qu'une vitrine un peu vide se
+                                   rattrape et un client qui repart sans son
+                                   plateau non. #}
+                                {% if r.ordered > 0 %}
+                                    <p class="pr-ord">
+                                        {{ icons.svg('receipt', 13) }}
+                                        {{ translations.board_ordered | default('dont') }}
+                                        {{ r.ordered|number_format(0, ',', ' ') }}
+                                        {{ translations.board_ordered_2 | default('commandés') }}
+                                    </p>
+                                {% endif %}
 
                                 {% if r.level == 'short' %}
                                     {# Constater le manque ne le comble pas. Ce bouton
