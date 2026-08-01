@@ -342,6 +342,17 @@
     .ck-out1.is-on { background: var(--c-primary, #8D1D2C); border-color: var(--c-primary, #8D1D2C); }
     .ck-out2.is-on { background: var(--c-ambre, #C17A2A); border-color: var(--c-ambre, #C17A2A); }
     .ck-over.is-on { background: var(--c-encre, #1F4F6B); border-color: var(--c-encre, #1F4F6B); }
+    /* La rangée des catégories est subordonnée à celle des états : mêmes
+       pastilles, un cran plus discrètes, pour qu'on voie tout de suite laquelle
+       porte la question principale. */
+    .cat-filters-2 { margin-top: -2px; }
+    .cat-filters-2 .cat-chip {
+        min-height: 34px; padding: 0 13px; font-size: .78rem; font-weight: 600;
+        color: var(--c-muted, #7a7168);
+    }
+    .cat-filters-2 .cat-chip.is-on {
+        background: var(--c-ink, #241f1c); border-color: var(--c-ink, #241f1c); color: #fff;
+    }
     .stk-empty-filter { margin: 18px 0 0; text-align: center; color: var(--c-muted, #7a7168); font-size: .86rem; }
 
     /* ── Tableau de travail d'une période ────────────────────────────────
@@ -601,14 +612,18 @@
     {# ── Toggle ──
        La MEP en tête : c'est par elle que la journée commence, et rien ne se
        vend avant elle. #}
-    <nav class="pr-toggle" aria-label="{{ translations.production_title | default('Production') }}">
+    {# Autant de colonnes que d'onglets réellement affichés : les périodes
+       passées ont quitté la barre, et une grille figée à quatre laisserait un
+       trou à leur place. #}
+    <nav class="pr-toggle" aria-label="{{ translations.production_title | default('Production') }}"
+         style="grid-template-columns: repeat({{ tabs|length + 1 }}, minmax(0, 1fr));">
         <a class="pr-tab {{ active_view == 'mep' ? 'is-active' : '' }}"
            href="{{ ROOT }}/production?view=mep"
            {{ active_view == 'mep' ? 'aria-current="page"' : '' }}>
             {{ translations.prod_view_mep | default('MEP') }}
             <small>{{ translations.mep_sub_hint | default('Valider / préparer') }}</small>
         </a>
-        {% for p in periods %}
+        {% for p in tabs %}
             <a class="pr-tab {{ active_view == p.key ? 'is-active' : '' }}"
                href="{{ ROOT }}/production?view={{ p.key }}"
                {{ active_view == p.key ? 'aria-current="page"' : '' }}>

@@ -151,6 +151,22 @@
                 </button>
             </div>
 
+            {# Seconde rangée : les catégories. Les deux filtres se combinent —
+               « ce qui ne tient pas » ET « en viennoiserie » est la question
+               qu'on pose vraiment quand on est au poste. Deux rangées plutôt
+               qu'une : mélangées, on ne verrait plus qu'un seul groupe est
+               exclusif et l'autre pas. #}
+            {% if outlook_categories|length > 1 %}
+                <div class="cat-filters cat-filters-2" data-target="#stockTable" data-kind="cat">
+                    <button type="button" class="cat-chip is-on" data-cat="">
+                        {{ translations.cat_all | default('Toutes') }}
+                    </button>
+                    {% for c in outlook_categories %}
+                        <button type="button" class="cat-chip" data-cat="{{ c }}">{{ c }}</button>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
             <div class="stk-table-wrap">
                 <table class="stk-table" id="stockTable">
                     <thead>
@@ -168,7 +184,7 @@
                     </thead>
                     <tbody>
                         {% for r in outlook %}
-                            <tr data-flag="{{ r.flag }}">
+                            <tr data-flag="{{ r.flag }}" data-cat="{{ r.category }}">
                                 <td class="cat">{{ r.category }}</td>
                                 <td class="name">{{ r.name }}</td>
                                 <td class="num"><b>{{ r.stock|number_format(0, ',', ' ') }}</b></td>

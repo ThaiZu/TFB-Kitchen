@@ -53,31 +53,43 @@
     }
 
     // ── Filtres du tableau ──
-    // Trois questions qui se posent vraiment : qu'est-ce qui ne tient pas
-    // jusqu'à la fin du service, qu'est-ce qui ne tient pas le service
-    // suivant, et de quoi en a-t-on fait trop.
-    document.addEventListener('click', function (e) {
-        var chip = e.target.closest('.cat-filters[data-target="#stockTable"] .cat-chip');
-        if (!chip) return;
+    // Deux rangées, deux questions qui se croisent : « qu'est-ce qui ne tient
+    // pas » et « dans quelle catégorie ». On est rarement à tous les postes à
+    // la fois, et les deux filtres se combinent donc au lieu de s'annuler.
+    var wantFlag = '';
+    var wantCat  = '';
 
+    function applyFilters() {
         var table = document.getElementById('stockTable');
         var none  = document.getElementById('stockNoMatch');
         if (!table) return;
 
-        chip.parentNode.querySelectorAll('.cat-chip').forEach(function (c) {
-            c.classList.toggle('is-on', c === chip);
-        });
-
-        var want  = chip.dataset.flag || '';
         var shown = 0;
         table.querySelectorAll('tbody tr').forEach(function (tr) {
-            var ok = !want || tr.dataset.flag === want;
+            var ok = (!wantFlag || tr.dataset.flag === wantFlag)
+                  && (!wantCat  || tr.dataset.cat  === wantCat);
             tr.hidden = !ok;
             if (ok) shown++;
         });
 
         table.hidden = shown === 0;
         if (none) none.classList.toggle('d-none', shown > 0);
+    }
+
+    document.addEventListener('click', function (e) {
+        var chip = e.target.closest('.cat-filters[data-target="#stockTable"] .cat-chip');
+        if (!chip) return;
+
+        chip.parentNode.querySelectorAll('.cat-chip').forEach(function (c) {
+            c.classList.toggle('is-on', c === chip);
+        });
+
+        if (chip.parentNode.dataset.kind === 'cat') {
+            wantCat = chip.dataset.cat || '';
+        } else {
+            wantFlag = chip.dataset.flag || '';
+        }
+        applyFilters();
     });
 
     function paintRebakes(items) {

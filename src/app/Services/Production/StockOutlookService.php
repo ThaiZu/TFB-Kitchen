@@ -89,6 +89,39 @@ class StockOutlookService
     }
 
     /**
+     * Les périodes qu'il reste à faire.
+     *
+     * Une cuisine ne produit pas pour ce matin à 15 h. Les périodes passées
+     * restent dans les données — le stock d'aujourd'hui vient d'elles, et leur
+     * URL continue de répondre — mais elles quittent le sélecteur : des onglets
+     * qui ne mènent qu'à du révolu font perdre le fil du service en cours.
+     *
+     * La période active reste visible même passée, sinon un lien partagé ou un
+     * retour arrière ouvrirait un écran dont l'onglet n'existe pas. Et après la
+     * fermeture on garde la dernière plutôt que de vider la barre : c'est celle
+     * qu'on vient de finir, et c'est là qu'on va lire ce qui reste.
+     *
+     * @param PeriodModel[] $periods
+     * @return PeriodModel[]
+     */
+    public function upcoming(array $periods, int $nowMinutes, ?string $activeKey = null): array
+    {
+        $kept = array_values(array_filter(
+            $periods,
+            fn(PeriodModel $p) => ForecastService::minutesOf($p->getEnd()) > $nowMinutes
+                               || $p->getKey() === $activeKey
+        ));
+
+        if ($kept === [] && $periods !== []) {
+            $last = $periods;
+            usort($last, fn($a, $b) => ForecastService::minutesOf($a->getEnd()) <=> ForecastService::minutesOf($b->getEnd()));
+            $kept = [end($last)];
+        }
+
+        return $kept;
+    }
+
+    /**
      * Une ligne par produit en stock, prête pour le tableau.
      *
      * Le catalogue donne la catégorie et l'unité quand la ligne de stock ne
@@ -175,6 +208,23 @@ class StockOutlookService
 
         $vendu = $e1 + ($e2 ?? 0.0);
         return $vendu > 0 && $d2 >= $vendu ? self::OVER : self::OK;
+    }
+
+    /**
+     * Les catégories présentes, dans l'ordre du tableau.
+     *
+     * @param array<int, array{category: string}> $rows
+     * @return string[]
+     */
+    public function categories(array $rows): array
+    {
+        $seen = [];
+        foreach ($rows as $r) {
+            $seen[$r['category']] = true;
+        }
+        $out = array_keys($seen);
+        usort($out, 'strnatcasecmp');
+        return $out;
     }
 
     /**

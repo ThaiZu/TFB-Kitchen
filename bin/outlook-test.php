@@ -62,6 +62,23 @@ check('dernière période : P2 est vide',           $h['p2']['to'] - $h['p2']['f
 $h = $at('20:00');
 check('après fermeture : aucun horizon',          [$h['p1']['key'], $h['p2']['key']], [null, null]);
 
+// ── Les onglets qu'il reste à faire ───────────────────────────────────────
+$tabs = fn(string $t, ?string $active = null) => array_map(
+    fn(PeriodModel $p) => $p->getKey(),
+    $svc->upcoming($periods, ForecastService::minutesOf($t), $active)
+);
+
+check('début de journée : tout est devant',   $tabs('07:00'), ['morning', 'noon', 'afternoon']);
+check('le matin fini disparaît',              $tabs('12:30'), ['noon', 'afternoon']);
+check('il ne reste que la dernière',          $tabs('16:00'), ['afternoon']);
+// Un lien partagé sur une période passée doit garder son onglet, sinon l'écran
+// s'affiche sans que rien ne dise où l'on est.
+check('la période active reste visible',      $tabs('16:00', 'morning'), ['morning', 'afternoon']);
+// Après la fermeture, on garde la dernière plutôt que de vider la barre.
+check('après fermeture : la dernière reste',  $tabs('20:00'), ['afternoon']);
+check('bornes : à 11:00 pile le matin est fini', $tabs('11:00'), ['noon', 'afternoon']);
+check('bornes : à 10:59 il tient encore',        $tabs('10:59'), ['morning', 'noon', 'afternoon']);
+
 // ── Les filtres ───────────────────────────────────────────────────────────
 $horizons = $at('07:00');
 

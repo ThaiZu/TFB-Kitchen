@@ -76,6 +76,21 @@ class ProductionService
         ];
     }
 
+    /**
+     * Les périodes qu'il reste à faire — voir StockOutlookService::upcoming(),
+     * où vit la règle, testable hors serveur.
+     *
+     * @return PeriodModel[]
+     */
+    public function upcomingPeriods(StockOutlookService $outlook, ?string $activeKey = null, ?string $time = null): array
+    {
+        return $outlook->upcoming(
+            $this->getPeriods(),
+            ForecastService::minutesOf($time ?? date('H:i')),
+            $activeKey
+        );
+    }
+
     /** La période qui contient l'heure donnée, sinon la première. */
     public function currentPeriodKey(?string $time = null): string
     {
@@ -365,8 +380,9 @@ class ProductionService
         return [
             'available' => $profile !== null,
             'rows'      => $rows,
-            'counts'    => $outlook->counts($rows),
-            'horizons'  => $horizons,
+            'counts'     => $outlook->counts($rows),
+            'categories' => $outlook->categories($rows),
+            'horizons'   => $horizons,
         ];
     }
 

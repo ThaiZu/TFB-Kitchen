@@ -36,7 +36,10 @@ class ProductionController extends Controller
         $view    = $this->readView($periods);
 
         $data = [
+            // Le sélecteur ne montre que ce qui reste à faire ; `periods` garde
+            // la journée entière pour les calculs d'horizon.
             'periods'     => $periods,
+            'tabs'        => $this->productionService->upcomingPeriods($this->outlookService, $view),
             'active_view' => $view,
             'today'       => $today,
             'params'      => $this->productionService->getParams(),
@@ -59,6 +62,7 @@ class ProductionController extends Controller
                 'outlook'           => $outlook['rows'],
                 'outlook_available' => $outlook['available'],
                 'outlook_counts'    => $outlook['counts'],
+                'outlook_categories'=> $outlook['categories'],
                 'horizons'          => $outlook['horizons'],
             ];
         } elseif ($view === 'mep') {
