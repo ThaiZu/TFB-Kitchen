@@ -1,0 +1,96 @@
+{% extends "layouts/base.twig" %}
+
+{% block title %}{{ translations.webshop | default('WebShop') }}{% endblock %}
+
+{% block head %}
+<style>
+    /* Le back-office est une application entière : il lui faut la hauteur, pas
+       un encart. Le cadre prend tout ce qui reste entre la coque du haut et la barre du
+       bas. Sans cela, la page défile autour d'une iframe qui défile
+       elle-même — deux ascenseurs pour un seul contenu, et le doigt ne sait
+       jamais lequel il pousse.
+
+       La colonne porte la hauteur, le cadre l'absorbe : la ligne de secours
+       passe sur deux lignes en dessous de 420 px, et une constante fixe
+       laisserait alors 20 px de débordement. */
+    .ws-wrap {
+        display: flex; flex-direction: column; gap: 6px;
+        height: calc(100dvh - var(--app-tabbar-h, 72px) - 108px);
+        min-height: 440px;
+    }
+    .ws-frame {
+        flex: 1 1 auto; min-height: 0; width: 100%;
+        border: 1px solid var(--c-line, rgba(36,26,22,.09));
+        border-radius: var(--r-lg, 18px);
+        background: #fff;
+        display: block;
+    }
+
+    .ws-state { text-align: center; padding: 34px 22px; }
+    .ws-state h2 { font-size: 1.05rem; font-weight: 800; margin-bottom: 8px; }
+    .ws-state p  { color: var(--c-muted, #7a7168); font-size: .9rem; margin-bottom: 4px; }
+    .ws-state .ws-what {
+        display: inline-block; margin-top: 14px; padding: 8px 12px;
+        border-radius: 10px; background: var(--c-bg-2, #F4EFE8);
+        font-size: .82rem; color: var(--c-ink, #241f1c);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        word-break: break-all;
+    }
+    .ws-go {
+        display: inline-flex; align-items: center; justify-content: center;
+        min-height: 48px; margin-top: 18px; padding: 0 20px;
+        border-radius: 999px; border: 0; text-decoration: none;
+        background: var(--c-primary, #8D1D2C); color: #fff; font-weight: 700;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% if webshop_url %}
+    {# Vue intégrée plutôt que redirection : l'utilisateur ne quitte pas
+       l'application, garde la barre d'onglets et peut revenir aux paramètres
+       sans passer par l'historique du navigateur. #}
+    <div class="ws-wrap">
+        <iframe class="ws-frame"
+                id="wsFrame"
+                src="{{ webshop_url }}"
+                title="{{ translations.webshop | default('WebShop') }}"
+                referrerpolicy="no-referrer"></iframe>
+
+        {# Un serveur qui refuse l'affichage en cadre (X-Frame-Options,
+           frame-ancestors) laisse une zone blanche sans erreur : le navigateur
+           ne remonte rien au script. On ne peut ni le détecter à coup sûr, ni
+           le contourner d'ici — l'ajustement se fait sur le serveur du webshop.
+           En attendant, cette sortie évite que l'équipe reste devant du blanc. #}
+        <p class="text-center mb-0" style="font-size:.8rem;">
+            <a href="{{ webshop_url }}" target="_blank" rel="noopener"
+               style="color:var(--c-muted, #7a7168);">
+                {{ translations.webshop_open_blank | default("Le cadre reste blanc ? Ouvrir le back-office dans un onglet") }}
+            </a>
+        </p>
+    </div>
+{% else %}
+    <div class="card">
+        <div class="card-body ws-state">
+            <h2>{{ translations.webshop_not_configured | default("Le mode WebShop n'est pas configuré") }}</h2>
+
+            {% if webshop_blocker == 'no_url' %}
+                <p>{{ translations.webshop_no_url | default("Aucune adresse de back-office n'est enregistrée sur cette tablette.") }}</p>
+            {% elseif webshop_blocker == 'bad_url' %}
+                <p>{{ translations.webshop_bad_url | default("L'adresse enregistrée n'est pas une adresse web (elle doit commencer par http:// ou https://).") }}</p>
+            {% elseif webshop_blocker == 'no_shop' %}
+                {# Celle-là ne se règle pas dans les paramètres : elle vient du
+                   compte de connexion. Le dire évite de chercher au mauvais
+                   endroit. #}
+                <p>{{ translations.webshop_no_shop | default("Aucune boutique n'est associée à cette session : le back-office ne saurait pas quoi afficher.") }}</p>
+            {% endif %}
+
+            <a class="ws-go" href="{{ ROOT }}/me">
+                {{ translations.webshop_go_settings | default('Ouvrir les paramètres') }}
+            </a>
+        </div>
+    </div>
+{% endif %}
+
+{% endblock %}

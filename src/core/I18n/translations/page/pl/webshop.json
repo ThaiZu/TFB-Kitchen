@@ -1,0 +1,15 @@
+{
+  "webshop": "WebShop",
+  "webshop_bad_url": "Zapisany adres nie jest adresem WWW (musi zaczynać się od http:// lub https://).",
+  "webshop_go_settings": "Otwórz ustawienia",
+  "webshop_no_shop": "Do tej sesji nie przypisano sklepu: zaplecze nie wiedziałoby, co pokazać.",
+  "webshop_no_url": "Na tym tablecie nie zapisano adresu zaplecza.",
+  "webshop_not_configured": "Tryb WebShop nie jest skonfigurowany",
+  "webshop_open_blank": "Ramka jest pusta? Otwórz zaplecze w karcie",
+  "webshop_shop_hint": "Zostaw puste, aby użyć sklepu z sesji:",
+  "webshop_shop_label": "Sklep (id)",
+  "webshop_shop_none": "Brak sklepu w sesji tego tabletu: ten identyfikator jest wtedy wymagany.",
+  "webshop_url_from_server": "Używana wartość z serwera:",
+  "webshop_url_hint": "Zostaw puste, aby użyć adresu skonfigurowanego na serwerze.",
+  "webshop_url_label": "Adres zaplecza WebShop"
+}

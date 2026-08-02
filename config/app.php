@@ -24,6 +24,14 @@ define('API_BASE_URL',
             ? 'https://'
             : 'http://') . $_SERVER['SERVER_NAME'] . '/api/v1'));
 
+// Back-office franchisé du WebShop, ouvert par le mode « WebShop » de la
+// tablette. Même mécanisme que KITCHEN_API_BASE : SetEnv WEBSHOP_BO_URL dans
+// le .htaccess du serveur, pour ne pas saisir la même URL sur chaque tablette.
+// Vide par défaut, et c'est volontaire : sans URL, le mode WebShop est proposé
+// grisé avec sa raison, pas ouvert sur une page blanche.
+$__webshopBoUrl = $_SERVER['WEBSHOP_BO_URL'] ?? $_ENV['WEBSHOP_BO_URL'] ?? getenv('WEBSHOP_BO_URL') ?: '';
+define('WEBSHOP_BO_URL', rtrim((string)$__webshopBoUrl, '/'));
+
 define('SHARED_FILES_URL',
     (((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ||
         (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https'))

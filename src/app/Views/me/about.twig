@@ -1,6 +1,6 @@
 {% extends "layouts/base.twig" %}
 
-{% block title %}{{ translations.supplier_about_title }}{% endblock %}
+{% block title %}{{ translations.settings_title | default('Réglages') }}{% endblock %}
 
 {% block head %}
 <style>
@@ -26,19 +26,185 @@
         transition: left .18s ease;
     }
     .set-switch[aria-checked="true"] .set-switch-knob { left: 27px; }
+
+    /* ── Mode de la tablette ──
+       Trois tuiles plutôt qu'un menu déroulant : le choix se fait une fois à
+       l'installation, mais il faut alors voir les trois possibilités et ce
+       que chacune montre. Un select cacherait deux options sur trois derrière
+       un tap, et surtout n'expliquerait aucune. */
+    .mode-grid { display: grid; gap: 10px; grid-template-columns: 1fr; }
+    @media (min-width: 700px) { .mode-grid { grid-template-columns: repeat(3, 1fr); } }
+
+    .mode-opt {
+        display: block; position: relative; cursor: pointer;
+        border: 2px solid var(--c-line, rgba(36,26,22,.12));
+        border-radius: var(--r-lg, 18px); padding: 14px 16px;
+        background: var(--c-surface, #fff);
+        transition: border-color .15s ease, background .15s ease;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .mode-opt input { position: absolute; opacity: 0; pointer-events: none; }
+    /* Deux sélecteurs pour un seul état. `:has()` suit le doigt en direct, mais
+       n'existe pas sur les WebView anciennes qu'on trouve encore sur les
+       tablettes de terrain ; `.is-on`, posé par le serveur, garantit qu'on voit
+       toujours au moins le mode courant. Sans lui, une vieille tablette
+       afficherait trois tuiles identiques. */
+    .mode-opt.is-on,
+    .mode-opt:has(input:checked) {
+        border-color: var(--c-primary, #8D1D2C);
+        background: #fdf7f8;
+    }
+    .mode-opt:has(input:not(:checked)) { border-color: var(--c-line, rgba(36,26,22,.12)); background: var(--c-surface, #fff); }
+    .mode-opt-name {
+        display: flex; align-items: center; gap: 8px;
+        font-size: 1rem; font-weight: 800; color: var(--c-ink, #241f1c);
+    }
+    .mode-opt-name .bi { color: var(--c-primary, #8D1D2C); }
+    .mode-opt-what {
+        display: block; margin-top: 6px; font-size: .8rem; line-height: 1.45;
+        color: var(--c-muted, #7a7168);
+    }
+    .mode-opt-now {
+        display: inline-block; margin-top: 8px; padding: 2px 8px;
+        border-radius: 999px; background: var(--c-vert, #2D7A3E); color: #fff;
+        font-size: .66rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
+    }
+    /* Une option indisponible reste visible et dit pourquoi : la masquer
+       laisserait chercher un mode annoncé ailleurs et introuvable ici. */
+    .mode-opt.is-blocked { opacity: .55; cursor: not-allowed; }
+    .mode-opt.is-blocked input { pointer-events: none; }
+    .mode-opt-why {
+        display: block; margin-top: 8px; font-size: .76rem; line-height: 1.4;
+        color: var(--c-ambre, #C17A2A); font-weight: 700;
+    }
+
+    .set-field { margin-top: 14px; }
+    .set-field label {
+        display: block; font-size: .78rem; font-weight: 800; letter-spacing: .04em;
+        text-transform: uppercase; color: var(--c-muted, #7a7168); margin-bottom: 5px;
+    }
+    .set-field input {
+        width: 100%; min-height: 46px; padding: 8px 12px;
+        border: 1px solid var(--c-line, rgba(36,26,22,.15)); border-radius: 12px;
+        font-size: .92rem; background: #fff;
+    }
+    .set-field small { display: block; margin-top: 5px; font-size: .76rem; color: var(--c-muted, #7a7168); }
+    .set-save {
+        min-height: 48px; margin-top: 18px; padding: 0 22px;
+        border: 0; border-radius: 999px;
+        background: var(--c-primary, #8D1D2C); color: #fff; font-weight: 700;
+    }
 </style>
 {% endblock %}
 
 {% block page_heading %}
     <div class="page-heading">
-        <h3>{{ translations.supplier_about_heading }}</h3>
-        <p class="text-subtitle text-muted">{{ translations.supplier_about_subtitle }}</p>
+        {# L'écran ne fait plus « à propos » : il porte le mode de la tablette,
+           qui décide de ce qu'elle affiche. Le titre doit le dire, sinon on
+           cherchera les réglages ailleurs. #}
+        <h3>{{ translations.settings_heading | default('Réglages') }}</h3>
+        <p class="text-subtitle text-muted">{{ translations.settings_subtitle | default("Réglages de cet appareil et données du compte.") }}</p>
     </div>
 {% endblock %}
 
 {% block content %}
 
     {% include "page_components/alerts.twig" %}
+
+    {# ── Mode de la tablette ──
+       Le mode dit à quoi sert CET appareil, pas ce que sait faire l'utilisateur :
+       la tablette du fournil reste en Production quand le responsable s'y
+       connecte, celle du comptoir reste en WebShop. Il survit au redémarrage et
+       se change ici, sans réinstallation et sans déconnexion.
+       Contrat : docs/MODE_TABLETTE.md #}
+    <form method="post" action="{{ ROOT }}/me/settings" class="card mb-3">
+        <div class="card-body">
+            <div class="set-title">{{ translations.mode_title | default('Mode de cette tablette') }}</div>
+            <div class="set-sub mb-3">{{ translations.mode_hint | default("Détermine les menus affichés sur cet appareil. Le réglage appartient à la tablette, pas au compte.") }}</div>
+
+            {% set mode_meta = {
+                'gestion':    { icon: 'clipboard-check', name: translations.mode_gestion    | default('Gestion'),
+                                what: translations.mode_gestion_what    | default('Tableau de bord et indicateurs, checklists et contrôle qualité, base de connaissances, réclamations.') },
+                'production': { icon: 'list-check',      name: translations.mode_production | default('Production'),
+                                what: translations.mode_production_what | default("Besoins, planning de l'atelier, mise en place, stock et commandes.") },
+                'webshop':    { icon: 'shop',            name: translations.mode_webshop    | default('WebShop'),
+                                what: translations.mode_webshop_what    | default('Ouvre le back-office franchisé de la boutique : tournées, stock, assortiment, clients B2B.') }
+            } %}
+
+            <div class="mode-grid">
+                {% for m in modes %}
+                    {% set meta    = mode_meta[m] %}
+                    {% set blocked = m == 'webshop' and webshop_blocker %}
+                    <label class="mode-opt {{ device_mode == m ? 'is-on' : '' }} {{ blocked ? 'is-blocked' : '' }}">
+                        {# Un bouton radio désactivé n'est pas envoyé par le
+                           formulaire. Si la tablette est DÉJÀ en WebShop et
+                           qu'on efface son URL, le désactiver ferait retomber
+                           silencieusement l'appareil en Production au premier
+                           enregistrement. Le mode courant reste donc toujours
+                           sélectionnable — il affiche sa raison, il ne
+                           disparaît pas. #}
+                        <input type="radio" name="device_mode" value="{{ m }}"
+                               {{ device_mode == m ? 'checked' : '' }}
+                               {{ blocked and device_mode != m ? 'disabled' : '' }}>
+                        <span class="mode-opt-name">
+                            <i class="bi bi-{{ meta.icon }}"></i>{{ meta.name }}
+                        </span>
+                        <span class="mode-opt-what">{{ meta.what }}</span>
+                        {% if device_mode == m %}
+                            <span class="mode-opt-now">{{ translations.mode_current | default('Mode actuel') }}</span>
+                        {% endif %}
+                        {% if blocked %}
+                            {# La raison, pas « indisponible » : elle dit où aller
+                               la corriger, et les trois causes ne se corrigent
+                               pas au même endroit. #}
+                            <span class="mode-opt-why">
+                                {% if webshop_blocker == 'no_url' %}
+                                    {{ translations.webshop_no_url | default("Aucune adresse de back-office n'est enregistrée sur cette tablette.") }}
+                                {% elseif webshop_blocker == 'bad_url' %}
+                                    {{ translations.webshop_bad_url | default("L'adresse enregistrée n'est pas une adresse web (elle doit commencer par http:// ou https://).") }}
+                                {% else %}
+                                    {{ translations.webshop_no_shop | default("Aucune boutique n'est associée à cette session : le back-office ne saurait pas quoi afficher.") }}
+                                {% endif %}
+                            </span>
+                        {% endif %}
+                    </label>
+                {% endfor %}
+            </div>
+
+            <div class="set-field">
+                <label for="webshopUrl">{{ translations.webshop_url_label | default('URL du back-office WebShop') }}</label>
+                <input type="url" id="webshopUrl" name="webshop_url"
+                       inputmode="url" autocomplete="off" spellcheck="false"
+                       placeholder="https://exemple.tld/webshop/backoffice_franchisee/"
+                       value="{{ webshop_base_local }}">
+                <small>
+                    {% if webshop_base_global and webshop_base %}
+                        {{ translations.webshop_url_from_server | default('Valeur du serveur utilisée :') }} {{ webshop_base }}
+                    {% else %}
+                        {{ translations.webshop_url_hint | default("Laisser vide pour utiliser l'adresse configurée sur le serveur.") }}
+                    {% endif %}
+                </small>
+            </div>
+
+            <div class="set-field">
+                <label for="webshopShop">{{ translations.webshop_shop_label | default('Boutique (id)') }}</label>
+                <input type="number" id="webshopShop" name="webshop_shop" min="1" step="1"
+                       inputmode="numeric" placeholder="{{ session_shop_id ?: '' }}"
+                       value="{{ webshop_shop_local }}">
+                <small>
+                    {% if session_shop_id %}
+                        {{ translations.webshop_shop_hint | default("Laisser vide pour utiliser la boutique de la session :") }} {{ session_shop_id }}
+                    {% else %}
+                        {{ translations.webshop_shop_none | default("Aucune boutique dans la session de cette tablette : cet identifiant est alors obligatoire.") }}
+                    {% endif %}
+                </small>
+            </div>
+
+            <button type="submit" class="set-save">
+                {{ translations.mode_save | default('Enregistrer le mode') }}
+            </button>
+        </div>
+    </form>
 
     {# ── Réglages de l'appareil ──
        Le son des nouvelles commandes se règle par tablette, pas par compte :
@@ -67,6 +233,19 @@
         </div>
     </div>
 
+{# Les données de l'appareil viennent de l'ERP (/devices/me). Quand il ne
+   répond pas, on le dit et on s'arrête là : les réglages ci-dessus restent
+   utilisables, ce qui est le point — une tablette hors ligne doit encore
+   pouvoir changer de mode. #}
+{% if not supplier %}
+    <div class="card">
+        <div class="card-body text-center" style="padding:26px 20px;">
+            <p style="margin:0;color:var(--c-muted, #7a7168);font-size:.9rem;">
+                {{ translations.device_unreachable | default("Les données de l'appareil ne sont pas disponibles pour le moment.") }}
+            </p>
+        </div>
+    </div>
+{% else %}
     <div class="row">
         <div class="col-12">
 
@@ -228,6 +407,7 @@
 
         </div>
     </div>
+{% endif %}
 
 {% endblock %}
 

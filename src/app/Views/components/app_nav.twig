@@ -53,8 +53,20 @@
         label: translations.complaints ?? 'Réclamations',
         icon:  'circle-alert',
         href:  ROOT ~ '/complaints'
+    },
+    {
+        key:   'webshop',
+        label: translations.webshop ?? 'WebShop',
+        icon:  'store',
+        href:  ROOT ~ '/webshop'
     }
 ] %}
+
+{# Le mode de la tablette filtre le menu — voir core/Support/DeviceMode. Une
+   tablette de comptoir n'a pas à faire défiler les écrans du fournil pour
+   trouver le sien. Le filtre s'applique aux clés, pas aux libellés : ajouter
+   une section ne demande que de la déclarer dans DeviceModeService. #}
+{% set items = items|filter(it => it.key in (nav_keys | default([]))) %}
 
 <div class="app-nav-backdrop" id="appNavBackdrop" aria-hidden="true"></div>
 

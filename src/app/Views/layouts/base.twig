@@ -18,6 +18,7 @@
     p starts with '/orders'     ? 'orders'     :
     p starts with '/knowledge'  ? 'knowledge'  :
     p starts with '/complaints' ? 'complaints' :
+    p starts with '/webshop'    ? 'webshop'    :
     p starts with '/me'         ? 'me'         : '' %}
 <!DOCTYPE html>
 <html lang="{{ lang_code ?? 'fr' }}">
@@ -83,7 +84,10 @@
                    suivi du nom du module — le consultant affiche « Panel consultant »
                    sous le même logo. Les deux apps sont deux modules d'un même
                    écosystème, la marque est commune et seul le module change. #}
-                <a href="{{ ROOT }}/dashboard" class="app-brand">
+                {# Le logo ramène à l'accueil DU MODE : en WebShop, le tableau
+                   de bord cuisine n'est plus au menu, et l'y envoyer serait
+                   sortir la tablette de son rôle sans le dire. #}
+                <a href="{{ ROOT }}{{ mode_home | default('/dashboard') }}" class="app-brand">
                     <img src="{{ ROOT }}/assets/brand/logo.png" alt="L'Atelier" class="app-brand-logo">
                     <span class="app-brand-module">{{ translations.module_name ?? 'Kitchen' }}</span>
                 </a>
@@ -127,25 +131,37 @@
 
 {% include "components/app_nav.twig" with { active_nav: active_nav } %}
 
-{# Barre d'onglets — les quatre gestes du quotidien, plus le profil à droite. #}
+{# Barre d'onglets — les gestes du quotidien du mode courant, plus le profil à
+   droite. Le mode ne réordonne rien : il retire ce qui ne sert pas ici. Le
+   profil reste dans tous les modes, c'est par lui qu'on revient aux réglages —
+   une tablette dont on ne peut plus changer le mode serait à réinstaller. #}
+{% set tabs = {
+    'dashboard':  { href: ROOT ~ '/dashboard',  icon: 'home',            label: translations.nav_dashboard  ?? 'Pulpit' },
+    'production': { href: ROOT ~ '/production', icon: 'list-checks',     label: translations.nav_production ?? 'Production' },
+    'checklists': { href: ROOT ~ '/checklists', icon: 'clipboard-check', label: translations.nav_checklists ?? 'Checklists' },
+    'orders':     { href: ROOT ~ '/orders',     icon: 'receipt',         label: translations.nav_orders     ?? 'Commandes' },
+    'knowledge':  { href: ROOT ~ '/knowledge',  icon: 'notebook',        label: translations.knowledge      ?? 'Connaissances' },
+    'complaints': { href: ROOT ~ '/complaints', icon: 'circle-alert',    label: translations.complaints     ?? 'Réclamations' },
+    'webshop':    { href: ROOT ~ '/webshop',    icon: 'store',           label: translations.webshop        ?? 'WebShop' }
+} %}
 <nav class="app-tabbar-bar" aria-label="{{ translations.menu ?? 'Navigation' }}">
-    <a href="{{ ROOT }}/dashboard" class="app-tab {{ active_nav == 'dashboard' ? 'is-active' : '' }}">
-        {{ icons.svg('home', 23) }}<span>{{ translations.nav_dashboard ?? 'Pulpit' }}</span>
-    </a>
-    <a href="{{ ROOT }}/production" class="app-tab {{ active_nav == 'production' ? 'is-active' : '' }}">
-        {{ icons.svg('list-checks', 23) }}<span>{{ translations.nav_production ?? 'Production' }}</span>
-    </a>
-    <a href="{{ ROOT }}/checklists" class="app-tab {{ active_nav == 'checklists' ? 'is-active' : '' }}">
-        {{ icons.svg('clipboard-check', 23) }}<span>{{ translations.nav_checklists ?? 'Checklists' }}</span>
-    </a>
-    <a href="{{ ROOT }}/orders" class="app-tab {{ active_nav == 'orders' ? 'is-active' : '' }}">
-        <span class="app-tab-ic">
-            {{ icons.svg('receipt', 23) }}
-            {# Rempli par le sondage ; masqué tant qu'il n'y a rien à signaler. #}
-            <span class="app-tab-count" id="ordersCount" hidden></span>
-        </span>
-        <span>{{ translations.nav_orders ?? 'Commandes' }}</span>
-    </a>
+    {% for key in tab_keys | default(['dashboard', 'production', 'checklists', 'orders']) %}
+        {% set t = tabs[key] %}
+        {% if t %}
+            <a href="{{ t.href }}" class="app-tab {{ active_nav == key ? 'is-active' : '' }}">
+                {% if key == 'orders' %}
+                    <span class="app-tab-ic">
+                        {{ icons.svg(t.icon, 23) }}
+                        {# Rempli par le sondage ; masqué tant qu'il n'y a rien à signaler. #}
+                        <span class="app-tab-count" id="ordersCount" hidden></span>
+                    </span>
+                {% else %}
+                    {{ icons.svg(t.icon, 23) }}
+                {% endif %}
+                <span>{{ t.label }}</span>
+            </a>
+        {% endif %}
+    {% endfor %}
     {% set _dn2 = (user.displayName ?? 'K')|trim %}
     {% set _pp = _dn2|split(' ') %}
     <a href="{{ ROOT }}/me" class="app-tab app-tab-profile {{ active_nav == 'me' ? 'is-active' : '' }}">

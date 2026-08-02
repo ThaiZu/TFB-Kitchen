@@ -1,0 +1,15 @@
+{
+  "webshop": "WebShop",
+  "webshop_bad_url": "L'adresse enregistrée n'est pas une adresse web (elle doit commencer par http:// ou https://).",
+  "webshop_go_settings": "Ouvrir les paramètres",
+  "webshop_no_shop": "Aucune boutique n'est associée à cette session : le back-office ne saurait pas quoi afficher.",
+  "webshop_no_url": "Aucune adresse de back-office n'est enregistrée sur cette tablette.",
+  "webshop_not_configured": "Le mode WebShop n'est pas configuré",
+  "webshop_open_blank": "Le cadre reste blanc ? Ouvrir le back-office dans un onglet",
+  "webshop_shop_hint": "Laisser vide pour utiliser la boutique de la session :",
+  "webshop_shop_label": "Boutique (id)",
+  "webshop_shop_none": "Aucune boutique dans la session de cette tablette : cet identifiant est alors obligatoire.",
+  "webshop_url_from_server": "Valeur du serveur utilisée :",
+  "webshop_url_hint": "Laisser vide pour utiliser l'adresse configurée sur le serveur.",
+  "webshop_url_label": "URL du back-office WebShop"
+}

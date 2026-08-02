@@ -32,6 +32,11 @@ $path = preg_replace('#^/kitchen#', '', $path) ?: '/';
 $file = __DIR__ . '/../public' . $path;
 if ($path !== '/' && is_file($file)) {
     $types = [
+        // Sans le type html, un fichier statique .html sous public/ arrive en
+        // application/octet-stream : le navigateur le télécharge au lieu de
+        // l'afficher, et une iframe qui le vise reste blanche.
+        'html' => 'text/html; charset=utf-8', 'htm' => 'text/html; charset=utf-8',
+        'txt' => 'text/plain; charset=utf-8',
         'css' => 'text/css', 'js' => 'application/javascript', 'json' => 'application/json',
         'svg' => 'image/svg+xml', 'png' => 'image/png', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg',
         'gif' => 'image/gif', 'webp' => 'image/webp', 'ico' => 'image/x-icon',

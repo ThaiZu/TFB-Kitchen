@@ -1,0 +1,15 @@
+{
+  "webshop": "WebShop",
+  "webshop_bad_url": "The stored address is not a web address (it must start with http:// or https://).",
+  "webshop_go_settings": "Open settings",
+  "webshop_no_shop": "No shop is attached to this session: the back office would not know what to show.",
+  "webshop_no_url": "No back-office address is stored on this tablet.",
+  "webshop_not_configured": "WebShop mode is not configured",
+  "webshop_open_blank": "Frame staying blank? Open the back office in a tab",
+  "webshop_shop_hint": "Leave empty to use the session's shop:",
+  "webshop_shop_label": "Shop (id)",
+  "webshop_shop_none": "No shop in this tablet's session: this id is then required.",
+  "webshop_url_from_server": "Server value in use:",
+  "webshop_url_hint": "Leave empty to use the address configured on the server.",
+  "webshop_url_label": "WebShop back-office URL"
+}
