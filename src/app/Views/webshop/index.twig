@@ -85,17 +85,6 @@
         {% include "webshop/_prep.twig" %}
     {% endif %}
 
-    {# Le back-office complet, replié. Le comptoir a ses trois écrans ; le
-       responsable qui passe peut avoir besoin du reste, et n'a pas à repasser
-       par les réglages pour y accéder. #}
-    {% if full_bo_url %}
-        <p class="ws-full">
-            <a href="{{ full_bo_url }}" target="_blank" rel="noopener">
-                {{ translations.ws_full_bo | default('Ouvrir le back-office complet') }}
-            </a>
-        </p>
-    {% endif %}
-
 {% endif %}
 
 {% endblock %}

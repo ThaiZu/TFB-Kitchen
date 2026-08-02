@@ -20,7 +20,6 @@
   "ws_closed": "Your franchisee can open it from the back office, under Settings › Kitchen tablet.",
   "ws_closed_title": "This screen is not open to this tablet",
   "ws_error": "The order could not be updated.",
-  "ws_full_bo": "Open the full back office",
   "ws_go_done": "Handed over",
   "ws_go_prep": "Preparing",
   "ws_go_ready": "It's ready",

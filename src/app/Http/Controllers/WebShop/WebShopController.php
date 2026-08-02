@@ -138,9 +138,6 @@ class WebShopController extends Controller
             'webshop_blocker' => $extra['webshop_blocker'] ?? null,
             'net_down'        => $extra['net_down'] ?? false,
             'today'           => date('Y-m-d'),
-            // Le back-office complet reste à un tap : le comptoir a trois
-            // écrans, mais le responsable qui passe peut avoir besoin du reste.
-            'full_bo_url'     => DeviceMode::webshopBase(),
         ];
     }
 
