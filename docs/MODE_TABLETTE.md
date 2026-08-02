@@ -202,14 +202,28 @@ comme venant de la tablette, pas d'une personne. C'est le choix assumé du brief
 pour ce poste. Si l'attribution devient nécessaire (litige, inventaire), il
 faudra ajouter une identification — pas contourner celle-ci.
 
-### Deux limites qui restent côté serveur
+### Le côté WebShop, livré
 
-**L'iframe et l'origine.** Si Kitchen est servi depuis le même hôte que le
-webshop, le cadre fonctionne tel quel. Sur une **autre origine**, le
-back-office ouvert en iframe n'a pas le jeton : il faudrait alors que Kitchen
-passe lui-même les appels et rende ses propres écrans (les six endpoints de la
-liste blanche). C'est un autre chantier, qui n'a pas été demandé — mais c'est
-la question à trancher avant de déployer sur deux hôtes distincts.
+Au moment d'intégrer, le jeton d'appareil **n'existait nulle part** côté
+WebShop : `/franchisee/*` n'avait qu'une garde, `X-Admin-Token`, et le front du
+back-office lisait ce jeton dans `localStorage`. Il a donc fallu l'écrire —
+dépôts `samsam2703mfc/webshop` et `back_office_ws_franchisee`, branche
+`claude/ux-pwa-consultant-t02npa`, contrat dans `webshop/DEVICE_TOKEN.md`.
+
+**Les deux applications sont servies par le même hôte** (`/var/www/html`,
+`/kitchen` et `/webshop/…`). Le cookie `kitchen_webshop_token` posé ici arrive
+donc jusqu'à l'API du webshop, qui l'accepte au même titre que l'en-tête
+`X-Device-Token`. C'est ce qui permet au back-office ouvert en cadre de
+s'authentifier **sans qu'aucun JavaScript ne touche au jeton** : il reste
+`HttpOnly`, et ne passe par aucune URL.
+
+Où prendre le jeton : `/webshop/backoffice_franchisee/tablette.html`, depuis la
+session du franchisé. Il n'est affiché **qu'une fois**.
+
+**Si un jour les deux applications changent d'hôte**, ce chemin tombe : le
+cookie ne franchit pas une origine. Il faudrait alors que Kitchen passe
+lui-même les appels et rende ses propres écrans. C'est la question à trancher
+avant tout déploiement sur deux hôtes distincts.
 
 **Le cadre lui-même.** Si `/webshop/backoffice_franchisee/` répond avec
 `X-Frame-Options: DENY` ou un `Content-Security-Policy: frame-ancestors`
