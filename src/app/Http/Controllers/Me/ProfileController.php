@@ -6,7 +6,6 @@ namespace App\Kitchen\app\Http\Controllers\Me;
 use App\Kitchen\app\Http\Controllers\Controller;
 use App\Kitchen\app\Services\Me\DeviceService;
 use App\Kitchen\core\Support\DeviceMode;
-use App\Kitchen\core\Support\GlobalRegistry;
 use App\Kitchen\core\Support\Route;
 
 class ProfileController extends Controller
@@ -49,14 +48,21 @@ class ProfileController extends Controller
     {
         $mode = DeviceMode::remember((string)($_POST['device_mode'] ?? ''));
 
-        // Les deux réglages WebShop ne sont écrits que si le formulaire les a
-        // portés : un POST partiel ne doit pas effacer une configuration
-        // posée par ailleurs.
-        if (array_key_exists('webshop_url', $_POST) || array_key_exists('webshop_shop', $_POST)) {
-            DeviceMode::rememberWebshop(
-                $_POST['webshop_url'] ?? '',
-                $_POST['webshop_shop'] ?? 0
-            );
+        // L'URL n'est écrite que si le formulaire l'a portée : un POST partiel
+        // ne doit pas effacer une configuration posée par ailleurs.
+        if (array_key_exists('webshop_url', $_POST)) {
+            DeviceMode::rememberWebshopUrl($_POST['webshop_url'] ?? '');
+        }
+
+        // Le jeton suit une autre règle, et c'est voulu : un champ vide le
+        // CONSERVE. Il n'est jamais rendu dans la page — le champ repart donc
+        // vide à chaque affichage, et l'effacer sur un simple enregistrement
+        // déconfigurerait la tablette au premier changement de mode. On ne
+        // l'efface que si on le demande explicitement.
+        if (!empty($_POST['webshop_token_clear'])) {
+            DeviceMode::rememberWebshopToken('');
+        } elseif (trim((string)($_POST['webshop_token'] ?? '')) !== '') {
+            DeviceMode::rememberWebshopToken($_POST['webshop_token']);
         }
 
         redirect(DeviceMode::rules()->home($mode));
@@ -66,13 +72,13 @@ class ProfileController extends Controller
     {
         $rules = DeviceMode::rules();
 
-        $data['modes']              = $rules->modes();
-        $data['webshop_base']       = DeviceMode::webshopBase();
-        $data['webshop_base_local'] = trim((string)($_COOKIE[DeviceMode::COOKIE_URL] ?? ''));
+        $data['modes']               = $rules->modes();
+        $data['webshop_base']        = DeviceMode::webshopBase();
+        $data['webshop_base_local']  = trim((string)($_COOKIE[DeviceMode::COOKIE_URL] ?? ''));
         $data['webshop_base_global'] = DeviceMode::webshopBaseIsGlobal();
-        $data['webshop_shop_local'] = (int)($_COOKIE[DeviceMode::COOKIE_SHOP] ?? 0) ?: '';
-        $data['webshop_shop_id']    = DeviceMode::webshopShopId();
-        $data['session_shop_id']    = (int)(GlobalRegistry::get('user')['shop_id'] ?? 0);
+        // Quatre caractères, jamais le jeton : la page reste lisible par
+        // n'importe qui passant devant le comptoir.
+        $data['token_hint']          = $rules->tokenHint(DeviceMode::webshopToken());
 
         return $data;
     }

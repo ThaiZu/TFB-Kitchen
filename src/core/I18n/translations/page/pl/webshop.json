@@ -1,15 +1,19 @@
 {
+  "backoffice_url": "Adres zaplecza WebShop",
+  "device_token": "Token urządzenia",
   "webshop": "WebShop",
+  "webshop_bad_token": "Zapisany token nie ma oczekiwanej postaci — sprawdź, czy został wklejony w całości, bez spacji.",
   "webshop_bad_url": "Zapisany adres nie jest adresem WWW (musi zaczynać się od http:// lub https://).",
   "webshop_go_settings": "Otwórz ustawienia",
-  "webshop_no_shop": "Do tej sesji nie przypisano sklepu: zaplecze nie wiedziałoby, co pokazać.",
+  "webshop_no_token": "Na tym tablecie nie zapisano tokenu urządzenia.",
   "webshop_no_url": "Na tym tablecie nie zapisano adresu zaplecza.",
   "webshop_not_configured": "Tryb WebShop nie jest skonfigurowany",
   "webshop_open_blank": "Ramka jest pusta? Otwórz zaplecze w karcie",
-  "webshop_shop_hint": "Zostaw puste, aby użyć sklepu z sesji:",
-  "webshop_shop_label": "Sklep (id)",
-  "webshop_shop_none": "Brak sklepu w sesji tego tabletu: ten identyfikator jest wtedy wymagany.",
+  "webshop_revoked": "Token tego tabletu został odwołany w zapleczu. Żadne dane nie są wyświetlane.",
+  "webshop_revoked_fix": "Poproś franczyzobiorcę o nowy token, a następnie wpisz go w ustawieniach.",
+  "webshop_revoked_title": "Ten tablet nie jest już autoryzowany",
+  "webshop_unchecked": "Token niezweryfikowany: webshop jest nieosiągalny. Ramka poniżej może pozostać pusta, dopóki sieć nie wróci.",
   "webshop_url_from_server": "Używana wartość z serwera:",
   "webshop_url_hint": "Zostaw puste, aby użyć adresu skonfigurowanego na serwerze.",
-  "webshop_url_label": "Adres zaplecza WebShop"
+  "webshop_where": "Obie wartości znajdziesz w zapleczu, w Ustawienia › Tablet Kitchen."
 }

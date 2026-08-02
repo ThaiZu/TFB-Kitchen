@@ -1,15 +1,19 @@
 {
+  "backoffice_url": "URL del back office WebShop",
+  "device_token": "Token del dispositivo",
   "webshop": "WebShop",
+  "webshop_bad_token": "Il token registrato non ha la forma prevista — verificare che sia stato incollato per intero, senza spazi.",
   "webshop_bad_url": "L'indirizzo registrato non è un indirizzo web (deve iniziare con http:// o https://).",
   "webshop_go_settings": "Apri le impostazioni",
-  "webshop_no_shop": "Nessun negozio è associato a questa sessione: il back office non saprebbe cosa mostrare.",
+  "webshop_no_token": "Nessun token del dispositivo è registrato su questo tablet.",
   "webshop_no_url": "Nessun indirizzo di back office è registrato su questo tablet.",
   "webshop_not_configured": "La modalità WebShop non è configurata",
   "webshop_open_blank": "Il riquadro resta bianco? Apri il back office in una scheda",
-  "webshop_shop_hint": "Lasciare vuoto per usare il negozio della sessione:",
-  "webshop_shop_label": "Negozio (id)",
-  "webshop_shop_none": "Nessun negozio nella sessione di questo tablet: questo identificativo diventa obbligatorio.",
+  "webshop_revoked": "Il token di questo tablet è stato revocato dal back office. Nessun dato viene mostrato.",
+  "webshop_revoked_fix": "Chiedete un nuovo token all'affiliato, poi inseritelo nelle impostazioni.",
+  "webshop_revoked_title": "Questo tablet non è più autorizzato",
+  "webshop_unchecked": "Token non verificato: il webshop non è raggiungibile. Il riquadro qui sotto può restare vuoto finché la rete non torna.",
   "webshop_url_from_server": "Valore del server in uso:",
   "webshop_url_hint": "Lasciare vuoto per usare l'indirizzo configurato sul server.",
-  "webshop_url_label": "URL del back office WebShop"
+  "webshop_where": "Entrambe le impostazioni si trovano nel back office, sotto Impostazioni › Tablet Kitchen."
 }

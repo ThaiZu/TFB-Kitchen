@@ -21,16 +21,20 @@ use App\Kitchen\app\Services\Me\DeviceModeService;
  * ajouter côté ERP dans docs/MODE_TABLETTE.md. Dès que l'API le portera,
  * seules les deux méthodes de lecture ci-dessous changeront.
  *
- * Le cookie est un réglage d'appareil, pas une identité : il n'entre dans
- * aucune décision d'autorisation. Le forger ne donne accès à rien — chaque
- * module reste protégé par son jeton, et le back-office WebShop par sa propre
- * session PIN. Il ne fait que choisir des entrées de menu.
+ * Le cookie de mode est un réglage d'appareil, pas une identité : il n'entre
+ * dans aucune décision d'autorisation. Le forger ne donne accès à rien — chaque
+ * module reste protégé par le jeton de session, et le back-office WebShop par
+ * son jeton d'appareil, que le serveur du webshop vérifie lui-même. Il ne fait
+ * que choisir des entrées de menu.
+ *
+ * Le cookie de jeton, lui, EST un secret. Il est HttpOnly, ne part que vers
+ * l'origine Kitchen, et n'est jamais rendu dans une page ni écrit dans un log.
  */
 final class DeviceMode
 {
-    public const COOKIE_MODE = 'kitchen_device_mode';
-    public const COOKIE_URL  = 'kitchen_webshop_url';
-    public const COOKIE_SHOP = 'kitchen_webshop_shop';
+    public const COOKIE_MODE  = 'kitchen_device_mode';
+    public const COOKIE_URL   = 'kitchen_webshop_url';
+    public const COOKIE_TOKEN = 'kitchen_webshop_token';
 
     /** Cinq ans : le réglage doit survivre au redémarrage, pas expirer tout seul. */
     private const TTL = 5 * 365 * 24 * 3600;
@@ -61,7 +65,7 @@ final class DeviceMode
         return $mode;
     }
 
-    public static function rememberWebshop(?string $url, $shopId): void
+    public static function rememberWebshopUrl(?string $url): void
     {
         $url = trim((string)$url);
         // On ne stocke pas une URL qu'on refuserait d'ouvrir : le contrôle est
@@ -70,7 +74,18 @@ final class DeviceMode
             $url = '';
         }
         self::write(self::COOKIE_URL, $url);
-        self::write(self::COOKIE_SHOP, (int)$shopId > 0 ? (string)(int)$shopId : '');
+    }
+
+    /**
+     * Le jeton d'appareil. C'est un secret : le cookie est HttpOnly, donc
+     * illisible par le JavaScript de la page, et il ne part jamais vers une
+     * autre origine que Kitchen. Il n'est écrit dans aucun log, ne passe par
+     * aucune URL, et n'est jamais rendu dans le HTML — voir
+     * DeviceModeService::tokenHint().
+     */
+    public static function rememberWebshopToken(?string $token): void
+    {
+        self::write(self::COOKIE_TOKEN, trim((string)$token));
     }
 
     /**
@@ -96,25 +111,16 @@ final class DeviceMode
     }
 
     /**
-     * La boutique du back-office : celle de la session de connexion, sauf
-     * réglage explicite sur l'appareil. La session fait foi par défaut parce
-     * qu'elle est déjà ce qui détermine tout le reste de l'écran ; un id saisi
-     * à la main qui la contredirait afficherait un back-office et des données
-     * Kitchen appartenant à deux magasins différents.
+     * Le jeton d'appareil de CETTE tablette.
+     *
+     * Pas de valeur serveur en repli, contrairement à l'URL : un jeton vaut
+     * pour une boutique, et un même serveur Kitchen sert plusieurs magasins.
+     * Une valeur globale ouvrirait donc le back-office du mauvais magasin —
+     * ou plutôt le même pour tout le monde, ce qui est pire.
      */
-    public static function webshopShopId(): int
+    public static function webshopToken(): string
     {
-        $local = (int)($_COOKIE[self::COOKIE_SHOP] ?? 0);
-        if ($local > 0) {
-            return $local;
-        }
-
-        return (int)(GlobalRegistry::get('user')['shop_id'] ?? 0);
-    }
-
-    public static function webshopShopIsSession(): bool
-    {
-        return (int)($_COOKIE[self::COOKIE_SHOP] ?? 0) <= 0;
+        return trim((string)($_COOKIE[self::COOKIE_TOKEN] ?? ''));
     }
 
     private static function write(string $name, string $value): void

@@ -1045,8 +1045,20 @@ Clés attendues aujourd'hui :
 | `setting_key` | portée usuelle | ce qu'il décide | si absent |
 |---|---|---|---|
 | `mode` | `device` | le mode de CETTE tablette | `is_default` de `pwa_mode`, donc `production` |
-| `webshop_url` | `brand` | l'URL de base du back-office franchisé | le mode WebShop est proposé **grisé, avec sa raison** (`no_url`) |
-| `webshop_shop_id` | `device` | la boutique ouverte par le back-office | la boutique du jeton de session ; si elle manque aussi, raison `no_shop` |
+| `webshop_url` | `brand` | l'URL du back-office franchisé, prise telle quelle | le mode WebShop est proposé **grisé, avec sa raison** (`no_url`) |
+| `webshop_device_token` | `shop`, ou `device` | **secret.** Le jeton d'appareil du webshop (`X-Device-Token`). Il porte la boutique — il n'y a pas d'id à stocker à côté | raison `no_token` |
+
+**Le jeton n'a pas de portée `brand`**, et ce n'est pas un oubli : il vaut pour
+une seule boutique. Une valeur de réseau ouvrirait le même magasin sur toutes
+les tablettes. Portée `shop` si le franchisé accepte que ses tablettes partagent
+un jeton, portée `device` s'il veut pouvoir en révoquer une seule — c'est le
+seul arbitrage, et il porte sur la granularité de la révocation.
+
+**Trois règles sur cette clé, parce que c'est un secret :** elle ne doit
+apparaître dans aucun journal, ne jamais être renvoyée par un endpoint de
+listing ou d'administration (seule la tablette concernée la reçoit, §8.6), et
+Kitchen ne la crée ni ne la révoque — `/franchisee/device-token` est réservé au
+jeton admin ERP.
 
 Le « … » de la liste est prévu : `order_sound`, `lang_code`, un identifiant
 d'imprimante viendront s'ajouter sans migration ni changement d'API. C'est la
@@ -1082,8 +1094,8 @@ seraient payées à chaque écran.
     {"code": "production", "label_key": "production",        "icon": "list-checks", "route": "/production", "in_drawer": true, "in_tabbar": true}
   ],
   "settings": {
-    "webshop_url": "https://exemple.tld/webshop/backoffice_franchisee/",
-    "webshop_shop_id": 2
+    "webshop_url": "https://exemple.tld/webshop/backoffice_franchisee/?shop=2",
+    "webshop_device_token": "…64 caractères…"
   }
 }
 ```
@@ -1096,8 +1108,8 @@ seraient payées à chaque écran.
 | `menu[]` | **les entrées du mode courant, déjà filtrées et triées.** Ne servez pas les huit en laissant la PWA choisir : le filtre serait alors écrit deux fois, et les deux divergeraient | l'affectation codée en dur |
 | `menu[].code` | la clé pivot. Un code inconnu de la PWA est **ignoré** — voir §8.3 | — |
 | `menu[].in_tabbar` | barre du bas, quatre au plus, profil ajouté par la coque | rien dans la barre du bas |
-| `settings.webshop_url` | l'URL de base du back-office. Doit commencer par `http://` ou `https://` : elle finit en `src` d'une iframe, et la PWA refuse tout autre schéma | mode WebShop grisé, raison affichée |
-| `settings.webshop_shop_id` | la boutique du back-office | la boutique du jeton |
+| `settings.webshop_url` | l'URL du back-office, ouverte **telle quelle**. Doit commencer par `http://` ou `https://` : elle finit en `src` d'une iframe, et la PWA refuse tout autre schéma | mode WebShop grisé, raison affichée |
+| `settings.webshop_device_token` | le jeton d'appareil du webshop. **Secret** : à ne servir qu'à la tablette qui le présente, jamais dans un listing, jamais dans un log | mode WebShop grisé, raison `no_token` |
 
 **Cet endpoint est une surcharge, pas un prérequis.** Un `404` n'est pas une
 panne : la PWA garde son cookie et ses valeurs codées en dur, et l'écran ne
@@ -1109,16 +1121,18 @@ lit **sa** configuration, celle du jeton qu'elle présente. Un
 `/devices/{id}/config` laisserait une tablette de comptoir lire — et demain
 écrire — le réglage de celle du fournil.
 
-**Aucun secret dans `settings`.** Le jeton admin de l'ERP n'a rien à faire sur
-une tablette, sous aucune forme : le back-office WebShop ouvre sa propre session
-PIN dans l'iframe. Voir `docs/MODE_TABLETTE.md` §3.
+**Un seul secret dans `settings`, et il est cloisonné.** Le jeton d'appareil du
+webshop est servi à la tablette qui le présente, à personne d'autre, et n'est
+jamais journalisé. Le jeton **admin** de l'ERP, lui, n'a rien à faire sur une
+tablette sous aucune forme : il donne accès aux marges et aux paramètres réseau.
+Voir `docs/MODE_TABLETTE.md` §3.
 
 ### 8.7 `PATCH /devices/me/settings`
 
 Écrit les réglages de **cette** tablette (`scope = 'device'`).
 
 ```json
-{"mode": "webshop", "webshop_url": "https://exemple.tld/bo/", "webshop_shop_id": 2}
+{"mode": "webshop", "webshop_url": "https://exemple.tld/bo/?shop=2", "webshop_device_token": "…"}
 ```
 
 Les trois champs sont facultatifs et indépendants : un corps qui ne porte que
@@ -1137,6 +1151,7 @@ Refus attendus :
 |---|---|---|
 | `mode` inconnu ou `is_active = 0` | `422` | `unknown_mode` |
 | `webshop_url` sans `http(s)://` | `422` | `bad_url_scheme` |
+| `webshop_device_token` écrit en portée `brand` | `422` | `token_scope_too_wide` |
 | jeton d'un appareil qui n'existe plus | `401` | — |
 
 **Changer de mode ne doit pas invalider la session** : l'équipe est en plein

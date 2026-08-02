@@ -89,6 +89,14 @@
         font-size: .92rem; background: #fff;
     }
     .set-field small { display: block; margin-top: 5px; font-size: .76rem; color: var(--c-muted, #7a7168); }
+    /* Effacer un jeton n'est pas un réglage courant : la case reste discrète,
+       mais assez haute pour se cocher au doigt sans viser. */
+    .set-clear {
+        display: flex; align-items: center; gap: 10px;
+        min-height: 44px; margin-top: 10px;
+        font-size: .82rem; color: var(--c-muted, #7a7168); cursor: pointer;
+    }
+    .set-clear input { width: 20px; height: 20px; flex: 0 0 auto; }
     .set-save {
         min-height: 48px; margin-top: 18px; padding: 0 22px;
         border: 0; border-radius: 999px;
@@ -154,16 +162,19 @@
                             <span class="mode-opt-now">{{ translations.mode_current | default('Mode actuel') }}</span>
                         {% endif %}
                         {% if blocked %}
-                            {# La raison, pas « indisponible » : elle dit où aller
-                               la corriger, et les trois causes ne se corrigent
-                               pas au même endroit. #}
+                            {# La raison, pas « indisponible » : les quatre causes
+                               ne se réparent pas de la même façon, et trois
+                               d'entre elles se règlent dans les deux champs
+                               juste en dessous. #}
                             <span class="mode-opt-why">
                                 {% if webshop_blocker == 'no_url' %}
                                     {{ translations.webshop_no_url | default("Aucune adresse de back-office n'est enregistrée sur cette tablette.") }}
                                 {% elseif webshop_blocker == 'bad_url' %}
                                     {{ translations.webshop_bad_url | default("L'adresse enregistrée n'est pas une adresse web (elle doit commencer par http:// ou https://).") }}
+                                {% elseif webshop_blocker == 'bad_token' %}
+                                    {{ translations.webshop_bad_token | default("Le jeton enregistré n'a pas la forme attendue — vérifiez qu'il a été collé en entier, sans espace.") }}
                                 {% else %}
-                                    {{ translations.webshop_no_shop | default("Aucune boutique n'est associée à cette session : le back-office ne saurait pas quoi afficher.") }}
+                                    {{ translations.webshop_no_token | default("Aucun jeton d'appareil n'est enregistré sur cette tablette.") }}
                                 {% endif %}
                             </span>
                         {% endif %}
@@ -171,11 +182,14 @@
                 {% endfor %}
             </div>
 
+            {# Les deux valeurs se prennent dans le back-office, sous
+               Réglages › Tablette Kitchen. Il n'y a pas d'identifiant de
+               boutique à saisir : elle est portée par l'URL et par le jeton. #}
             <div class="set-field">
-                <label for="webshopUrl">{{ translations.webshop_url_label | default('URL du back-office WebShop') }}</label>
+                <label for="webshopUrl">{{ translations.backoffice_url | default('URL du back-office WebShop') }}</label>
                 <input type="url" id="webshopUrl" name="webshop_url"
                        inputmode="url" autocomplete="off" spellcheck="false"
-                       placeholder="https://exemple.tld/webshop/backoffice_franchisee/"
+                       placeholder="https://exemple.tld/webshop/backoffice_franchisee/?shop=2"
                        value="{{ webshop_base_local }}">
                 <small>
                     {% if webshop_base_global and webshop_base %}
@@ -186,19 +200,36 @@
                 </small>
             </div>
 
+            {# ── Le jeton d'appareil ──
+               C'est un secret, et une tablette de comptoir reste allumée toute
+               la journée devant tout le monde. Il n'est donc jamais rendu dans
+               la page : le champ part vide, et seuls ses quatre derniers
+               caractères sont affichés — assez pour reconnaître celui qui est
+               en place, pas assez pour le recopier. #}
             <div class="set-field">
-                <label for="webshopShop">{{ translations.webshop_shop_label | default('Boutique (id)') }}</label>
-                <input type="number" id="webshopShop" name="webshop_shop" min="1" step="1"
-                       inputmode="numeric" placeholder="{{ session_shop_id ?: '' }}"
-                       value="{{ webshop_shop_local }}">
+                <label for="webshopToken">{{ translations.device_token | default("Jeton d'appareil") }}</label>
+                <input type="password" id="webshopToken" name="webshop_token"
+                       autocomplete="off" spellcheck="false"
+                       autocapitalize="off" autocorrect="off"
+                       placeholder="{{ token_hint
+                            ? (translations.device_token_set | default('Jeton enregistré')) ~ ' ' ~ token_hint
+                            : (translations.device_token_ph | default('64 caractères fournis par le back-office')) }}"
+                       value="">
                 <small>
-                    {% if session_shop_id %}
-                        {{ translations.webshop_shop_hint | default("Laisser vide pour utiliser la boutique de la session :") }} {{ session_shop_id }}
+                    {% if token_hint %}
+                        {{ translations.device_token_keep | default('Laisser vide pour conserver le jeton enregistré.') }}
                     {% else %}
-                        {{ translations.webshop_shop_none | default("Aucune boutique dans la session de cette tablette : cet identifiant est alors obligatoire.") }}
+                        {{ translations.device_token_hint | default('Back-office → Réglages → Tablette Kitchen. Il vaut pour une seule boutique et reste révocable de là-bas.') }}
                     {% endif %}
                 </small>
             </div>
+
+            {% if token_hint %}
+                <label class="set-clear">
+                    <input type="checkbox" name="webshop_token_clear" value="1">
+                    <span>{{ translations.device_token_clear | default('Effacer le jeton de cette tablette') }}</span>
+                </label>
+            {% endif %}
 
             <button type="submit" class="set-save">
                 {{ translations.mode_save | default('Enregistrer le mode') }}

@@ -68,33 +68,58 @@ check('accueil webshop',               $m->home('webshop'), '/webshop');
 check('accueil mode inconnu',          $m->home('zzz'), '/dashboard');
 
 // ── WebShop : ouvrir, ou dire pourquoi on n'ouvre pas ─────────────────────
-$url = 'https://exemple.tld/webshop/backoffice_franchisee/';
+// Depuis la révision du 2 août 2026 : plus de connexion personnelle, plus d'id
+// de boutique à saisir. Deux réglages, une URL et un jeton d'appareil — et
+// c'est le jeton qui porte la boutique.
+$url = 'https://exemple.tld/webshop/backoffice_franchisee/?shop=2';
+$tok = str_repeat('a1b2', 16);   // 64 caractères, comme les vrais
 
-check('URL + boutique',                $m->webshopUrl($url, 2),
-    'https://exemple.tld/webshop/backoffice_franchisee?shop=2');
-check('sans URL',                      $m->webshopUrl('', 2), null);
-check('sans URL : raison',             $m->webshopBlocker('', 2), 'no_url');
-check('sans boutique',                 $m->webshopUrl($url, 0), null);
-check('sans boutique : raison',        $m->webshopBlocker($url, 0), 'no_shop');
-check('boutique négative',             $m->webshopBlocker($url, -3), 'no_shop');
-check('tout est là : aucune raison',   $m->webshopBlocker($url, 7), null);
+check('URL + jeton',                   $m->webshopUrl($url, $tok), $url);
+check('tout est là : aucune raison',   $m->webshopBlocker($url, $tok), null);
+check('sans URL',                      $m->webshopUrl('', $tok), null);
+check('sans URL : raison',             $m->webshopBlocker('', $tok), 'no_url');
+check('sans jeton',                    $m->webshopUrl($url, ''), null);
+check('sans jeton : raison',           $m->webshopBlocker($url, ''), 'no_token');
+check('sans jeton : null aussi',       $m->webshopBlocker($url, null), 'no_token');
 
-// Le champ est saisi à la main sur la tablette et finit en src d'une iframe :
-// tout ce qui n'est pas http(s) est refusé, y compris ce qui ressemble à une
-// URL.
-check('javascript: refusé',            $m->webshopBlocker('javascript:alert(1)', 2), 'bad_url');
-check('data: refusé',                  $m->webshopBlocker('data:text/html,<b>x', 2), 'bad_url');
-check('sans schéma refusé',            $m->webshopBlocker('exemple.tld/bo', 2), 'bad_url');
-check('http accepté',                  $m->webshopBlocker('http://exemple.tld/bo', 2), null);
-check('majuscules du schéma',          $m->webshopBlocker('HTTPS://exemple.tld/bo', 2), null);
+// L'URL est prise telle quelle : c'est le jeton qui impose la boutique, et le
+// serveur ignore ?shop=. Y ajouter quoi que ce soit laisserait croire que la
+// tablette choisit son magasin.
+check("l'URL n'est pas complétée",     $m->webshopUrl('https://x.tld/bo', $tok), 'https://x.tld/bo');
+check('espaces rognés',                $m->webshopUrl('  https://x.tld/bo  ', $tok), 'https://x.tld/bo');
 
-// Une base qui porte déjà une query garde la sienne : on ajoute la boutique,
-// on ne la remplace pas.
-check('query existante conservée',     $m->webshopUrl('https://x.tld/bo?lang=fr', 4),
-    'https://x.tld/bo?lang=fr&shop=4');
-// Un id de boutique venant d'un champ texte arrive en chaîne.
-check('boutique en chaîne',            $m->webshopUrl($url, '9'),
-    'https://exemple.tld/webshop/backoffice_franchisee?shop=9');
+// Le champ finit en src d'une iframe : tout ce qui n'est pas http(s) est
+// refusé, y compris ce qui ressemble à une URL.
+check('javascript: refusé',            $m->webshopBlocker('javascript:alert(1)', $tok), 'bad_url');
+check('data: refusé',                  $m->webshopBlocker('data:text/html,<b>x', $tok), 'bad_url');
+check('sans schéma refusé',            $m->webshopBlocker('exemple.tld/bo', $tok), 'bad_url');
+check('http accepté',                  $m->webshopBlocker('http://exemple.tld/bo', $tok), null);
+check('majuscules du schéma',          $m->webshopBlocker('HTTPS://exemple.tld/bo', $tok), null);
+
+// La faute qu'on attrape sur le jeton, c'est le mauvais champ ou le
+// copier-coller approximatif — pas le mauvais jeton, que seul le serveur sait.
+check('URL collée dans le jeton',      $m->webshopBlocker($url, 'https://exemple.tld/bo'), 'bad_token');
+check('jeton trop court',              $m->webshopBlocker($url, 'abc123'), 'bad_token');
+check('espace au milieu',              $m->webshopBlocker($url, str_repeat('ab', 8) . ' x'), 'bad_token');
+check('espaces autour : tolérés',      $m->webshopBlocker($url, '  ' . $tok . '  '), null);
+check('jeton majuscules',              $m->webshopBlocker($url, strtoupper($tok)), null);
+
+// ── La base d'API, déduite de l'URL ───────────────────────────────────────
+// Un seul champ pour une seule information : deux champs à saisir seraient
+// deux occasions de les rendre incohérents.
+check('api déduite',                   $m->webshopApiBase($url), 'https://exemple.tld/webshop/api');
+check('api : le port suit',            $m->webshopApiBase('http://127.0.0.1:8080/webshop/backoffice_franchisee/'),
+    'http://127.0.0.1:8080/webshop/api');
+check('api : le chemin saute',         $m->webshopApiBase('https://x.tld/a/b/c?d=e'), 'https://x.tld/webshop/api');
+check('api sans URL',                  $m->webshopApiBase(''), null);
+check('api sur URL malformée',         $m->webshopApiBase('exemple.tld'), null);
+
+// ── Le jeton ne s'affiche pas ─────────────────────────────────────────────
+// Une tablette de comptoir reste allumée devant tout le monde : la page dit
+// lequel est en place, jamais lequel c'est.
+check('indice : quatre caractères',    $m->tokenHint('0123456789abcdef'), '…cdef');
+check('indice : rien sans jeton',      $m->tokenHint(''), null);
+check('indice : rien sur null',        $m->tokenHint(null), null);
 
 // ── Verdict ───────────────────────────────────────────────────────────────
 echo $ko === []

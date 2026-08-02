@@ -96,17 +96,29 @@ class Controller
         // core/Support/DeviceMode et docs/MODE_TABLETTE.md.
         $mode  = DeviceMode::current();
         $rules = DeviceMode::rules();
-        $data['device_mode']   = $mode;
-        $data['nav_keys']      = $rules->navKeys($mode);
-        $data['tab_keys']      = $rules->tabKeys($mode);
-        $data['mode_home']     = $rules->home($mode);
-        // Le menu doit savoir si l'entrée WebShop mène quelque part avant de
-        // l'afficher : une entrée qui ouvre une page d'erreur est une entrée
-        // morte, et le brief n'en veut aucune.
-        $data['webshop_blocker'] = $rules->webshopBlocker(
-            DeviceMode::webshopBase(),
-            DeviceMode::webshopShopId()
-        );
+
+        // Ces valeurs sont des DÉFAUTS, pas des surcharges : un contrôleur qui
+        // a déjà tranché garde son verdict. Sans cette règle, l'écran WebShop
+        // ne pouvait pas dire « jeton révoqué » — le calcul générique, qui ne
+        // connaît que les cookies, écrasait sa réponse par « non configuré ».
+        $defaults = [
+            'device_mode' => $mode,
+            'nav_keys'    => $rules->navKeys($mode),
+            'tab_keys'    => $rules->tabKeys($mode),
+            'mode_home'   => $rules->home($mode),
+            // Le menu doit savoir si l'entrée WebShop mène quelque part avant
+            // de l'afficher : une entrée qui ouvre une page d'erreur est une
+            // entrée morte, et le brief n'en veut aucune.
+            'webshop_blocker' => $rules->webshopBlocker(
+                DeviceMode::webshopBase(),
+                DeviceMode::webshopToken()
+            ),
+        ];
+        foreach ($defaults as $key => $value) {
+            if (!array_key_exists($key, $data)) {
+                $data[$key] = $value;
+            }
+        }
 
         // Jeśli istnieje plik .twig, renderuj przez Twig
         $twigTemplate = $name . ".twig";

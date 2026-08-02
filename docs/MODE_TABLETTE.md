@@ -5,8 +5,9 @@ fournil produit, le bureau contrôle, le comptoir vend. Le **mode** dit à quoi
 sert un appareil, et donc ce qu'il affiche.
 
 > Contrat d'origine : `INTEGRATION_KITCHEN_WEBSHOP.md` (dépôt
-> `samsam2703MFC/WebShop`). Ce document dit ce qui a été fait, ce qui a été fait
-> autrement, et pourquoi.
+> `samsam2703MFC/WebShop`), **révision du 2 août 2026** — le mode PIN a été
+> retiré, la tablette s'identifie par un jeton d'appareil. Ce document dit ce
+> qui a été fait, ce qui a été fait autrement, et pourquoi.
 
 ---
 
@@ -60,15 +61,20 @@ mécanisme était exclu ; le cookie est celui que le brief nomme.
 |---|---|---|
 | `kitchen_device_mode` | `gestion` \| `production` \| `webshop` | 5 ans |
 | `kitchen_webshop_url` | surcharge locale de l'URL du back-office | 5 ans |
-| `kitchen_webshop_shop` | surcharge locale de l'id de boutique | 5 ans |
+| `kitchen_webshop_token` | **le jeton d'appareil du webshop — un secret** | 5 ans |
 
 `Secure` · `HttpOnly` · `SameSite=Strict` · `path=/`, comme les cookies d'auth
 existants.
 
-**Ce cookie n'est pas une identité.** Il n'entre dans aucune décision
-d'autorisation : le forger ne donne accès à rien. Chaque module reste protégé
-par le jeton de session, et le back-office WebShop par sa propre session PIN. Il
-ne fait que choisir des entrées de menu.
+**Les deux premiers ne sont pas une identité.** Ils n'entrent dans aucune
+décision d'autorisation : les forger ne donne accès à rien. Chaque module reste
+protégé par le jeton de session, et le back-office WebShop par son jeton
+d'appareil, que le serveur du webshop vérifie lui-même. Ils ne font que choisir
+des entrées de menu.
+
+**Le troisième, si.** `HttpOnly` le met hors de portée du JavaScript de la page,
+`Secure` hors de portée d'un réseau en clair, et il ne part jamais vers une
+autre origine que Kitchen. Voir §3 pour le reste du traitement.
 
 ### Pour passer à l'option 1 (ERP)
 
@@ -100,64 +106,117 @@ encore afficher son menu, et c'est lui qui le sait.
 ## 3. Mode WebShop
 
 **Le back-office franchisé n'est pas réécrit.** Il existe, il est déployé, il
-compte 37 sections en 6 groupes, et il gère déjà tout ce qui est délicat : pavé
-PIN, filtrage du menu par profil, cloisonnement à la boutique, révocation
-immédiate, anti-brute-force. Kitchen lui donne un cadre et sa boutique.
+compte 37 sections en 6 groupes, et il gère déjà tout ce qui est délicat :
+portée du jeton, cloisonnement à la boutique, révocation, liste blanche des
+écrans ouverts. Kitchen lui donne un cadre.
 
 - Route : `GET /webshop` → `app/Views/webshop/index.twig`
 - Rendu : **vue intégrée** (iframe plein écran), option 1 des trois proposées —
   l'utilisateur ne quitte pas l'application et garde la barre d'onglets.
-- URL ouverte : `<base>?shop=<id>`
+- URL ouverte : **celle qui a été configurée, telle quelle.**
 
-### Configuration
+Kitchen n'ajoute plus `?shop=`. Depuis la révision, c'est le jeton qui impose la
+boutique et le serveur **ignore** ce paramètre : l'ajouter laisserait croire que
+la tablette choisit son magasin.
 
-| Réglage | Source | Priorité |
+### Aucune connexion personnelle
+
+La tablette est posée dans le magasin et sert à toute l'équipe. Lui demander un
+identifiant à chaque geste n'aurait pas de sens : l'identité, c'est **l'appareil**.
+
+Deux réglages, pris dans le back-office sous **Réglages › Tablette Kitchen** :
+
+| Réglage | Où il vit | Repli |
 |---|---|---|
-| URL du back-office | `SetEnv WEBSHOP_BO_URL` (serveur) ou champ dans `/me` (tablette) | tablette > serveur |
-| Boutique (id) | session de connexion (`shop_id` du jeton) ou champ dans `/me` | tablette > session |
+| **URL du back-office** | cookie `kitchen_webshop_url`, ou `SetEnv WEBSHOP_BO_URL` | serveur, puis rien |
+| **Jeton d'appareil** | cookie `kitchen_webshop_token` | **aucun** |
 
-La configuration serveur existe pour ne pas saisir la même URL sur cinquante
-tablettes ; la surcharge locale, pour en dévier une le temps d'un test.
+L'URL a une valeur serveur pour ne pas la saisir sur cinquante tablettes. **Le
+jeton n'en a pas, et c'est délibéré** : un jeton vaut pour une boutique, et un
+même serveur Kitchen sert plusieurs magasins. Une valeur globale ouvrirait le
+back-office du même magasin pour tout le monde.
 
-L'id de boutique vient de la session par défaut. Le forger est sans effet côté
-serveur — le back-office ignore `?shop=` pour une session PIN et retient la
-boutique de la session — mais un id qui contredit la session afficherait un
-back-office et des données Kitchen appartenant à deux magasins différents. D'où
-le défaut.
+### Le jeton est un secret, et il est traité comme tel
+
+- **Jamais dans une URL** : ni dans le `src` de l'iframe, ni en paramètre de
+  requête. Une URL se retrouve dans les journaux d'accès, dans le `Referer` et
+  dans l'historique du navigateur. Il ne voyage qu'en en-tête `X-Device-Token`.
+- **Jamais dans un log.**
+- **Jamais rendu dans la page.** Une tablette de comptoir reste allumée devant
+  tout le monde : le champ de réglage part vide et n'affiche que les **quatre
+  derniers caractères** — assez pour reconnaître celui qui est en place, pas
+  assez pour le recopier. D'où aussi la règle du formulaire : *un champ vide
+  conserve le jeton*, et l'effacer demande de cocher une case.
+- Cookie `HttpOnly` : illisible par le JavaScript de la page.
+- **Le jeton admin ERP n'apparaît nulle part** — ni code, ni config, ni log, ni
+  stockage. Il donne accès aux marges et aux paramètres réseau ; il n'a rien à
+  faire sur un comptoir.
+
+### Vérification au démarrage, et révocation
+
+Le jeton est révocable depuis le back-office : c'est le seul recours si la
+tablette disparaît. À chaque ouverture de `/webshop`, Kitchen appelle
+`GET <origine>/webshop/api/franchisee/me` avec l'en-tête, et décide :
+
+| Réponse | Ce qu'on affiche |
+|---|---|
+| `2xx` | le cadre |
+| `401` / `403` | **écran de configuration** — « cette tablette n'est plus autorisée ». Aucun cadre monté, donc aucune donnée en cache affichée |
+| réseau injoignable | le cadre **et** un bandeau « jeton non vérifié, le webshop est injoignable » |
+| `5xx` | idem réseau : un incident serveur n'est pas un verdict sur le jeton |
+
+Le cas réseau mérite d'être justifié : bloquer sur un hoquet de wifi rendrait le
+comptoir inutilisable, alors que le serveur du webshop refusera de toute façon
+un jeton révoqué. On ouvre, et on **écrit** qu'on n'a pas pu vérifier — un échec
+réseau dit « réseau », jamais « aucune donnée ».
+
+La base d'API est **déduite** de l'URL configurée (son origine + `/webshop/api`)
+plutôt que saisie : deux champs pour une seule information, ce sont deux
+occasions de les rendre incohérents.
 
 ### Quand le mode est indisponible
 
-L'option est **grisée avec sa raison**, jamais masquée. Trois raisons
-distinctes, parce qu'elles ne se corrigent pas au même endroit :
+L'option est **grisée avec sa raison**, jamais masquée. Quatre raisons
+distinctes, parce qu'elles n'appellent pas la même réparation :
 
 | Code | Message | Où corriger |
 |---|---|---|
-| `no_url` | aucune adresse enregistrée | paramètres de la tablette, ou `WEBSHOP_BO_URL` |
-| `bad_url` | l'adresse n'est pas une adresse web | paramètres de la tablette |
-| `no_shop` | aucune boutique dans la session | compte de connexion — **pas** ici |
+| `no_url` | aucune adresse enregistrée | réglages, ou `WEBSHOP_BO_URL` |
+| `bad_url` | l'adresse n'est pas une adresse web | réglages |
+| `no_token` | aucun jeton enregistré | réglages, jeton pris dans le back-office |
+| `bad_token` | le jeton n'a pas la forme attendue | réglages — c'est l'URL collée dans le mauvais champ, neuf fois sur dix |
+
+`bad_token` ne dit **pas** que le jeton est faux : seul le serveur le sait, et
+il le dit par un 403. Le contrôle local attrape la faute de saisie, rien de
+plus — un format strict enfermerait la tablette le jour où le webshop change la
+longueur de ses jetons.
 
 `GET /webshop` affiche la même raison plutôt qu'un cadre vide. Aucun repli,
 aucune donnée de démonstration.
 
-### Authentification
+### Une conséquence à connaître
 
-**Aucun jeton n'est transmis au back-office.** Il ouvre sa propre session PIN
-dans le cadre (cas B1 du brief : une saisie par service, session de 12 h). Le
-jeton admin ERP n'apparaît nulle part dans Kitchen — ni code, ni config, ni log,
-ni stockage — et n'a rien à faire sur une tablette de comptoir.
+Un appareil partagé sans identification personnelle signifie qu'**aucune action
+n'est attribuable à quelqu'un** : changer le statut d'une commande est tracé
+comme venant de la tablette, pas d'une personne. C'est le choix assumé du brief
+pour ce poste. Si l'attribution devient nécessaire (litige, inventaire), il
+faudra ajouter une identification — pas contourner celle-ci.
 
-L'URL saisie sur la tablette finit en `src` d'une iframe : tout ce qui ne
-commence pas par `http://` ou `https://` est refusé, à l'écriture comme à la
-lecture. C'est ce qui ferme `javascript:` et `data:`.
+### Deux limites qui restent côté serveur
 
-### Ce qui reste côté serveur du webshop
+**L'iframe et l'origine.** Si Kitchen est servi depuis le même hôte que le
+webshop, le cadre fonctionne tel quel. Sur une **autre origine**, le
+back-office ouvert en iframe n'a pas le jeton : il faudrait alors que Kitchen
+passe lui-même les appels et rende ses propres écrans (les six endpoints de la
+liste blanche). C'est un autre chantier, qui n'a pas été demandé — mais c'est
+la question à trancher avant de déployer sur deux hôtes distincts.
 
-Si `/webshop/backoffice_franchisee/` répond avec `X-Frame-Options: DENY` ou un
-`Content-Security-Policy: frame-ancestors` restrictif, le cadre restera blanc.
-Le navigateur ne remonte rien au script : on ne peut ni le détecter, ni le
-contourner côté client — et on ne cherche pas à le faire. La page laisse un lien
-« ouvrir dans un onglet » pour ne pas bloquer l'équipe en attendant
-l'ajustement, qui se fait sur le serveur web du webshop.
+**Le cadre lui-même.** Si `/webshop/backoffice_franchisee/` répond avec
+`X-Frame-Options: DENY` ou un `Content-Security-Policy: frame-ancestors`
+restrictif, le cadre restera blanc. Le navigateur ne remonte rien au script : on
+ne peut ni le détecter, ni le contourner d'ici — et on ne cherche pas à le
+faire. La page laisse un lien « ouvrir dans un onglet » pour ne pas bloquer
+l'équipe en attendant l'ajustement, qui se fait sur le serveur du webshop.
 
 ---
 
@@ -170,6 +229,7 @@ l'ajustement, qui se fait sur le serveur web du webshop.
 | Exposition à toutes les vues | `app/Http/Controllers/Controller.php` (`view()`) |
 | Écran de réglage | `app/Views/me/about.twig`, `POST /me/settings` |
 | Vue WebShop | `app/Http/Controllers/WebShop/`, `app/Views/webshop/index.twig` |
+| Vérification du jeton | `app/Repositories/WebShop/DeviceTokenRepository.php` |
 | Menu | `app/Views/components/app_nav.twig` |
 | Barre du bas | `app/Views/layouts/base.twig` |
 | Tests | `php bin/mode-test.php` |

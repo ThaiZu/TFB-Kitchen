@@ -105,17 +105,18 @@ class DeviceModeService
     /**
      * Pourquoi le mode WebShop ne peut pas s'ouvrir, ou null s'il le peut.
      *
-     * On distingue les trois causes parce qu'elles n'appellent pas la même
-     * réparation : une URL absente se règle dans les paramètres, une URL
-     * malformée se corrige, une boutique absente vient du compte de connexion
-     * et ne se règle pas ici. « Non configuré » les confondrait toutes les
-     * trois et enverrait chercher au mauvais endroit.
+     * On distingue les causes parce qu'elles n'appellent pas la même
+     * réparation : une URL absente et un jeton absent se règlent tous deux dans
+     * les paramètres, mais pas au même champ, et un jeton mal collé — l'URL
+     * dans le mauvais champ, un espace au bout — ne se voit pas si on répond
+     * « non configuré ».
      *
-     * @return string|null 'no_url' | 'bad_url' | 'no_shop'
+     * @return string|null 'no_url' | 'bad_url' | 'no_token' | 'bad_token'
      */
-    public function webshopBlocker(?string $base, $shopId): ?string
+    public function webshopBlocker(?string $base, ?string $token): ?string
     {
-        $base = trim((string)$base);
+        $base  = trim((string)$base);
+        $token = trim((string)$token);
 
         if ($base === '') {
             return 'no_url';
@@ -126,26 +127,76 @@ class DeviceModeService
         if (!preg_match('#^https?://#i', $base)) {
             return 'bad_url';
         }
-        if ((int)$shopId <= 0) {
-            return 'no_shop';
+        if ($token === '') {
+            return 'no_token';
+        }
+        // On ne vérifie pas que le jeton est LE bon — seul le serveur le sait,
+        // et c'est son 403 qui fait foi. On vérifie qu'il a la forme d'un
+        // jeton : la faute qu'on attrape ici, c'est l'URL collée dans le champ
+        // du jeton, ou un espace ramassé au passage. Volontairement large : un
+        // format plus strict enfermerait la tablette le jour où le webshop
+        // change la longueur de ses jetons.
+        if (!preg_match('#^[A-Za-z0-9_.:-]{16,256}$#', $token)) {
+            return 'bad_token';
         }
 
         return null;
     }
 
     /**
-     * L'URL du back-office franchisé pour CETTE boutique, ou null si un
-     * réglage manque. Jamais d'URL partielle : ouvrir le back-office sans
-     * boutique afficherait le catalogue d'un autre magasin.
+     * L'URL du back-office, ou null si un réglage manque.
+     *
+     * Elle est prise telle qu'elle a été configurée : depuis la révision du
+     * 2 août 2026, c'est le jeton qui impose la boutique, et le serveur
+     * **ignore** `?shop=`. Kitchen n'a donc plus rien à y ajouter — l'ajouter
+     * quand même laisserait croire que la tablette choisit son magasin.
      */
-    public function webshopUrl(?string $base, $shopId): ?string
+    public function webshopUrl(?string $base, ?string $token): ?string
     {
-        if ($this->webshopBlocker($base, $shopId) !== null) {
+        if ($this->webshopBlocker($base, $token) !== null) {
             return null;
         }
 
-        $base = rtrim(trim((string)$base), '/');
+        return trim((string)$base);
+    }
 
-        return $base . (str_contains($base, '?') ? '&' : '?') . 'shop=' . (int)$shopId;
+    /**
+     * La base d'API du webshop, déduite de l'URL du back-office : le brief la
+     * définit comme « l'origine du webshop » + /webshop/api. On la déduit
+     * plutôt que de la faire saisir — deux champs pour une seule information,
+     * c'est un champ de trop et une occasion de les rendre incohérents.
+     *
+     * Sert au seul appel que Kitchen passe lui-même : la vérification du jeton
+     * au démarrage (GET /franchisee/me).
+     */
+    public function webshopApiBase(?string $base): ?string
+    {
+        $base = trim((string)$base);
+        if ($base === '' || !preg_match('#^https?://#i', $base)) {
+            return null;
+        }
+
+        $parts = parse_url($base);
+        if (empty($parts['scheme']) || empty($parts['host'])) {
+            return null;
+        }
+
+        $origin = $parts['scheme'] . '://' . $parts['host']
+                . (isset($parts['port']) ? ':' . $parts['port'] : '');
+
+        return $origin . '/webshop/api';
+    }
+
+    /**
+     * Les quatre derniers caractères d'un jeton, pour dire « c'est bien
+     * celui-là » sans l'écrire. Le jeton est un secret : il ne doit apparaître
+     * ni dans un log, ni dans une URL, ni dans le HTML d'une page laissée
+     * ouverte sur un comptoir.
+     */
+    public function tokenHint(?string $token): ?string
+    {
+        $token = trim((string)$token);
+
+        return $token === '' ? null : '…' . substr($token, -4);
     }
 }
