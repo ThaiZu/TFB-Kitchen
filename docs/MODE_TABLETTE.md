@@ -72,24 +72,28 @@ ne fait que choisir des entrées de menu.
 
 ### Pour passer à l'option 1 (ERP)
 
-Deux méthodes changent, rien d'autre — les règles ne connaissent pas le
-stockage :
+**Les tables et les deux endpoints sont spécifiés dans
+`docs/BACKEND_A_FAIRE.md` §8** — quatre tables préfixées `pwa_` (les modes, les
+entrées de menu, leur affectation, les réglages d'appareil) et
+`GET /devices/me/config` + `PATCH /devices/me/settings`.
 
-```php
-// core/Support/DeviceMode.php
-public static function current(): string        // ← lire $device->getMode()
-public static function remember(string $m): string  // ← PATCH /devices/me
-```
+Ce périmètre est plus large qu'un simple champ `mode` sur l'appareil, et
+volontairement : tant qu'à sortir la décision du code, autant en sortir aussi
+**l'affectation des menus**. Sinon il faut encore livrer une version de la PWA
+pour déplacer une entrée d'un mode à l'autre, et le réglage à distance n'aurait
+résolu que la moitié du problème.
 
-Côté ERP, le champ à ajouter :
+Côté PWA, trois points d'accroche, déjà isolés pour ça :
 
-| Champ | Type | Ce qu'il décide | Si absent |
-|---|---|---|---|
-| `mode` | `enum('gestion','production','webshop')` | les menus affichés par l'appareil | on retombe sur `production`, donc sur le comportement actuel |
+| Aujourd'hui | Demain |
+|---|---|
+| `DeviceMode::current()` — lit le cookie | lit `config.mode`, cookie en repli hors ligne |
+| `DeviceMode::remember()` — écrit le cookie | `PATCH /devices/me/settings`, cookie en cache |
+| `DeviceModeService::NAV` / `TABS` — constantes | `config.menu`, constantes en repli |
 
-Un `PATCH /devices/me { "mode": "webshop" }` suffirait, et rendrait le réglage
-pilotable à distance — c'est le seul avantage réel sur le cookie : survivre à un
-vidage du cache et se changer sans se déplacer.
+Les règles restent pures et `bin/mode-test.php` ne change pas : seule la source
+des données change. Le cookie ne disparaît pas — une tablette hors ligne doit
+encore afficher son menu, et c'est lui qui le sait.
 
 ---
 
