@@ -79,5 +79,8 @@
   "view_all": "View all",
   "view_profile": "My Profile",
   "view_profile_subtitle": "Check account data and supplier information.",
-  "webshop": "WebShop"
+  "webshop": "WebShop",
+  "ws_board": "Dashboard",
+  "ws_prep": "Preparation",
+  "ws_stock": "Today's stock"
 }

@@ -2,126 +2,102 @@
 
 {% block title %}{{ translations.webshop | default('WebShop') }}{% endblock %}
 
-{% block head %}
-<style>
-    /* Le back-office est une application entière : il lui faut la hauteur, pas
-       un encart. Le cadre prend tout ce qui reste entre la coque du haut et la barre du
-       bas. Sans cela, la page défile autour d'une iframe qui défile
-       elle-même — deux ascenseurs pour un seul contenu, et le doigt ne sait
-       jamais lequel il pousse.
+{% block head %}{% include "webshop/_styles.twig" %}{% endblock %}
 
-       La colonne porte la hauteur, le cadre l'absorbe : la ligne de secours
-       passe sur deux lignes en dessous de 420 px, et une constante fixe
-       laisserait alors 20 px de débordement. */
-    .ws-wrap {
-        display: flex; flex-direction: column; gap: 6px;
-        height: calc(100dvh - var(--app-tabbar-h, 72px) - 108px);
-        min-height: 440px;
-    }
-    .ws-frame {
-        flex: 1 1 auto; min-height: 0; width: 100%;
-        border: 1px solid var(--c-line, rgba(36,26,22,.09));
-        border-radius: var(--r-lg, 18px);
-        background: #fff;
-        display: block;
-    }
-
-    .ws-state { text-align: center; padding: 34px 22px; }
-    .ws-state h2 { font-size: 1.05rem; font-weight: 800; margin-bottom: 8px; }
-    .ws-state p  { color: var(--c-muted, #7a7168); font-size: .9rem; margin-bottom: 4px; }
-    .ws-state .ws-what {
-        display: inline-block; margin-top: 14px; padding: 8px 12px;
-        border-radius: 10px; background: var(--c-bg-2, #F4EFE8);
-        font-size: .82rem; color: var(--c-ink, #241f1c);
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-        word-break: break-all;
-    }
-
-    /* Le jeton n'a pas pu être vérifié : on le dit sans bloquer. Ambre et non
-       rouge — ce n'est pas un refus, c'est une incertitude. */
-    .ws-net {
-        display: flex; align-items: center; gap: 8px;
-        padding: 8px 12px; border-radius: 12px;
-        background: #FDF3E6; color: var(--c-ambre, #C17A2A);
-        font-size: .82rem; font-weight: 700; line-height: 1.35;
-    }
-    .ws-go {
-        display: inline-flex; align-items: center; justify-content: center;
-        min-height: 48px; margin-top: 18px; padding: 0 20px;
-        border-radius: 999px; border: 0; text-decoration: none;
-        background: var(--c-primary, #8D1D2C); color: #fff; font-weight: 700;
-    }
-</style>
+{% block page_heading %}
+    <div class="page-heading">
+        <h3>{{ translations.webshop | default('WebShop') }}</h3>
+        <p class="text-subtitle text-muted">
+            {%- if shop_name -%}
+                {{ shop_name }}{{ shop_city ? ' · ' ~ shop_city : '' }}
+            {%- else -%}
+                {{ translations.ws_subtitle | default('Commandes, stock et indicateurs de la boutique') }}
+            {%- endif -%}
+        </p>
+    </div>
 {% endblock %}
 
 {% block content %}
 
-{% if webshop_url %}
-    {# Vue intégrée plutôt que redirection : l'utilisateur ne quitte pas
-       l'application, garde la barre d'onglets et peut revenir aux paramètres
-       sans passer par l'historique du navigateur. #}
-    <div class="ws-wrap">
-        {% if token_state == 'network' %}
-            {# On n'a pas pu joindre le webshop pour vérifier le jeton. Ce n'est
-               pas « aucune donnée » : c'est le réseau, et on le nomme. #}
-            <p class="ws-net">
-                {{ translations.webshop_unchecked | default("Jeton non vérifié : le webshop est injoignable. Le cadre ci-dessous peut rester vide tant que le réseau ne revient pas.") }}
-            </p>
-        {% endif %}
-        <iframe class="ws-frame"
-                id="wsFrame"
-                src="{{ webshop_url }}"
-                title="{{ translations.webshop | default('WebShop') }}"
-                referrerpolicy="no-referrer"></iframe>
+{# ── Ce qui empêche d'afficher quoi que ce soit ──
+   Quatre causes, quatre réparations différentes. « Non configuré » les
+   confondrait toutes et enverrait chercher au mauvais endroit. #}
+{% if webshop_blocker %}
+    {% include "webshop/_blocked.twig" %}
 
-        {# Un serveur qui refuse l'affichage en cadre (X-Frame-Options,
-           frame-ancestors) laisse une zone blanche sans erreur : le navigateur
-           ne remonte rien au script. On ne peut ni le détecter à coup sûr, ni
-           le contourner d'ici — l'ajustement se fait sur le serveur du webshop.
-           En attendant, cette sortie évite que l'équipe reste devant du blanc. #}
-        <p class="text-center mb-0" style="font-size:.8rem;">
-            <a href="{{ webshop_url }}" target="_blank" rel="noopener"
-               style="color:var(--c-muted, #7a7168);">
-                {{ translations.webshop_open_blank | default("Le cadre reste blanc ? Ouvrir le back-office dans un onglet") }}
+{% else %}
+
+    {# Le réseau est tombé : on le dit, on ne prétend pas qu'il n'y a rien. #}
+    {% if net_down %}
+        <p class="ws-net">
+            {{ translations.ws_net_down | default("Le webshop est injoignable. Les données affichées ne sont pas à jour — c'est le réseau, pas le magasin.") }}
+        </p>
+    {% endif %}
+
+    {# ── Trois onglets, un par geste ──
+       La barre du bas les porte déjà. On les répète ici parce qu'une tablette
+       posée à plat se manipule autant par le haut que par le bas, et parce que
+       la pastille « à préparer » doit se voir depuis les trois écrans. #}
+    <nav class="ws-tabs" aria-label="{{ translations.webshop | default('WebShop') }}">
+        {% set tabs_def = [
+            { key: 'prep',  label: translations.ws_prep  | default('Préparation'),     n: todo_count | default(null) },
+            { key: 'stock', label: translations.ws_stock | default('Stock du jour'),   n: out_count  | default(null) },
+            { key: 'board', label: translations.ws_board | default('Tableau de bord'), n: null }
+        ] %}
+        {% for t in tabs_def %}
+            <a class="ws-tab {{ active_view == t.key ? 'is-active' : '' }}"
+               href="{{ ROOT }}/webshop?view={{ t.key }}"
+               {{ active_view == t.key ? 'aria-current="page"' : '' }}>
+                <b>{{ t.label }}</b>
+                {% if t.n %}<span class="ws-tab-n">{{ t.n }}</span>{% endif %}
+            </a>
+        {% endfor %}
+    </nav>
+
+    {# Une section non accordée à cette tablette : on le dit, et on dit à qui
+       le demander. C'est un réglage du franchisé, pas une panne. #}
+    {% if closed_section %}
+        <div class="card mt-3">
+            <div class="card-body ws-state">
+                <h2>{{ translations.ws_closed_title | default("Cet écran n'est pas ouvert à cette tablette") }}</h2>
+                <p>{{ translations.ws_closed | default('Votre franchisé peut l\'ouvrir depuis le back-office, dans Réglages › Tablette Kitchen.') }}</p>
+            </div>
+        </div>
+
+    {% elseif fetch_state == 'network' %}
+        <div class="card mt-3">
+            <div class="card-body ws-state">
+                <h2>{{ translations.ws_net_title | default('Le webshop ne répond pas') }}</h2>
+                {# « réseau », jamais « aucune donnée » : la différence décide si
+                   on réessaie ou si on appelle quelqu'un. #}
+                <p>{{ translations.ws_net_body | default("C'est un problème de réseau, pas une absence de commandes. Réessayez dans un instant.") }}</p>
+                <a class="ws-go" href="{{ ROOT }}/webshop?view={{ active_view }}">
+                    {{ translations.ws_retry | default('Réessayer') }}
+                </a>
+            </div>
+        </div>
+
+    {% elseif active_view == 'stock' %}
+        {% include "webshop/_stock.twig" %}
+    {% elseif active_view == 'board' %}
+        {% include "webshop/_board.twig" %}
+    {% else %}
+        {% include "webshop/_prep.twig" %}
+    {% endif %}
+
+    {# Le back-office complet, replié. Le comptoir a ses trois écrans ; le
+       responsable qui passe peut avoir besoin du reste, et n'a pas à repasser
+       par les réglages pour y accéder. #}
+    {% if full_bo_url %}
+        <p class="ws-full">
+            <a href="{{ full_bo_url }}" target="_blank" rel="noopener">
+                {{ translations.ws_full_bo | default('Ouvrir le back-office complet') }}
             </a>
         </p>
-    </div>
-{% else %}
-    <div class="card">
-        <div class="card-body ws-state">
-            <h2>
-                {% if webshop_blocker == 'revoked' %}
-                    {{ translations.webshop_revoked_title | default("Cette tablette n'est plus autorisée") }}
-                {% else %}
-                    {{ translations.webshop_not_configured | default("Le mode WebShop n'est pas configuré") }}
-                {% endif %}
-            </h2>
+    {% endif %}
 
-            {% if webshop_blocker == 'no_url' %}
-                <p>{{ translations.webshop_no_url | default("Aucune adresse de back-office n'est enregistrée sur cette tablette.") }}</p>
-            {% elseif webshop_blocker == 'bad_url' %}
-                <p>{{ translations.webshop_bad_url | default("L'adresse enregistrée n'est pas une adresse web (elle doit commencer par http:// ou https://).") }}</p>
-            {% elseif webshop_blocker == 'no_token' %}
-                <p>{{ translations.webshop_no_token | default("Aucun jeton d'appareil n'est enregistré sur cette tablette.") }}</p>
-            {% elseif webshop_blocker == 'bad_token' %}
-                <p>{{ translations.webshop_bad_token | default("Le jeton enregistré n'a pas la forme attendue — vérifiez qu'il a été collé en entier, sans espace.") }}</p>
-            {% elseif webshop_blocker == 'revoked' %}
-                {# Révoqué n'est pas « mal configuré » : quelqu'un a retiré
-                   l'accès de cette tablette, volontairement. Le dire évite de
-                   ressaisir dix fois un jeton qui ne remarchera pas. #}
-                <p>{{ translations.webshop_revoked | default("Le jeton de cette tablette a été révoqué depuis le back-office. Aucune donnée n'est affichée.") }}</p>
-                <p>{{ translations.webshop_revoked_fix | default('Demandez un nouveau jeton au franchisé, puis saisissez-le dans les paramètres.') }}</p>
-            {% endif %}
-
-            {% if webshop_blocker != 'revoked' %}
-                <p>{{ translations.webshop_where | default('Les deux réglages se trouvent dans le back-office, sous Réglages › Tablette Kitchen.') }}</p>
-            {% endif %}
-
-            <a class="ws-go" href="{{ ROOT }}/me">
-                {{ translations.webshop_go_settings | default('Ouvrir les paramètres') }}
-            </a>
-        </div>
-    </div>
 {% endif %}
 
 {% endblock %}
+
+{% block scripts %}{% if not webshop_blocker %}{% include "webshop/_scripts.twig" %}{% endif %}{% endblock %}

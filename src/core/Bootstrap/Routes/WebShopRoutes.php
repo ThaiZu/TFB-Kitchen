@@ -9,4 +9,9 @@ return function (RouteCollector $r) {
         'method'     => 'index',
     ]);
 
+    $r->addRoute('POST', '/ajax/webshop/order-status', [
+        'controller' => \App\Kitchen\app\Http\Controllers\WebShop\WebShopController::class,
+        'method'     => 'ajaxOrderStatus',
+    ]);
+
 };

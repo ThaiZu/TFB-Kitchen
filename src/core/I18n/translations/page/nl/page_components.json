@@ -79,5 +79,8 @@
   "view_all": "Alles bekijken",
   "view_profile": "Mijn profiel",
   "view_profile_subtitle": "Controleer accountgegevens en leveranciersinformatie.",
-  "webshop": "WebShop"
+  "webshop": "WebShop",
+  "ws_board": "Dashboard",
+  "ws_prep": "Voorbereiding",
+  "ws_stock": "Voorraad van vandaag"
 }

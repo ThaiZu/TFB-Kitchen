@@ -53,7 +53,7 @@ class DeviceModeService
     private const TABS = [
         self::MODE_PRODUCTION => ['dashboard', 'production', 'checklists', 'orders'],
         self::MODE_GESTION    => ['dashboard', 'checklists', 'knowledge', 'complaints'],
-        self::MODE_WEBSHOP    => ['webshop'],
+        self::MODE_WEBSHOP    => ['ws_prep', 'ws_stock', 'ws_board'],
     ];
 
     /** @return string[] */

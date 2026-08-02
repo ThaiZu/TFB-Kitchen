@@ -18,7 +18,7 @@
     p starts with '/orders'     ? 'orders'     :
     p starts with '/knowledge'  ? 'knowledge'  :
     p starts with '/complaints' ? 'complaints' :
-    p starts with '/webshop'    ? 'webshop'    :
+    p starts with '/webshop'    ? ('ws_' ~ (current_view | default('prep'))) :
     p starts with '/me'         ? 'me'         : '' %}
 <!DOCTYPE html>
 <html lang="{{ lang_code ?? 'fr' }}">
@@ -142,7 +142,10 @@
     'orders':     { href: ROOT ~ '/orders',     icon: 'receipt',         label: translations.nav_orders     ?? 'Commandes' },
     'knowledge':  { href: ROOT ~ '/knowledge',  icon: 'notebook',        label: translations.knowledge      ?? 'Connaissances' },
     'complaints': { href: ROOT ~ '/complaints', icon: 'circle-alert',    label: translations.complaints     ?? 'Réclamations' },
-    'webshop':    { href: ROOT ~ '/webshop',    icon: 'store',           label: translations.webshop        ?? 'WebShop' }
+    'webshop':    { href: ROOT ~ '/webshop',    icon: 'store',           label: translations.webshop        ?? 'WebShop' },
+    'ws_prep':    { href: ROOT ~ '/webshop?view=prep',  icon: 'clipboard-check', label: translations.ws_prep  ?? 'Préparation' },
+    'ws_stock':   { href: ROOT ~ '/webshop?view=stock', icon: 'store',           label: translations.ws_stock ?? 'Stock du jour' },
+    'ws_board':   { href: ROOT ~ '/webshop?view=board', icon: 'home',            label: translations.ws_board ?? 'Tableau de bord' }
 } %}
 <nav class="app-tabbar-bar" aria-label="{{ translations.menu ?? 'Navigation' }}">
     {% for key in tab_keys | default(['dashboard', 'production', 'checklists', 'orders']) %}

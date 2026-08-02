@@ -106,6 +106,10 @@ class Controller
             'nav_keys'    => $rules->navKeys($mode),
             'tab_keys'    => $rules->tabKeys($mode),
             'mode_home'   => $rules->home($mode),
+            // La vue courante d'un module à onglets internes : la barre du bas
+            // en a besoin pour savoir lequel de ses trois onglets est actif,
+            // tous trois pointant sur le même chemin.
+            'current_view' => $_GET['view'] ?? '',
             // Le menu doit savoir si l'entrée WebShop mène quelque part avant
             // de l'afficher : une entrée qui ouvre une page d'erreur est une
             // entrée morte, et le brief n'en veut aucune.
