@@ -951,12 +951,26 @@
     {% endif %}
 
     {% if active_view == 'planning' %}
-        {# Le panneau d'ordres est le fil de l'atelier : il n'a de sens que là.
-           Sur la MEP ou le stock, il proposerait un geste sans rapport avec
-           l'écran ouvert. Ailleurs, c'est la bande de flux qui oriente. #}
-        {% include "baking/_next.twig" %}
-        {% include "baking/_gantt.twig" %}
-        {% include "baking/_cards.twig" %}
+        {# Mode service. Une fournée = une ligne, trois états, un geste au même
+           endroit — on exécute, on ne consulte pas.
+
+           _next.twig reste inclus, sans son panneau d'ordres : il porte la
+           feuille de validation (#bkAssign) et la bande de réserve
+           (#bkReserve), et c'est cette feuille qui, sur la dernière étape,
+           enchaîne sur la mise en magasin — le seul geste qui crédite le stock
+           vendable. Le panneau, lui, ne ferait que répéter la première ligne
+           du fil. #}
+        {% include "baking/_next.twig" with { hide_orders: true } %}
+        {% include "baking/_fil.twig" %}
+
+        {# Le plan de charge répond à « comment tient la journée », pas à « je
+           fais quoi maintenant ». Il reste d'un tap, replié : le supprimer
+           coûterait la seule vue où l'on voit deux fournées se chevaucher sur
+           un four. #}
+        <details class="pr-fold bk-later">
+            <summary>{{ translations.fil_see_plan | default('Voir le plan de la journée') }}</summary>
+            {% include "baking/_gantt.twig" %}
+        </details>
     {% elseif active_view == 'stock' %}
         {% set p1_label = horizons.p1.key ? (translations['period_' ~ horizons.p1.key] | default(horizons.p1.key)) : '' %}
         {% set p2_label = horizons.p2.key ? (translations['period_' ~ horizons.p2.key] | default(horizons.p2.key)) : '' %}

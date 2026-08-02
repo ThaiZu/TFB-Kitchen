@@ -32,7 +32,10 @@
     <div id="bkReserveList"></div>
 </div>
 
-{% if orders is not empty %}
+{# En mode service, le fil de production dit déjà où en est chaque fournée, et
+   ce panneau ne ferait que répéter sa première ligne. La feuille de validation,
+   elle, reste montée : c'est elle qui enchaîne sur la mise en magasin. #}
+{% if orders is not empty and not (hide_orders | default(false)) %}
     {% set lead = orders|first %}
 
     <div class="card mt-3">

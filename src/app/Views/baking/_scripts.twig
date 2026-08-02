@@ -129,7 +129,7 @@
         });
 
         var want = chip.dataset.oven || '';
-        document.querySelectorAll('.bk-row[data-oven], .bk-card[data-oven], .bk-order[data-oven]')
+        document.querySelectorAll('.bk-row[data-oven], .bk-card[data-oven], .f-row[data-oven], .bk-order[data-oven]')
             .forEach(function (el) {
                 el.hidden = !!want && el.dataset.oven !== want;
             });
@@ -428,9 +428,10 @@
     }
 
     // Arrivée depuis une tuile de Production : on amène la fournée visée sous
-    // les yeux. On vise la carte, pas la ligne de frise — c'est la carte qui
-    // porte le bouton d'action, et c'est donc elle qu'on est venu chercher.
-    var focused = document.querySelector('.bk-card.is-focus');
+    // les yeux. On vise ce qui porte le bouton d'action — la ligne du fil en
+    // mode service, la carte ailleurs —, pas la ligne de frise : c'est le
+    // geste qu'on est venu chercher, pas l'horaire.
+    var focused = document.querySelector('.f-row.is-focus, .bk-card.is-focus');
     if (focused) {
         var centre = function () {
             var r = focused.getBoundingClientRect();
