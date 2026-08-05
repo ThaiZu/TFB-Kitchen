@@ -46,5 +46,7 @@
     "shift_signing": "signe les tâches de cette checklist",
     "shift_change": "Changer",
     "no_employees": "Aucun employé disponible.",
-    "schedule_not_served": "L'API ne dit pas encore qui est de service : toute l'équipe est proposée."
+    "schedule_not_served": "L'API ne dit pas encore qui est de service : toute l'équipe est proposée.",
+    "filter_title": "Date et checklist",
+    "filter_auto": "choisie selon l'heure"
 }

@@ -309,12 +309,46 @@ une commande. Deux corrections :
 
 Les sept suites de tests restent vertes : **231 assertions**.
 
+### Fait aussi, et vérifié au navigateur
+
+| # | Correction | Vérification |
+|---|---|---|
+| 8 | Plancher tactile de 44 px : rail des périodes, pastilles de filtre, boutons, champs, onglets du bas, logo, dépliants, commutateurs | **0 cible sous 44 px** sur les onze écrans mesurés (contre 6 à 25) |
+| 9 | Six bibliothèques sorties de la coque ; Choices, SweetAlert et modules.js déclarés par les deux écrans de commande | 31 → **14 requêtes**, 934 → **662 Ko** par page |
+| 10 | Checklist du moment présélectionnée, filtres repliés en bandeau | premier bouton « Effectuer » à **537 px** au lieu de 1 045 px |
+| 11 | Manifeste, icônes, service worker, page hors ligne | worker **actif**, 11 fichiers en cache, page « Pas de réseau » servie serveur arrêté |
+
+#### Ce que le service worker fait, et ce qu'il refuse de faire
+
+Il met en cache **les fichiers, jamais les données**. Aucune page HTML, aucun
+appel `/ajax/` ne passe par un cache : réseau d'abord, toujours. C'est la même
+règle que le reste de l'application — une tablette de cuisine ne doit jamais
+afficher un stock d'hier comme s'il était d'aujourd'hui. Le gain est donc de la
+vitesse et de l'installation, pas de l'autonomie.
+
+Vérifié en arrêtant réellement le serveur : la navigation affiche la page
+« Pas de réseau », et un appel `/ajax/` échoue franchement plutôt que de servir
+une valeur périmée.
+
+> **Prérequis non rempli aujourd'hui.** Le service worker et « Ajouter à
+> l'écran d'accueil » exigent un contexte sécurisé. Le site est servi en
+> `http://185.180.206.46/kitchen`, en clair sur une adresse IP : le navigateur
+> lit le manifeste mais refuse d'enregistrer le worker, et n'offre pas
+> l'installation. **Tout le code est en place et s'activera de lui-même le jour
+> où le site passe en HTTPS** — rien à changer alors, ni dans les gabarits, ni
+> dans le `.htaccess`. C'est une décision d'hébergement, pas de code.
+
+Trois défauts trouvés en chemin ont été réparés au passage : `favicon.svg`,
+référencé sur chaque page, n'existait pas ; le bouchon d'API renvoyait
+« Ouverture du magasin » quelle que soit la checklist demandée, ce qui faisait
+lire une contradiction à l'écran ; et un `background` en raccourci aurait annulé
+le `background-clip` des commutateurs agrandis.
+
 ### À faire
 
 | # | Correction | Gain | Effort |
 |---|---|---|---|
-| 8 | Cibles tactiles à 44 px (rail à 19 px, chips, boutons) | usage à la tablette | 1 h |
-| 9 | Charger filepond/cropper/choices par page | −250 Ko par navigation | 1 h |
-| 10 | Checklist due présélectionnée, filtres repliés | le geste du jour au premier écran | 2 h |
-| 11 | Manifeste + service worker | l'app s'installe et survit au réseau | 1 j |
 | 12 | Écran des sous-recettes (le contrôleur et le service attendent, le gabarit est vide) | la carte peut revenir | 0,5 j |
+| 13 | Servir le site en HTTPS | l'application devient installable, le worker s'active | hébergement |
+| 14 | Découper `ProductionController` (900 lignes, cinq vues) | lisibilité | 0,5 j |
+| 15 | Scanner les attributs `#[Route]` ou les supprimer | plus de double tenue de livres | 2 h |

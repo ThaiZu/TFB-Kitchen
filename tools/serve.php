@@ -42,6 +42,9 @@ if ($path !== '/' && is_file($file)) {
         'gif' => 'image/gif', 'webp' => 'image/webp', 'ico' => 'image/x-icon',
         'woff' => 'font/woff', 'woff2' => 'font/woff2', 'ttf' => 'font/ttf', 'otf' => 'font/otf',
         'map' => 'application/json',
+        // Le manifeste doit arriver en application/manifest+json, sinon le
+        // navigateur l'ignore et l'application ne s'installe pas.
+        'webmanifest' => 'application/manifest+json',
     ];
     $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
     header('Content-Type: ' . ($types[$ext] ?? 'application/octet-stream'));

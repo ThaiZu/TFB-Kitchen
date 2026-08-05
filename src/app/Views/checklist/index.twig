@@ -19,6 +19,32 @@
 
     .checklist-section { margin-bottom: 2rem; }
 
+    /* ── Les filtres, repliés ── */
+    .cl-filters { border: 0; }
+    .cl-filters-sum {
+        display: flex; align-items: center; gap: 12px;
+        min-height: 56px; padding: 8px 14px;
+        border: 1px solid var(--c-line, rgba(36,26,22,.09));
+        border-radius: var(--r-md, 13px);
+        background: var(--c-surface, #fff);
+        cursor: pointer; list-style: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .cl-filters-sum::-webkit-details-marker { display: none; }
+    .cl-filters-ic {
+        flex: 0 0 auto; width: 34px; height: 34px; border-radius: var(--r-md, 13px);
+        display: inline-flex; align-items: center; justify-content: center;
+        background: var(--c-bg-2, #F4EFE8); color: var(--c-muted, #7a7168);
+    }
+    .cl-filters-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+    .cl-filters-txt b { font-size: .9rem; font-weight: 700; color: var(--c-ink, #241f1c); }
+    .cl-filters-txt small {
+        font-size: .76rem; color: var(--c-muted, #7a7168);
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .cl-filters-chev { flex: 0 0 auto; color: var(--c-muted, #7a7168); transition: transform .15s ease; }
+    .cl-filters[open] .cl-filters-chev { transform: rotate(180deg); }
+
     /* ── Choix de la checklist : tuiles, deux par ligne ── */
     .cl-pick-set { border: 0; padding: 0; margin: 1rem 0 0; min-width: 0; }
     .cl-pick-set > legend { float: none; width: auto; font-size: .82rem; margin-bottom: .5rem; }
@@ -258,10 +284,28 @@
 
 {% block content %}
 
-    {# ── Panel filtrów ── #}
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
+    {# ── Panel filtrów ──
+       Ce bloc occupait la totalité du premier écran : date, bouton, bandeau
+       « toutes », puis trois tuiles. Le premier bouton « Exécuter » tombait
+       vers 1 045 px, sous la ligne de flottaison d'une tablette de 768 px —
+       alors que l'écran n'a qu'un usage, enchaîner les tâches du moment.
+
+       Il se replie donc dès qu'une checklist est ouverte, et reste déplié quand
+       on regarde l'ensemble. Le résumé du <summary> dit ce qui est filtré, pour
+       qu'on n'ait pas à déplier pour le savoir. #}
+    <details class="cl-filters mb-4" {{ selected_checklist_id ? '' : 'open' }}>
+        <summary class="cl-filters-sum">
+            <span class="cl-filters-ic" aria-hidden="true"><i class="bi bi-funnel"></i></span>
+            <span class="cl-filters-txt">
+                <b>{{ translations.filter_title | default('Date et checklist') }}</b>
+                <small>
+                    {{ selected_date }}{% if focused_name %} · {{ focused_name }}{% endif %}
+                    {%- if auto_focus %} · {{ translations.filter_auto | default('choisie selon l\'heure') }}{% endif -%}
+                </small>
+            </span>
+            <span class="cl-filters-chev" aria-hidden="true"><i class="bi bi-chevron-down"></i></span>
+        </summary>
+        <div class="card mt-2">
                 <div class="card-body">
                     <form method="GET" action="{{ ROOT }}/checklists" id="filterForm">
                         <div class="row g-3 align-items-end">
@@ -337,9 +381,8 @@
                         </fieldset>
                     </form>
                 </div>
-            </div>
         </div>
-    </div>
+    </details>
 
     {# ── Wyniki ── #}
     {% if progress is not null and progress.checklist is defined %}

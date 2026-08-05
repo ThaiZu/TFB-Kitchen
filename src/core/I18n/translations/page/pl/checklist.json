@@ -46,5 +46,7 @@
     "shift_signing": "podpisuje zadania tej checklisty",
     "shift_change": "Zmień",
     "no_employees": "Brak dostępnych pracowników.",
-    "schedule_not_served": "API nie podaje jeszcze, kto jest na zmianie: pokazujemy cały zespół."
+    "schedule_not_served": "API nie podaje jeszcze, kto jest na zmianie: pokazujemy cały zespół.",
+    "filter_title": "Data i checklista",
+    "filter_auto": "wybrana według godziny"
 }

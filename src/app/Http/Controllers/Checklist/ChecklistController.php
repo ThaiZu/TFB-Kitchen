@@ -3,13 +3,15 @@
 namespace App\Kitchen\app\Http\Controllers\Checklist;
 
 use App\Kitchen\app\Http\Controllers\Controller;
+use App\Kitchen\app\Services\Checklist\ChecklistFocusService;
 use App\Kitchen\app\Services\Checklist\ChecklistService;
 use App\Kitchen\core\Support\ShiftSession;
 
 class ChecklistController extends Controller
 {
     public function __construct(
-        private ChecklistService $checklistService
+        private ChecklistService $checklistService,
+        private ChecklistFocusService $focus
     ) {}
 
     /**
@@ -31,6 +33,21 @@ class ChecklistController extends Controller
             null,
             []
         );
+
+        // ── Ouvrir la checklist du moment, plutôt que de la demander ──
+        // Le paramètre ABSENT et le paramètre VIDE ne veulent pas dire la même
+        // chose : absent, c'est une arrivée sur l'écran, et on peut décider
+        // pour l'équipe ; vide, c'est « — toutes — » choisi à la main, et on ne
+        // repasse pas par-dessus. La règle ne vaut qu'aujourd'hui : sur une
+        // date passée on vient relire, pas exécuter.
+        $autoFocus = false;
+        if (!array_key_exists('checklist_id', $_GET) && $date === date('Y-m-d') && $checklists) {
+            $picked = $this->focus->pick($checklists, date('H:i'));
+            if ($picked !== null) {
+                $checklistId = $picked;
+                $autoFocus   = true;
+            }
+        }
 
         $progress = null;
         if ($checklistId && !empty($checklists)) {
@@ -61,11 +78,33 @@ class ChecklistController extends Controller
             ] : null,
             'selected_date'         => $date,
             'selected_checklist_id' => $checklistId,
+            // La vue s'en sert pour deux choses : replier les filtres, et dire
+            // que c'est elle qui a choisi. Une sélection qu'on n'a pas faite et
+            // qu'on ne voit pas expliquée passe pour un bug.
+            'auto_focus'            => $autoFocus,
+            // Le nom de la checklist retenue, pour que le bandeau replié dise
+            // ce qu'il cache.
+            'focused_name'          => $this->nameOf($checklists, $checklistId),
             'checklists'            => $checklists,
             'progress'              => $progress,
             'today'                 => date('Y-m-d'),
             'employees'             => $employees,
         ]);
+    }
+
+    /** Le nom d'une checklist par son identifiant, ou null. */
+    private function nameOf(array $checklists, ?int $id): ?string
+    {
+        if (!$id) {
+            return null;
+        }
+        foreach ($checklists as $c) {
+            if (is_array($c) && (int)($c['id'] ?? 0) === $id) {
+                return (string)($c['name'] ?? '') ?: null;
+            }
+        }
+
+        return null;
     }
 
     /**

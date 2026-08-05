@@ -46,5 +46,7 @@
     "shift_signing": "firma le attività di questa checklist",
     "shift_change": "Cambiare",
     "no_employees": "Nessun dipendente disponibile.",
-    "schedule_not_served": "L'API non indica ancora chi è di turno: viene proposta tutta la squadra."
+    "schedule_not_served": "L'API non indica ancora chi è di turno: viene proposta tutta la squadra.",
+    "filter_title": "Data e checklist",
+    "filter_auto": "scelta in base all'ora"
 }

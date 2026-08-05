@@ -365,24 +365,54 @@ function mock_checklists(): array
 
 function mock_checklist_progress(int $id): array
 {
-    $tasks = [
-        ['task_id' => 101, 'name' => 'Relevé température chambre froide', 'status' => 'DONE',
-         'completed_by' => 'Nathan Colin', 'completed_at' => date('Y-m-d') . ' 06:12:00',
-         'is_mandatory' => true, 'requires_photo' => true, 'execution_time' => '06:00:00', 'note' => '3 °C — conforme'],
-        ['task_id' => 102, 'name' => 'Nettoyage du plan de travail', 'status' => 'PENDING',
-         'is_mandatory' => false, 'requires_photo' => false, 'execution_time' => '06:15:00'],
-        ['task_id' => 103, 'name' => 'Contrôle des DLC en vitrine', 'status' => 'PENDING',
-         'is_mandatory' => true, 'requires_photo' => false, 'execution_time' => '06:30:00'],
-        ['task_id' => 104, 'name' => 'Lavage du sol du laboratoire', 'status' => 'PENDING',
-         'is_mandatory' => false, 'requires_photo' => false, 'execution_time' => '06:45:00'],
-        ['task_id' => 105, 'name' => 'Relevé température four', 'status' => 'PENDING',
-         'is_mandatory' => true, 'requires_photo' => false, 'execution_time' => '07:00:00'],
+    // Le bouchon renvoyait « Ouverture du magasin » quelle que soit la
+    // checklist demandée. Une vérification d'écran y lisait alors un titre qui
+    // contredisait la sélection, et faisait chercher un bug dans le contrôleur.
+    $par_liste = [
+        1 => ['Ouverture du magasin', '06:00:00', [
+            ['Relevé température chambre froide', 'DONE',    '06:00:00', true,  true],
+            ['Nettoyage du plan de travail',      'PENDING', '06:15:00', false, false],
+            ['Contrôle des DLC en vitrine',       'PENDING', '06:30:00', true,  false],
+            ['Lavage du sol du laboratoire',      'PENDING', '06:45:00', false, false],
+            ['Relevé température four',           'PENDING', '07:00:00', true,  false],
+        ]],
+        2 => ['Contrôles HACCP', '11:00:00', [
+            ['Températures des vitrines réfrigérées', 'PENDING', '11:00:00', true,  true],
+            ['Traçabilité des lots du jour',          'PENDING', '11:15:00', true,  false],
+            ['Contrôle des huiles de friture',        'PENDING', '11:30:00', false, false],
+        ]],
+        3 => ['Fermeture', '19:00:00', [
+            ['Nettoyage des vitrines',        'PENDING', '19:00:00', true,  false],
+            ['Invendus : pesée et sortie',    'PENDING', '19:15:00', true,  true],
+            ['Nettoyage du four',             'PENDING', '19:30:00', false, false],
+            ['Fermeture de caisse',           'PENDING', '19:45:00', true,  false],
+        ]],
     ];
+
+    [$nom, $heure, $lignes] = $par_liste[$id] ?? $par_liste[1];
+
+    $tasks = [];
+    foreach ($lignes as $i => [$name, $status, $time, $mandatory, $photo]) {
+        $t = [
+            'task_id'        => $id * 100 + $i + 1,
+            'name'           => $name,
+            'status'         => $status,
+            'is_mandatory'   => $mandatory,
+            'requires_photo' => $photo,
+            'execution_time' => $time,
+        ];
+        if ($status === 'DONE') {
+            $t['completed_by'] = 'Nathan Colin';
+            $t['completed_at'] = date('Y-m-d') . ' 06:12:00';
+            $t['note']         = '3 °C — conforme';
+        }
+        $tasks[] = $t;
+    }
 
     $done = count(array_filter($tasks, fn($t) => $t['status'] === 'DONE'));
 
     return [
-        'checklist' => ['id' => $id, 'name' => 'Ouverture du magasin', 'execution_time' => '06:00:00'],
+        'checklist' => ['id' => $id, 'name' => $nom, 'execution_time' => $heure],
         'summary'   => ['total' => count($tasks), 'done' => $done, 'not_done' => count($tasks) - $done],
         'tasks'     => $tasks,
     ];

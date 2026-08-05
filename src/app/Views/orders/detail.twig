@@ -5,6 +5,13 @@
     {% if order.getPoHash() %} – #{{ order.getPoHash() }}{% endif %}
 {% endblock %}
 
+{# window.api (modules.js) porte le changement de statut d'une commande, et
+   s'appuie sur SweetAlert pour annoncer un échec. Voir layouts/base.twig. #}
+{% block vendor_scripts %}
+    <script src="{{ ROOT }}/assets/vendors/sweetalert2/sweetalert2.all.min.js"></script>
+    <script type="module" src="{{ ROOT }}/assets/js/modules.js"></script>
+{% endblock %}
+
 {% block head %}
 <style>
     .order-status-badge {

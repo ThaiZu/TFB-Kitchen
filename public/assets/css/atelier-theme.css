@@ -56,13 +56,20 @@ a:hover { color:var(--c-primary-hover); }
 .min-w-0 { min-width:0 !important; }
 
 /* ---- Buttons ------------------------------------------------------------ */
+/* Plancher tactile : 44 px.
+   Cette application se manipule debout, au doigt, souvent ganté ou fariné.
+   Les boutons Bootstrap tombaient à 31 px en .btn-sm et 38 px en taille
+   normale. On ne renonce pas au bouton discret — .btn-sm reste plus étroit et
+   plus léger typographiquement — mais on cesse de le rendre plus dur à viser :
+   la hiérarchie se tient par la largeur et la couleur, pas par la hauteur. */
 .btn {
+  min-height:44px; display:inline-flex; align-items:center; justify-content:center; gap:.4em;
   border-radius:var(--r-sm); font-weight:600; letter-spacing:.01em; padding-inline:16px;
   transition:transform .12s var(--ease), box-shadow .18s var(--ease),
              background-color .18s var(--ease), border-color .18s var(--ease), color .18s var(--ease);
 }
 .btn:active { transform:translateY(1px); }
-.btn-sm { padding-inline:12px; }
+.btn-sm { min-height:44px; padding-inline:12px; }
 
 .btn.btn-primary {
   background-color:var(--c-primary); border-color:var(--c-primary); color:#fff;
@@ -120,9 +127,15 @@ a:hover { color:var(--c-primary-hover); }
 .btn-link:hover { color:var(--c-primary-hover); }
 
 /* ---- Forms -------------------------------------------------------------- */
+/* Même plancher pour les champs : un sélecteur de date à 38 px se manque, et
+   la date est le premier geste de l'écran Checklists. */
 .form-control,.form-select,.choices__inner {
+  min-height:44px;
   border-radius:var(--r-sm); border-color:var(--c-line-2); color:var(--c-ink); font-family:var(--font-ui);
 }
+/* Une zone de texte garde sa hauteur propre : le plancher ne vaut que comme
+   minimum, pas comme contrainte de mise en page. */
+textarea.form-control { min-height:88px; }
 .form-control:focus,.form-select:focus,.choices.is-focused .choices__inner {
   border-color:var(--c-secondary); box-shadow:0 0 0 .22rem rgba(141,29,44,.14);
 }
@@ -217,7 +230,10 @@ a .card:active,.card.is-tappable:active { transform:scale(.985); }
 /* Marque : lettrage L'Atelier + nom du module, séparés d'un filet. Le
    lettrage est commun à tous les modules de l'écosystème ; le mot qui suit
    dit lequel on regarde. */
-.app-brand { display: inline-flex; align-items: center; gap: 9px; text-decoration: none; min-width: 0; }
+/* Le logo est un lien — il ramène à l'accueil du mode — et il ne faisait que
+   la hauteur de son image. On lui donne la hauteur du doigt sans rien déplacer :
+   la barre le centre déjà verticalement. */
+.app-brand { display: inline-flex; align-items: center; gap: 9px; text-decoration: none; min-width: 0; min-height: 44px; }
 .app-brand-logo { height: 21px; width: auto; display: block; flex-shrink: 0; }
 .app-brand-module {
   font-family: var(--font-display); font-size: .95rem; line-height: 1; color: var(--c-primary);
@@ -255,8 +271,14 @@ a .card:active,.card.is-tappable:active { transform:scale(.985); }
   background: rgba(255,255,255,.94); backdrop-filter: blur(14px);
   border-top: 1px solid var(--c-line);
 }
+/* La barre mesure 72 px, mais chaque onglet ne faisait que 39 px de haut : le
+   contenu (icône + libellé) ne remplissait pas sa colonne, et les 33 px
+   restants n'étaient sensibles nulle part. On centre le contenu sur toute la
+   hauteur — l'aspect ne change pas, la cible passe à 44 px, et c'est la
+   navigation la plus utilisée de l'application. */
 .app-tab {
-  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  min-height: 44px;
   color: #a89e93; font-size: 10.5px; font-weight: 600; text-decoration: none;
   transition: color .15s var(--ease); -webkit-tap-highlight-color: transparent;
 }

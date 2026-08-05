@@ -9,6 +9,26 @@
     }}
 {% endblock %}
 
+{# ── Les bibliothèques de CET écran ──
+   Choices.js habille les deux sélecteurs (client, produit) ; window.api, fourni
+   par modules.js, porte les appels d'écriture, et s'appuie sur SweetAlert pour
+   annoncer un échec. Les trois étaient chargées sur les vingt-deux écrans de
+   l'application ; elles ne servent qu'ici et sur le détail d'une commande. #}
+{% block vendor_head %}
+    <link rel="stylesheet" href="{{ ROOT }}/assets/vendors/choices.js/choices.min.css">
+    <style>
+        /* Une sélection multiple ne doit pas être plafonnée en hauteur : on
+           choisit parfois quinze produits. */
+        .choices__list--multiple { max-height: none; }
+    </style>
+{% endblock %}
+
+{% block vendor_scripts %}
+    <script src="{{ ROOT }}/assets/vendors/sweetalert2/sweetalert2.all.min.js"></script>
+    <script src="{{ ROOT }}/assets/vendors/choices.js/choices.min.js"></script>
+    <script type="module" src="{{ ROOT }}/assets/js/modules.js"></script>
+{% endblock %}
+
 {% block head %}
 <style>
     /* Cet écran datait d'avant le design system : dégradé bleu nuit en tête de

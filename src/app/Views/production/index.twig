@@ -46,7 +46,7 @@
         color: var(--c-muted, #7a7168); margin-right: 2px;
     }
     .pr-sectors .cat-chip {
-        display: inline-flex; align-items: center; min-height: 40px;
+        display: inline-flex; align-items: center; min-height: 44px;
         text-decoration: none; line-height: 1;
     }
     .pr-sectors .cat-chip.is-on {
@@ -91,10 +91,18 @@
         display: flex; align-items: center; gap: 6px;
         margin: 12px 2px 0; font-size: .72rem; color: var(--c-muted, #7a7168);
     }
+    /* Le rail est un repère, mais c'est AUSSI le raccourci qui change d'écran
+       plusieurs fois par service. Il mesurait 19 px de haut — la hauteur de sa
+       pastille — c'est-à-dire moins de la moitié du minimum tactile, dans une
+       cuisine où les doigts sont farinés. On garde exactement la même densité
+       visuelle et on étend la zone sensible sous le texte : la marge négative
+       annule la place que la hauteur prendrait, si bien que rien ne bouge à
+       l'écran et que la cible passe à 44 px. */
     .pr-rail-i {
         display: inline-flex; align-items: center; gap: 5px; flex: 0 0 auto;
         text-decoration: none; color: inherit;
         -webkit-tap-highlight-color: transparent;
+        min-height: 44px; margin-block: -12px;
     }
     .pr-rail-i b {
         width: 19px; height: 19px; border-radius: 50%; flex: 0 0 auto;
@@ -119,6 +127,7 @@
        arriverait sans savoir comment en sortir. */
     .pr-back {
         display: inline-flex; align-items: center; gap: 5px;
+        min-height: 44px;
         margin-top: 14px; padding: 8px 13px 8px 9px;
         border: 1px solid var(--c-line-2, rgba(36,26,22,.14));
         border-radius: 999px; background: #fff;
@@ -159,6 +168,9 @@
     .pr-fold > summary, .bk-later > summary {
         cursor: pointer; list-style: none;
         display: flex; align-items: center; gap: 8px;
+        /* Un dépliant est un bouton : il mesurait la hauteur de son libellé,
+           soit 21 px. La zone sensible descend à 44 px sans écarter le texte. */
+        min-height: 44px;
     }
     .pr-fold > summary::-webkit-details-marker,
     .bk-later > summary::-webkit-details-marker { display: none; }
@@ -324,8 +336,10 @@
         padding: 2px 2px 8px; margin: 0 -2px 4px;
     }
     .cat-filters::-webkit-scrollbar { display: none; }
+    /* 44 px : le minimum tactile. Ces pastilles filtrent le stock et les
+       besoins plusieurs fois par service, avec des mains farinées. */
     .cat-chip {
-        flex: 0 0 auto; min-height: 38px; padding: 0 15px;
+        flex: 0 0 auto; min-height: 44px; padding: 0 15px;
         border: 1px solid var(--c-line-2, rgba(36,26,22,.14));
         border-radius: 999px; background: #fff;
         color: var(--c-muted, #7a7168);
@@ -505,8 +519,12 @@
        pastilles, un cran plus discrètes, pour qu'on voie tout de suite laquelle
        porte la question principale. */
     .cat-filters-2 { margin-top: -2px; }
+    /* La seconde rangée reste visuellement secondaire — police plus petite,
+       gris plus clair — mais pas plus petite au doigt : 34 px se rataient une
+       fois sur trois. La hiérarchie se tient par la couleur, pas par la
+       hauteur de la cible. */
     .cat-filters-2 .cat-chip {
-        min-height: 34px; padding: 0 13px; font-size: .78rem; font-weight: 600;
+        min-height: 44px; padding: 0 13px; font-size: .78rem; font-weight: 600;
         color: var(--c-muted, #7a7168);
     }
     .cat-filters-2 .cat-chip.is-on {

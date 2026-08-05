@@ -46,5 +46,7 @@
     "shift_signing": "is signing this checklist's tasks",
     "shift_change": "Change",
     "no_employees": "No employee available.",
-    "schedule_not_served": "The API does not say yet who is on shift: the whole team is listed."
+    "schedule_not_served": "The API does not say yet who is on shift: the whole team is listed.",
+    "filter_title": "Date and checklist",
+    "filter_auto": "picked from the time of day"
 }

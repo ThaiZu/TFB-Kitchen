@@ -46,5 +46,7 @@
     "shift_signing": "tekent de taken van deze checklist",
     "shift_change": "Wijzigen",
     "no_employees": "Geen medewerker beschikbaar.",
-    "schedule_not_served": "De API zegt nog niet wie dienst heeft: het hele team wordt getoond."
+    "schedule_not_served": "De API zegt nog niet wie dienst heeft: het hele team wordt getoond.",
+    "filter_title": "Datum en checklist",
+    "filter_auto": "gekozen op basis van het tijdstip"
 }

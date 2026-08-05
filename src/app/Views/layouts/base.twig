@@ -41,31 +41,54 @@
        hébergée en local par atelier-theme.css, qui recouvre le
        « body { font-family: Nunito } » de bootstrap.css. On payait treize
        secondes pour une police invisible. Ne pas la réintroduire. #}
+    {# ── Ce qui est ici sert sur TOUTES les pages ──
+       Le reste descend dans les écrans qui l'emploient, via le bloc
+       « vendor_head » plus bas. Cette coque chargeait quinze feuilles de style
+       et sept scripts sur chaque page, dont la plupart n'étaient utilisés
+       nulle part : 934 Ko et 31 requêtes pour afficher quatre chiffres, sur
+       une tablette en wifi de magasin et sans cache applicatif.
+
+       Ce qui a été retiré, et pourquoi — vérifié fichier par fichier :
+         • perfect-scrollbar (CSS + JS) : n'est appelé que par assets/js/main.js,
+           qui n'était chargé nulle part ;
+         • dripicons (webfont.css + pages/dripicons.css) : aucune vue n'utilise
+           ces icônes, elles viennent du gabarit Mazer d'origine ;
+         • filepond ×3 : le CSS était chargé, jamais le JS, et aucun écran
+           n'instancie FilePond — les pièces jointes des réclamations passent
+           par un champ fichier natif ;
+         • cropper (CSS + JS) : aucune vue n'appelle Cropper ;
+         • functions.js : ses neuf fonctions (getJSON, sortTable, filterTable…)
+           ne sont référencées par aucune vue ;
+         • choices.js, sweetalert2 et modules.js : employés par les deux écrans
+           de commande seulement, ils y sont déclarés désormais.
+
+       Ce qui reste : Bootstrap (grille, modales, offcanvas), bootstrap-icons
+       (utilisé par quinze gabarits), et les trois feuilles maison. #}
     <link rel="stylesheet" href="{{ ROOT }}/assets/css/bootstrap.css">
-    <link rel="stylesheet" href="{{ ROOT }}/assets/vendors/perfect-scrollbar/perfect-scrollbar.css">
     <link rel="stylesheet" href="{{ ROOT }}/assets/vendors/bootstrap-icons/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ ROOT }}/assets/css/app.css">
     <link rel="shortcut icon" href="{{ ROOT }}/assets/images/favicon.svg" type="image/x-icon">
     <link rel="stylesheet" href="{{ ROOT }}/assets/css/snackbarStyle.css">
     <link rel="stylesheet" href="{{ ROOT }}/assets/css/custom.css">
-    <link rel="stylesheet" href="{{ ROOT }}/assets/vendors/dripicons/webfont.css">
-    <link rel="stylesheet" href="{{ ROOT }}/assets/css/pages/dripicons.css">
-    <link rel="stylesheet" href="{{ ROOT }}/assets/vendors/choices.js/choices.min.css" />
-
-    <link rel="stylesheet" href="{{ ROOT }}/assets/css/filepond.css">
-    <link rel="stylesheet" href="{{ ROOT }}/assets/css/filepond-plugin-image-preview.css">
-    <link rel="stylesheet" href="{{ ROOT }}/assets/css/cropper/cropper.css">
 
     {# Coque (structure) puis design system (habillage) : l'ordre compte. #}
     <link rel="stylesheet" href="{{ ROOT }}/assets/css/app-shell.css">
     <link rel="stylesheet" href="{{ ROOT }}/assets/css/atelier-theme.css">
 
-    <style>
-        /* Przykład: Upewnij się, że nie ma limitów w CSS */
-        .choices__list--multiple {
-            max-height: none;
-        }
-    </style>
+    {# ── L'application s'installe ──
+       Manifeste et service worker : la tablette de magasin gagne son icône
+       d'écran d'accueil, son mode plein écran, et une coque qui survit à une
+       coupure de wifi. Voir public/manifest.webmanifest et public/sw.js. #}
+    <link rel="manifest" href="{{ ROOT }}/manifest.webmanifest">
+    <meta name="theme-color" content="#8D1D2C">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="{{ translations.module_name ?? 'Kitchen' }}">
+    <link rel="apple-touch-icon" href="{{ ROOT }}/assets/brand/icon-192.png">
+
+    {# Les bibliothèques d'un seul écran se déclarent dans cet écran. #}
+    {% block vendor_head %}{% endblock %}
 
     <!-- DISABLE ENTER ON EVERY PAGE -->
     <script>
@@ -182,13 +205,12 @@
     </a>
 </nav>
 
-<script src="{{ ROOT }}/assets/vendors/perfect-scrollbar/perfect-scrollbar.min.js"></script>
+{# Bootstrap seul est global : modales, offcanvas et infobulles servent partout.
+   Voir l'inventaire en tête de fichier pour les six autres, qui ne servaient
+   nulle part ou dans un seul écran. #}
 <script src="{{ ROOT }}/assets/js/bootstrap.bundle.min.js"></script>
-<script src="{{ ROOT }}/assets/js/functions.js"></script>
-<script type="module" src="{{ ROOT }}/assets/js/modules.js"></script>
-<script src="{{ ROOT }}/assets/vendors/sweetalert2/sweetalert2.all.min.js"></script>
-<script src="{{ ROOT }}/assets/vendors/choices.js/choices.min.js"></script>
-<script src="{{ ROOT }}/assets/js/cropper/cropper.min.js"></script>
+
+{% block vendor_scripts %}{% endblock %}
 
 <script>
     function showSnack(resp, message = "") {
@@ -219,6 +241,29 @@
 
 
 {% block scripts %}{% endblock %}
+
+{# ── Enregistrement du service worker ──────────────────────────────────
+   La version voyage dans l'URL : APP_BUILD change à chaque déploiement, donc
+   l'URL du worker change, donc le navigateur en installe un neuf qui purge les
+   caches précédents. Sans cela, une feuille de style corrigée resterait
+   invisible jusqu'à ce que quelqu'un vide le cache de la tablette.
+
+   Ce worker ne met en cache QUE des fichiers statiques — jamais une page, jamais
+   un /ajax/. Voir l'en-tête de public/sw.js pour le raisonnement.
+   ────────────────────────────────────────────────────────────────────── #}
+<script>
+(function () {
+    if (!('serviceWorker' in navigator)) return;
+    window.addEventListener('load', function () {
+        navigator.serviceWorker
+            {# APP_BUILD vaut « 1a2b3c4 2026-08-05T21:00Z » : on ne garde que le
+               commit. Il suffit à changer l'URL à chaque déploiement, et il
+               tient dans une chaîne de requête sans encodage. #}
+            .register('{{ ROOT }}/sw.js?v={{ app_build | split(' ') | first | url_encode }}', { scope: '{{ ROOT }}/' })
+            .catch(function () { /* pas de worker : l'app fonctionne comme avant */ });
+    });
+})();
+</script>
 
 {# ── Commandes en attente : sondage, pastille, son ──────────────────────
    Une commande web arrive sans que personne ne regarde l'écran. Le nombre
