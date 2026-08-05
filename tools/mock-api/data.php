@@ -347,3 +347,43 @@ function mock_baking_batches(int $nowMinutes): array
 
     return $batches;
 }
+
+/**
+ * Checklists du jour.
+ *
+ * Ce que l'écran lit : le nom, l'heure d'exécution, et l'avancement — c'est
+ * l'avancement qui décide de la barre et du choix de la checklist ouverte.
+ */
+function mock_checklists(): array
+{
+    return [
+        ['id' => 1, 'name' => 'Ouverture du magasin', 'execution_time' => '06:00:00', 'tasks_done' => 1, 'tasks_total' => 5],
+        ['id' => 2, 'name' => 'Contrôles HACCP',      'execution_time' => '11:00:00', 'tasks_done' => 0, 'tasks_total' => 3],
+        ['id' => 3, 'name' => 'Fermeture',            'execution_time' => '19:00:00', 'tasks_done' => 0, 'tasks_total' => 4],
+    ];
+}
+
+function mock_checklist_progress(int $id): array
+{
+    $tasks = [
+        ['task_id' => 101, 'name' => 'Relevé température chambre froide', 'status' => 'DONE',
+         'completed_by' => 'Nathan Colin', 'completed_at' => date('Y-m-d') . ' 06:12:00',
+         'is_mandatory' => true, 'requires_photo' => true, 'execution_time' => '06:00:00', 'note' => '3 °C — conforme'],
+        ['task_id' => 102, 'name' => 'Nettoyage du plan de travail', 'status' => 'PENDING',
+         'is_mandatory' => false, 'requires_photo' => false, 'execution_time' => '06:15:00'],
+        ['task_id' => 103, 'name' => 'Contrôle des DLC en vitrine', 'status' => 'PENDING',
+         'is_mandatory' => true, 'requires_photo' => false, 'execution_time' => '06:30:00'],
+        ['task_id' => 104, 'name' => 'Lavage du sol du laboratoire', 'status' => 'PENDING',
+         'is_mandatory' => false, 'requires_photo' => false, 'execution_time' => '06:45:00'],
+        ['task_id' => 105, 'name' => 'Relevé température four', 'status' => 'PENDING',
+         'is_mandatory' => true, 'requires_photo' => false, 'execution_time' => '07:00:00'],
+    ];
+
+    $done = count(array_filter($tasks, fn($t) => $t['status'] === 'DONE'));
+
+    return [
+        'checklist' => ['id' => $id, 'name' => 'Ouverture du magasin', 'execution_time' => '06:00:00'],
+        'summary'   => ['total' => count($tasks), 'done' => $done, 'not_done' => count($tasks) - $done],
+        'tasks'     => $tasks,
+    ];
+}

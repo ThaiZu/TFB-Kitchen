@@ -381,6 +381,18 @@ if ($method === 'GET' && $m('/shops/\d+/employees')) {
     ok(mock_employees());
 }
 
+// ── Checklists ────────────────────────────────────────────────────────────
+// L'écran des tâches était le seul module que le bouchon ne servait pas : on ne
+// pouvait donc ni le voir ni le vérifier sans la vraie API.
+if ($method === 'GET' && $m('/consultant/shops/\d+/checklists$')) {
+    ok(mock_checklists());
+}
+
+if ($method === 'GET' && $m('/consultant/shops/\d+/checklists/\d+/progress')) {
+    preg_match('#/checklists/(\d+)/progress#', $path, $mm);
+    ok(mock_checklist_progress((int) ($mm[1] ?? 1)));
+}
+
 // ── Cuisson ───────────────────────────────────────────────────────────────
 if ($method === 'GET' && $m('/shops/\d+/ovens')) {
     ok(mock_ovens());
