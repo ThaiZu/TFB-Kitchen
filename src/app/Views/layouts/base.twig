@@ -30,8 +30,17 @@
 
     <title>{% block title %}{{ pageTitle|default('Kitchen') }}{% endblock %}</title>
 
-    <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    {# ── Aucune police distante ──
+       Cette page chargeait Nunito depuis fonts.googleapis.com, en feuille de
+       style bloquante. Mesuré au navigateur : 12 751 ms d'attente avant le
+       premier pixel quand Google est injoignable — ce qui arrive derrière un
+       portail captif, un DNS lent ou le pare-feu d'un magasin. Les mêmes pages
+       s'affichent en 640 ms sans elle.
+
+       Et elle ne servait à rien : la typographie de l'application est Gotham,
+       hébergée en local par atelier-theme.css, qui recouvre le
+       « body { font-family: Nunito } » de bootstrap.css. On payait treize
+       secondes pour une police invisible. Ne pas la réintroduire. #}
     <link rel="stylesheet" href="{{ ROOT }}/assets/css/bootstrap.css">
     <link rel="stylesheet" href="{{ ROOT }}/assets/vendors/perfect-scrollbar/perfect-scrollbar.css">
     <link rel="stylesheet" href="{{ ROOT }}/assets/vendors/bootstrap-icons/bootstrap-icons.css">

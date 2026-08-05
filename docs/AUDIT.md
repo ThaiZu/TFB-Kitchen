@@ -1,5 +1,14 @@
 # Audit — fonctions, fluidité, flow
 
+> **État au 5 août 2026, après corrections.** Les sept premières lignes du plan
+> de traitement sont appliquées et vérifiées au navigateur. Le relevé ci-dessous
+> décrit ce qui a été trouvé ; le tableau final dit ce qu'il en reste.
+>
+> Résultat mesuré après correction : **629 à 751 ms par page**, contre 13 400 ms
+> avant, et **aucun hôte externe contacté**.
+>
+> Une erreur de ce rapport a été corrigée : voir §4d, `/baking`.
+
 Relevé du 5 août 2026, sur la version déployée (`db6a5f2`), mesuré au navigateur
 sur les 22 écrans atteignables, plus lecture des 54 routes déclarées.
 
@@ -137,10 +146,13 @@ Ce qu'on obtient en les appelant, mesuré :
 
 Une erreur 500 nue, en polonais, sans coque ni bouton de retour.
 
-**d. `/baking` n'est au menu d'aucun mode.**
-L'écran de cuisson est complet — contrôleur, service, dépôt, huit gabarits,
-30 assertions vertes — et `DeviceModeService::NAV` ne le liste dans aucun des
-trois modes, `TABS` non plus. On ne peut l'atteindre qu'en tapant l'URL.
+**d. ~~`/baking` n'est au menu d'aucun mode.~~ — constat erroné, retiré.**
+J'avais conclu à un écran orphelin en lisant les routes, le service et les huit
+gabarits, sans lire le corps de `BakingController::index()`. Il ne rend rien :
+il redirige en 302 vers `/production?view=planning`. Le planning a été fondu
+dans Production — un module, quatre questions — et `/baking` ne survit que comme
+ancienne adresse, pour les liens qui circulent déjà. Il n'a donc rien à faire au
+menu : l'y mettre doublerait l'entrée Production. Rien à corriger.
 
 ## 5. L'écran Checklists est en polonais, dans les cinq langues
 
@@ -258,21 +270,51 @@ et le fil horizontal de production tient sur une ligne comme prévu.
 
 ---
 
-## Ordre de traitement conseillé
+## Ordre de traitement — état
+
+### Fait, et vérifié au navigateur
+
+| # | Correction | Vérification |
+|---|---|---|
+| 1 | Police Google retirée de `base.twig`, `error_mobile.twig` **et `auth/login.twig`** | 629–751 ms par page, 0 hôte externe |
+| 2 | `checklists.json` → `checklist.json` dans les cinq langues, plus deux clés manquantes | l'écran est en français de bout en bout |
+| 3 | `NOT_FOUND` rend `errors/404.twig` en HTTP 404 ; `/ajax/…` répond en JSON ; `/Dashboard` corrigé | `/nexistepas` → 404, page lisible, bouton de retour valide |
+| 4 | `CatalogRoutes` et `IngredientRoutes` supprimés, `PriceRoutes` sorti de `ClientRoutes` | `/catalog` et `/clients/1/price-list` → 404 propre, plus de 500 |
+| 5 | `DEBUG` lu depuis `KITCHEN_DEBUG`, éteint par défaut ; `debug` de Twig aligné | plus de `display_errors` en production |
+| 6 | Carte « Sous-recettes » retirée ; `objectives` sorti des deux menus ; badge « En construction » retiré de Production | 6 entrées de menu, toutes vivantes |
+| 7 | *(annulé — constat erroné, voir §4d)* | — |
+
+Deux réparations non prévues ont été faites au passage, parce qu'elles
+tombaient dans le même geste : les trois pages d'erreur affichaient une
+**illustration Mazer jamais déployée** (remplacée par le code en grand, sans
+fichier), et la page d'erreur sortait dans la langue du navigateur plutôt que
+dans celle réglée sur la tablette — le middleware qui pose la langue ne tourne
+pas quand le routage échoue.
+
+**Et une panne que la correction 5 a mise au jour : « Nouvelle réclamation »
+était cassé, et l'était déjà.** Tant que `display_errors` était allumé, l'écran
+imprimait une trace PHP et passait pour à moitié chargé ; éteint, il est devenu
+un 500 muet. La cause : `/shops/{id}/orders` sert deux appelants avec deux
+formes — `{ date, items: [...] }` pour le carnet de production, la liste seule
+pour ce formulaire. Le tri parcourait donc la chaîne « date » comme si c'était
+une commande. Deux corrections :
+
+- le dépôt accepte les deux formes et écarte les entrées mal formées ;
+- `safeFetch` rattrape désormais `Throwable` et plus seulement `Exception`. Une
+  `TypeError` n'est pas une `Exception` : elle traversait le filet et emportait
+  la page entière, alors que cette méthode existe pour qu'un panneau en panne
+  n'en emporte pas d'autres.
+
+`/complaints/new` répond 200 et affiche son formulaire.
+
+Les sept suites de tests restent vertes : **231 assertions**.
+
+### À faire
 
 | # | Correction | Gain | Effort |
 |---|---|---|---|
-| 1 | Retirer la police Google de `base.twig` | −12,7 s par page | 1 min |
-| 2 | Renommer `checklists.json` → `checklist.json` (×5) | l'écran repasse en français | 2 min |
-| 3 | Rendre `errors/404.twig` sur `NOT_FOUND`, corriger `/Dashboard` | plus de page blanche | 15 min |
-| 4 | Supprimer les 15 routes mortes (Catalog, Ingredient, Price) | plus de 500 en polonais | 10 min |
-| 5 | `DEBUG = false` | pas de chemins serveur dans la page | 1 min |
-| 6 | Router ou retirer `/knowledge/recipes` ; sortir `objectives` du menu | plus de lien mort | 20 min |
-| 7 | Ajouter `/baking` au mode Production | un écran fini redevient atteignable | 5 min |
-| 8 | Cibles tactiles à 44 px (rail, chips, boutons) | usage à la tablette | 1 h |
+| 8 | Cibles tactiles à 44 px (rail à 19 px, chips, boutons) | usage à la tablette | 1 h |
 | 9 | Charger filepond/cropper/choices par page | −250 Ko par navigation | 1 h |
 | 10 | Checklist due présélectionnée, filtres repliés | le geste du jour au premier écran | 2 h |
 | 11 | Manifeste + service worker | l'app s'installe et survit au réseau | 1 j |
-
-Les sept premières lignes tiennent en une heure et couvrent tout ce qui est
-visible par l'équipe en magasin.
+| 12 | Écran des sous-recettes (le contrôleur et le service attendent, le gabarit est vide) | la carte peut revenir | 0,5 j |

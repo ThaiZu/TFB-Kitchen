@@ -39,8 +39,13 @@ check('casse ignorée',                 $m->normalise('WebShop'), 'webshop');
 check('espaces ignorés',               $m->normalise('  gestion '), 'gestion');
 
 // ── Ce que chaque mode montre ─────────────────────────────────────────────
-check('production : menu inchangé',    $m->navKeys('production'),
-    ['dashboard', 'production', 'objectives', 'checklists', 'orders', 'knowledge', 'complaints']);
+// « objectives » a quitté les deux menus qui le portaient : l'entrée était
+// disabled avec href="#", elle n'ouvrait rien. Ce test le fige, pour qu'on ne
+// la réintroduise pas sans écran derrière.
+check('production : menu',             $m->navKeys('production'),
+    ['dashboard', 'production', 'checklists', 'orders', 'knowledge', 'complaints']);
+check('aucun mode ne propose objectives',
+    $m->allows('production', 'objectives') || $m->allows('gestion', 'objectives'), false);
 check('production : onglets inchangés', $m->tabKeys('production'),
     ['dashboard', 'production', 'checklists', 'orders']);
 

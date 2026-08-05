@@ -38,10 +38,20 @@ class DeviceModeService
     /**
      * En mode production, la navigation est celle d'aujourd'hui, à l'entrée
      * près. C'est la contrainte : le mode par défaut ne doit rien changer.
+     *
+     * « objectives » a été retiré des deux modes qui le portaient. L'entrée était
+     * déclarée disabled avec href="#" : elle occupait une place au menu et ne
+     * menait nulle part. Une section se déclare le jour où son écran existe ;
+     * d'ici là, une case grisée n'informe de rien qu'on ne sache déjà.
+     *
+     * « baking » n'a pas à y figurer, malgré les apparences : /baking existe
+     * bien, mais son contrôleur redirige en 302 vers /production?view=planning.
+     * Le planning est devenu un onglet de Production — un module, quatre
+     * questions. L'inscrire au menu doublerait l'entrée Production.
      */
     private const NAV = [
-        self::MODE_PRODUCTION => ['dashboard', 'production', 'objectives', 'checklists', 'orders', 'knowledge', 'complaints'],
-        self::MODE_GESTION    => ['dashboard', 'objectives', 'checklists', 'knowledge', 'complaints'],
+        self::MODE_PRODUCTION => ['dashboard', 'production', 'checklists', 'orders', 'knowledge', 'complaints'],
+        self::MODE_GESTION    => ['dashboard', 'checklists', 'knowledge', 'complaints'],
         self::MODE_WEBSHOP    => ['webshop'],
     ];
 

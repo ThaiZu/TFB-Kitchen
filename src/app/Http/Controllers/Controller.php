@@ -50,6 +50,16 @@ class Controller
             $errors[] = "Nieoczekiwany błąd: " . $e->getMessage();
             error_log($e->getMessage());
             return $default;
+        } catch (\Throwable $e) {
+            // Une TypeError n'est pas une Exception : elle passait à travers ce
+            // filet et emportait la page entière, alors que safeFetch existe
+            // précisément pour qu'un panneau en panne n'en emporte pas d'autres.
+            // C'est ainsi que « Nouvelle réclamation » rendait un 500 muet.
+            // L'erreur reste journalisée — on cesse seulement de la laisser
+            // remonter jusqu'à l'écran.
+            $errors[] = "Nieoczekiwany błąd: " . $e->getMessage();
+            error_log($e->getMessage());
+            return $default;
         }
     }
 
@@ -140,7 +150,10 @@ class Controller
         $twig = new Environment($loader, [
             'cache' => false, // Możesz zmienić na ścieżkę do cache w produkcji
             'autoescape' => 'html',
-            'debug' => true, // Włącz debugowanie, jeśli potrzebujesz
+            // Le mode debug de Twig suit celui de l'application. Allumé en dur,
+            // il exposait la trace complète du gabarit à la moindre erreur, sur
+            // l'écran du magasin.
+            'debug' => DEBUG,
         ]);
 
         $twig->addExtension(new DebugExtension());

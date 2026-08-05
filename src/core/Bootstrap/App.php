@@ -44,7 +44,13 @@ class App {
 
         switch ($routeInfo[0]) {
             case Dispatcher::NOT_FOUND:
-                break; // idziemy do fallbacku
+                // Ce « break » sortait de la méthode sans rien écrire : toute URL
+                // inconnue rendait une page blanche, en HTTP 200 par-dessus le
+                // marché — donc invisible dans les logs, et mise en cache comme
+                // une réponse valide. Le gabarit d'erreur existait déjà ; il
+                // n'était simplement jamais appelé.
+                $this->notFound($container, $uri);
+                return;
             case Dispatcher::METHOD_NOT_ALLOWED:
                 header('HTTP/1.1 405 Method Not Allowed');
                 exit;
@@ -77,6 +83,55 @@ class App {
                 }
 
                 return;
+        }
+    }
+
+    /**
+     * Ce qu'on montre quand aucune route ne correspond.
+     *
+     * Deux réponses, parce qu'il y a deux appelants. Un écran attend du HTML et
+     * quelqu'un le lit : il reçoit le gabarit d'erreur, avec un chemin de
+     * retour. Un appel `/ajax/…` attend du JSON et personne ne le lit : lui
+     * renvoyer une page HTML ferait échouer son `r.json()` sur une erreur de
+     * syntaxe, ce qui masquerait la vraie cause.
+     *
+     * Le code HTTP est 404 dans les deux cas. C'était un 200 auparavant, ce qui
+     * rendait les liens morts invisibles dans les logs du serveur.
+     */
+    private function notFound(ContainerInterface $container, string $uri): void
+    {
+        http_response_code(404);
+
+        if (str_starts_with($uri, '/ajax/')) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['success' => false, 'description' => 'not_found']);
+            return;
+        }
+
+        try {
+            // La langue de la tablette vit dans le jeton, et le middleware
+            // d'authentification — qui la pose d'habitude — ne tourne pas ici :
+            // le routage a échoué avant lui. Sans ce rattrapage, la page
+            // d'erreur sortirait dans la langue du navigateur, pas dans celle
+            // que le magasin a réglée. On lit la revendication sans vérifier la
+            // signature : elle ne sert qu'à choisir un fichier de traduction,
+            // aucune autorisation n'en dépend.
+            $access = $_COOKIE['kitchen_access_token'] ?? null;
+            if ($access) {
+                $claims = $container->get(\App\Kitchen\app\Services\Auth\JwtService::class)
+                                    ->getClaimsUnsafe($access);
+                $lang = strtolower((string)($claims['dv_lncd'] ?? ''));
+                if (in_array($lang, APP_SUPPORTED_LANGUAGES, true)) {
+                    \App\Kitchen\core\Support\GlobalRegistry::set('lang_code', $lang);
+                }
+            }
+
+            $container->get(\App\Kitchen\app\Http\Controllers\Controller::class)
+                      ->view('errors/404', []);
+        } catch (\Throwable $e) {
+            // Le gabarit d'erreur qui échoue n'a pas le droit de rendre une page
+            // blanche à son tour : c'est exactement le défaut qu'on corrige.
+            echo '404';
         }
     }
 }

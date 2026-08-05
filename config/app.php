@@ -100,4 +100,22 @@ define('APP_BUILD', (function () {
     return is_file($f) ? trim((string)file_get_contents($f)) : 'dev';
 })());
 
-const DEBUG = true;
+/*
+ * L'affichage des erreurs PHP dans la page.
+ *
+ * Cette constante valait « true » en dur, et son seul effet est
+ * ini_set('display_errors', 1) dans public/index.php : la moindre alerte PHP
+ * s'imprimait donc au milieu de l'écran du magasin, chemins du serveur
+ * compris. Sur une tablette de comptoir, personne ne sait lire ça, et ceux qui
+ * savent n'ont pas à y avoir accès.
+ *
+ * Elle se lit maintenant depuis l'environnement, comme KITCHEN_API_BASE :
+ * « SetEnv KITCHEN_DEBUG 1 » dans le .htaccess d'un poste de développement
+ * suffit à la rallumer. Absente, elle est éteinte — c'est le bon défaut pour
+ * une application qui n'existe qu'en production sur un serveur de client.
+ *
+ * Les erreurs restent journalisées côté serveur (error_log), on ne perd rien :
+ * on cesse simplement de les montrer à l'équipe.
+ */
+$__kitchenDebug = $_SERVER['KITCHEN_DEBUG'] ?? $_ENV['KITCHEN_DEBUG'] ?? getenv('KITCHEN_DEBUG') ?: '';
+define('DEBUG', in_array(strtolower((string)$__kitchenDebug), ['1', 'true', 'on', 'yes'], true));
