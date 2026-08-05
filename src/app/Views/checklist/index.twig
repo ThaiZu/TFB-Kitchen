@@ -205,7 +205,10 @@
         font-size: .82rem; font-weight: 700;
     }
 
-    .pin-boxes { display: flex; gap: 10px; }
+    /* Centré : quatre cases alignées à gauche laissaient un vide à droite qui
+       tirait l'œil vers rien. Au milieu, elles tombent sous le pouce quelle que
+       soit la main qui tient la tablette. */
+    .pin-boxes { display: flex; gap: 10px; justify-content: center; }
     .pin-box {
         width: 56px; height: 60px; flex: 0 0 auto;
         border: 1px solid var(--c-line-2, rgba(36,26,22,.14));
