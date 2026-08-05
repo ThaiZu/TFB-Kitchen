@@ -27,13 +27,13 @@
   "btn_complete": "Completa",
   "modal_complete_title": "Segna compito come completato",
   "modal_employee_label": "Dipendente",
-  "modal_employee_placeholder": "\u2014 seleziona dipendente \u2014",
+  "modal_employee_placeholder": "— seleziona dipendente —",
   "modal_pin_label": "PIN",
   "modal_pin_placeholder": "PIN a 4 cifre",
   "modal_note_label": "Nota (opzionale)",
   "modal_btn_cancel": "Annulla",
   "modal_btn_confirm": "Conferma",
-  "complete_success": "Il compito \u00e8 stato contrassegnato come completato.",
+  "complete_success": "Il compito è stato contrassegnato come completato.",
   "complete_error_invalid_pin": "PIN non valido.",
   "complete_error_employee_not_found": "Dipendente non trovato.",
   "complete_error_generic": "Errore durante la marcatura del compito. Riprova.",
@@ -42,5 +42,7 @@
   "photo_required": "Foto richiesta",
   "modal_photo_label": "Foto",
   "modal_photo_hint": "Scatta una foto o seleziona un file.",
-  "complete_error_photo_required": "Questo compito richiede una foto. Aggiungi una foto prima di confermare."
+  "complete_error_photo_required": "Questo compito richiede una foto. Aggiungi una foto prima di confermare.",
+  "shift_signing": "firma le attività di questa checklist",
+  "shift_change": "Cambiare"
 }

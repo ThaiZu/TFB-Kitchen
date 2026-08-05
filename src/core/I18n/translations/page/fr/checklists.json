@@ -42,5 +42,7 @@
   "photo_required": "Photo requise",
   "modal_photo_label": "Photo",
   "modal_photo_hint": "Prenez une photo ou sélectionnez un fichier.",
-  "complete_error_photo_required": "Cette tâche nécessite une photo. Veuillez ajouter une photo avant de confirmer."
+  "complete_error_photo_required": "Cette tâche nécessite une photo. Veuillez ajouter une photo avant de confirmer.",
+  "shift_signing": "signe les tâches de cette checklist",
+  "shift_change": "Changer"
 }

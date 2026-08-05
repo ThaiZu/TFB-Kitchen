@@ -179,6 +179,32 @@
     /* ── PIN : quatre cases ── */
     #modalNoteInput { resize: vertical; min-height: 62px; }
 
+    /* ── Bandeau de poste ──
+       Vert et permanent : on ne tape plus son code, il faut donc voir en
+       continu sous quel nom on signe. */
+    .shift-bar {
+        display: flex; align-items: center; gap: 13px;
+        background: var(--c-surface, #fff);
+        border: 2px solid var(--c-vert, #2D7A3E);
+        border-radius: var(--r-lg, 18px);
+        padding: 11px 16px; margin-bottom: 14px;
+    }
+    .shift-av {
+        width: 38px; height: 38px; flex: none; border-radius: 50%;
+        background: var(--c-vert, #2D7A3E); color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-size: .84rem; font-weight: 800;
+    }
+    .shift-txt { flex: 1; min-width: 0; }
+    .shift-txt b { display: block; font-size: .95rem; font-weight: 800; line-height: 1.2; }
+    .shift-txt small { display: block; font-size: .76rem; color: var(--c-muted, #7a7168); }
+    .shift-x {
+        flex: none; min-height: 44px; padding: 0 17px;
+        border: 1px solid var(--c-line, rgba(36,26,22,.15)); border-radius: 999px;
+        background: #fff; color: var(--c-primary, #8D1D2C);
+        font-size: .82rem; font-weight: 700;
+    }
+
     .pin-boxes { display: flex; gap: 10px; }
     .pin-box {
         width: 56px; height: 60px; flex: 0 0 auto;
@@ -517,6 +543,24 @@
 </script>
 
 {# ── Modal potwierdzenia wykonania zadania ── #}
+{# ── La prise de poste ──
+   On se déclare une fois, et toute la checklist s'enchaîne. Le bandeau reste
+   visible en permanence : c'est la contrepartie de ne plus taper son code à
+   chaque tâche — on doit voir d'un coup d'œil sous quel nom on est en train de
+   signer, et pouvoir passer la main sans chercher. #}
+{% if shift %}
+    <div class="shift-bar" id="shiftBar">
+        <span class="shift-av">{{ shift.initials }}</span>
+        <span class="shift-txt">
+            <b>{{ shift.name }}</b>
+            <small>{{ translations.shift_signing | default('signe les tâches de cette checklist') }}</small>
+        </span>
+        <button type="button" class="shift-x" id="shiftClose">
+            {{ translations.shift_change | default('Changer') }}
+        </button>
+    </div>
+{% endif %}
+
 <div class="modal fade" id="completeTaskModal" tabindex="-1" aria-labelledby="completeTaskModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -537,7 +581,10 @@
                    Le select reste dans le document, masqué : le JavaScript qui
                    lit #modalEmployeeSelect et envoie le formulaire fonctionne
                    sans être réécrit. #}
-                <div class="mb-3">
+                {# Poste ouvert : ni nom, ni code. C'est tout l'objet de la
+                   prise de poste — la tâche se valide d'un geste, et reste
+                   attribuée à la personne déclarée en haut de l'écran. #}
+                <div class="mb-3{{ shift ? ' d-none' : '' }}" id="modalWhoBlock">
                     <label class="form-label fw-semibold">
                         {{ translations.modal_employee_label | default('Pracownik') }} <span class="text-danger">*</span>
                     </label>
@@ -589,7 +636,7 @@
                    Quatre chiffres, quatre cases : on voit ce qu'on a saisi et
                    où on en est. Le champ unique en type=password n'appelait pas
                    le pavé numérique de façon fiable et ne montrait rien. #}
-                <div class="mb-1">
+                <div class="mb-1{{ shift ? ' d-none' : '' }}" id="modalPinBlock">
                     <label class="form-label fw-semibold">
                         {{ translations.modal_pin_label | default('PIN') }} <span class="text-danger">*</span>
                     </label>
@@ -903,6 +950,24 @@
 
     if (!confirmBtn) return;
 
+    // Le poste ouvert est connu du serveur, qui l'a signé. Cette variable n'est
+    // qu'un miroir pour l'écran : la vérité reste côté serveur, où le cookie
+    // est vérifié à chaque tâche.
+    let SHIFT_OPEN = {{ shift ? 'true' : 'false' }};
+
+    // Passer la main : on referme le poste et on recharge. La tâche suivante
+    // redemandera un nom et un code — c'est exactement ce qu'on veut quand
+    // quelqu'un d'autre prend le relais.
+    const shiftCloseBtn = document.getElementById('shiftClose');
+    if (shiftCloseBtn) {
+        shiftCloseBtn.addEventListener('click', function () {
+            shiftCloseBtn.disabled = true;
+            fetch(ROOT + '/ajax/checklists/shift/close', { method: 'POST', credentials: 'same-origin' })
+                .then(function () { window.location.reload(); })
+                .catch(function () { shiftCloseBtn.disabled = false; });
+        });
+    }
+
     confirmBtn.addEventListener('click', async function () {
         hideAlert();
 
@@ -912,13 +977,17 @@
         const photoFile  = photoInput && photoInput.files && photoInput.files[0]
                             ? photoInput.files[0] : null;
 
-        if (!employeeId) {
-            showAlert(translations.complete_error_employee_required, 'warning');
-            return;
-        }
-        if (!pin) {
-            showAlert(translations.complete_error_pin_required, 'warning');
-            return;
+        // Poste ouvert : ni nom ni code à saisir, c'est tout l'objet de la
+        // prise de poste. On ne réclame donc pas ce qui n'est plus demandé.
+        if (!SHIFT_OPEN) {
+            if (!employeeId) {
+                showAlert(translations.complete_error_employee_required, 'warning');
+                return;
+            }
+            if (!pin) {
+                showAlert(translations.complete_error_pin_required, 'warning');
+                return;
+            }
         }
         if (currentRequiresPhoto && !photoFile) {
             showAlert(translations.complete_error_photo_required, 'warning');
@@ -929,6 +998,31 @@
         confirmBtn.disabled = true;
 
         try {
+            // Première tâche du service : on ouvre le poste avec le code saisi.
+            // Les tâches suivantes n'en auront plus besoin — le serveur reconnaît
+            // le poste par son cookie signé, et le code ne repart jamais sur le
+            // réseau.
+            if (!SHIFT_OPEN) {
+                const body = new URLSearchParams();
+                body.append('employee_id', employeeId);
+                body.append('pin', pin);
+                const r = await fetch(ROOT + '/ajax/checklists/shift', {
+                    method: 'POST', credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: body
+                });
+                const d = await r.json().catch(function () { return null; });
+                if (!d || !d.success) {
+                    showAlert(d && d.message === 'invalid_pin'
+                        ? translations.complete_error_invalid_pin
+                        : translations.complete_error_generic, 'danger');
+                    spinner.classList.add('d-none');
+                    confirmBtn.disabled = false;
+                    return;
+                }
+                SHIFT_OPEN = true;
+            }
+
             const formData = new FormData();
             formData.append('employee_id', employeeId);
             formData.append('pin',         pin);

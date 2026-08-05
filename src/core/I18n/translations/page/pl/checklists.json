@@ -42,5 +42,7 @@
   "photo_required": "Wymagane zdjęcie",
   "modal_photo_label": "Zdjęcie",
   "modal_photo_hint": "Zrób zdjęcie lub wybierz plik.",
-  "complete_error_photo_required": "To zadanie wymaga zdjęcia. Dodaj zdjęcie przed zatwierdzeniem."
+  "complete_error_photo_required": "To zadanie wymaga zdjęcia. Dodaj zdjęcie przed zatwierdzeniem.",
+  "shift_signing": "podpisuje zadania tej checklisty",
+  "shift_change": "Zmień"
 }

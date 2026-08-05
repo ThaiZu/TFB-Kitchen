@@ -13,4 +13,14 @@ return function (RouteCollector $r) {
         'controller' => \App\Kitchen\app\Http\Controllers\Checklist\ChecklistController::class,
         'method'     => 'completeTask',
     ]);
+
+    // La prise de poste : le seul endroit où le PIN est saisi.
+    $r->addRoute('POST', '/ajax/checklists/shift', [
+        'controller' => \App\Kitchen\app\Http\Controllers\Checklist\ChecklistController::class,
+        'method'     => 'openShift',
+    ]);
+    $r->addRoute('POST', '/ajax/checklists/shift/close', [
+        'controller' => \App\Kitchen\app\Http\Controllers\Checklist\ChecklistController::class,
+        'method'     => 'closeShift',
+    ]);
 };

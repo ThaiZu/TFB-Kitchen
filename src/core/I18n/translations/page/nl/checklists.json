@@ -27,7 +27,7 @@
   "btn_complete": "Voltooien",
   "modal_complete_title": "Taak markeren als voltooid",
   "modal_employee_label": "Medewerker",
-  "modal_employee_placeholder": "\u2014 selecteer medewerker \u2014",
+  "modal_employee_placeholder": "— selecteer medewerker —",
   "modal_pin_label": "PIN",
   "modal_pin_placeholder": "4-cijferige PIN",
   "modal_note_label": "Notitie (optioneel)",
@@ -42,5 +42,7 @@
   "photo_required": "Foto vereist",
   "modal_photo_label": "Foto",
   "modal_photo_hint": "Maak een foto of selecteer een bestand.",
-  "complete_error_photo_required": "Deze taak vereist een foto. Voeg een foto toe voor de bevestiging."
+  "complete_error_photo_required": "Deze taak vereist een foto. Voeg een foto toe voor de bevestiging.",
+  "shift_signing": "tekent de taken van deze checklist",
+  "shift_change": "Wijzigen"
 }

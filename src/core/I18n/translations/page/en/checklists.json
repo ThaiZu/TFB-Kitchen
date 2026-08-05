@@ -27,7 +27,7 @@
   "btn_complete": "Complete",
   "modal_complete_title": "Mark task as done",
   "modal_employee_label": "Employee",
-  "modal_employee_placeholder": "\u2014 select employee \u2014",
+  "modal_employee_placeholder": "— select employee —",
   "modal_pin_label": "PIN",
   "modal_pin_placeholder": "4-digit PIN",
   "modal_note_label": "Note (optional)",
@@ -42,5 +42,7 @@
   "photo_required": "Photo required",
   "modal_photo_label": "Photo",
   "modal_photo_hint": "Take a photo or select a file.",
-  "complete_error_photo_required": "This task requires a photo. Please add a photo before confirming."
+  "complete_error_photo_required": "This task requires a photo. Please add a photo before confirming.",
+  "shift_signing": "is signing this checklist's tasks",
+  "shift_change": "Change"
 }
