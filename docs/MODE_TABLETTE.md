@@ -202,35 +202,37 @@ comme venant de la tablette, pas d'une personne. C'est le choix assumé du brief
 pour ce poste. Si l'attribution devient nécessaire (litige, inventaire), il
 faudra ajouter une identification — pas contourner celle-ci.
 
-### Le côté WebShop, livré
+### Le côté WebShop : le jeton existe déjà
 
-Au moment d'intégrer, le jeton d'appareil **n'existait nulle part** côté
-WebShop : `/franchisee/*` n'avait qu'une garde, `X-Admin-Token`, et le front du
-back-office lisait ce jeton dans `localStorage`. Il a donc fallu l'écrire —
-dépôts `samsam2703mfc/webshop` et `back_office_ws_franchisee`, branche
-`claude/ux-pwa-consultant-t02npa`, contrat dans `webshop/DEVICE_TOKEN.md`.
+**Ne réécrivez pas ce jeton — il est en production.** La branche
+`claude/webshop-bureau-zone-modal` du dépôt `samsam2703mfc/webshop` le porte, et
+c'est elle qui est déployée (`workflow_dispatch`, pas `main` — `main` a plusieurs
+centaines de commits de retard, et déployer depuis lui ramènerait le serveur en
+arrière).
 
-**Les deux applications sont servies par le même hôte** (`/var/www/html`,
-`/kitchen` et `/webshop/…`). Le cookie `kitchen_webshop_token` posé ici arrive
-donc jusqu'à l'API du webshop, qui l'accepte au même titre que l'en-tête
-`X-Device-Token`. C'est ce qui permet au back-office ouvert en cadre de
-s'authentifier **sans qu'aucun JavaScript ne touche au jeton** : il reste
-`HttpOnly`, et ne passe par aucune URL.
+| Côté webshop | Ce qu'il y a |
+|---|---|
+| Table | `ws_shop_device_token` — migration **0052** |
+| Stockage | SHA-256, plus un `token_prefix` en clair pour reconnaître le jeton actif |
+| Règle | **un seul jeton actif par boutique** : régénérer révoque le précédent |
+| Garde | `device_token_shop()` lit `X-Device-Token`, borne à la boutique du jeton |
+| Portée | liste blanche de six écrans de comptoir, tout le reste refusé |
 
-Où prendre le jeton : `/webshop/backoffice_franchisee/tablette.html`, depuis la
-session du franchisé. Il n'est affiché **qu'une fois**.
+Kitchen envoie l'en-tête `X-Device-Token` depuis le serveur
+(`app/Repositories/WebShop/WebShopRepository`) : c'est exactement ce que cette
+garde attend. **Rien à ajouter côté webshop.**
 
-**Si un jour les deux applications changent d'hôte**, ce chemin tombe : le
-cookie ne franchit pas une origine. Il faudrait alors que Kitchen passe
-lui-même les appels et rende ses propres écrans. C'est la question à trancher
-avant tout déploiement sur deux hôtes distincts.
+Une version concurrente de ce jeton a été écrite ici par erreur, sur une base
+trop ancienne pour voir l'existante, puis retirée. Ce qu'il faut en retenir :
+avant d'écrire quoi que ce soit dans ce dépôt, regarder les branches — `main`
+n'y est pas la ligne de travail.
 
-**Le cadre lui-même.** Si `/webshop/backoffice_franchisee/` répond avec
-`X-Frame-Options: DENY` ou un `Content-Security-Policy: frame-ancestors`
-restrictif, le cadre restera blanc. Le navigateur ne remonte rien au script : on
-ne peut ni le détecter, ni le contourner d'ici — et on ne cherche pas à le
-faire. La page laisse un lien « ouvrir dans un onglet » pour ne pas bloquer
-l'équipe en attendant l'ajustement, qui se fait sur le serveur du webshop.
+**Où prendre le jeton** : dans le back-office franchisé de cette branche. Il
+n'est affiché qu'une fois, comme un mot de passe.
+
+**Si un jour les deux applications changent d'hôte**, rien ne casse : l'en-tête
+franchit les origines. C'est le mode « cadre » (iframe) qui tomberait, et il
+n'est plus utilisé — le comptoir a ses trois écrans natifs.
 
 ---
 
