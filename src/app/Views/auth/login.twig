@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ translations.supplier_portal_login_title }}</title>
+
+    {# La version servie. Cet écran n'hérite pas de layouts/base.twig, il ne la
+       portait donc pas — et le contrôle de fin de déploiement, qui cherche cette
+       balise sur la page d'accueil (laquelle redirige ici), signalait depuis
+       toujours « version servie : absente ». Il ne vérifiait rien. #}
+    <meta name="app-build" content="{{ app_build }}">
     {# Pas de police distante — et ici moins qu'ailleurs. C'est le premier écran
        de la journée : treize secondes d'attente devant un formulaire vide, et
        l'équipe conclut que la tablette est en panne. Voir layouts/base.twig. #}
