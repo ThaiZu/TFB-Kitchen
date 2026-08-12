@@ -381,6 +381,29 @@ if ($method === 'GET' && $m('/shops/\d+/employees')) {
     ok(mock_employees());
 }
 
+// Valider — ou refuser — une tache de checklist. Le bouchon ne conserve rien :
+// il repond, ce qui suffit a verifier le parcours a l'ecran. Le statut est
+// renvoye tel quel pour qu'une erreur de champ se voie tout de suite.
+if ($method === 'POST' && $m('/employees/\d+/tasks/\d+/mark-as-done')) {
+    $in = body();
+    $st = strtoupper((string)($in['status'] ?? ''));
+    if (!in_array($st, ['DONE', 'FAILED'], true)) {
+        ko('invalid_status', 422);
+    }
+    ok(['message' => 'ok', 'status' => $st, 'note' => (string)($in['note'] ?? '')]);
+}
+
+// Qui existe : la liste de reference du franchise, etat d'activite compris.
+if ($method === 'GET' && $m('/franchisee-employees')) {
+    ok(mock_franchisee_employees());
+}
+
+// Qui travaille, un jour donne. Le planning ne porte pas de noms : c'est son
+// croisement avec la liste ci-dessus qui dit qui peut signer une tache.
+if ($method === 'GET' && $m('/shops/\d+/schedule')) {
+    ok(mock_schedule($q['date'] ?? date('Y-m-d')));
+}
+
 // ── Checklists ────────────────────────────────────────────────────────────
 // L'écran des tâches était le seul module que le bouchon ne servait pas : on ne
 // pouvait donc ni le voir ni le vérifier sans la vraie API.

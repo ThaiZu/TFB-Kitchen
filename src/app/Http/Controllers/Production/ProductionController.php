@@ -292,7 +292,9 @@ class ProductionController extends Controller
         $active  = $this->bakingService->active($mine);
         $shown   = $this->bakingService->filterByStage($active, $stage);
         $dayPlan = $this->bakingService->dayPlan($mine, $stage);
-        $staff   = $this->staffService->getEmployees();
+        // La cuisson est toujours celle d'aujourd'hui : le planning demandé est
+        // donc celui du jour.
+        $staff   = $this->staffService->getEmployees(date('Y-m-d'));
 
         return [
             'plan_served'    => true,

@@ -59,6 +59,43 @@ function mock_employees(): array
     ];
 }
 
+/**
+ * Les employés du franchisé — la liste de référence.
+ *
+ * Volontairement plus large que le planning, et volontairement bruitée : une
+ * fiche désactivée, une autre archivée, un identifiant rendu en chaîne. C'est
+ * ce que le front doit savoir encaisser, et le bouchon ne sert à rien s'il ne
+ * sert que des données propres.
+ */
+function mock_franchisee_employees(): array
+{
+    return [
+        ['id' => 41, 'name' => 'Nathan Colin',    'is_active' => true],
+        ['id' => 42, 'name' => 'Aïcha Benali',    'is_active' => true],
+        ['id' => '43', 'name' => 'Marek Kowalski', 'is_active' => true],
+        ['id' => 44, 'name' => 'Ali',             'is_active' => true],
+        ['id' => 45, 'name' => 'Sofia Ferreira',  'is_active' => true],
+        ['id' => 46, 'name' => 'Yannick Dubois',  'is_active' => false],
+        ['id' => 47, 'name' => 'Claire Petit',    'status' => 'ARCHIVED'],
+    ];
+}
+
+/**
+ * Le planning d'un jour : des identifiants et des heures, pas des noms.
+ *
+ * Trois personnes de service, dont une dont l'identifiant est rendu en chaîne
+ * là où la fiche le rend en nombre — c'est le cas qui ferait disparaître
+ * quelqu'un si la comparaison était typée.
+ */
+function mock_schedule(string $date): array
+{
+    return [
+        ['id' => 901, 'employee_id' => 41,   'date' => $date, 'start' => '06:00', 'end' => '14:00'],
+        ['id' => 902, 'employee_id' => '43', 'date' => $date, 'start' => '06:00', 'end' => '14:00'],
+        ['id' => 903, 'employee_id' => 44,   'date' => $date, 'start' => '13:00', 'end' => '20:00'],
+    ];
+}
+
 function mock_ovens(): array
 {
     return [
@@ -374,7 +411,7 @@ function mock_checklist_progress(int $id): array
             ['Nettoyage du plan de travail',      'PENDING', '06:15:00', false, false],
             ['Contrôle des DLC en vitrine',       'PENDING', '06:30:00', true,  false],
             ['Lavage du sol du laboratoire',      'PENDING', '06:45:00', false, false],
-            ['Relevé température four',           'PENDING', '07:00:00', true,  false],
+            ['Relevé température four',           'PENDING', '07:00:00', true,  true],
         ]],
         2 => ['Contrôles HACCP', '11:00:00', [
             ['Températures des vitrines réfrigérées', 'PENDING', '11:00:00', true,  true],

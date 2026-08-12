@@ -32,23 +32,49 @@ class ChecklistService
     }
 
     /**
-     * Zwraca listę pracowników sklepu tylko z polami id i name (bez PIN).
+     * Qui peut signer une tâche, le jour consulté.
      *
-     * La cuisson pose la même question — qui est en atelier — et la réponse ne
-     * doit exister qu'à un endroit : StaffService. Ici on garde la signature
-     * (liste, jamais null) attendue par l'écran des checklists.
+     * La liste ne propose plus toute l'équipe mais les personnes ACTIVES et AU
+     * PLANNING de cette date : proposer quelqu'un qui n'était pas là invite à
+     * signer sous son nom, et le relevé perd sa valeur de preuve. La date
+     * compte — une checklist se relit aussi pour hier.
+     *
+     * Le tableau rendu porte `on_schedule` à null quand le planning n'est pas
+     * servi : l'écran affiche alors toute l'équipe en l'écrivant, plutôt qu'une
+     * liste vide qui rendrait la checklist inachevable.
+     *
+     * @return array<int, array{id: mixed, name: string, initials: string, on_schedule: ?bool}>
      */
-    public function getEmployeesForShop(): array
+    public function getEmployeesForShop(?string $date = null): array
     {
-        return $this->staffService->getEmployees() ?? [];
+        return $this->staffService->getEmployees($date) ?? [];
+    }
+
+    /** L'équipe réellement proposable : filtrée par le planning s'il est connu. */
+    public function onDuty(array $employees): array
+    {
+        return $this->staffService->onDuty($employees);
+    }
+
+    /** Le planning du jour est-il connu ? L'écran le dit à l'équipe. */
+    public function scheduleKnown(array $employees): bool
+    {
+        return $this->staffService->scheduleKnown($employees);
     }
 
     /**
      * Weryfikuje PIN pracownika po stronie serwera, a następnie oznacza zadanie jako wykonane.
      * Zwraca ['success' => bool, 'message' => string].
      */
-    public function completeTask(int $taskId, int $employeeId, string $pin, string $date, string $note, ?array $photo = null, bool $shiftVerified = false): array
+    public function completeTask(int $taskId, int $employeeId, string $pin, string $date, string $note, ?array $photo = null, bool $shiftVerified = false, string $taskStatus = 'DONE'): array
     {
+        // Le contrôleur a déjà refusé tout autre statut ; on referme la liste
+        // ici aussi, parce que ce service est appelable d'ailleurs et qu'un
+        // statut inventé s'écrirait tel quel dans le relevé.
+        if (!in_array($taskStatus, ['DONE', 'FAILED'], true)) {
+            $taskStatus = 'DONE';
+        }
+
         $shopId = $this->getShopId();
         if ($shopId <= 0) {
             return ['success' => false, 'message' => 'shop_not_found'];
@@ -71,7 +97,7 @@ class ChecklistService
 
         $fields = [
             'task_id'            => $taskId,
-            'status'             => 'DONE',
+            'status'             => $taskStatus,
             'scheduled_for_date' => $date,
             'employee_id'        => $employeeId,
             'note'               => $note,

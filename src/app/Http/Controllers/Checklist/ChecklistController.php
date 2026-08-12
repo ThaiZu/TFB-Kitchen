@@ -59,12 +59,17 @@ class ChecklistController extends Controller
             );
         }
 
+        // Qui peut signer, CE jour-là. On demande le planning de la date
+        // consultée et pas celui d'aujourd'hui : une checklist se relit pour
+        // hier, et c'est l'équipe d'hier qui doit y figurer.
         $employees = $this->safeFetch(
-            fn() => $this->checklistService->getEmployeesForShop(),
+            fn() => $this->checklistService->getEmployeesForShop($date),
             $this->errors,
             null,
             []
         );
+        $scheduleKnown = $this->checklistService->scheduleKnown($employees);
+        $onDuty        = $this->checklistService->onDuty($employees);
 
         // Le poste ouvert, s'il y en a un : c'est lui qui décide si l'écran
         // demande encore un nom et un code, ou s'il enchaîne.
@@ -88,7 +93,11 @@ class ChecklistController extends Controller
             'checklists'            => $checklists,
             'progress'              => $progress,
             'today'                 => date('Y-m-d'),
-            'employees'             => $employees,
+            'employees'             => $onDuty,
+            // Sans cette distinction, une liste complete passerait pour la
+            // liste de service : l'ecran doit pouvoir dire « le planning n'est
+            // pas connu, toute l'equipe est proposee ».
+            'schedule_known'        => $scheduleKnown,
         ]);
     }
 
@@ -123,6 +132,22 @@ class ChecklistController extends Controller
         $note  = trim($body['note'] ?? '');
         $photo = $_FILES['photo'] ?? null;
 
+        /* ── Faite, ou pas faite ──
+           Deux issues seulement, et la liste est fermée ici : ce champ vient
+           du navigateur, et un statut libre laisserait écrire n'importe quoi
+           dans le relevé.
+
+           « Non effectuée » exige une raison. Une tâche déclarée non faite
+           sans explication ne dit rien à celui qui relira la checklist, et
+           c'est précisément pour ce cas qu'on ouvre encore une fenêtre. */
+        $taskStatus = strtoupper(trim($body['status'] ?? 'DONE'));
+        if (!in_array($taskStatus, ['DONE', 'FAILED'], true)) {
+            return $this->json(['success' => false, 'message' => 'invalid_status'], 400);
+        }
+        if ($taskStatus === 'FAILED' && $note === '') {
+            return $this->json(['success' => false, 'message' => 'note_required'], 400);
+        }
+
         /* ── Qui signe ──
            Le poste ouvert fait foi, et il vient du cookie signé par le serveur.
            On ne lit PAS l'employé envoyé par le formulaire quand un poste est
@@ -150,7 +175,7 @@ class ChecklistController extends Controller
         }
 
         $result = $this->checklistService->completeTask(
-            $taskId, $employeeId, $pin, $date, $note, $photo, $shift !== null
+            $taskId, $employeeId, $pin, $date, $note, $photo, $shift !== null, $taskStatus
         );
 
         // Une tâche validée repousse l'échéance : c'est ce qui permet

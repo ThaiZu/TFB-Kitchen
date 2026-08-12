@@ -151,10 +151,22 @@
     }
     .tk-note i { color: var(--c-muted, #7a7168); flex-shrink: 0; margin-top: 2px; }
 
-    /* Cocher une tâche est le geste de l'écran : pleine largeur, 48 px. */
+    /* ── Les deux issues d'une tâche ──────────────────────────────────────
+       Une tâche se termine de deux façons, et l'écran ne montrait que la
+       première. « Non effectuée » se déclarait donc en la laissant en attente,
+       c'est-à-dire en ne disant rien — et celui qui relit la checklist ne
+       distingue pas l'oubli du problème constaté.
+
+       Les deux boutons ne pèsent pas pareil : « Effectuer » prend la place, le
+       refus reste à côté, plus étroit, mais rouge et aussi haut — 48 px. Ce
+       n'est pas un geste qu'on doit viser. */
+    .tk-acts {
+        display: flex; gap: 8px;
+        width: calc(100% - 37px); margin: 12px 0 0 37px;
+    }
     .tk-do {
         display: flex; align-items: center; justify-content: center; gap: 8px;
-        width: calc(100% - 37px); margin: 12px 0 0 37px; min-height: 48px;
+        flex: 1 1 auto; min-height: 48px;
         border: 0; border-radius: var(--r-md, 13px);
         background: #2D7A3E; color: #fff;
         font-family: inherit; font-size: .95rem; font-weight: 600; cursor: pointer;
@@ -164,10 +176,26 @@
     .tk-do:hover { background: #256633; color: #fff; }
     .tk-do:active { transform: scale(.99); }
     .tk-do i { font-size: 1.1rem; }
+    .tk-do[disabled] { opacity: .6; cursor: default; }
+
+    .tk-fail {
+        display: flex; align-items: center; justify-content: center; gap: 7px;
+        flex: 0 0 auto; min-height: 48px; padding: 0 16px;
+        border: 2px solid var(--c-primary, #8D1D2C); border-radius: var(--r-md, 13px);
+        background: #fff; color: var(--c-primary, #8D1D2C);
+        font-family: inherit; font-size: .9rem; font-weight: 700; cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .tk-fail:active { transform: scale(.99); }
+    .tk-fail i { font-size: 1rem; }
 
     @media (max-width: 520px) {
         .tk-meta, .tk-note { margin-left: 0; }
-        .tk-do { width: 100%; margin-left: 0; }
+        .tk-acts { width: 100%; margin-left: 0; }
+        /* Sous 520 px les deux libellés ne tiennent plus côte à côte : le refus
+           garde sa couleur et sa hauteur, et perd son mot. */
+        .tk-fail span { display: none; }
+        .tk-fail { padding: 0 18px; }
     }
 
     /* ── Choix de l'employé : badges deux par ligne ── */
@@ -515,14 +543,33 @@
                         {% endif %}
 
                         {% if status != 'DONE' and status != 'SKIPPED' %}
-                            <button type="button"
-                                    class="tk-do btn-complete-task"
-                                    data-task-id="{{ task.task_id }}"
-                                    data-task-name="{{ task.name }}"
-                                    data-date="{{ selected_date }}"
-                                    data-requires-photo="{{ task.requires_photo ? '1' : '0' }}">
-                                <i class="bi bi-check2"></i>{{ translations.btn_complete | default('Wykonaj') }}
-                            </button>
+                            {# « Effectuer » ouvre une fenêtre uniquement quand
+                               il reste quelque chose à saisir : une photo
+                               exigée, ou le nom et le code de la première tâche
+                               du service. Sans photo et le poste ouvert, la
+                               tâche se valide d'un seul geste — c'était le
+                               reproche principal fait à cet écran.
+                               Le script lit ces deux attributs pour trancher. #}
+                            <div class="tk-acts">
+                                <button type="button"
+                                        class="tk-do btn-complete-task"
+                                        data-task-id="{{ task.task_id }}"
+                                        data-task-name="{{ task.name }}"
+                                        data-date="{{ selected_date }}"
+                                        data-requires-photo="{{ task.requires_photo ? '1' : '0' }}">
+                                    <i class="bi bi-check2"></i>{{ translations.btn_complete | default('Wykonaj') }}
+                                </button>
+                                {# Le refus, lui, passe TOUJOURS par la fenêtre :
+                                   il exige une raison écrite. #}
+                                <button type="button"
+                                        class="tk-fail btn-fail-task"
+                                        data-task-id="{{ task.task_id }}"
+                                        data-task-name="{{ task.name }}"
+                                        data-date="{{ selected_date }}"
+                                        aria-label="{{ translations.btn_not_done | default('Non effectuée') }}">
+                                    <i class="bi bi-x-lg"></i><span>{{ translations.btn_not_done | default('Non effectuée') }}</span>
+                                </button>
+                            </div>
                         {% endif %}
                     </div>
                 {% endfor %}
@@ -611,7 +658,12 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="completeTaskModalLabel">
+                {# Le titre dit ce qu'on est en train de déclarer : la même
+                   fenêtre sert aux deux issues, et se tromper d'issue se
+                   corrige mal — une tâche signée ne se dé-signe pas. #}
+                <h5 class="modal-title" id="completeTaskModalLabel"
+                    data-title-done="{{ translations.modal_complete_title | default('Oznacz zadanie jako wykonane') }}"
+                    data-title-fail="{{ translations.modal_fail_title | default('Déclarer la tâche non effectuée') }}">
                     {{ translations.modal_complete_title | default('Oznacz zadanie jako wykonane') }}
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -635,9 +687,12 @@
                         {{ translations.modal_employee_label | default('Pracownik') }} <span class="text-danger">*</span>
                     </label>
 
-                    {% set on_duty = employees|filter(e => e.on_schedule is same as(true)) %}
-                    {% set schedule_known = employees|filter(e => e.on_schedule is not null)|length > 0 %}
-                    {% set shown = schedule_known ? on_duty : employees %}
+                    {# Le filtrage se fait cote serveur : `employees` porte deja
+                       les seules personnes de service, croisees entre les
+                       employes actifs du franchise et le planning du jour
+                       consulte. `schedule_known` dit si ce croisement a pu se
+                       faire — voir StaffService. #}
+                    {% set shown = employees %}
 
                     <div class="emp-grid">
                         {% for emp in shown %}
@@ -649,14 +704,22 @@
                     </div>
 
                     {% if shown is empty %}
-                        <p class="emp-note">{{ translations.no_employees | default('Aucun employé disponible.') }}</p>
-                    {% elseif not schedule_known %}
-                        {# Un filtre annoncé mais inopérant tromperait : tant que
-                           l'API ne dit pas qui est de service, on montre tout le
-                           monde et on l'écrit. #}
+                        {# Planning connu ET vide : personne n'est de service ce
+                           jour-là. Le dire vaut mieux qu'une grille vide, qui
+                           passerait pour une panne de chargement. #}
                         <p class="emp-note">
                             <i class="bi bi-info-circle"></i>
-                            {{ translations.schedule_not_served | default("L'API ne dit pas encore qui est de service : toute l'équipe est proposée.") }}
+                            {{ schedule_known
+                               ? (translations.no_one_scheduled | default("Personne n'est au planning ce jour-là."))
+                               : (translations.no_employees | default('Aucun employé disponible.')) }}
+                        </p>
+                    {% elseif not schedule_known %}
+                        {# Un filtre annoncé mais inopérant tromperait : tant que
+                           le planning n'est pas servi, on montre toute l'équipe
+                           active et on l'écrit. #}
+                        <p class="emp-note">
+                            <i class="bi bi-info-circle"></i>
+                            {{ translations.schedule_not_served | default("Le planning du jour n'est pas disponible : toute l'équipe est proposée.") }}
                         </p>
                     {% endif %}
 
@@ -673,9 +736,12 @@
                    validation, fait de la saisie du code le geste qui conclut. #}
                 <div class="mb-3">
                     <label for="modalNoteInput" class="form-label fw-semibold">
-                        {{ translations.modal_note_label | default('Notatka (opcjonalnie)') }}
+                        <span id="modalNoteLabel">{{ translations.modal_note_label | default('Notatka (opcjonalnie)') }}</span>
+                        <span class="text-danger d-none" id="modalNoteRequired">*</span>
                     </label>
-                    <textarea id="modalNoteInput" class="form-control" rows="2" maxlength="255"></textarea>
+                    <textarea id="modalNoteInput" class="form-control" rows="2" maxlength="255"
+                              data-label-note="{{ translations.modal_note_label | default('Notatka (opcjonalnie)') }}"
+                              data-label-reason="{{ translations.modal_reason_label | default('Pourquoi la tâche n\'a pas été faite') }}"></textarea>
                 </div>
 
                 {# ── PIN ──
@@ -707,23 +773,34 @@
                     </label>
                     <div class="d-flex gap-2 mb-2">
                         <button type="button" class="btn btn-outline-secondary btn-sm" id="modalOpenCameraBtn">
-                            <i class="bi bi-camera me-1"></i>{{ 'Kamera' }}
+                            <i class="bi bi-camera me-1"></i>{{ translations.modal_photo_take | default('Prendre la photo') }}
                         </button>
                         <button type="button" class="btn btn-outline-secondary btn-sm" id="modalClearPhotoBtn">
-                            <i class="bi bi-trash me-1"></i>{{ 'Wyczyść' }}
+                            <i class="bi bi-trash me-1"></i>{{ translations.modal_photo_clear | default('Effacer') }}
                         </button>
                     </div>
-                    <input type="file" id="modalPhotoInput" class="form-control form-control-sm"
-                           accept="image/*" capture="environment">
+                    {# ── Pas de « choisir un fichier » ──
+                       Le champ était visible et proposait la galerie : on
+                       photographie ce qu'on constate à l'instant, on ne
+                       ressort pas une image d'hier — c'est ce qui fait la
+                       valeur de preuve du relevé.
+
+                       L'élément reste, masqué : c'est lui qui transporte le
+                       cliché pris par la caméra, et c'est aussi le seul
+                       recours quand getUserMedia est refusé. « capture »
+                       ouvre alors l'appareil photo de la tablette, pas la
+                       galerie. #}
+                    <input type="file" id="modalPhotoInput" class="visually-hidden"
+                           tabindex="-1" accept="image/*" capture="environment">
                     <div id="modalCameraWrap" class="mt-2 d-none">
                         <video id="modalCameraVideo" playsinline autoplay
                                style="width:100%;border-radius:8px;background:#000;max-height:220px;object-fit:cover;"></video>
                         <div class="d-flex gap-2 mt-1">
                             <button type="button" class="btn btn-sm btn-primary" id="modalTakePhotoBtn">
-                                <i class="bi bi-camera me-1"></i>Zrób zdjęcie
+                                <i class="bi bi-camera me-1"></i>{{ translations.modal_photo_shoot | default('Déclencher') }}
                             </button>
                             <button type="button" class="btn btn-sm btn-outline-secondary" id="modalCloseCameraBtn">
-                                <i class="bi bi-x-circle me-1"></i>Zamknij
+                                <i class="bi bi-x-circle me-1"></i>{{ translations.modal_photo_close | default('Fermer') }}
                             </button>
                         </div>
                         <canvas id="modalPhotoCanvas" style="display:none;"></canvas>
@@ -733,7 +810,7 @@
                              style="max-width:100%;border-radius:8px;border:1px solid rgba(0,0,0,.1);">
                     </div>
                     <div class="text-muted small mt-1">
-                        {{ translations.modal_photo_hint | default('Zrób zdjęcie lub wybierz plik.') }}
+                        {{ translations.modal_photo_hint | default('Photographiez ce que vous venez de constater.') }}
                     </div>
                 </div>
 
@@ -743,9 +820,14 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     {{ translations.modal_btn_cancel | default('Anuluj') }}
                 </button>
-                <button type="button" class="btn btn-success" id="modalConfirmBtn">
+                {# Le bouton porte la couleur de l'issue : vert pour « faite »,
+                   rouge pour « non faite ». Un même bouton vert pour les deux
+                   laisserait déclarer un échec avec le geste de la réussite. #}
+                <button type="button" class="btn btn-success" id="modalConfirmBtn"
+                        data-label-done="{{ translations.modal_btn_confirm | default('Zatwierdź') }}"
+                        data-label-fail="{{ translations.modal_btn_fail | default('Déclarer non effectuée') }}">
                     <span id="modalBtnSpinner" class="spinner-border spinner-border-sm me-1 d-none"></span>
-                    {{ translations.modal_btn_confirm | default('Zatwierdź') }}
+                    <span id="modalConfirmLabel">{{ translations.modal_btn_confirm | default('Zatwierdź') }}</span>
                 </button>
             </div>
         </div>
@@ -763,16 +845,28 @@
         complete_error_employee_required:  {{ (translations.complete_error_employee_required | default('Wybierz pracownika.')) | json_encode | raw }},
         complete_error_pin_required:       {{ (translations.complete_error_pin_required | default('Wprowadź PIN.')) | json_encode | raw }},
         complete_error_photo_required:     {{ (translations.complete_error_photo_required | default('To zadanie wymaga zdjęcia. Dodaj zdjęcie przed zatwierdzeniem.')) | json_encode | raw }},
+        complete_error_note_required:      {{ (translations.complete_error_note_required | default("Indiquez pourquoi la tâche n'a pas été faite.")) | json_encode | raw }},
     };
 
     let currentTaskId       = null;
     let currentTaskDate     = null;
     let currentRequiresPhoto = false;
+    let currentStatus       = 'DONE';   // DONE ou FAILED — l'issue déclarée
     let cameraStream        = null;
+
+    // Le poste ouvert est connu du serveur, qui l'a signé. Cette variable n'est
+    // qu'un miroir pour l'écran : la vérité reste côté serveur, où le cookie est
+    // vérifié à chaque tâche. Elle est déclarée ici, en tête, parce que c'est
+    // elle qui décide si un « Effectuer » ouvre une fenêtre ou part directement.
+    let SHIFT_OPEN = {{ shift ? 'true' : 'false' }};
 
     const modal          = document.getElementById('completeTaskModal');
     const bsModal        = modal ? new bootstrap.Modal(modal) : null;
     const taskNameEl     = document.getElementById('modalTaskName');
+    const titleEl        = document.getElementById('completeTaskModalLabel');
+    const noteLabel      = document.getElementById('modalNoteLabel');
+    const noteRequired   = document.getElementById('modalNoteRequired');
+    const confirmLabel   = document.getElementById('modalConfirmLabel');
     // Badges d'employés et cases de PIN : ils alimentent #modalEmployeeSelect
     // et #modalPinInput, que la suite du script lit sans modification.
     (function () {
@@ -909,28 +1003,126 @@
         showPhotoPreview(null);
     }
 
-    // Otwieranie modalu po kliknięciu "Wykonaj"
-    document.addEventListener('click', function (e) {
-        const btn = e.target.closest('.btn-complete-task');
-        if (!btn) return;
+    /**
+     * Envoyer l'issue d'une tâche — faite, ou non faite.
+     *
+     * Un seul chemin d'écriture pour les deux entrées de l'écran : le geste
+     * direct (sans fenêtre) et la confirmation dans la fenêtre. Deux copies
+     * auraient fini par diverger sur ce qui compte le plus ici — le statut
+     * envoyé et ce qu'on fait d'un échec.
+     */
+    async function submitTask(opts) {
+        const inModal = !opts.button;
+        if (opts.button) opts.button.disabled = true;
 
+        const formData = new FormData();
+        formData.append('employee_id', opts.employeeId || '');
+        formData.append('pin',         opts.pin || '');
+        formData.append('date',        opts.date);
+        formData.append('note',        opts.note || '');
+        formData.append('status',      opts.status);
+        if (opts.photo) formData.append('photo', opts.photo);
+
+        try {
+            const response = await fetch(ROOT + '/checklists/tasks/' + opts.taskId + '/complete', {
+                method: 'POST',
+                body:   formData,
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                if (inModal) bsModal.hide();
+                window.location.reload();
+                return true;
+            }
+
+            const msg = data.message || 'error';
+            let displayMsg;
+            if (msg === 'invalid_pin')             { displayMsg = translations.complete_error_invalid_pin; }
+            else if (msg === 'employee_not_found') { displayMsg = translations.complete_error_employee_not_found; }
+            else if (msg === 'employee_required')  { displayMsg = translations.complete_error_employee_required; }
+            else if (msg === 'pin_required')       { displayMsg = translations.complete_error_pin_required; }
+            else if (msg === 'note_required')      { displayMsg = translations.complete_error_note_required; }
+            else                                   { displayMsg = translations.complete_error_generic; }
+
+            // Hors fenêtre, il n'y a pas d'encart d'erreur : le bandeau sert.
+            if (inModal) { showAlert(displayMsg, 'danger'); }
+            else if (typeof showSnack === 'function') { showSnack(false, displayMsg); }
+            return false;
+        } catch (err) {
+            const m = translations.complete_error_generic;
+            if (inModal) { showAlert(m, 'danger'); }
+            else if (typeof showSnack === 'function') { showSnack(false, m); }
+            return false;
+        } finally {
+            if (opts.button) opts.button.disabled = false;
+        }
+    }
+
+    // ── Ce qui ouvre la fenêtre, et ce qui ne l'ouvre pas ────────────────
+    // La fenêtre ne s'ouvre que s'il reste quelque chose à SAISIR :
+    //   • une photo exigée par la tâche ;
+    //   • le nom et le code, tant que le poste n'est pas pris ;
+    //   • la raison, quand on déclare la tâche non effectuée.
+    // Hors de ces trois cas, elle ne demandait rien et ne servait qu'à faire
+    // taper « Confirmer » : la tâche part directement.
+    function openModal(btn, mode) {
         currentTaskId        = btn.dataset.taskId;
         currentTaskDate      = btn.dataset.date;
-        currentRequiresPhoto = btn.dataset.requiresPhoto === '1';
-        const taskName       = btn.dataset.taskName || '';
+        currentStatus        = mode === 'fail' ? 'FAILED' : 'DONE';
+        currentRequiresPhoto = mode !== 'fail' && btn.dataset.requiresPhoto === '1';
 
-        if (taskNameEl) taskNameEl.textContent = taskName;
+        if (taskNameEl) taskNameEl.textContent = btn.dataset.taskName || '';
         resetModal();
 
-        if (photoSection) {
-            if (currentRequiresPhoto) {
-                photoSection.classList.remove('d-none');
-            } else {
-                photoSection.classList.add('d-none');
+        if (titleEl) {
+            titleEl.textContent = mode === 'fail'
+                ? (titleEl.dataset.titleFail || titleEl.textContent)
+                : (titleEl.dataset.titleDone || titleEl.textContent);
+        }
+        // Une tâche non faite n'a pas de photo à montrer : le bloc disparaît.
+        if (photoSection) photoSection.classList.toggle('d-none', !currentRequiresPhoto);
+        // La raison, elle, devient obligatoire — et le dit.
+        if (noteLabel && noteInput) {
+            noteLabel.textContent = mode === 'fail'
+                ? (noteInput.dataset.labelReason || noteLabel.textContent)
+                : (noteInput.dataset.labelNote || noteLabel.textContent);
+        }
+        if (noteRequired) noteRequired.classList.toggle('d-none', mode !== 'fail');
+        if (confirmBtn) {
+            confirmBtn.classList.toggle('btn-danger', mode === 'fail');
+            confirmBtn.classList.toggle('btn-success', mode !== 'fail');
+            if (confirmLabel) {
+                confirmLabel.textContent = mode === 'fail'
+                    ? (confirmBtn.dataset.labelFail || confirmLabel.textContent)
+                    : (confirmBtn.dataset.labelDone || confirmLabel.textContent);
             }
         }
 
         bsModal.show();
+    }
+
+    document.addEventListener('click', function (e) {
+        const fail = e.target.closest('.btn-fail-task');
+        if (fail) { openModal(fail, 'fail'); return; }
+
+        const btn = e.target.closest('.btn-complete-task');
+        if (!btn) return;
+
+        const needsPhoto = btn.dataset.requiresPhoto === '1';
+        if (!needsPhoto && SHIFT_OPEN) {
+            submitTask({
+                button: btn,
+                taskId: btn.dataset.taskId,
+                date:   btn.dataset.date,
+                status: 'DONE',
+                note:   '',
+                photo:  null,
+            });
+            return;
+        }
+
+        openModal(btn, 'done');
     });
 
     // Zmiana pliku przez file input
@@ -996,11 +1188,6 @@
 
     if (!confirmBtn) return;
 
-    // Le poste ouvert est connu du serveur, qui l'a signé. Cette variable n'est
-    // qu'un miroir pour l'écran : la vérité reste côté serveur, où le cookie
-    // est vérifié à chaque tâche.
-    let SHIFT_OPEN = {{ shift ? 'true' : 'false' }};
-
     // Passer la main : on referme le poste et on recharge. La tâche suivante
     // redemandera un nom et un code — c'est exactement ce qu'on veut quand
     // quelqu'un d'autre prend le relais.
@@ -1039,6 +1226,13 @@
             showAlert(translations.complete_error_photo_required, 'warning');
             return;
         }
+        // Déclarer une tâche non faite sans dire pourquoi n'apprend rien à
+        // celui qui relira la checklist : c'est le seul cas où la note est
+        // exigée, et le serveur le refuse aussi de son côté.
+        if (currentStatus === 'FAILED' && !note) {
+            showAlert(translations.complete_error_note_required, 'warning');
+            return;
+        }
 
         spinner.classList.remove('d-none');
         confirmBtn.disabled = true;
@@ -1069,43 +1263,15 @@
                 SHIFT_OPEN = true;
             }
 
-            const formData = new FormData();
-            formData.append('employee_id', employeeId);
-            formData.append('pin',         pin);
-            formData.append('date',        currentTaskDate);
-            formData.append('note',        note);
-            if (photoFile) {
-                formData.append('photo', photoFile);
-            }
-
-            const response = await fetch(ROOT + '/checklists/tasks/' + currentTaskId + '/complete', {
-                method: 'POST',
-                body:   formData,
+            await submitTask({
+                taskId:     currentTaskId,
+                date:       currentTaskDate,
+                status:     currentStatus,
+                note:       note,
+                photo:      photoFile,
+                employeeId: employeeId,
+                pin:        pin,
             });
-
-            const data = await response.json();
-
-            if (data.success) {
-                bsModal.hide();
-                window.location.reload();
-            } else {
-                const msg = data.message || 'error';
-                let displayMsg;
-                if (msg === 'invalid_pin') {
-                    displayMsg = translations.complete_error_invalid_pin;
-                } else if (msg === 'employee_not_found') {
-                    displayMsg = translations.complete_error_employee_not_found;
-                } else if (msg === 'employee_required') {
-                    displayMsg = translations.complete_error_employee_required;
-                } else if (msg === 'pin_required') {
-                    displayMsg = translations.complete_error_pin_required;
-                } else {
-                    displayMsg = translations.complete_error_generic;
-                }
-                showAlert(displayMsg, 'danger');
-            }
-        } catch (err) {
-            showAlert(translations.complete_error_generic, 'danger');
         } finally {
             spinner.classList.add('d-none');
             confirmBtn.disabled = false;
