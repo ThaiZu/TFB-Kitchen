@@ -58,5 +58,6 @@
     "complete_error_note_required": "Indica perché l'attività non è stata eseguita.",
     "modal_photo_shoot": "Scatta",
     "modal_photo_close": "Chiudi",
-    "modal_btn_fail": "Segnala non eseguita"
+    "modal_btn_fail": "Segnala non eseguita",
+    "col_reported_at": "Segnalata alle"
 }

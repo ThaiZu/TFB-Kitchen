@@ -58,5 +58,6 @@
     "complete_error_note_required": "Geef aan waarom de taak niet is uitgevoerd.",
     "modal_photo_shoot": "Vastleggen",
     "modal_photo_close": "Sluiten",
-    "modal_btn_fail": "Melden als niet gedaan"
+    "modal_btn_fail": "Melden als niet gedaan",
+    "col_reported_at": "Gemeld om"
 }

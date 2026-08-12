@@ -523,9 +523,16 @@
                                 </span>
                             {% endif %}
                             {% if task.completed_at %}
+                                {# Une tâche refusée porte le même horodatage,
+                                   mais « Réalisée à » contredirait le badge
+                                   « Non effectuée » juste au-dessus : ce n'est
+                                   pas l'heure d'une réalisation, c'est celle
+                                   d'un constat. #}
                                 <span class="tk-chip">
-                                    <i class="bi bi-check2"></i>
-                                    {{ translations.col_completed_at | default('Zrealizowane') }}
+                                    <i class="bi bi-{{ status == 'FAILED' ? 'x-circle' : 'check2' }}"></i>
+                                    {{ status == 'FAILED'
+                                       ? (translations.col_reported_at | default('Signalée à'))
+                                       : (translations.col_completed_at | default('Zrealizowane')) }}
                                     <strong>{{ task.completed_at|slice(11,5) }}</strong>
                                 </span>
                             {% endif %}

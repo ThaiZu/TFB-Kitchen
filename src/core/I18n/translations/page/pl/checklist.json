@@ -58,5 +58,6 @@
     "complete_error_note_required": "Podaj, dlaczego zadanie nie zostało wykonane.",
     "modal_photo_shoot": "Zrób zdjęcie",
     "modal_photo_close": "Zamknij",
-    "modal_btn_fail": "Zgłoś jako niewykonane"
+    "modal_btn_fail": "Zgłoś jako niewykonane",
+    "col_reported_at": "Zgłoszone o"
 }

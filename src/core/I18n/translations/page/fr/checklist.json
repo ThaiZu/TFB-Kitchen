@@ -58,5 +58,6 @@
     "complete_error_note_required": "Indiquez pourquoi la tâche n'a pas été faite.",
     "modal_photo_shoot": "Déclencher",
     "modal_photo_close": "Fermer",
-    "modal_btn_fail": "Déclarer non effectuée"
+    "modal_btn_fail": "Déclarer non effectuée",
+    "col_reported_at": "Signalée à"
 }

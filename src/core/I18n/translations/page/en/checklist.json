@@ -58,5 +58,6 @@
     "complete_error_note_required": "Say why the task was not done.",
     "modal_photo_shoot": "Shoot",
     "modal_photo_close": "Close",
-    "modal_btn_fail": "Report as not done"
+    "modal_btn_fail": "Report as not done",
+    "col_reported_at": "Reported at"
 }

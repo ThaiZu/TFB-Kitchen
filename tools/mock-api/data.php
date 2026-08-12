@@ -409,7 +409,7 @@ function mock_checklist_progress(int $id): array
         1 => ['Ouverture du magasin', '06:00:00', [
             ['Relevé température chambre froide', 'DONE',    '06:00:00', true,  true],
             ['Nettoyage du plan de travail',      'PENDING', '06:15:00', false, false],
-            ['Contrôle des DLC en vitrine',       'PENDING', '06:30:00', true,  false],
+            ['Contrôle des DLC en vitrine',       'FAILED',  '06:30:00', true,  false],
             ['Lavage du sol du laboratoire',      'PENDING', '06:45:00', false, false],
             ['Relevé température four',           'PENDING', '07:00:00', true,  true],
         ]],
@@ -442,6 +442,11 @@ function mock_checklist_progress(int $id): array
             $t['completed_by'] = 'Nathan Colin';
             $t['completed_at'] = date('Y-m-d') . ' 06:12:00';
             $t['note']         = '3 °C — conforme';
+        }
+        if ($status === 'FAILED') {
+            $t['completed_by'] = 'Aïcha Benali';
+            $t['completed_at'] = date('Y-m-d') . ' 06:34:00';
+            $t['note']         = 'Vitrine en cours de reparation, DLC controlees en reserve';
         }
         $tasks[] = $t;
     }
