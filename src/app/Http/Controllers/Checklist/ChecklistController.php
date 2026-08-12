@@ -68,8 +68,7 @@ class ChecklistController extends Controller
             null,
             []
         );
-        $scheduleKnown = $this->checklistService->scheduleKnown($employees);
-        $onDuty        = $this->checklistService->onDuty($employees);
+        $roster = $this->checklistService->roster($employees);
 
         // Le poste ouvert, s'il y en a un : c'est lui qui décide si l'écran
         // demande encore un nom et un code, ou s'il enchaîne.
@@ -93,11 +92,11 @@ class ChecklistController extends Controller
             'checklists'            => $checklists,
             'progress'              => $progress,
             'today'                 => date('Y-m-d'),
-            'employees'             => $onDuty,
+            'employees'             => $roster['list'],
             // Sans cette distinction, une liste complete passerait pour la
-            // liste de service : l'ecran doit pouvoir dire « le planning n'est
-            // pas connu, toute l'equipe est proposee ».
-            'schedule_known'        => $scheduleKnown,
+            // liste de service. Quatre cas, quatre phrases differentes — voir
+            // StaffService::roster().
+            'roster_mode'           => $roster['mode'],
         ]);
     }
 

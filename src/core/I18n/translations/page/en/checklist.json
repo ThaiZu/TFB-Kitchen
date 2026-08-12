@@ -54,7 +54,7 @@
     "modal_reason_label": "Why the task was not done",
     "modal_photo_take": "Take the photo",
     "modal_photo_clear": "Clear",
-    "no_one_scheduled": "Nobody is on the schedule that day.",
+    "no_one_scheduled": "The schedule lists nobody today: the whole team is offered.",
     "complete_error_note_required": "Say why the task was not done.",
     "modal_photo_shoot": "Shoot",
     "modal_photo_close": "Close",

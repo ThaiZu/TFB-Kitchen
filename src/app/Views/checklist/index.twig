@@ -710,20 +710,22 @@
                         {% endfor %}
                     </div>
 
-                    {% if shown is empty %}
-                        {# Planning connu ET vide : personne n'est de service ce
-                           jour-là. Le dire vaut mieux qu'une grille vide, qui
-                           passerait pour une panne de chargement. #}
+                    {# Quatre situations, quatre phrases. Elles se ressemblent à
+                       l'écran et n'appellent pas la même réaction : « le
+                       planning ne vous a pas désigné » se règle au back-office,
+                       « le planning est injoignable » se règle plus tard.
+                       Voir StaffService::roster(). #}
+                    {% if roster_mode == 'none' %}
                         <p class="emp-note">
                             <i class="bi bi-info-circle"></i>
-                            {{ schedule_known
-                               ? (translations.no_one_scheduled | default("Personne n'est au planning ce jour-là."))
-                               : (translations.no_employees | default('Aucun employé disponible.')) }}
+                            {{ translations.no_employees | default('Aucun employé disponible.') }}
                         </p>
-                    {% elseif not schedule_known %}
-                        {# Un filtre annoncé mais inopérant tromperait : tant que
-                           le planning n'est pas servi, on montre toute l'équipe
-                           active et on l'écrit. #}
+                    {% elseif roster_mode == 'all_empty' %}
+                        <p class="emp-note">
+                            <i class="bi bi-info-circle"></i>
+                            {{ translations.no_one_scheduled | default("Le planning ne désigne personne aujourd'hui : toute l'équipe est proposée.") }}
+                        </p>
+                    {% elseif roster_mode == 'all_unknown' %}
                         <p class="emp-note">
                             <i class="bi bi-info-circle"></i>
                             {{ translations.schedule_not_served | default("Le planning du jour n'est pas disponible : toute l'équipe est proposée.") }}

@@ -54,7 +54,7 @@
     "modal_reason_label": "Pourquoi la tâche n'a pas été faite",
     "modal_photo_take": "Prendre la photo",
     "modal_photo_clear": "Effacer",
-    "no_one_scheduled": "Personne n'est au planning ce jour-là.",
+    "no_one_scheduled": "Le planning ne désigne personne aujourd'hui : toute l'équipe est proposée.",
     "complete_error_note_required": "Indiquez pourquoi la tâche n'a pas été faite.",
     "modal_photo_shoot": "Déclencher",
     "modal_photo_close": "Fermer",

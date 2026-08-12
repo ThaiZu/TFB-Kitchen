@@ -129,7 +129,8 @@ $equipe = [
     ['id' => 1, 'name' => 'A', 'initials' => 'A', 'on_schedule' => true],
     ['id' => 2, 'name' => 'B', 'initials' => 'B', 'on_schedule' => false],
 ];
-check('planning connu → filtré',   $ids($s->onDuty($equipe)), [1]);
+check('planning connu → filtré',   $ids($s->roster($equipe)['list']), [1]);
+check('planning connu → mode',     $s->roster($equipe)['mode'], 'scheduled');
 check('planning connu',            $s->scheduleKnown($equipe), true);
 
 $inconnu = [
@@ -138,14 +139,31 @@ $inconnu = [
 ];
 // Toute l'équipe plutôt qu'une liste vide : une checklist inachevable est pire
 // qu'une liste trop large, et l'écran écrit qu'il ne sait pas.
-check('planning inconnu → tous',   $ids($s->onDuty($inconnu)), [1, 2]);
+check('planning inconnu → tous',   $ids($s->roster($inconnu)['list']), [1, 2]);
+check('planning inconnu → mode',   $s->roster($inconnu)['mode'], 'all_unknown');
 check('planning inconnu',          $s->scheduleKnown($inconnu), false);
 
-check('personne de service',       $s->onDuty([
-    ['id' => 1, 'on_schedule' => false],
-]), []);
-check('liste absente → vide',      $s->onDuty(null), []);
+/* ── Le cas qui bloquait le magasin ──
+   Planning SERVI mais ne designant personne : un planning pas encore saisi, ou
+   saisi ailleurs. La liste se vidait, et plus aucune tache n'etait validable —
+   equipe presente, magasin ouvert, ecran qui refuse de laisser signer. On rend
+   toute l'equipe, et l'ecran dit pourquoi. */
+$vide = [
+    ['id' => 1, 'name' => 'A', 'initials' => 'A', 'on_schedule' => false],
+    ['id' => 2, 'name' => 'B', 'initials' => 'B', 'on_schedule' => false],
+];
+check('planning vide → tous',      $ids($s->roster($vide)['list']), [1, 2]);
+check('planning vide → mode',      $s->roster($vide)['mode'], 'all_empty');
+check('planning vide, jamais []',  $s->roster($vide)['list'] === [], false);
+
+check('aucune équipe → vide',      $s->roster([])['list'], []);
+check('aucune équipe → mode',      $s->roster([])['mode'], 'none');
+check('liste absente → vide',      $s->roster(null)['list'], []);
+check('liste absente → mode',      $s->roster(null)['mode'], 'none');
 check('liste absente → inconnu',   $s->scheduleKnown(null), false);
+
+// onDuty reste la porte d'entrée de la cuisson : même verdict, liste seule.
+check('onDuty suit roster',        $ids($s->onDuty($vide)), [1, 2]);
 
 // ── Verdict ────────────────────────────────────────────────────────────────
 if ($ko) {

@@ -54,7 +54,7 @@
     "modal_reason_label": "Perché l'attività non è stata eseguita",
     "modal_photo_take": "Scatta la foto",
     "modal_photo_clear": "Cancella",
-    "no_one_scheduled": "Quel giorno non c'è nessuno in turno.",
+    "no_one_scheduled": "Il turno non indica nessuno oggi: viene proposta tutta la squadra.",
     "complete_error_note_required": "Indica perché l'attività non è stata eseguita.",
     "modal_photo_shoot": "Scatta",
     "modal_photo_close": "Chiudi",

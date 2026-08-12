@@ -50,16 +50,19 @@ class ChecklistService
         return $this->staffService->getEmployees($date) ?? [];
     }
 
-    /** L'équipe réellement proposable : filtrée par le planning s'il est connu. */
-    public function onDuty(array $employees): array
+    /**
+     * Qui proposer, et sous quelle réserve.
+     *
+     * Rend la liste ET la raison : l'écran doit pouvoir écrire « ces
+     * personnes-là », « le planning n'est pas disponible » ou « le planning ne
+     * désigne personne aujourd'hui ». Les trois se ressemblent à l'affichage et
+     * n'appellent pas la même réaction.
+     *
+     * @return array{list: array, mode: string}
+     */
+    public function roster(array $employees): array
     {
-        return $this->staffService->onDuty($employees);
-    }
-
-    /** Le planning du jour est-il connu ? L'écran le dit à l'équipe. */
-    public function scheduleKnown(array $employees): bool
-    {
-        return $this->staffService->scheduleKnown($employees);
+        return $this->staffService->roster($employees);
     }
 
     /**

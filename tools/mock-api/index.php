@@ -401,6 +401,9 @@ if ($method === 'GET' && $m('/franchisee-employees')) {
 // Qui travaille, un jour donne. Le planning ne porte pas de noms : c'est son
 // croisement avec la liste ci-dessus qui dit qui peut signer une tache.
 if ($method === 'GET' && $m('/shops/\d+/schedule')) {
+    // ?empty=1 : un planning servi mais qui ne designe personne. C'est le cas
+    // qui vidait la liste et rendait toute la checklist invalidable.
+    if (!empty($q['empty'])) { ok([]); }
     ok(mock_schedule($q['date'] ?? date('Y-m-d')));
 }
 

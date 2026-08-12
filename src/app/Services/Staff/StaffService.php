@@ -85,20 +85,57 @@ class StaffService
     }
 
     /**
-     * Le personnel actif : ceux qui sont de service.
+     * Qui proposer, et sous quelle réserve.
+     *
+     * ── La règle, et sa limite ──
+     * On filtre par le planning quand il désigne quelqu'un. Quand il ne désigne
+     * PERSONNE, on rend toute l'équipe active en le disant.
+     *
+     * Ce dernier cas n'est pas un détail : un planning vide — pas encore saisi,
+     * saisi ailleurs, ou simplement absent pour un jour férié travaillé — videra
+     * la liste, et une liste vide rend toutes les tâches invalidables. Le
+     * magasin est ouvert, l'équipe est là, et l'écran refuserait de la laisser
+     * signer. Un filtre ne doit jamais rendre le travail impossible ; il doit
+     * aider quand il sait, et s'effacer quand il ne sait pas.
+     *
+     * @param array<int, array{on_schedule: ?bool}>|null $employees
+     * @return array{list: array<int, array>, mode: string}
+     *         mode = scheduled   — le planning désigne ces personnes
+     *              | all_unknown — planning non servi, toute l'équipe
+     *              | all_empty   — planning servi mais vide, toute l'équipe
+     *              | none        — aucune équipe du tout
+     */
+    public function roster(?array $employees): array
+    {
+        if ($employees === null || $employees === []) {
+            return ['list' => [], 'mode' => 'none'];
+        }
+
+        if (!$this->scheduleKnown($employees)) {
+            return ['list' => $employees, 'mode' => 'all_unknown'];
+        }
+
+        $onDuty = array_values(array_filter($employees, fn(array $e) => $e['on_schedule'] === true));
+        if ($onDuty === []) {
+            return ['list' => $employees, 'mode' => 'all_empty'];
+        }
+
+        return ['list' => $onDuty, 'mode' => 'scheduled'];
+    }
+
+    /**
+     * Le personnel de service, liste seule.
+     *
+     * Conservé pour la cuisson, qui affiche une équipe sans avoir à expliquer
+     * pourquoi. L'écran des checklists, lui, doit dire sous quelle réserve il
+     * propose sa liste : il passe par roster().
      *
      * @param array<int, array{on_schedule: ?bool}>|null $employees
      * @return array<int, array>
      */
     public function onDuty(?array $employees): array
     {
-        if ($employees === null) {
-            return [];
-        }
-        if (!$this->scheduleKnown($employees)) {
-            return $employees;
-        }
-        return array_values(array_filter($employees, fn(array $e) => $e['on_schedule'] === true));
+        return $this->roster($employees)['list'];
     }
 
     /** @param array<int, array{on_schedule: ?bool}>|null $employees */
