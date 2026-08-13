@@ -956,27 +956,33 @@ Ce jeu reproduit **exactement** ce que les tablettes affichent aujourd'hui. Le
 poser tel quel ne change donc rien à l'écran — c'est ce qui permet de livrer la
 table sans rien casser, puis d'ajuster une case à la fois.
 
+**Le fichier prêt à exécuter est `docs/sql/pwa_kitchen_param.sql`** — INSERT
+idempotent, requête de vérification, et la requête de l'endpoint. Son contenu,
+pour mémoire :
+
 ```sql
-INSERT INTO pwa_kitchen_param (mode, feature, is_enabled, in_tabbar, sort_order) VALUES
+INSERT INTO pwa_kitchen_param (mode, feature, is_enabled, in_tabbar, sort_order, id_shop) VALUES
 -- Production : le fournil. Six entrées au menu, quatre dans la barre.
-('production', 'dashboard',  1, 1, 10),
-('production', 'production', 1, 1, 20),
-('production', 'checklists', 1, 1, 30),
-('production', 'orders',     1, 1, 40),
-('production', 'knowledge',  1, 0, 50),
-('production', 'complaints', 1, 0, 60),
+('production', 'dashboard',  1, 1, 10, 0),
+('production', 'production', 1, 1, 20, 0),
+('production', 'checklists', 1, 1, 30, 0),
+('production', 'orders',     1, 1, 40, 0),
+('production', 'knowledge',  1, 0, 50, 0),
+('production', 'complaints', 1, 0, 60, 0),
 
 -- Gestion : le bureau. Ni production, ni commandes.
-('gestion',    'dashboard',  1, 1, 10),
-('gestion',    'checklists', 1, 1, 20),
-('gestion',    'knowledge',  1, 1, 30),
-('gestion',    'complaints', 1, 1, 40),
+('gestion',    'dashboard',  1, 1, 10, 0),
+('gestion',    'checklists', 1, 1, 20, 0),
+('gestion',    'knowledge',  1, 1, 30, 0),
+('gestion',    'complaints', 1, 1, 40, 0),
 
 -- WebShop : le comptoir. Une entrée de menu, et ses trois vues en bas.
-('webshop',    'webshop',    1, 0, 10),
-('webshop',    'ws_prep',    1, 1, 20),
-('webshop',    'ws_stock',   1, 1, 30),
-('webshop',    'ws_board',   1, 1, 40);
+('webshop',    'webshop',    1, 0, 10, 0),
+('webshop',    'ws_prep',    1, 1, 20, 0),
+('webshop',    'ws_stock',   1, 1, 30, 0),
+('webshop',    'ws_board',   1, 1, 40, 0)
+ON DUPLICATE KEY UPDATE
+  is_enabled = VALUES(is_enabled), in_tabbar = VALUES(in_tabbar), sort_order = VALUES(sort_order);
 ```
 
 La requête qui sert l'endpoint, surcharge par boutique comprise — la ligne de
