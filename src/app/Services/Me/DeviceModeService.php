@@ -49,7 +49,7 @@ class DeviceModeService
      * Le planning est devenu un onglet de Production — un module, quatre
      * questions. L'inscrire au menu doublerait l'entrée Production.
      */
-    private const NAV = [
+    public const DEFAULT_NAV = [
         self::MODE_PRODUCTION => ['dashboard', 'production', 'checklists', 'orders', 'knowledge', 'complaints'],
         self::MODE_GESTION    => ['dashboard', 'checklists', 'knowledge', 'complaints'],
         self::MODE_WEBSHOP    => ['webshop'],
@@ -60,11 +60,139 @@ class DeviceModeService
      * pas l'inventaire des sections. Quatre au plus, le profil en cinquième
      * étant ajouté par la coque.
      */
-    private const TABS = [
+    public const DEFAULT_TABS = [
         self::MODE_PRODUCTION => ['dashboard', 'production', 'checklists', 'orders'],
         self::MODE_GESTION    => ['dashboard', 'checklists', 'knowledge', 'complaints'],
         self::MODE_WEBSHOP    => ['ws_prep', 'ws_stock', 'ws_board'],
     ];
+
+    /**
+     * Les fonctionnalités que l'application sait rendre.
+     *
+     * C'est une liste FERMÉE, et c'est le point important : la table
+     * `pwa_kitchen_param` décide de ce qui est montré, pas de ce qui existe.
+     * Une ligne y désignant « facturation » n'ouvrirait pas un écran de
+     * facturation — elle ajouterait une entrée de menu qui ne mène nulle part,
+     * exactement le défaut qu'on a retiré du menu en août. Ce qui n'est pas
+     * dans cette liste est donc ignoré, en silence côté écran et signalé côté
+     * log.
+     *
+     * Y ajouter une clé demande d'abord d'écrire l'écran, sa route et son
+     * entrée dans components/app_nav.twig.
+     */
+    public const KNOWN_NAV = [
+        'dashboard', 'production', 'checklists', 'orders', 'knowledge', 'complaints', 'webshop',
+    ];
+
+    /** Les onglets du bas : les clés de menu, plus les trois vues WebShop. */
+    public const KNOWN_TABS = [
+        'dashboard', 'production', 'checklists', 'orders', 'knowledge', 'complaints', 'webshop',
+        'ws_prep', 'ws_stock', 'ws_board',
+    ];
+
+    /** La barre du bas tient quatre onglets, le profil étant ajouté par la coque. */
+    public const MAX_TABS = 4;
+
+    /**
+     * Les cartes effectives : les défauts ci-dessus, éventuellement remplacés
+     * par ce que sert `GET /devices/me/config` (table `pwa_kitchen_param`).
+     *
+     * @var array{nav: array<string, string[]>, tabs: array<string, string[]>}|null
+     */
+    private ?array $maps = null;
+
+    /**
+     * Brancher la configuration distante.
+     *
+     * Appelée une fois par requête, depuis core/Support/DeviceMode. Passer null
+     * ou une configuration illisible laisse les défauts en place : c'est le
+     * comportement voulu, une tablette ne doit jamais se retrouver sans menu
+     * parce que l'ERP a hoqueté.
+     */
+    public function applyConfig(?array $config): void
+    {
+        $this->maps = self::sanitise($config);
+    }
+
+    /**
+     * Transforme la configuration servie en cartes utilisables, ou rend les
+     * défauts. Pure : c'est elle qu'on vérifie dans bin/mode-test.php.
+     *
+     * ── Ce qui est refusé, et pourquoi ──
+     * • une fonctionnalité inconnue de l'application → ignorée (voir KNOWN_NAV) ;
+     * • un mode inconnu → ignoré ; il n'a pas d'écran d'accueil ni de vues ;
+     * • un menu VIDE pour un mode → on garde le défaut de ce mode. C'est la
+     *   garde la plus importante : une ligne mal saisie en base ne doit pas
+     *   rendre une tablette inutilisable, et une tablette sans menu ne se
+     *   répare pas au doigt ;
+     * • plus de quatre onglets → on garde les quatre premiers ; la barre n'en
+     *   affiche pas davantage, et les suivants disparaîtraient sans un mot.
+     *
+     * Un mode absent de la configuration garde ses défauts : configurer la
+     * production ne doit pas effacer la gestion.
+     *
+     * @param array|null $config  ['modes' => ['production' => ['nav' => [...], 'tabs' => [...]], …]]
+     * @return array{nav: array<string, string[]>, tabs: array<string, string[]>}
+     */
+    public static function sanitise(?array $config): array
+    {
+        $nav  = self::DEFAULT_NAV;
+        $tabs = self::DEFAULT_TABS;
+
+        $modes = $config['modes'] ?? null;
+        if (!is_array($modes)) {
+            return ['nav' => $nav, 'tabs' => $tabs];
+        }
+
+        foreach ($modes as $mode => $spec) {
+            $mode = strtolower(trim((string)$mode));
+            if (!array_key_exists($mode, self::DEFAULT_NAV) || !is_array($spec)) {
+                continue;
+            }
+
+            if (isset($spec['nav']) && is_array($spec['nav'])) {
+                $keep = self::keepKnown($spec['nav'], self::KNOWN_NAV);
+                // Vide = on garde le défaut. Voir plus haut : c'est la garde
+                // qui empêche une tablette sans menu.
+                if ($keep !== []) {
+                    $nav[$mode] = $keep;
+                }
+            }
+
+            if (isset($spec['tabs']) && is_array($spec['tabs'])) {
+                $keep = self::keepKnown($spec['tabs'], self::KNOWN_TABS);
+                if ($keep !== []) {
+                    $tabs[$mode] = array_slice($keep, 0, self::MAX_TABS);
+                }
+            }
+        }
+
+        return ['nav' => $nav, 'tabs' => $tabs];
+    }
+
+    /**
+     * Ne garde que les clés que l'application sait rendre, dans l'ordre servi,
+     * sans doublon.
+     *
+     * @param array<int, mixed> $keys
+     * @param string[] $known
+     * @return string[]
+     */
+    private static function keepKnown(array $keys, array $known): array
+    {
+        $out = [];
+        foreach ($keys as $k) {
+            if (!is_string($k) && !is_int($k)) {
+                continue;
+            }
+            $k = strtolower(trim((string)$k));
+            if ($k !== '' && in_array($k, $known, true) && !in_array($k, $out, true)) {
+                $out[] = $k;
+            }
+        }
+
+        return $out;
+    }
 
     /** @return string[] */
     public function modes(): array
@@ -88,13 +216,13 @@ class DeviceModeService
     /** @return string[] clés des sections visibles dans le menu */
     public function navKeys(?string $mode): array
     {
-        return self::NAV[$this->normalise($mode)];
+        return ($this->maps['nav'] ?? self::DEFAULT_NAV)[$this->normalise($mode)];
     }
 
     /** @return string[] clés des onglets du bas, profil non compris */
     public function tabKeys(?string $mode): array
     {
-        return self::TABS[$this->normalise($mode)];
+        return ($this->maps['tabs'] ?? self::DEFAULT_TABS)[$this->normalise($mode)];
     }
 
     public function allows(?string $mode, string $navKey): bool

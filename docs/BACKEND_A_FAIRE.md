@@ -853,24 +853,23 @@ cas d'erreur, dans `docs/ENDPOINTS_PRODUCTION.md` et
 
 ---
 
-## 8. Le mode de la tablette — tables `pwa_`
+## 8. Le mode de la tablette — table `pwa_kitchen_param`
 
 Une même application tourne sur trois postes qui n'ont pas le même métier : le
 fournil produit, le bureau contrôle, le comptoir vend. Le **mode** dit à quoi
-sert un appareil, et donc quels menus il affiche.
+sert un appareil, et donc quelles fonctionnalités il affiche.
 
-Aujourd'hui, les trois modes et leurs menus sont **codés en dur** dans la PWA
-(`app/Services/Me/DeviceModeService.php`) et le choix vit dans un cookie de la
-tablette. Ça fonctionne, mais ça oblige à livrer une version pour changer
-l'affectation d'une entrée de menu, et à passer sur chaque tablette pour
-changer son mode.
+Ce que chaque mode montre était **codé en dur** dans la PWA
+(`app/Services/Me/DeviceModeService.php`). Ouvrir les réclamations au comptoir
+demandait alors un commit, une revue et une mise en production, pour un choix
+qui appartient au franchisé.
 
-Ce qui suit est la **table de gestion** qui déplace les deux décisions côté
-back-office : quels menus dans quel mode, et quel mode sur quelle tablette.
+La table ci-dessous déplace ce choix là où il se prend. **Côté PWA, tout est
+branché** (§8.9) : il ne manque que la table et l'endpoint.
 
-Ces tables portent le préfixe **`pwa_`** et non `pro_` : elles ne parlent pas de
-production, elles parlent de l'application elle-même. Un jour où le module
-Production sera retiré, elles resteront.
+Le préfixe est **`pwa_`** et non `pro_` : elle ne parle pas de production, elle
+parle de l'application elle-même. Le jour où le module Production sera retiré,
+elle restera.
 
 > Vue d'ensemble côté PWA — ce qui est déjà en place, et pourquoi le cookie :
 > `docs/MODE_TABLETTE.md`.
@@ -886,138 +885,119 @@ serait un bug qu'aucun déploiement ne rattraperait.
 Même logique pour `icon` : c'est une clé de `components/_icons.twig`
 (`home`, `list-checks`, `store`…), pas un fichier ni un SVG.
 
-### 8.2 Les modes
+### 8.2 La table demandée — `pwa_kitchen_param`
+
+**Une seule table**, une ligne par couple (mode, fonctionnalité). C'est la
+forme demandée le 12/08/2026, et elle remplace les trois tables
+(`pwa_mode`, `pwa_menu_item`, `pwa_mode_menu`) proposées dans la version
+précédente de ce document : trois tables pour une matrice de dix-huit lignes
+coûtaient deux jointures et un écran d'administration à chaque question.
 
 ```sql
-CREATE TABLE pwa_mode (
+CREATE TABLE pwa_kitchen_param (
     id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    code        VARCHAR(32)  NOT NULL COMMENT 'gestion | production | webshop',
-    label_key   VARCHAR(64)  NOT NULL COMMENT 'clé i18n, ex. mode_production',
-    home_route  VARCHAR(128) NOT NULL COMMENT 'où atterrit la tablette : /dashboard, /webshop',
-    is_default  TINYINT(1)   NOT NULL DEFAULT 0,
-    is_active   TINYINT(1)   NOT NULL DEFAULT 1,
-    sort_order  SMALLINT UNSIGNED NOT NULL DEFAULT 0,
-    UNIQUE KEY uq_code (code)
-);
 
-INSERT INTO pwa_mode (code, label_key, home_route, is_default, sort_order) VALUES
-    ('gestion',    'mode_gestion',    '/dashboard', 0, 10),
-    ('production', 'mode_production', '/dashboard', 1, 20),
-    ('webshop',    'mode_webshop',    '/webshop',   0, 30);
+    mode        VARCHAR(32)  NOT NULL COMMENT 'gestion | production | webshop',
+    feature     VARCHAR(32)  NOT NULL COMMENT 'clé connue de la PWA — voir 8.3',
+
+    is_enabled  TINYINT(1)   NOT NULL DEFAULT 1 COMMENT 'la fonctionnalité est-elle offerte dans ce mode',
+    in_tabbar   TINYINT(1)   NOT NULL DEFAULT 0 COMMENT 'en plus du menu, dans la barre du bas (4 max)',
+    sort_order  SMALLINT     NOT NULL DEFAULT 0 COMMENT 'ordre d''affichage, croissant',
+
+    -- 0 = vaut pour toutes les boutiques ; sinon, surcharge de CETTE boutique.
+    -- NOT NULL DEFAULT 0 et non NULL : en MySQL, une clé unique portant une
+    -- colonne NULL accepte les doublons, et deux lignes contradictoires pour le
+    -- même couple passeraient sans bruit.
+    id_shop     INT UNSIGNED NOT NULL DEFAULT 0,
+
+    updated_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uq_param (mode, feature, id_shop),
+    KEY idx_mode (mode, is_enabled)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
-**`is_default` doit valoir `production`, et une seule ligne doit le porter.**
-Ce n'est pas un détail de confort : les tablettes déjà en service tournent en
-production, et tout autre défaut changerait ce qu'elles affichent au premier
-déploiement, sans que personne l'ait demandé. Si aucune ligne n'est marquée, la
-PWA retombe sur `production` — elle ne prend pas la première venue.
+`is_enabled` plutôt que la suppression de la ligne : on ferme une
+fonctionnalité pour un mois et on la rouvre, sans reperdre son ordre ni sa
+place dans la barre. Une ligne supprimée efface aussi la trace de la décision.
 
-`is_active = 0` retire un mode du choix **sans supprimer la ligne** : les
-tablettes qui l'avaient déjà retombent sur le défaut, et l'affectation des
-menus est conservée si on le réactive.
+`id_shop` permet de dévier une boutique sans toucher aux autres : la ligne à
+`id_shop = 0` est la règle du réseau, celle à `id_shop = 42` la remplace pour
+la boutique 42. La résolution se fait dans la requête (§8.4), pas dans la PWA —
+sinon le filtre serait écrit deux fois et les deux divergeraient.
 
-### 8.3 Les entrées de menu
+### 8.3 Les valeurs admises dans `feature`
 
-```sql
-CREATE TABLE pwa_menu_item (
-    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    code        VARCHAR(32)  NOT NULL COMMENT 'doit être une clé connue de la PWA — voir plus bas',
-    label_key   VARCHAR(64)  NOT NULL,
-    icon        VARCHAR(32)  NOT NULL COMMENT 'clé de components/_icons.twig',
-    route       VARCHAR(128) NOT NULL COMMENT 'chemin relatif à ROOT, ex. /production',
-    is_active   TINYINT(1)   NOT NULL DEFAULT 1,
-    UNIQUE KEY uq_code (code)
-);
+La PWA ignore toute clé qu'elle ne sait pas rendre. **Ce n'est pas une
+restriction arbitraire** : une ligne `facturation` n'ouvrirait pas un écran de
+facturation, elle ajouterait une entrée de menu qui ne mène nulle part — le
+défaut exact qui a été retiré du menu en août.
 
-INSERT INTO pwa_menu_item (code, label_key, icon, route) VALUES
-    ('dashboard',  'kitchen_dashboard', 'home',            '/dashboard'),
-    ('production', 'production',        'list-checks',     '/production'),
-    ('objectives', 'objectives_bonuses','target',          '#'),
-    ('checklists', 'checklists',        'clipboard-check', '/checklists'),
-    ('orders',     'orders',            'receipt',         '/orders'),
-    ('knowledge',  'knowledge',         'notebook',        '/knowledge'),
-    ('complaints', 'complaints',        'circle-alert',    '/complaints'),
-    ('webshop',    'webshop',           'store',           '/webshop');
-```
-
-**`code` n'est pas libre.** La PWA ignore les codes qu'elle ne connaît pas, et
-c'est délibéré : une ligne inventée en base — `('marketing', …, '/marketing')` —
-produirait une entrée de menu qui ouvre un 404. Le brief d'intégration interdit
-les entrées mortes, et la seule façon de le garantir depuis une table est que la
-PWA arbitre. **Ajouter une section se fait donc en deux temps : la PWA d'abord,
-la ligne ensuite.**
-
-Les huit codes ci-dessus sont ceux que la PWA connaît aujourd'hui ; ils sont
-définis dans `DeviceModeService::NAV`.
-
-### 8.4 L'affectation — la table demandée
-
-```sql
-CREATE TABLE pwa_mode_menu (
-    id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    id_mode      INT UNSIGNED NOT NULL,
-    id_menu_item INT UNSIGNED NOT NULL,
-    in_drawer    TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'visible dans le menu hamburger',
-    in_tabbar    TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'visible dans la barre du bas',
-    sort_order   SMALLINT UNSIGNED NOT NULL DEFAULT 0,
-    UNIQUE KEY uq_assign (id_mode, id_menu_item),
-    KEY ix_mode (id_mode),
-    CONSTRAINT fk_mm_mode FOREIGN KEY (id_mode)      REFERENCES pwa_mode(id)      ON DELETE CASCADE,
-    CONSTRAINT fk_mm_item FOREIGN KEY (id_menu_item) REFERENCES pwa_menu_item(id) ON DELETE CASCADE
-);
-```
-
-**Deux booléens plutôt que deux tables** : le menu et la barre du bas sont deux
-vues d'une même affectation, pas deux listes indépendantes. Une entrée dans la
-barre du bas et absente du menu serait une incohérence qu'aucun écran ne sait
-présenter.
-
-**La barre du bas tient quatre entrées, profil non compris.** Le profil y est
-ajouté par la coque dans tous les modes — c'est par lui qu'on revient aux
-réglages, et une tablette dont on ne peut plus changer le mode serait à
-réinstaller. Au-delà de quatre `in_tabbar = 1` pour un même mode, la PWA prend
-les quatre premiers par `sort_order` : la console de marque **devrait** refuser
-le cinquième plutôt que de laisser découvrir la troncature sur le terrain.
-
-L'état actuel de la PWA, à reproduire tel quel pour ne rien changer aux
-tablettes en service :
-
-| mode | entrées (`sort_order`) | dans la barre du bas |
+| `feature` | l'écran | route |
 |---|---|---|
-| `gestion` | dashboard 10, objectives 20, checklists 30, knowledge 40, complaints 50 | dashboard, checklists, knowledge, complaints |
-| `production` | dashboard 10, production 20, objectives 30, checklists 40, orders 50, knowledge 60, complaints 70 | dashboard, production, checklists, orders |
-| `webshop` | webshop 10 | webshop |
+| `dashboard` | Tableau de bord cuisine | `/dashboard` |
+| `production` | Production (besoins, atelier, stock, minimums, MEP) | `/production` |
+| `checklists` | Listes de contrôle | `/checklists` |
+| `orders` | Commandes clients | `/orders` |
+| `knowledge` | Base de connaissances | `/knowledge` |
+| `complaints` | Réclamations | `/complaints` |
+| `webshop` | WebShop (les trois écrans de comptoir) | `/webshop` |
 
-Le seed correspondant, à passer tel quel après les deux tables précédentes :
+Et pour la barre du bas seulement, les trois vues internes du mode WebShop :
+`ws_prep`, `ws_stock`, `ws_board`.
 
-```sql
-INSERT INTO pwa_mode_menu (id_mode, id_menu_item, in_drawer, in_tabbar, sort_order)
-SELECT m.id, i.id, x.in_drawer, x.in_tabbar, x.sort_order
-FROM (
-    SELECT 'gestion'    AS mode, 'dashboard'  AS item, 1 AS in_drawer, 1 AS in_tabbar, 10 AS sort_order
-    UNION ALL SELECT 'gestion',    'objectives', 1, 0, 20
-    UNION ALL SELECT 'gestion',    'checklists', 1, 1, 30
-    UNION ALL SELECT 'gestion',    'knowledge',  1, 1, 40
-    UNION ALL SELECT 'gestion',    'complaints', 1, 1, 50
-    UNION ALL SELECT 'production', 'dashboard',  1, 1, 10
-    UNION ALL SELECT 'production', 'production', 1, 1, 20
-    UNION ALL SELECT 'production', 'objectives', 1, 0, 30
-    UNION ALL SELECT 'production', 'checklists', 1, 1, 40
-    UNION ALL SELECT 'production', 'orders',     1, 1, 50
-    UNION ALL SELECT 'production', 'knowledge',  1, 0, 60
-    UNION ALL SELECT 'production', 'complaints', 1, 0, 70
-    UNION ALL SELECT 'webshop',    'webshop',    1, 1, 10
-) x
-JOIN pwa_mode      m ON m.code = x.mode
-JOIN pwa_menu_item i ON i.code = x.item;
-```
+La liste vit dans `DeviceModeService::KNOWN_NAV` et `KNOWN_TABS`. Y ajouter une
+clé demande d'abord d'écrire l'écran, sa route et son entrée de menu : la table
+décide de ce qui est **montré**, jamais de ce qui **existe**.
 
-Et l'URL du back-office, posée une fois pour tout le réseau :
+### 8.4 Le contenu initial, et la requête
+
+Ce jeu reproduit **exactement** ce que les tablettes affichent aujourd'hui. Le
+poser tel quel ne change donc rien à l'écran — c'est ce qui permet de livrer la
+table sans rien casser, puis d'ajuster une case à la fois.
 
 ```sql
-INSERT INTO pwa_device_setting (scope, scope_id, setting_key, value, updated_at)
-VALUES ('brand', NULL, 'webshop_url', 'https://exemple.tld/webshop/backoffice_franchisee/', NOW());
+INSERT INTO pwa_kitchen_param (mode, feature, is_enabled, in_tabbar, sort_order) VALUES
+-- Production : le fournil. Six entrées au menu, quatre dans la barre.
+('production', 'dashboard',  1, 1, 10),
+('production', 'production', 1, 1, 20),
+('production', 'checklists', 1, 1, 30),
+('production', 'orders',     1, 1, 40),
+('production', 'knowledge',  1, 0, 50),
+('production', 'complaints', 1, 0, 60),
+
+-- Gestion : le bureau. Ni production, ni commandes.
+('gestion',    'dashboard',  1, 1, 10),
+('gestion',    'checklists', 1, 1, 20),
+('gestion',    'knowledge',  1, 1, 30),
+('gestion',    'complaints', 1, 1, 40),
+
+-- WebShop : le comptoir. Une entrée de menu, et ses trois vues en bas.
+('webshop',    'webshop',    1, 0, 10),
+('webshop',    'ws_prep',    1, 1, 20),
+('webshop',    'ws_stock',   1, 1, 30),
+('webshop',    'ws_board',   1, 1, 40);
 ```
+
+La requête qui sert l'endpoint, surcharge par boutique comprise — la ligne de
+la boutique gagne sur celle du réseau :
+
+```sql
+SELECT p.mode, p.feature, p.in_tabbar, p.sort_order
+FROM pwa_kitchen_param p
+WHERE p.is_enabled = 1
+  AND p.id_shop = (
+        SELECT MAX(q.id_shop) FROM pwa_kitchen_param q
+        WHERE q.mode = p.mode AND q.feature = p.feature
+          AND q.id_shop IN (0, :shop_id)
+      )
+ORDER BY p.mode, p.sort_order;
+```
+
+Une ligne désactivée pour une boutique (`is_enabled = 0`, `id_shop = 42`) doit
+**masquer** la ligne réseau, pas la laisser repasser : d'où la sous-requête sur
+`MAX(id_shop)` avant le filtre, et non un simple `AND is_enabled = 1` sur les
+deux portées.
 
 ### 8.5 Les réglages d'appareil — mode, URL, boutique
 
@@ -1044,7 +1024,7 @@ Clés attendues aujourd'hui :
 
 | `setting_key` | portée usuelle | ce qu'il décide | si absent |
 |---|---|---|---|
-| `mode` | `device` | le mode de CETTE tablette | `is_default` de `pwa_mode`, donc `production` |
+| `mode` | `device` | le mode de CETTE tablette | `production`, le défaut codé dans la PWA |
 | `webshop_url` | `brand` | l'URL du back-office franchisé, prise telle quelle | le mode WebShop est proposé **grisé, avec sa raison** (`no_url`) |
 | `webshop_device_token` | `shop`, ou `device` | **secret.** Le jeton d'appareil du webshop (`X-Device-Token`). Il porte la boutique — il n'y a pas d'id à stocker à côté | raison `no_token` |
 
@@ -1077,44 +1057,66 @@ et non un champ sur l'utilisateur.
 
 ### 8.6 `GET /devices/me/config`
 
-Tout ce dont la tablette a besoin au démarrage, en **un appel**. Elle en fait un
-par chargement de page : deux ou trois requêtes séparées pour peindre un menu
-seraient payées à chaque écran.
+Tout ce dont la tablette a besoin, en **un appel**. Elle le passe au plus une
+fois par tranche de dix minutes — le résultat est mis en cache dans un cookie —
+et non à chaque page : peindre un menu ne vaut pas un aller-retour par écran.
 
 ```json
 {
   "mode": "production",
-  "modes": [
-    {"code": "gestion",    "label_key": "mode_gestion",    "home_route": "/dashboard", "is_default": false},
-    {"code": "production", "label_key": "mode_production", "home_route": "/dashboard", "is_default": true},
-    {"code": "webshop",    "label_key": "mode_webshop",    "home_route": "/webshop",   "is_default": false}
-  ],
-  "menu": [
-    {"code": "dashboard",  "label_key": "kitchen_dashboard", "icon": "home",        "route": "/dashboard",  "in_drawer": true, "in_tabbar": true},
-    {"code": "production", "label_key": "production",        "icon": "list-checks", "route": "/production", "in_drawer": true, "in_tabbar": true}
-  ],
+  "modes": {
+    "production": {
+      "nav":  ["dashboard", "production", "checklists", "orders", "knowledge", "complaints"],
+      "tabs": ["dashboard", "production", "checklists", "orders"]
+    },
+    "gestion": {
+      "nav":  ["dashboard", "checklists", "knowledge", "complaints"],
+      "tabs": ["dashboard", "checklists", "knowledge", "complaints"]
+    },
+    "webshop": {
+      "nav":  ["webshop"],
+      "tabs": ["ws_prep", "ws_stock", "ws_board"]
+    }
+  },
   "settings": {
-    "webshop_url": "https://exemple.tld/webshop/backoffice_franchisee/?shop=2",
+    "webshop_url": "https://exemple.tld/webshop/backoffice_franchisee/",
     "webshop_device_token": "…64 caractères…"
   }
 }
 ```
 
+`nav` est l'ordre du menu, `tabs` celui de la barre du bas : les deux sortent de
+`sort_order`, `tabs` ne gardant que les lignes à `in_tabbar = 1`.
+
+**Les trois modes sont servis, pas seulement le courant.** Le mode est un
+réglage local de la tablette, changeable à tout instant dans les réglages :
+n'en servir qu'un obligerait à rappeler l'API à chaque bascule, et l'écran de
+réglage ne pourrait plus montrer ce que chaque mode donne.
+
 | champ | ce qu'il décide | si absent |
 |---|---|---|
-| `mode` | le mode **résolu** pour cette tablette : `pwa_device_setting` d'abord, `pwa_mode.is_default` sinon. Le serveur résout, la PWA n'empile pas les portées | repli sur le cookie local, puis sur `production` |
-| `modes[]` | les tuiles de l'écran de réglage. Seuls les modes `is_active = 1` sont servis | les trois modes codés en dur |
-| `modes[].home_route` | où atterrit la tablette après connexion, après un changement de mode, et derrière le logo | `/dashboard`, sauf `webshop` → `/webshop` |
-| `menu[]` | **les entrées du mode courant, déjà filtrées et triées.** Ne servez pas les huit en laissant la PWA choisir : le filtre serait alors écrit deux fois, et les deux divergeraient | l'affectation codée en dur |
-| `menu[].code` | la clé pivot. Un code inconnu de la PWA est **ignoré** — voir §8.3 | — |
-| `menu[].in_tabbar` | barre du bas, quatre au plus, profil ajouté par la coque | rien dans la barre du bas |
-| `settings.webshop_url` | l'URL du back-office, ouverte **telle quelle**. Doit commencer par `http://` ou `https://` : elle finit en `src` d'une iframe, et la PWA refuse tout autre schéma | mode WebShop grisé, raison affichée |
-| `settings.webshop_device_token` | le jeton d'appareil du webshop. **Secret** : à ne servir qu'à la tablette qui le présente, jamais dans un listing, jamais dans un log | mode WebShop grisé, raison `no_token` |
+| `mode` | le mode résolu côté serveur pour cette tablette | repli sur le cookie local, puis sur `production` |
+| `modes` | ce que chaque mode affiche — la table `pwa_kitchen_param` | l'affectation codée en dur dans la PWA |
+| `modes.<mode>.nav` | les entrées du menu, dans l'ordre | le défaut de CE mode |
+| `modes.<mode>.tabs` | la barre du bas, **quatre au plus** ; au-delà, la PWA garde les quatre premières | le défaut de CE mode |
+| `settings.webshop_url` | l'URL du back-office, ouverte telle quelle. `http(s)` obligatoire : elle finit en `src` d'une iframe | mode WebShop grisé, raison affichée |
+| `settings.webshop_device_token` | le jeton d'appareil du webshop. **Secret** : servi à la tablette qui le présente, jamais dans un listing ni un log | mode WebShop grisé, raison `no_token` |
 
 **Cet endpoint est une surcharge, pas un prérequis.** Un `404` n'est pas une
-panne : la PWA garde son cookie et ses valeurs codées en dur, et l'écran ne
-change pas. C'est ce qui permet de livrer les tables sans immobiliser les
-tablettes, et de les livrer dans l'ordre qui vous arrange.
+panne : la PWA garde ses valeurs codées en dur et l'écran ne change pas. C'est
+ce qui permet de livrer la table sans immobiliser les tablettes.
+
+**Ce que la PWA refuse, et ce n'est pas négociable :**
+
+- une `feature` inconnue → ignorée (§8.3) ;
+- un mode inconnu → ignoré ;
+- un `nav` **vide** pour un mode → le défaut de ce mode est conservé. Une
+  tablette sans menu ne se répare pas au doigt, et une ligne mal saisie en base
+  ne doit pas immobiliser un magasin ;
+- plus de quatre onglets → les quatre premiers.
+
+Ces règles sont dans `DeviceModeService::sanitise()` et vérifiées par
+`bin/mode-test.php`.
 
 **Aucun identifiant d'appareil dans l'URL**, et c'est structurant : la tablette
 lit **sa** configuration, celle du jeton qu'elle présente. Un
@@ -1124,8 +1126,7 @@ lit **sa** configuration, celle du jeton qu'elle présente. Un
 **Un seul secret dans `settings`, et il est cloisonné.** Le jeton d'appareil du
 webshop est servi à la tablette qui le présente, à personne d'autre, et n'est
 jamais journalisé. Le jeton **admin** de l'ERP, lui, n'a rien à faire sur une
-tablette sous aucune forme : il donne accès aux marges et aux paramètres réseau.
-Voir `docs/MODE_TABLETTE.md` §3.
+tablette sous aucune forme. Voir `docs/MODE_TABLETTE.md` §3.
 
 ### 8.7 `PATCH /devices/me/settings`
 
@@ -1159,32 +1160,41 @@ service, une déconnexion pour un changement de menu serait une panne.
 
 ### 8.8 Ce que la PWA n'écrit jamais
 
-`pwa_mode`, `pwa_menu_item` et `pwa_mode_menu` sont pilotées par la **console de
-marque**, jamais par la tablette. La PWA les lit, un point c'est tout : une
-tablette de comptoir n'a pas à décider ce que voit celle du fournil.
+`pwa_kitchen_param` est pilotée par la **console de marque**, jamais par la
+tablette. La PWA la lit, un point c'est tout : une tablette de comptoir n'a pas
+à décider ce que voit celle du fournil.
 
 Seule `pwa_device_setting` en portée `device` est écrite depuis la tablette, et
 seulement pour elle-même.
 
-### 8.9 Côté PWA, ce qui changera le jour où ça existe
+### 8.9 Côté PWA, c'est branché
 
-Trois points d'accroche, déjà isolés pour ça — le détail est dans
-`docs/MODE_TABLETTE.md` §2. En résumé : le cookie devient un cache, les
-constantes deviennent un repli, et les règles ne bougent pas. Elles sont
-**pures** — ni cookie, ni requête, ni horloge — et couvertes par
-`php bin/mode-test.php` : ce sont les mêmes tests avant et après, seule la
-source des données change.
+**Fait le 12/08/2026.** Il n'y a plus rien à faire côté PWA : elle appelle
+`GET /devices/me/config`, applique ce qu'elle y trouve, et garde ses valeurs
+codées en dur pour tout ce qui manque.
+
+| pièce | rôle |
+|---|---|
+| `Repositories/Me/DeviceConfigRepository` | l'appel, et rien d'autre |
+| `core/Support/DeviceMode::refreshConfig()` | le cache — un appel par tranche de dix minutes, dans un cookie |
+| `Services/Me/DeviceModeService::sanitise()` | le filtre : clés connues, modes connus, jamais de menu vide, quatre onglets au plus |
+| `DeviceModeService::DEFAULT_NAV` / `DEFAULT_TABS` | le repli |
+
+Les règles restent **pures** — ni cookie, ni requête, ni horloge — et couvertes
+par `php bin/mode-test.php`.
 
 Ce que ça implique pour vous : **rien d'urgent, et rien d'irréversible.** Un
 endpoint absent, muet ou incomplet laisse la PWA sur son comportement
-d'aujourd'hui.
+d'aujourd'hui. Vous pouvez poser la table, la remplir avec le jeu de §8.4 — qui
+ne change rien à l'écran — puis ajuster une case et voir l'effet dans les dix
+minutes.
 
-### 8.10 Ces deux endpoints ne sont pas dans le bouchon
+### 8.10 Le bouchon sert `/devices/me/config`
 
-Contrairement aux seize premiers (§1), `/devices/me/config` et
-`/devices/me/settings` **ne sont pas** servis par `tools/mock-api/`. Rien ne les
-appelle encore côté PWA : les écrire aujourd'hui serait du code sans lecteur,
-qui aurait divergé du vrai serveur avant même d'être branché.
+`tools/mock-api/` sert désormais cet endpoint, avec le jeu de §8.4 : c'est ce
+qui a permis de vérifier au navigateur qu'une case décochée retire bien
+l'entrée du menu. `PATCH /devices/me/settings`, lui, n'est toujours pas
+bouchonné — rien ne l'appelle encore côté PWA.
 
 Pour vérifier votre implémentation, le contrat ci-dessus se teste au curl :
 

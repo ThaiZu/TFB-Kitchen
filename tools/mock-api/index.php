@@ -393,6 +393,13 @@ if ($method === 'POST' && $m('/employees/\d+/tasks/\d+/mark-as-done')) {
     ok(['message' => 'ok', 'status' => $st, 'note' => (string)($in['note'] ?? '')]);
 }
 
+// Ce que chaque mode de tablette affiche — table pwa_kitchen_param, §8 du
+// document de passation. Un 404 ici n'est pas une panne : la PWA garde ses
+// valeurs par defaut. C'est exactement ce qu'on veut pouvoir verifier.
+if ($method === 'GET' && $m('/devices/me/config')) {
+    ok(mock_device_config());
+}
+
 // Qui existe : la liste de reference du franchise, etat d'activite compris.
 if ($method === 'GET' && $m('/franchisee-employees')) {
     ok(mock_franchisee_employees());

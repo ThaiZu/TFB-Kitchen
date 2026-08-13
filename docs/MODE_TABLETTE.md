@@ -62,6 +62,17 @@ mécanisme était exclu ; le cookie est celui que le brief nomme.
 | `kitchen_device_mode` | `gestion` \| `production` \| `webshop` | 5 ans |
 | `kitchen_webshop_url` | surcharge locale de l'URL du back-office | 5 ans |
 | `kitchen_webshop_token` | **le jeton d'appareil du webshop — un secret** | 5 ans |
+| `kitchen_mode_config` | cache de `GET /devices/me/config` — ce que chaque mode affiche | 10 min |
+
+Le quatrième est un **cache**, pas un réglage : ce que chaque mode montre vient
+désormais de la table `pwa_kitchen_param` côté ERP (voir
+`docs/BACKEND_A_FAIRE.md` §8). La tablette l'interroge au plus une fois par
+tranche de dix minutes — un réglage coché au back-office descend donc dans le
+quart d'heure, sans qu'on touche à la tablette et sans déploiement.
+
+Endpoint absent, muet ou incomplet : la PWA garde ses valeurs codées en dur
+(`DeviceModeService::DEFAULT_NAV` / `DEFAULT_TABS`) et l'écran ne change pas.
+Une tablette sans menu ne se répare pas au doigt.
 
 `Secure` · `HttpOnly` · `SameSite=Strict` · `path=/`, comme les cookies d'auth
 existants.

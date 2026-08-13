@@ -459,3 +459,70 @@ function mock_checklist_progress(int $id): array
         'tasks'     => $tasks,
     ];
 }
+
+/**
+ * La table pwa_kitchen_param, telle que l'endpoint /devices/me/config la sert.
+ *
+ * Le jeu est celui du seed de docs/BACKEND_A_FAIRE.md §8.4 : il reproduit
+ * exactement ce que les tablettes affichent sans configuration. Un bouchon qui
+ * servirait autre chose ferait croire a un changement la ou il n'y en a pas.
+ *
+ * MOCK_MODES_OFF permet d'en retirer des cases pour verifier a l'ecran :
+ *     MOCK_MODES_OFF=production:complaints,gestion:knowledge php -S ...
+ */
+function mock_device_config(): array
+{
+    $lignes = [
+        ['production', 'dashboard',  1, 10],
+        ['production', 'production', 1, 20],
+        ['production', 'checklists', 1, 30],
+        ['production', 'orders',     1, 40],
+        ['production', 'knowledge',  0, 50],
+        ['production', 'complaints', 0, 60],
+
+        ['gestion',    'dashboard',  1, 10],
+        ['gestion',    'checklists', 1, 20],
+        ['gestion',    'knowledge',  1, 30],
+        ['gestion',    'complaints', 1, 40],
+
+        ['webshop',    'webshop',    0, 10],
+        ['webshop',    'ws_prep',    1, 20],
+        ['webshop',    'ws_stock',   1, 30],
+        ['webshop',    'ws_board',   1, 40],
+    ];
+
+    $off = [];
+    foreach (explode(',', (string)getenv('MOCK_MODES_OFF')) as $paire) {
+        $paire = trim($paire);
+        if ($paire !== '') {
+            $off[$paire] = true;
+        }
+    }
+
+    $modes = [];
+    foreach ($lignes as [$mode, $feature, $inTabbar, $ordre]) {
+        if (isset($off[$mode . ':' . $feature])) {
+            continue;   // is_enabled = 0
+        }
+        $modes[$mode]['nav'][$ordre] = $feature;
+        if ($inTabbar) {
+            $modes[$mode]['tabs'][$ordre] = $feature;
+        }
+    }
+
+    // « nav » porte tout ce qui est actif ; les vues internes du WebShop ne
+    // vivent que dans la barre du bas.
+    foreach ($modes as $mode => &$m) {
+        foreach (['nav', 'tabs'] as $cle) {
+            $liste = $m[$cle] ?? [];
+            ksort($liste);
+            $m[$cle] = array_values(array_filter(
+                $liste,
+                fn($f) => $cle === 'tabs' || !str_starts_with($f, 'ws_')
+            ));
+        }
+    }
+    unset($m);
+
+    return ['mode' => 'production', 'modes' => $modes];
+}

@@ -73,6 +73,21 @@ class App {
                 // jeżeli potrzebujesz middleware:
                 if (!in_array($controllerFQCN, $this->publicControllers, true)) {
                     $this->middleware->handle();
+
+                    // Ce que chaque mode de tablette affiche vient de la table
+                    // pwa_kitchen_param, via GET /devices/me/config. On la
+                    // rafraîchit ici, après l'authentification — l'appel a
+                    // besoin du jeton — et au plus une fois par tranche de dix
+                    // minutes, le cache vivant dans un cookie.
+                    //
+                    // Le fetch est passé en closure : DeviceMode est un support
+                    // statique et n'a pas de conteneur. Lui donner le dépôt
+                    // plutôt que le conteneur garde la dépendance visible.
+                    \App\Kitchen\core\Support\DeviceMode::refreshConfig(
+                        static fn() => $container
+                            ->get(\App\Kitchen\app\Repositories\Me\DeviceConfigRepository::class)
+                            ->get()
+                    );
                 }
                 // wywołaj z parametrami z {shopId}, {supplierId}
                 $result = call_user_func_array([$controller, $action], $vars);

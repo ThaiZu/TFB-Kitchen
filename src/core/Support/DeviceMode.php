@@ -32,18 +32,105 @@ use App\Kitchen\app\Services\Me\DeviceModeService;
  */
 final class DeviceMode
 {
-    public const COOKIE_MODE  = 'kitchen_device_mode';
-    public const COOKIE_URL   = 'kitchen_webshop_url';
-    public const COOKIE_TOKEN = 'kitchen_webshop_token';
+    public const COOKIE_MODE   = 'kitchen_device_mode';
+    public const COOKIE_URL    = 'kitchen_webshop_url';
+    public const COOKIE_TOKEN  = 'kitchen_webshop_token';
+    public const COOKIE_CONFIG = 'kitchen_mode_config';
 
     /** Cinq ans : le réglage doit survivre au redémarrage, pas expirer tout seul. */
     private const TTL = 5 * 365 * 24 * 3600;
+
+    /**
+     * Dix minutes pour la configuration des modes.
+     *
+     * Elle change rarement — quelqu'un coche une case au back-office — mais
+     * quand elle change, l'équipe ne doit pas attendre le lendemain. Dix minutes
+     * est le compromis : un appel par tablette et par tranche de dix minutes au
+     * lieu d'un appel à chaque page, et un réglage qui descend dans le quart
+     * d'heure.
+     */
+    private const TTL_CONFIG = 600;
 
     private static ?DeviceModeService $rules = null;
 
     public static function rules(): DeviceModeService
     {
-        return self::$rules ??= new DeviceModeService();
+        if (self::$rules === null) {
+            self::$rules = new DeviceModeService();
+            self::$rules->applyConfig(self::cachedConfig());
+        }
+
+        return self::$rules;
+    }
+
+    /**
+     * Rafraîchit la configuration des modes si elle a vieilli.
+     *
+     * Appelée une fois par requête depuis core/Bootstrap/App, APRÈS le
+     * middleware d'authentification : l'appel a besoin du jeton de session, et
+     * une page publique n'a pas de configuration à charger.
+     *
+     * Une panne de l'ERP ne change rien à l'écran : on garde le dernier cache,
+     * et s'il n'y en a pas, les valeurs par défaut de l'application. Une
+     * tablette sans menu ne se répare pas au doigt — c'est la seule chose qui
+     * ne doit jamais arriver ici.
+     */
+    public static function refreshConfig(callable $fetch): void
+    {
+        if (self::cachedConfig() !== null) {
+            return;   // encore frais
+        }
+
+        $config = null;
+        try {
+            $config = $fetch();
+        } catch (\Throwable $e) {
+            error_log('config des modes injoignable : ' . $e->getMessage());
+        }
+
+        if (!is_array($config)) {
+            return;   // on garde ce qu'on a
+        }
+
+        self::write(self::COOKIE_CONFIG, json_encode(
+            ['t' => time(), 'c' => $config],
+            JSON_UNESCAPED_UNICODE
+        ), self::TTL_CONFIG * 3);
+
+        // La page en cours doit déjà en profiter : sans cela, le premier écran
+        // après connexion afficherait l'ancien menu et le réglage aurait l'air
+        // de n'avoir pas pris.
+        self::$rules?->applyConfig($config);
+    }
+
+    /**
+     * La configuration en cache, ou null si elle est absente ou périmée.
+     *
+     * Le cookie n'est pas signé, et ce n'est pas un oubli : il ne porte que des
+     * clés de menu, toutes filtrées par DeviceModeService::sanitise() contre une
+     * liste fermée. Le forger ne fait qu'afficher ou masquer une entrée que
+     * l'utilisateur peut de toute façon atteindre en tapant l'URL — le mode
+     * lui-même, changeable dans les réglages, en fait déjà autant. Aucune
+     * décision d'autorisation n'en dépend.
+     */
+    private static function cachedConfig(): ?array
+    {
+        $raw = (string)($_COOKIE[self::COOKIE_CONFIG] ?? '');
+        if ($raw === '') {
+            return null;
+        }
+
+        $d = json_decode($raw, true);
+        if (!is_array($d) || !isset($d['t'], $d['c']) || !is_array($d['c'])) {
+            return null;
+        }
+        $t = (int)$d['t'];
+        // Daté du futur : horloge touchée, on ne lui fait pas crédit.
+        if ($t > time() || time() - $t > self::TTL_CONFIG) {
+            return null;
+        }
+
+        return $d['c'];
     }
 
     public static function current(): string
@@ -123,10 +210,10 @@ final class DeviceMode
         return trim((string)($_COOKIE[self::COOKIE_TOKEN] ?? ''));
     }
 
-    private static function write(string $name, string $value): void
+    private static function write(string $name, string $value, ?int $ttl = null): void
     {
         setcookie($name, $value, [
-            'expires'  => $value === '' ? time() - 3600 : time() + self::TTL,
+            'expires'  => $value === '' ? time() - 3600 : time() + ($ttl ?? self::TTL),
             'path'     => '/',
             'secure'   => true,
             'httponly' => true,

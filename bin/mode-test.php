@@ -126,6 +126,101 @@ check('indice : quatre caractères',    $m->tokenHint('0123456789abcdef'), '…c
 check('indice : rien sans jeton',      $m->tokenHint(''), null);
 check('indice : rien sur null',        $m->tokenHint(null), null);
 
+// ── La configuration servie par pwa_kitchen_param ───────────────────────────
+// Ces regles decident de ce que la tablette affiche. La plus importante n'est
+// pas qu'une configuration valide passe — c'est qu'une configuration FAUSSE ne
+// vide jamais un menu. Une tablette sans menu ne se repare pas au doigt.
+
+$def = DeviceModeService::DEFAULT_NAV;
+
+// Rien de servi : les defauts, a l'identique.
+check('config nulle → défauts',        DeviceModeService::sanitise(null)['nav'], $def);
+check('config vide → défauts',         DeviceModeService::sanitise([])['nav'], $def);
+check('« modes » absent → défauts',    DeviceModeService::sanitise(['autre' => 1])['nav'], $def);
+check('« modes » non tableau',         DeviceModeService::sanitise(['modes' => 'x'])['nav'], $def);
+
+// Une case decochee : l'entree disparait, les autres modes ne bougent pas.
+$sans = DeviceModeService::sanitise(['modes' => [
+    'production' => ['nav' => ['dashboard', 'production', 'checklists', 'orders', 'knowledge']],
+]]);
+check('réclamations retirées',         $sans['nav']['production'],
+    ['dashboard', 'production', 'checklists', 'orders', 'knowledge']);
+check('gestion intacte',               $sans['nav']['gestion'],   $def['gestion']);
+check('webshop intact',                $sans['nav']['webshop'],   $def['webshop']);
+// Les onglets ne sont pas touches par une config qui ne parle que du menu.
+check('onglets non touchés',           $sans['tabs']['production'], DeviceModeService::DEFAULT_TABS['production']);
+
+// L'ordre servi est l'ordre affiche : c'est sort_order qui le porte.
+check('ordre respecté',                DeviceModeService::sanitise(['modes' => [
+    'gestion' => ['nav' => ['complaints', 'dashboard', 'knowledge']],
+]])['nav']['gestion'], ['complaints', 'dashboard', 'knowledge']);
+
+// ── Ce qu'on refuse ────────────────────────────────────────────────────────
+// Une fonctionnalite que l'application ne sait pas rendre ajouterait une entree
+// de menu qui n'ouvre rien : ignoree.
+check('feature inconnue ignorée',      DeviceModeService::sanitise(['modes' => [
+    'gestion' => ['nav' => ['dashboard', 'facturation', 'checklists']],
+]])['nav']['gestion'], ['dashboard', 'checklists']);
+
+check('doublons écartés',              DeviceModeService::sanitise(['modes' => [
+    'gestion' => ['nav' => ['dashboard', 'dashboard', 'checklists']],
+]])['nav']['gestion'], ['dashboard', 'checklists']);
+
+check('casse et espaces',              DeviceModeService::sanitise(['modes' => [
+    'GESTION' => ['nav' => [' Dashboard ', 'CHECKLISTS']],
+]])['nav']['gestion'], ['dashboard', 'checklists']);
+
+check('mode inconnu ignoré',           DeviceModeService::sanitise(['modes' => [
+    'comptoir' => ['nav' => ['dashboard']],
+]])['nav'], $def);
+
+check('valeurs non textuelles',        DeviceModeService::sanitise(['modes' => [
+    'gestion' => ['nav' => [['x'], null, true, 'dashboard']],
+]])['nav']['gestion'], ['dashboard']);
+
+// LA garde : un menu vide garde le defaut du mode. Une ligne mal saisie en base
+// ne doit pas immobiliser un magasin.
+check('nav vide → défaut gardé',       DeviceModeService::sanitise(['modes' => [
+    'production' => ['nav' => []],
+]])['nav']['production'], $def['production']);
+
+check('nav toute inconnue → défaut',   DeviceModeService::sanitise(['modes' => [
+    'production' => ['nav' => ['facturation', 'rh']],
+]])['nav']['production'], $def['production']);
+
+check('tabs vides → défaut gardé',     DeviceModeService::sanitise(['modes' => [
+    'production' => ['tabs' => []],
+]])['tabs']['production'], DeviceModeService::DEFAULT_TABS['production']);
+
+// La barre du bas tient quatre onglets : au-dela, les suivants disparaitraient
+// sans un mot. On tronque, visiblement, plutot que de laisser faire.
+check('cinq onglets → quatre',         DeviceModeService::sanitise(['modes' => [
+    'production' => ['tabs' => ['dashboard', 'production', 'checklists', 'orders', 'knowledge']],
+]])['tabs']['production'], ['dashboard', 'production', 'checklists', 'orders']);
+
+// Les vues internes du WebShop n'existent qu'en bas.
+check('ws_* accepté en onglet',        DeviceModeService::sanitise(['modes' => [
+    'webshop' => ['tabs' => ['ws_stock', 'ws_prep']],
+]])['tabs']['webshop'], ['ws_stock', 'ws_prep']);
+check('ws_* refusé au menu',           DeviceModeService::sanitise(['modes' => [
+    'webshop' => ['nav' => ['ws_stock']],
+]])['nav']['webshop'], $def['webshop']);
+
+// ── Et une fois appliquée ──────────────────────────────────────────────────
+$m2 = new DeviceModeService();
+$m2->applyConfig(['modes' => ['production' => [
+    'nav'  => ['dashboard', 'checklists'],
+    'tabs' => ['dashboard', 'checklists'],
+]]]);
+check('appliquée : menu',              $m2->navKeys('production'), ['dashboard', 'checklists']);
+check('appliquée : onglets',           $m2->tabKeys('production'), ['dashboard', 'checklists']);
+check('appliquée : allows suit',       $m2->allows('production', 'orders'), false);
+check('appliquée : gestion intacte',   $m2->navKeys('gestion'), $def['gestion']);
+
+$m3 = new DeviceModeService();
+$m3->applyConfig(null);
+check('config nulle : rien ne bouge',  $m3->navKeys('production'), $def['production']);
+
 // ── Verdict ───────────────────────────────────────────────────────────────
 echo $ko === []
     ? "✓ {$ok} vérifications passées\n"
