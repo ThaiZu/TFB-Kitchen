@@ -45,8 +45,7 @@
     "complete_error_photo_required": "Cette tâche nécessite une photo. Veuillez ajouter une photo avant de confirmer.",
     "shift_signing": "signe les tâches de cette checklist",
     "shift_change": "Changer",
-    "no_employees": "Aucun employé disponible.",
-    "schedule_not_served": "Le planning du jour n'est pas disponible : toute l'équipe est proposée.",
+    "no_employees": "Aucun employé actif.",
     "filter_title": "Date et checklist",
     "filter_auto": "choisie selon l'heure",
     "btn_not_done": "Non effectuée",
@@ -54,10 +53,11 @@
     "modal_reason_label": "Pourquoi la tâche n'a pas été faite",
     "modal_photo_take": "Prendre la photo",
     "modal_photo_clear": "Effacer",
-    "no_one_scheduled": "Le planning ne désigne personne aujourd'hui : toute l'équipe est proposée.",
+    "no_one_scheduled": "Personne n'est au planning ce jour-là.",
     "complete_error_note_required": "Indiquez pourquoi la tâche n'a pas été faite.",
     "modal_photo_shoot": "Déclencher",
     "modal_photo_close": "Fermer",
     "modal_btn_fail": "Déclarer non effectuée",
-    "col_reported_at": "Signalée à"
+    "col_reported_at": "Signalée à",
+    "roster_api_missing": "La liste vient de l'API, qui ne répond pas encore — voir le bandeau en haut de l'écran."
 }

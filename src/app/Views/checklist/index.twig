@@ -697,8 +697,8 @@
                     {# Le filtrage se fait cote serveur : `employees` porte deja
                        les seules personnes de service, croisees entre les
                        employes actifs du franchise et le planning du jour
-                       consulte. `schedule_known` dit si ce croisement a pu se
-                       faire — voir StaffService. #}
+                       consulte. `roster_mode` dit dans quelle situation on est
+                       — voir StaffService::roster(). #}
                     {% set shown = employees %}
 
                     <div class="emp-grid">
@@ -715,20 +715,25 @@
                        planning ne vous a pas désigné » se règle au back-office,
                        « le planning est injoignable » se règle plus tard.
                        Voir StaffService::roster(). #}
-                    {% if roster_mode == 'none' %}
+                    {# Trois situations, trois phrases. « Personne n'est de
+                       service » est une reponse ; « la route ne repond pas »
+                       est un chantier, et le bandeau ambre en haut de page le
+                       nomme. Les confondre enverrait chercher au mauvais
+                       endroit. #}
+                    {% if roster_mode == 'missing' %}
                         <p class="emp-note">
                             <i class="bi bi-info-circle"></i>
-                            {{ translations.no_employees | default('Aucun employé disponible.') }}
+                            {{ translations.roster_api_missing | default("La liste vient de l'API, qui ne répond pas encore — voir le bandeau en haut de l'écran.") }}
                         </p>
-                    {% elseif roster_mode == 'all_empty' %}
+                    {% elseif roster_mode == 'empty' %}
                         <p class="emp-note">
                             <i class="bi bi-info-circle"></i>
-                            {{ translations.no_one_scheduled | default("Le planning ne désigne personne aujourd'hui : toute l'équipe est proposée.") }}
+                            {{ translations.no_one_scheduled | default("Personne n'est au planning ce jour-là.") }}
                         </p>
-                    {% elseif roster_mode == 'all_unknown' %}
+                    {% elseif roster_mode == 'none' %}
                         <p class="emp-note">
                             <i class="bi bi-info-circle"></i>
-                            {{ translations.schedule_not_served | default("Le planning du jour n'est pas disponible : toute l'équipe est proposée.") }}
+                            {{ translations.no_employees | default('Aucun employé actif.') }}
                         </p>
                     {% endif %}
 

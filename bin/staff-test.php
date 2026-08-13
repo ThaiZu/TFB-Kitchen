@@ -120,7 +120,10 @@ check('lignes illisibles ignorées', StaffService::scheduledIds([
 check('planning vide', StaffService::scheduledIds([], $J), []);
 
 // ── Ce que l'écran en fait ──────────────────────────────────────────────────
-// La classe est instanciable sans dépôt tant qu'on n'appelle pas getEmployees().
+// Revision du 13/08/2026 : plus de repli. Si une route ne repond pas, on ne
+// propose PERSONNE et l'ecran nomme la route. On rendait auparavant toute
+// l'equipe « pour ne pas bloquer » : confortable, et trompeur — un trou passait
+// pour un fonctionnement normal, et le back n'etait jamais reclame.
 $s = new StaffService(new class extends \App\Kitchen\app\Repositories\Staff\StaffRepository {
     public function __construct() {}
 });
@@ -131,39 +134,27 @@ $equipe = [
 ];
 check('planning connu → filtré',   $ids($s->roster($equipe)['list']), [1]);
 check('planning connu → mode',     $s->roster($equipe)['mode'], 'scheduled');
-check('planning connu',            $s->scheduleKnown($equipe), true);
+check('planning connu → rien à créer', $s->roster($equipe)['missing'], null);
 
-$inconnu = [
-    ['id' => 1, 'name' => 'A', 'initials' => 'A', 'on_schedule' => null],
-    ['id' => 2, 'name' => 'B', 'initials' => 'B', 'on_schedule' => null],
-];
-// Toute l'équipe plutôt qu'une liste vide : une checklist inachevable est pire
-// qu'une liste trop large, et l'écran écrit qu'il ne sait pas.
-check('planning inconnu → tous',   $ids($s->roster($inconnu)['list']), [1, 2]);
-check('planning inconnu → mode',   $s->roster($inconnu)['mode'], 'all_unknown');
-check('planning inconnu',          $s->scheduleKnown($inconnu), false);
-
-/* ── Le cas qui bloquait le magasin ──
-   Planning SERVI mais ne designant personne : un planning pas encore saisi, ou
-   saisi ailleurs. La liste se vidait, et plus aucune tache n'etait validable —
-   equipe presente, magasin ouvert, ecran qui refuse de laisser signer. On rend
-   toute l'equipe, et l'ecran dit pourquoi. */
+/* Planning servi et vide : ce n'est PAS une panne, c'est une reponse. Personne
+   n'est de service ce jour-la, et l'ecran le dit dans ces mots — pas dans ceux
+   d'une API manquante. La distinction compte : l'une se regle au back-office,
+   l'autre chez le developpeur. */
 $vide = [
     ['id' => 1, 'name' => 'A', 'initials' => 'A', 'on_schedule' => false],
     ['id' => 2, 'name' => 'B', 'initials' => 'B', 'on_schedule' => false],
 ];
-check('planning vide → tous',      $ids($s->roster($vide)['list']), [1, 2]);
-check('planning vide → mode',      $s->roster($vide)['mode'], 'all_empty');
-check('planning vide, jamais []',  $s->roster($vide)['list'] === [], false);
+check('planning vide → personne',  $s->roster($vide)['list'], []);
+check('planning vide → mode',      $s->roster($vide)['mode'], 'empty');
+check('planning vide → rien à créer', $s->roster($vide)['missing'], null);
 
-check('aucune équipe → vide',      $s->roster([])['list'], []);
-check('aucune équipe → mode',      $s->roster([])['mode'], 'none');
+check('aucun employé → vide',      $s->roster([])['list'], []);
+check('aucun employé → mode',      $s->roster([])['mode'], 'none');
 check('liste absente → vide',      $s->roster(null)['list'], []);
 check('liste absente → mode',      $s->roster(null)['mode'], 'none');
-check('liste absente → inconnu',   $s->scheduleKnown(null), false);
 
-// onDuty reste la porte d'entrée de la cuisson : même verdict, liste seule.
-check('onDuty suit roster',        $ids($s->onDuty($vide)), [1, 2]);
+// Rien n'a ete appele : aucune route n'est signalee a tort.
+check('rien à signaler au départ', $s->missingApi(), null);
 
 // ── Verdict ────────────────────────────────────────────────────────────────
 if ($ko) {

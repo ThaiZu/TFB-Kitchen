@@ -45,8 +45,7 @@
     "complete_error_photo_required": "To zadanie wymaga zdjęcia. Dodaj zdjęcie przed zatwierdzeniem.",
     "shift_signing": "podpisuje zadania tej checklisty",
     "shift_change": "Zmień",
-    "no_employees": "Brak dostępnych pracowników.",
-    "schedule_not_served": "Grafik dnia jest niedostępny: pokazujemy cały zespół.",
+    "no_employees": "Brak aktywnych pracowników.",
     "filter_title": "Data i checklista",
     "filter_auto": "wybrana według godziny",
     "btn_not_done": "Niewykonane",
@@ -54,10 +53,11 @@
     "modal_reason_label": "Dlaczego zadanie nie zostało wykonane",
     "modal_photo_take": "Zrób zdjęcie",
     "modal_photo_clear": "Wyczyść",
-    "no_one_scheduled": "Grafik nikogo dziś nie wskazuje: pokazujemy cały zespół.",
+    "no_one_scheduled": "Tego dnia nikogo nie ma w grafiku.",
     "complete_error_note_required": "Podaj, dlaczego zadanie nie zostało wykonane.",
     "modal_photo_shoot": "Zrób zdjęcie",
     "modal_photo_close": "Zamknij",
     "modal_btn_fail": "Zgłoś jako niewykonane",
-    "col_reported_at": "Zgłoszone o"
+    "col_reported_at": "Zgłoszone o",
+    "roster_api_missing": "Lista pochodzi z API, które jeszcze nie odpowiada — zobacz baner u góry."
 }

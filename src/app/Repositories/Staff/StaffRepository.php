@@ -18,12 +18,12 @@ use App\Kitchen\core\Http\ApiClient;
  * Le même couple sert les checklists et la cuisson : savoir qui est en atelier
  * n'appartient à aucun des deux modules.
  *
- * ── Pourquoi pas un seul appel ──
- * `/shops/{id}/employees` répondait déjà, mais sans notion de date : il donne
- * l'équipe, pas le service du jour. Une checklist se relit aussi pour hier, et
- * il faut alors savoir qui était là CE jour-là. Il reste ici en dernier
- * recours, pour qu'une indisponibilité de `/franchisee-employees` ne vide pas
- * la modale et ne rende pas les tâches invalidables.
+ * ── Aucun repli ──
+ * Si l'une des deux routes ne répond pas, on rend null. L'écran nomme alors la
+ * route manquante — « API à créer : GET /shops/{id}/schedule » — au lieu de
+ * proposer une liste tirée d'ailleurs. Pendant que le back se construit, une
+ * liste plausible venue d'une autre source masque précisément le trou qu'on
+ * cherche.
  */
 class StaffRepository
 {
@@ -41,15 +41,11 @@ class StaffRepository
      */
     public function getEmployees(int $shopId): ?array
     {
-        $rows = $this->rows($this->apiClient->get('/franchisee-employees'));
-        if ($rows !== null) {
-            return $rows;
-        }
-
-        // Repli sur l'ancien endpoint : c'est un repli d'ADRESSE, pas de
-        // données. On ne fabrique rien — soit une des deux routes répond, soit
-        // on rend null et l'écran dit qu'il ne sait pas.
-        return $this->rows($this->apiClient->get("/shops/{$shopId}/employees"));
+        // Une seule adresse. Le repli sur /shops/{id}/employees a été retiré le
+        // 13/08/2026 : deux routes pour une même question, c'est une réponse
+        // qui peut venir de deux endroits sans qu'on sache lequel — et c'est
+        // exactement ce qui empêche de voir qu'une des deux ne répond pas.
+        return $this->rows($this->apiClient->get('/franchisee-employees'));
     }
 
     /**

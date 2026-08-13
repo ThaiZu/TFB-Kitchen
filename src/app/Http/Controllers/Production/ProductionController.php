@@ -266,7 +266,6 @@ class ProductionController extends Controller
                 'counts'         => ['all' => 0, 'prep' => 0, 'cook' => 0, 'finish' => 0],
                 'staff'          => [],
                 'staff_available'=> false,
-                'schedule_known' => false,
                 'now'            => $this->bakingService->nowMinutes(),
                 'now_clock'      => date('H:i'),
                 'window'         => ['from' => 0, 'to' => 60, 'hours' => []],
@@ -305,7 +304,9 @@ class ProductionController extends Controller
             'counts'         => $this->bakingService->countByStage($active),
             'staff'          => $this->staffService->onDuty($staff),
             'staff_available'=> $staff !== null,
-            'schedule_known' => $this->staffService->scheduleKnown($staff),
+            // La route manquante, s'il y en a une : la coque la nomme en haut
+            // d'ecran. Plus de repli — voir StaffService.
+            'missing_api'    => $this->staffService->missingApi(),
             'now'            => $now,
             'now_clock'      => BakingBatchModel::toClock($now),
             'window'         => $this->bakingService->window($dayPlan ?: $active, $now, true),

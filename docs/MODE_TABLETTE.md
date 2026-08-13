@@ -19,9 +19,10 @@ sert un appareil, et donc ce qu'il affiche.
 | **Production** *(défaut)* | Tableau de bord, Production, Checklists, Commandes, Base de connaissances, Réclamations | Accueil, Production, Checklists, Commandes |
 | **WebShop** | WebShop | Préparation, Stock du jour, Tableau de bord |
 
-Ce tableau donne les **défauts**, ceux qui s'appliquent tant que la table
-`pwa_kitchen_param` n'est pas posée ou ne répond pas. Depuis le 12/08/2026,
-c'est elle qui décide — voir §2.
+Ce tableau est une **référence**, pas un défaut : c'est le contenu que la table
+`pwa_kitchen_param` doit porter pour reproduire l'affichage historique. Depuis
+le 13/08/2026, l'écran ne montre QUE ce que la table décrit — si elle ne répond
+pas, il n'y a aucun menu et un bandeau nomme la route à créer. Voir §2.
 
 « Objectifs & Primes » a quitté les deux menus qui le portaient : l'entrée était
 grisée et n'ouvrait rien. Une section se déclare le jour où son écran existe.
@@ -77,9 +78,17 @@ désormais de la table `pwa_kitchen_param` côté ERP (voir
 tranche de dix minutes — un réglage coché au back-office descend donc dans le
 quart d'heure, sans qu'on touche à la tablette et sans déploiement.
 
-Endpoint absent, muet ou incomplet : la PWA garde ses valeurs codées en dur
-(`DeviceModeService::DEFAULT_NAV` / `DEFAULT_TABS`) et l'écran ne change pas.
-Une tablette sans menu ne se répare pas au doigt.
+**Endpoint absent ou muet : aucun menu, et l'écran le dit.** Chaque page affiche
+alors « API à créer : `GET /devices/me/config` ».
+
+C'est un choix assumé, demandé le 13/08/2026, et il a un coût : sans cet
+endpoint, la tablette n'a plus de navigation. C'est le prix de la règle
+inverse — un menu codé en dur qui prend la place fait croire que tout va bien,
+et le manque ne se voit qu'au moment de s'en servir. Pendant que le back se
+construit, mieux vaut un écran qui gêne qu'un écran qui ment.
+
+Le mode, lui, reste réglable sur la tablette : c'est par le profil qu'on y
+accède, et l'onglet Profil est toujours présent dans la barre du bas.
 
 `Secure` · `HttpOnly` · `SameSite=Strict` · `path=/`, comme les cookies d'auth
 existants.

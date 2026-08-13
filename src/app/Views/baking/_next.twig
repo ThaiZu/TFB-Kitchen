@@ -125,8 +125,10 @@
         <p class="bk-sheet-lbl">{{ translations.order_who | default("Qui s'en occupe ?") }}</p>
 
         {% if not staff_available %}
+            {# La route est nommée par le bandeau en haut de l'écran. Ici on dit
+               seulement ce que ça change pour le geste en cours. #}
             <p class="emp-note">
-                {{ translations.staff_not_served | default("L'équipe n'est pas encore servie par l'API : l'ordre peut être validé sans nom.") }}
+                {{ translations.staff_not_served | default("L'équipe vient de l'API, qui ne répond pas encore : l'ordre peut être validé sans nom.") }}
             </p>
         {% elseif staff is empty %}
             <p class="emp-note">{{ translations.no_employees | default('Aucun employé disponible.') }}</p>
@@ -139,14 +141,6 @@
                     </button>
                 {% endfor %}
             </div>
-            {% if not schedule_known %}
-                {# Un filtre annoncé mais inopérant tromperait : tant que
-                   l'API ne dit pas qui est de service, on montre tout le
-                   monde et on l'écrit. #}
-                <p class="emp-note">
-                    {{ translations.schedule_not_served | default("L'API ne dit pas encore qui est de service : toute l'équipe est proposée.") }}
-                </p>
-            {% endif %}
         {% endif %}
 
         <p class="bk-sheet-lbl">{{ translations.order_time | default('Temps imparti') }}</p>

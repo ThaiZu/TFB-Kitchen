@@ -13,13 +13,15 @@ use App\Kitchen\core\Support\GlobalRegistry;
  * AU PLANNING de la date consultée. Le croisement se fait ici, sur des
  * identifiants, parce que le planning ne porte pas de noms.
  *
- * ── Ce qui ne change pas, et pourquoi ──
- * Quand le planning n'est pas servi, on rend toute l'équipe active plutôt
- * qu'une liste vide, et `scheduleKnown()` permet à l'écran de l'écrire. Un
- * filtre annoncé mais inopérant trompe plus qu'il n'aide ; une liste vide,
- * elle, rendrait la checklist inachevable. La distinction entre `null` (« on
- * ne sait pas ») et `false` (« pas de service ») est donc portée jusqu'à la
- * vue.
+ * ── Rien n'est inventé ── (révision du 13/08/2026)
+ * Si l'une des deux routes ne répond pas, on ne propose PERSONNE et l'écran
+ * nomme la route à créer. On rendait auparavant toute l'équipe active « pour ne
+ * pas bloquer » : c'était confortable et trompeur — un trou passait alors pour
+ * un fonctionnement normal, et le back n'était jamais réclamé.
+ *
+ * Reste une distinction qui compte : un planning servi et VIDE n'est pas une
+ * panne, c'est une réponse. Personne n'est de service ce jour-là, et l'écran le
+ * dit dans ces mots — pas dans ceux d'une API manquante.
  *
  * Le PIN ne sort jamais d'ici : il ne sert qu'à la vérification serveur, dans
  * ChecklistService::verifyPin(), qui interroge sa propre source. Un écran n'a
@@ -33,6 +35,19 @@ class StaffService
     public function __construct(
         private StaffRepository $staffRepository
     ) {}
+
+    /**
+     * La route qui n'a pas répondu au dernier appel, ou null.
+     *
+     * L'écran l'affiche telle quelle. Depuis le 13/08/2026, on ne remplace plus
+     * une réponse manquante par une liste plausible : on nomme la route.
+     */
+    private ?string $missing = null;
+
+    public function missingApi(): ?string
+    {
+        return $this->missing;
+    }
 
     private function getShopId(): int
     {
@@ -51,6 +66,8 @@ class StaffService
      */
     public function getEmployees(?string $date = null): ?array
     {
+        $this->missing = null;
+
         $shopId = $this->getShopId();
         if ($shopId <= 0) {
             return null;
@@ -58,69 +75,75 @@ class StaffService
 
         $employees = $this->staffRepository->getEmployees($shopId);
         if ($employees === null) {
+            $this->missing = 'GET /franchisee-employees';
             return null;
         }
 
         $employees = self::activeOnly($employees);
 
-        // Le planning n'est demandé que si l'on a une date. Son absence n'est
-        // pas une erreur : elle laisse `on_schedule` à null, et l'écran dira
-        // qu'il ne connaît pas le service du jour.
-        $scheduled = null;
-        if ($date !== null && $date !== '') {
-            $rows = $this->staffRepository->getSchedule($shopId, $date);
-            if ($rows !== null) {
-                $scheduled = self::scheduledIds($rows, $date);
-            }
+        // Sans date, la question « qui est de service » n'a pas de sens : ce
+        // n'est pas une route manquante, c'est un appel qui ne la pose pas.
+        if ($date === null || $date === '') {
+            return array_map(fn(array $e) => self::card($e, null), $employees);
         }
 
-        return array_map(fn(array $e) => [
+        $rows = $this->staffRepository->getSchedule($shopId, $date);
+        if ($rows === null) {
+            $this->missing = 'GET /shops/{id}/schedule?date=' . $date;
+            return array_map(fn(array $e) => self::card($e, null), $employees);
+        }
+
+        $scheduled = self::scheduledIds($rows, $date);
+
+        return array_map(
+            fn(array $e) => self::card($e, in_array((string)($e['id'] ?? ''), $scheduled, true)),
+            $employees
+        );
+    }
+
+    /** @return array{id: mixed, name: string, initials: string, on_schedule: ?bool} */
+    private static function card(array $e, ?bool $onSchedule): array
+    {
+        return [
             'id'          => $e['id'] ?? null,
             'name'        => (string)($e['name'] ?? ''),
             'initials'    => self::initials((string)($e['name'] ?? '')),
-            'on_schedule' => $scheduled === null
-                ? self::readOnSchedule($e)
-                : in_array((string)($e['id'] ?? ''), $scheduled, true),
-        ], $employees);
+            'on_schedule' => $onSchedule,
+        ];
     }
 
     /**
      * Qui proposer, et sous quelle réserve.
      *
-     * ── La règle, et sa limite ──
-     * On filtre par le planning quand il désigne quelqu'un. Quand il ne désigne
-     * PERSONNE, on rend toute l'équipe active en le disant.
-     *
-     * Ce dernier cas n'est pas un détail : un planning vide — pas encore saisi,
-     * saisi ailleurs, ou simplement absent pour un jour férié travaillé — videra
-     * la liste, et une liste vide rend toutes les tâches invalidables. Le
-     * magasin est ouvert, l'équipe est là, et l'écran refuserait de la laisser
-     * signer. Un filtre ne doit jamais rendre le travail impossible ; il doit
-     * aider quand il sait, et s'effacer quand il ne sait pas.
-     *
      * @param array<int, array{on_schedule: ?bool}>|null $employees
-     * @return array{list: array<int, array>, mode: string}
-     *         mode = scheduled   — le planning désigne ces personnes
-     *              | all_unknown — planning non servi, toute l'équipe
-     *              | all_empty   — planning servi mais vide, toute l'équipe
-     *              | none        — aucune équipe du tout
+     * @return array{list: array<int, array>, mode: string, missing: ?string}
+     *         mode = scheduled — le planning désigne ces personnes
+     *              | empty     — planning servi, personne de service ce jour-là
+     *              | missing    — une route n'a pas répondu ; `missing` la nomme
+     *              | none       — aucun employé actif
      */
     public function roster(?array $employees): array
     {
-        if ($employees === null || $employees === []) {
-            return ['list' => [], 'mode' => 'none'];
+        if ($this->missing !== null) {
+            // La route ne répond pas : on ne propose personne et on dit
+            // laquelle créer. Proposer toute l'équipe ferait passer un trou
+            // pour un fonctionnement normal.
+            return ['list' => [], 'mode' => 'missing', 'missing' => $this->missing];
         }
 
-        if (!$this->scheduleKnown($employees)) {
-            return ['list' => $employees, 'mode' => 'all_unknown'];
+        if ($employees === null || $employees === []) {
+            return ['list' => [], 'mode' => 'none', 'missing' => null];
         }
 
         $onDuty = array_values(array_filter($employees, fn(array $e) => $e['on_schedule'] === true));
-        if ($onDuty === []) {
-            return ['list' => $employees, 'mode' => 'all_empty'];
-        }
 
-        return ['list' => $onDuty, 'mode' => 'scheduled'];
+        // Planning servi et vide : ce n'est pas une panne, c'est une réponse.
+        // Personne n'est de service ce jour-là, et l'écran le dit.
+        return [
+            'list'    => $onDuty,
+            'mode'    => $onDuty === [] ? 'empty' : 'scheduled',
+            'missing' => null,
+        ];
     }
 
     /**
@@ -138,15 +161,10 @@ class StaffService
         return $this->roster($employees)['list'];
     }
 
-    /** @param array<int, array{on_schedule: ?bool}>|null $employees */
-    public function scheduleKnown(?array $employees): bool
+    /** Le planning a-t-il répondu ? Sert aux écrans qui n'affichent pas la raison. */
+    public function scheduleServed(): bool
     {
-        foreach ($employees ?? [] as $e) {
-            if ($e['on_schedule'] !== null) {
-                return true;
-            }
-        }
-        return false;
+        return $this->missing === null;
     }
 
     /**
@@ -237,17 +255,4 @@ class StaffService
         return mb_strtoupper(mb_substr($parts[0] ?? '', 0, 1) . mb_substr($parts[1] ?? '', 0, 1));
     }
 
-    /**
-     * Lit l'indicateur de présence porté par la fiche elle-même, quand aucun
-     * planning n'est disponible. null quand aucun n'est fourni.
-     */
-    private static function readOnSchedule(array $e): ?bool
-    {
-        foreach (['on_schedule', 'is_on_schedule', 'on_shift', 'is_working', 'is_present', 'scheduled_today'] as $key) {
-            if (array_key_exists($key, $e) && $e[$key] !== null && $e[$key] !== '') {
-                return filter_var($e[$key], FILTER_VALIDATE_BOOLEAN);
-            }
-        }
-        return null;
-    }
 }

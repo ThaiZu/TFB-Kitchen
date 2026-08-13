@@ -1115,21 +1115,28 @@ réglage ne pourrait plus montrer ce que chaque mode donne.
 | `settings.webshop_url` | l'URL du back-office, ouverte telle quelle. `http(s)` obligatoire : elle finit en `src` d'une iframe | mode WebShop grisé, raison affichée |
 | `settings.webshop_device_token` | le jeton d'appareil du webshop. **Secret** : servi à la tablette qui le présente, jamais dans un listing ni un log | mode WebShop grisé, raison `no_token` |
 
-**Cet endpoint est une surcharge, pas un prérequis.** Un `404` n'est pas une
-panne : la PWA garde ses valeurs codées en dur et l'écran ne change pas. C'est
-ce qui permet de livrer la table sans immobiliser les tablettes.
+**Cet endpoint est un prérequis, depuis le 13/08/2026.** Un `404` ne passe plus
+inaperçu : la PWA n'a alors **aucun menu**, et chaque écran affiche un bandeau
+qui nomme la route à créer — « API à créer : `GET /devices/me/config` ».
 
-**Ce que la PWA refuse, et ce n'est pas négociable :**
+C'est un changement de posture assumé, et il a été demandé. La version
+précédente retombait sur des menus codés en dur : commode, mais l'écran avait
+l'air normal alors que la moitié venait du code. Pendant que le back se
+construit, un repli silencieux masque exactement ce qu'on cherche à voir.
 
-- une `feature` inconnue → ignorée (§8.3) ;
-- un mode inconnu → ignoré ;
-- un `nav` **vide** pour un mode → le défaut de ce mode est conservé. Une
-  tablette sans menu ne se répare pas au doigt, et une ligne mal saisie en base
-  ne doit pas immobiliser un magasin ;
-- plus de quatre onglets → les quatre premiers.
+**Ce que la PWA écarte** — ce sont des validations, pas des replis : on
+n'ajoute rien, on refuse ce qui ne veut rien dire :
+
+- une `feature` inconnue de l'application (§8.3) : elle ajouterait une entrée
+  de menu qui n'ouvre aucun écran ;
+- un mode inconnu : il n'a ni accueil ni vues ;
+- au-delà de quatre onglets : la barre n'en affiche pas plus.
+
+Un mode que la table ne décrit pas reste **vide** : c'est une information, et
+l'écran la donne telle quelle.
 
 Ces règles sont dans `DeviceModeService::sanitise()` et vérifiées par
-`bin/mode-test.php`.
+`bin/mode-test.php` (84 assertions).
 
 **Aucun identifiant d'appareil dans l'URL**, et c'est structurant : la tablette
 lit **sa** configuration, celle du jeton qu'elle présente. Un

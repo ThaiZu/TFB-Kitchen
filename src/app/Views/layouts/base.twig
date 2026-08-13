@@ -139,6 +139,21 @@
 
 <main class="app-content">
     <div class="container py-3">
+        {# ── Ce que le back doit encore servir ──────────────────────────────
+           Pas de repli, pas de valeur inventée : quand une donnée vient d'un
+           endpoint qui n'existe pas, l'écran nomme l'endpoint. Un menu codé en
+           dur qui prend la place ferait croire que tout va bien, et le manque
+           ne se verrait qu'au moment de s'en servir.
+
+           Le bandeau reste tant que la route ne répond pas — c'est voulu : il
+           doit gêner. #}
+        {% if missing_api is not empty %}
+            <div class="api-todo" role="status">
+                <span class="api-todo-tag">{{ translations.api_missing | default('API à créer') }}</span>
+                {% for route in missing_api %}<code>{{ route }}</code>{% endfor %}
+            </div>
+        {% endif %}
+
         {% block page_heading %}{% endblock %}
 
         {% include "page_components/alerts.twig" %}
@@ -180,7 +195,11 @@
     'ws_board':   { href: ROOT ~ '/webshop?view=board', icon: 'home',            label: translations.ws_board ?? 'Tableau de bord' }
 } %}
 <nav class="app-tabbar-bar" aria-label="{{ translations.menu ?? 'Navigation' }}">
-    {% for key in tab_keys | default(['dashboard', 'production', 'checklists', 'orders']) %}
+    {# Pas de liste par défaut ici : la barre affiche ce que la table
+       pwa_kitchen_param décrit, et rien si elle ne répond pas. Le bandeau
+       « API à créer » en haut de page dit alors pourquoi. Un quatuor codé en
+       dur ferait une barre qui a l'air normale au-dessus d'un écran vide. #}
+    {% for key in tab_keys | default([]) %}
         {% set t = tabs[key] %}
         {% if t %}
             <a href="{{ t.href }}" class="app-tab {{ active_nav == key ? 'is-active' : '' }}">

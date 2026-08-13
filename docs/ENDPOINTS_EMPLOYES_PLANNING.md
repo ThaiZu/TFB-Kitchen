@@ -46,18 +46,34 @@ inachevable.
   l'endpoint est censé filtrer. Ce n'est pas de la défiance : une ligne de la
   veille laissée passer ferait signer quelqu'un qui n'était pas là.
 
-### Les trois états, et pourquoi ils restent distincts
+### Trois situations, et elles ne se confondent pas
 
 | Situation | Ce que l'écran montre |
 |---|---|
 | planning servi, des gens dedans | ces personnes-là, et elles seules |
 | planning servi, vide | « Personne n'est au planning ce jour-là. » |
-| planning non servi | toute l'équipe active, **et on l'écrit** |
+| une des deux routes ne répond pas | **personne**, et un bandeau nomme la route à créer |
 
-La distinction entre `null` (« on ne sait pas ») et `false` (« pas de
-service ») est portée jusqu'à la vue. Sans elle, une indisponibilité du
-planning viderait la liste et rendrait les tâches invalidables ; un filtre
-annoncé mais inopérant, à l'inverse, tromperait.
+**Révision du 13/08/2026 : plus de repli.** La version précédente rendait toute
+l'équipe active quand le planning n'était pas servi, « pour ne pas bloquer ».
+C'était commode et trompeur : un trou passait pour un fonctionnement normal, et
+la route n'était jamais réclamée. L'écran affiche désormais
+« API à créer : `GET /shops/{id}/schedule?date=…` » et ne propose personne.
+
+La deuxième ligne n'est pas la troisième, et c'est le point délicat : un
+planning **servi et vide** est une réponse, pas une panne. Personne n'est de
+service ce jour-là. L'une se règle au back-office, l'autre chez le développeur —
+les confondre envoie chercher au mauvais endroit.
+
+### Aucun repli d'adresse non plus
+
+`/shops/{shopId}/employees` n'est plus interrogé en second recours. Deux routes
+pour une même question, c'est une réponse qui peut venir de deux endroits sans
+qu'on sache lequel — et c'est exactement ce qui empêche de voir qu'une des deux
+ne répond pas.
+
+Elle reste la source du PIN, côté serveur uniquement — voir la note de sécurité
+ci-dessous.
 
 ### La date compte
 
@@ -65,22 +81,12 @@ C'est celle de la checklist consultée, pas celle du jour : une checklist se
 relit pour hier, et il faut alors savoir qui était de service **ce jour-là**.
 `ChecklistController` passe donc `$date`, pas `date('Y-m-d')`.
 
-### Repli d'adresse
-
-Si `/franchisee-employees` ne répond pas, le front retombe sur
-`GET /shops/{shopId}/employees`, qui répondait déjà. C'est un repli
-d'**adresse**, pas de données : on ne fabrique rien, et si les deux se taisent
-l'écran dit qu'il ne sait pas.
-
-`/shops/{shopId}/employees` reste par ailleurs la source du PIN, côté serveur
-uniquement — voir la note de sécurité ci-dessous.
-
-### Ce qui n'est plus utilisé
+### Ce qui n'est plus lu
 
 L'indicateur porté par la fiche elle-même (`on_schedule`, `is_on_schedule`,
-`on_shift`, `is_working`, `is_present`, `scheduled_today`) est toujours lu,
-mais seulement quand le planning n'est pas disponible. Le planning daté a
-priorité : c'est la seule source qui sait répondre pour une date passée.
+`on_shift`…) n'est plus consulté. Le planning daté est la seule source : c'est
+la seule qui sache répondre pour une date passée, et deux sources pour une même
+question finissent par se contredire un jour de remplacement.
 
 ## Note de sécurité, hors sujet mais rencontrée
 

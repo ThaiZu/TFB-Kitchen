@@ -45,8 +45,7 @@
     "complete_error_photo_required": "Deze taak vereist een foto. Voeg een foto toe voor de bevestiging.",
     "shift_signing": "tekent de taken van deze checklist",
     "shift_change": "Wijzigen",
-    "no_employees": "Geen medewerker beschikbaar.",
-    "schedule_not_served": "Het rooster van de dag is niet beschikbaar: het hele team wordt getoond.",
+    "no_employees": "Geen actieve medewerker.",
     "filter_title": "Datum en checklist",
     "filter_auto": "gekozen op basis van het tijdstip",
     "btn_not_done": "Niet gedaan",
@@ -54,10 +53,11 @@
     "modal_reason_label": "Waarom de taak niet is uitgevoerd",
     "modal_photo_take": "Foto maken",
     "modal_photo_clear": "Wissen",
-    "no_one_scheduled": "Het rooster wijst vandaag niemand aan: het hele team wordt getoond.",
+    "no_one_scheduled": "Die dag staat niemand op het rooster.",
     "complete_error_note_required": "Geef aan waarom de taak niet is uitgevoerd.",
     "modal_photo_shoot": "Vastleggen",
     "modal_photo_close": "Sluiten",
     "modal_btn_fail": "Melden als niet gedaan",
-    "col_reported_at": "Gemeld om"
+    "col_reported_at": "Gemeld om",
+    "roster_api_missing": "De lijst komt van de API, die nog niet antwoordt — zie de banner bovenaan."
 }

@@ -93,10 +93,11 @@ class ChecklistController extends Controller
             'progress'              => $progress,
             'today'                 => date('Y-m-d'),
             'employees'             => $roster['list'],
-            // Sans cette distinction, une liste complete passerait pour la
-            // liste de service. Quatre cas, quatre phrases differentes — voir
-            // StaffService::roster().
+            // Trois situations distinctes — voir StaffService::roster().
             'roster_mode'           => $roster['mode'],
+            // La route a creer, s'il en manque une. La coque l'affiche : on ne
+            // remplace plus une reponse absente par une liste plausible.
+            'missing_api'           => $roster['missing'],
         ]);
     }
 

@@ -356,3 +356,25 @@ a .card:active,.card.is-tappable:active { transform:scale(.985); }
 @media (prefers-reduced-motion: reduce) {
   * { transition:none !important; animation:none !important; }
 }
+
+/* ---- « API à créer » ----------------------------------------------------
+   Pas de repli, pas de valeur inventée : quand une donnee vient d'un endpoint
+   qui n'existe pas encore, l'ecran nomme l'endpoint. Le bandeau est ambre et
+   non rouge — ce n'est pas une panne, c'est un chantier — mais il occupe la
+   largeur et reste tant que la route ne repond pas. Il doit gener. */
+.api-todo {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 14px; padding: 11px 14px;
+  border: 1px solid var(--c-ambre); border-left: 4px solid var(--c-ambre);
+  border-radius: var(--r-md); background: #fdf6ec;
+  font-size: .86rem; color: var(--c-ink);
+}
+.api-todo-tag {
+  flex: 0 0 auto; padding: 3px 9px; border-radius: 999px;
+  background: var(--c-ambre); color: #fff;
+  font-size: .68rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
+}
+.api-todo code {
+  font-size: .84rem; font-weight: 700; color: var(--c-ink);
+  background: rgba(193,122,42,.12); padding: 2px 8px; border-radius: 6px;
+}

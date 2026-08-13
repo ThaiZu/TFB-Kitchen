@@ -134,6 +134,18 @@ class Controller
             }
         }
 
+        /* ── Les routes que le back doit encore servir ──
+           Une LISTE, pas une valeur : un écran peut manquer de deux choses à la
+           fois — la configuration des modes ET la liste des employés — et n'en
+           nommer qu'une enverrait corriger la moins importante, puis revenir.
+
+           C'est le seul champ que la coque CUMULE au lieu de laisser au
+           contrôleur : les deux savent chacun une partie, aucun ne sait tout. */
+        $manque = $data['missing_api'] ?? [];
+        $manque = is_array($manque) ? $manque : [$manque];
+        $manque[] = $rules->missingApi();
+        $data['missing_api'] = array_values(array_unique(array_filter($manque)));
+
         // Jeśli istnieje plik .twig, renderuj przez Twig
         $twigTemplate = $name . ".twig";
         if (file_exists($baseViewPath . $twigTemplate)) {

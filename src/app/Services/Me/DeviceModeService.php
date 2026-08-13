@@ -36,18 +36,17 @@ class DeviceModeService
     public const DEFAULT_MODE = self::MODE_PRODUCTION;
 
     /**
-     * En mode production, la navigation est celle d'aujourd'hui, à l'entrée
-     * près. C'est la contrainte : le mode par défaut ne doit rien changer.
+     * Ce que chaque mode affichait avant que la table `pwa_kitchen_param`
+     * n'existe.
      *
-     * « objectives » a été retiré des deux modes qui le portaient. L'entrée était
-     * déclarée disabled avec href="#" : elle occupait une place au menu et ne
-     * menait nulle part. Une section se déclare le jour où son écran existe ;
-     * d'ici là, une case grisée n'informe de rien qu'on ne sache déjà.
+     * **Ce n'est plus un repli.** Depuis le 13/08/2026, la configuration vient
+     * de l'API et d'elle seule : si elle ne répond pas, l'écran le DIT et nomme
+     * l'endpoint à créer, au lieu de servir ces valeurs en faisant croire que
+     * tout va bien. Un repli silencieux masquait exactement ce qu'on cherche à
+     * voir pendant que le back se construit.
      *
-     * « baking » n'a pas à y figurer, malgré les apparences : /baking existe
-     * bien, mais son contrôleur redirige en 302 vers /production?view=planning.
-     * Le planning est devenu un onglet de Production — un module, quatre
-     * questions. L'inscrire au menu doublerait l'entrée Production.
+     * Elles restent ici comme référence : c'est le contenu que la table doit
+     * porter pour reproduire l'affichage historique.
      */
     public const DEFAULT_NAV = [
         self::MODE_PRODUCTION => ['dashboard', 'production', 'checklists', 'orders', 'knowledge', 'complaints'],
@@ -94,20 +93,19 @@ class DeviceModeService
     public const MAX_TABS = 4;
 
     /**
-     * Les cartes effectives : les défauts ci-dessus, éventuellement remplacés
-     * par ce que sert `GET /devices/me/config` (table `pwa_kitchen_param`).
+     * Les cartes effectives, telles que `GET /devices/me/config` les a servies.
      *
-     * @var array{nav: array<string, string[]>, tabs: array<string, string[]>}|null
+     * @var array{nav: array<string, string[]>, tabs: array<string, string[]>, ok: bool}|null
      */
     private ?array $maps = null;
 
     /**
      * Brancher la configuration distante.
      *
-     * Appelée une fois par requête, depuis core/Support/DeviceMode. Passer null
-     * ou une configuration illisible laisse les défauts en place : c'est le
-     * comportement voulu, une tablette ne doit jamais se retrouver sans menu
-     * parce que l'ERP a hoqueté.
+     * Appelée une fois par requête, depuis core/Support/DeviceMode. Sans
+     * configuration exploitable, les menus restent VIDES et `missingApi()`
+     * nomme l'endpoint : l'écran affiche alors ce qui manque, plutôt que de
+     * servir un menu codé en dur qui ferait croire que tout va bien.
      */
     public function applyConfig(?array $config): void
     {
@@ -115,33 +113,51 @@ class DeviceModeService
     }
 
     /**
-     * Transforme la configuration servie en cartes utilisables, ou rend les
-     * défauts. Pure : c'est elle qu'on vérifie dans bin/mode-test.php.
+     * L'endpoint à créer, ou null si la configuration est arrivée.
      *
-     * ── Ce qui est refusé, et pourquoi ──
-     * • une fonctionnalité inconnue de l'application → ignorée (voir KNOWN_NAV) ;
-     * • un mode inconnu → ignoré ; il n'a pas d'écran d'accueil ni de vues ;
-     * • un menu VIDE pour un mode → on garde le défaut de ce mode. C'est la
-     *   garde la plus importante : une ligne mal saisie en base ne doit pas
-     *   rendre une tablette inutilisable, et une tablette sans menu ne se
-     *   répare pas au doigt ;
-     * • plus de quatre onglets → on garde les quatre premiers ; la barre n'en
-     *   affiche pas davantage, et les suivants disparaîtraient sans un mot.
+     * L'écran l'affiche tel quel. Nommer la route évite l'aller-retour
+     * « ça ne marche pas » → « qu'est-ce qui ne marche pas ».
+     */
+    public function missingApi(): ?string
+    {
+        return ($this->maps['ok'] ?? false) ? null : 'GET /devices/me/config';
+    }
+
+    /**
+     * Transforme la configuration servie en cartes utilisables.
      *
-     * Un mode absent de la configuration garde ses défauts : configurer la
-     * production ne doit pas effacer la gestion.
+     * Pure : c'est elle qu'on vérifie dans bin/mode-test.php.
+     *
+     * ── Rien n'est inventé ──
+     * Sans configuration exploitable, elle rend des cartes VIDES et `ok` à
+     * false. L'appelant en tire un message qui nomme l'endpoint à créer. C'est
+     * le point de la révision du 13/08/2026 : pendant que le back se construit,
+     * un repli silencieux masque précisément ce qu'on cherche à voir.
+     *
+     * ── Ce qui est écarté, et pourquoi ──
+     * Ce ne sont pas des replis mais des validations — on n'ajoute rien, on
+     * refuse ce qui ne veut rien dire :
+     * • une fonctionnalité inconnue de l'application (voir KNOWN_NAV) : elle
+     *   ajouterait une entrée de menu qui n'ouvre aucun écran ;
+     * • un mode inconnu : il n'a ni accueil ni vues ;
+     * • au-delà de quatre onglets : la barre n'en affiche pas plus, et les
+     *   suivants disparaîtraient sans un mot.
+     *
+     * Un mode absent de la configuration reste vide : c'est une information —
+     * la table ne le décrit pas — et l'écran la donne telle quelle.
      *
      * @param array|null $config  ['modes' => ['production' => ['nav' => [...], 'tabs' => [...]], …]]
-     * @return array{nav: array<string, string[]>, tabs: array<string, string[]>}
+     * @return array{nav: array<string, string[]>, tabs: array<string, string[]>, ok: bool}
      */
     public static function sanitise(?array $config): array
     {
-        $nav  = self::DEFAULT_NAV;
-        $tabs = self::DEFAULT_TABS;
+        $vide = array_fill_keys(array_keys(self::DEFAULT_NAV), []);
+        $nav  = $vide;
+        $tabs = $vide;
 
         $modes = $config['modes'] ?? null;
-        if (!is_array($modes)) {
-            return ['nav' => $nav, 'tabs' => $tabs];
+        if (!is_array($modes) || $modes === []) {
+            return ['nav' => $nav, 'tabs' => $tabs, 'ok' => false];
         }
 
         foreach ($modes as $mode => $spec) {
@@ -151,23 +167,20 @@ class DeviceModeService
             }
 
             if (isset($spec['nav']) && is_array($spec['nav'])) {
-                $keep = self::keepKnown($spec['nav'], self::KNOWN_NAV);
-                // Vide = on garde le défaut. Voir plus haut : c'est la garde
-                // qui empêche une tablette sans menu.
-                if ($keep !== []) {
-                    $nav[$mode] = $keep;
-                }
+                $nav[$mode] = self::keepKnown($spec['nav'], self::KNOWN_NAV);
             }
-
             if (isset($spec['tabs']) && is_array($spec['tabs'])) {
-                $keep = self::keepKnown($spec['tabs'], self::KNOWN_TABS);
-                if ($keep !== []) {
-                    $tabs[$mode] = array_slice($keep, 0, self::MAX_TABS);
-                }
+                $tabs[$mode] = array_slice(
+                    self::keepKnown($spec['tabs'], self::KNOWN_TABS), 0, self::MAX_TABS
+                );
             }
         }
 
-        return ['nav' => $nav, 'tabs' => $tabs];
+        // Une réponse qui ne décrit aucun mode connu n'est pas une
+        // configuration : on la traite comme une absence, et on le dit.
+        $ok = $nav !== $vide || $tabs !== $vide;
+
+        return ['nav' => $nav, 'tabs' => $tabs, 'ok' => $ok];
     }
 
     /**
@@ -216,13 +229,13 @@ class DeviceModeService
     /** @return string[] clés des sections visibles dans le menu */
     public function navKeys(?string $mode): array
     {
-        return ($this->maps['nav'] ?? self::DEFAULT_NAV)[$this->normalise($mode)];
+        return ($this->maps['nav'] ?? array_fill_keys(array_keys(self::DEFAULT_NAV), []))[$this->normalise($mode)];
     }
 
     /** @return string[] clés des onglets du bas, profil non compris */
     public function tabKeys(?string $mode): array
     {
-        return ($this->maps['tabs'] ?? self::DEFAULT_TABS)[$this->normalise($mode)];
+        return ($this->maps['tabs'] ?? array_fill_keys(array_keys(self::DEFAULT_TABS), []))[$this->normalise($mode)];
     }
 
     public function allows(?string $mode, string $navKey): bool
