@@ -15,9 +15,16 @@ sert un appareil, et donc ce qu'il affiche.
 
 | Mode | Menu | Barre du bas |
 |---|---|---|
-| **Gestion** | Tableau de bord, Objectifs & Primes, Checklists, Base de connaissances, Réclamations | Accueil, Checklists, Connaissances, Réclamations |
-| **Production** *(défaut)* | Tableau de bord, Production, Objectifs & Primes, Checklists, Commandes, Base de connaissances, Réclamations | Accueil, Production, Checklists, Commandes |
-| **WebShop** | WebShop | WebShop |
+| **Gestion** | Tableau de bord, Checklists, Base de connaissances, Réclamations | Accueil, Checklists, Connaissances, Réclamations |
+| **Production** *(défaut)* | Tableau de bord, Production, Checklists, Commandes, Base de connaissances, Réclamations | Accueil, Production, Checklists, Commandes |
+| **WebShop** | WebShop | Préparation, Stock du jour, Tableau de bord |
+
+Ce tableau donne les **défauts**, ceux qui s'appliquent tant que la table
+`pwa_kitchen_param` n'est pas posée ou ne répond pas. Depuis le 12/08/2026,
+c'est elle qui décide — voir §2.
+
+« Objectifs & Primes » a quitté les deux menus qui le portaient : l'entrée était
+grisée et n'ouvrait rien. Une section se déclare le jour où son écran existe.
 
 Le **Profil** est présent dans les trois modes, dans la barre du bas et en bas du
 menu. Ce n'est pas une exception décorative : c'est par lui qu'on revient aux
@@ -87,30 +94,29 @@ des entrées de menu.
 `Secure` hors de portée d'un réseau en clair, et il ne part jamais vers une
 autre origine que Kitchen. Voir §3 pour le reste du traitement.
 
-### Pour passer à l'option 1 (ERP)
+### Ce qui vient de l'ERP, et ce qui n'en vient pas
 
-**Les tables et les deux endpoints sont spécifiés dans
-`docs/BACKEND_A_FAIRE.md` §8** — quatre tables préfixées `pwa_` (les modes, les
-entrées de menu, leur affectation, les réglages d'appareil) et
-`GET /devices/me/config` + `PATCH /devices/me/settings`.
+**Tranché le 12/08/2026.** La frontière passe entre deux questions qu'on
+confondait :
 
-Ce périmètre est plus large qu'un simple champ `mode` sur l'appareil, et
-volontairement : tant qu'à sortir la décision du code, autant en sortir aussi
-**l'affectation des menus**. Sinon il faut encore livrer une version de la PWA
-pour déplacer une entrée d'un mode à l'autre, et le réglage à distance n'aurait
-résolu que la moitié du problème.
+| Question | Où elle se règle | Pourquoi |
+|---|---|---|
+| **Ce que chaque mode affiche** | table `pwa_kitchen_param`, côté ERP | c'est une décision de réseau, elle appartient au franchisé et ne doit pas demander un déploiement |
+| **Quel mode porte cette tablette** | la tablette, dans ses réglages | on déplace une tablette du fournil au comptoir un samedi matin ; l'équipe doit pouvoir la basculer sur-le-champ, sans appeler quelqu'un qui a accès au back-office |
 
-Côté PWA, trois points d'accroche, déjà isolés pour ça :
+La première est branchée : `GET /devices/me/config` est lu au plus une fois par
+tranche de dix minutes, filtré par `DeviceModeService::sanitise()` et mis en
+cache dans `kitchen_mode_config`. Voir `docs/BACKEND_A_FAIRE.md` §8.
 
-| Aujourd'hui | Demain |
-|---|---|
-| `DeviceMode::current()` — lit le cookie | lit `config.mode`, cookie en repli hors ligne |
-| `DeviceMode::remember()` — écrit le cookie | `PATCH /devices/me/settings`, cookie en cache |
-| `DeviceModeService::NAV` / `TABS` — constantes | `config.menu`, constantes en repli |
+La seconde ne le sera pas. `GET /devices/me/config` **ne sert pas** de champ
+`mode`, `PATCH /devices/me/settings` n'en accepte pas, et trois assertions de
+`bin/mode-test.php` interdisent qu'un tel champ prenne la main un jour sans
+qu'on l'ait décidé. Le mode reste ce qu'il a toujours été ici : un cookie de
+cinq ans sur l'appareil.
 
-Les règles restent pures et `bin/mode-test.php` ne change pas : seule la source
-des données change. Le cookie ne disparaît pas — une tablette hors ligne doit
-encore afficher son menu, et c'est lui qui le sait.
+Ce n'est pas un renoncement à la centralisation. C'est reconnaître que les deux
+réglages n'ont pas le même rythme : l'un change quand la politique change,
+l'autre quand on déplace un meuble.
 
 ---
 

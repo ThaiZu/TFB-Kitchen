@@ -524,5 +524,8 @@ function mock_device_config(): array
     }
     unset($m);
 
-    return ['mode' => 'production', 'modes' => $modes];
+    // Pas de « mode » : il reste un reglage de la tablette, pas du serveur.
+    // Le servir ici ferait croire qu'il agit — voir §8.6 du document de
+    // passation.
+    return ['modes' => $modes];
 }

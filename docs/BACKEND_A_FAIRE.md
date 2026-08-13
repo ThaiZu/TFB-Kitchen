@@ -1024,7 +1024,6 @@ Clés attendues aujourd'hui :
 
 | `setting_key` | portée usuelle | ce qu'il décide | si absent |
 |---|---|---|---|
-| `mode` | `device` | le mode de CETTE tablette | `production`, le défaut codé dans la PWA |
 | `webshop_url` | `brand` | l'URL du back-office franchisé, prise telle quelle | le mode WebShop est proposé **grisé, avec sa raison** (`no_url`) |
 | `webshop_device_token` | `shop`, ou `device` | **secret.** Le jeton d'appareil du webshop (`X-Device-Token`). Il porte la boutique — il n'y a pas d'id à stocker à côté | raison `no_token` |
 
@@ -1045,9 +1044,14 @@ d'imprimante viendront s'ajouter sans migration ni changement d'API. C'est la
 raison du couple clé/valeur plutôt que d'une colonne par réglage — trois
 colonnes aujourd'hui, quinze dans deux ans, et une migration par idée.
 
-**Le mode est un réglage d'appareil, pas de compte.** La tablette du fournil
-reste en Production quand le responsable s'y connecte. D'où `scope = 'device'`
-et non un champ sur l'utilisateur.
+**Le mode n'est PAS dans cette table**, et c'est une décision, pas un oubli. Il
+reste un réglage de la tablette elle-même, dans son cookie, changeable dans les
+réglages de l'appareil — voir §8.6. Le mettre ici obligerait à passer par le
+back-office pour basculer une tablette qu'on vient de déplacer du fournil au
+comptoir.
+
+Ce qui reste vrai : **c'est un réglage d'appareil, pas de compte.** La tablette
+du fournil reste en Production quand le responsable s'y connecte.
 
 > Si votre console de marque a besoin de rendre un formulaire depuis la base
 > plutôt que depuis une liste codée en dur, une table
@@ -1063,7 +1067,6 @@ et non à chaque page : peindre un menu ne vaut pas un aller-retour par écran.
 
 ```json
 {
-  "mode": "production",
   "modes": {
     "production": {
       "nav":  ["dashboard", "production", "checklists", "orders", "knowledge", "complaints"],
@@ -1088,6 +1091,17 @@ et non à chaque page : peindre un menu ne vaut pas un aller-retour par écran.
 `nav` est l'ordre du menu, `tabs` celui de la barre du bas : les deux sortent de
 `sort_order`, `tabs` ne gardant que les lignes à `in_tabbar = 1`.
 
+**Pas de champ `mode` dans cette réponse, et c'est délibéré.** Le mode d'une
+tablette reste un réglage de la tablette : la table dit ce que chaque mode
+affiche, pas quel mode porte quel appareil. Décision du 12/08/2026, motivée par
+l'usage : on déplace une tablette du fournil au comptoir un samedi matin, et
+l'équipe doit pouvoir la basculer sur-le-champ, sans appeler quelqu'un qui a
+accès au back-office.
+
+Servir un `mode` ici serait donc du travail perdu : la PWA l'ignore, et trois
+assertions de `bin/mode-test.php` interdisent qu'il prenne la main un jour sans
+qu'on l'ait décidé.
+
 **Les trois modes sont servis, pas seulement le courant.** Le mode est un
 réglage local de la tablette, changeable à tout instant dans les réglages :
 n'en servir qu'un obligerait à rappeler l'API à chaque bascule, et l'écran de
@@ -1095,7 +1109,6 @@ réglage ne pourrait plus montrer ce que chaque mode donne.
 
 | champ | ce qu'il décide | si absent |
 |---|---|---|
-| `mode` | le mode résolu côté serveur pour cette tablette | repli sur le cookie local, puis sur `production` |
 | `modes` | ce que chaque mode affiche — la table `pwa_kitchen_param` | l'affectation codée en dur dans la PWA |
 | `modes.<mode>.nav` | les entrées du menu, dans l'ordre | le défaut de CE mode |
 | `modes.<mode>.tabs` | la barre du bas, **quatre au plus** ; au-delà, la PWA garde les quatre premières | le défaut de CE mode |
@@ -1133,8 +1146,11 @@ tablette sous aucune forme. Voir `docs/MODE_TABLETTE.md` §3.
 Écrit les réglages de **cette** tablette (`scope = 'device'`).
 
 ```json
-{"mode": "webshop", "webshop_url": "https://exemple.tld/bo/?shop=2", "webshop_device_token": "…"}
+{"webshop_url": "https://exemple.tld/bo/?shop=2", "webshop_device_token": "…"}
 ```
+
+**Pas de `mode` ici non plus.** Il se règle sur la tablette et n'est jamais
+écrit sur le serveur — §8.5.
 
 Les trois champs sont facultatifs et indépendants : un corps qui ne porte que
 `mode` ne doit pas effacer l'URL. Une chaîne vide **efface** la surcharge
@@ -1150,13 +1166,15 @@ Refus attendus :
 
 | cas | code | `description` |
 |---|---|---|
-| `mode` inconnu ou `is_active = 0` | `422` | `unknown_mode` |
 | `webshop_url` sans `http(s)://` | `422` | `bad_url_scheme` |
 | `webshop_device_token` écrit en portée `brand` | `422` | `token_scope_too_wide` |
 | jeton d'un appareil qui n'existe plus | `401` | — |
 
-**Changer de mode ne doit pas invalider la session** : l'équipe est en plein
-service, une déconnexion pour un changement de menu serait une panne.
+Cet endpoint n'est **pas** appelé par la PWA aujourd'hui : les deux réglages
+webshop se saisissent sur la tablette et vivent dans ses cookies. Il n'a d'
+intérêt que le jour où l'on voudra poser l'URL une fois pour tout le réseau
+depuis la console — auquel cas c'est `GET /devices/me/config` qui la
+redescendra, et celui-ci qui l'écrira.
 
 ### 8.8 Ce que la PWA n'écrit jamais
 

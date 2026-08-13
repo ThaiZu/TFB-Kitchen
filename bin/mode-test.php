@@ -221,6 +221,26 @@ $m3 = new DeviceModeService();
 $m3->applyConfig(null);
 check('config nulle : rien ne bouge',  $m3->navKeys('production'), $def['production']);
 
+// ── Le mode reste un reglage de la TABLETTE ────────────────────────────────
+// Decision du 12/08/2026, et elle est structurante : la table
+// pwa_kitchen_param dit ce que chaque mode affiche, elle ne dit pas quel mode
+// porte quelle tablette. Celui-la se regle sur place, dans les reglages.
+//
+// La raison est pratique : on deplace une tablette du fournil au comptoir un
+// samedi matin, et l'equipe doit pouvoir la basculer sur-le-champ, sans
+// appeler quelqu'un qui a acces au back-office.
+//
+// Ces trois verifications interdisent qu'un champ « mode » servi par l'API
+// prenne la main un jour sans qu'on l'ait decide.
+$avec = ['mode' => 'webshop', 'modes' => ['gestion' => ['nav' => ['dashboard']]]];
+check('sanitise ne rend que nav+tabs', array_keys(DeviceModeService::sanitise($avec)), ['nav', 'tabs']);
+
+$m4 = new DeviceModeService();
+$m4->applyConfig($avec);
+check('« mode » servi ne bascule rien', $m4->normalise(null), DeviceModeService::DEFAULT_MODE);
+check('la config ne touche pas au mode courant',
+    $m4->navKeys(null), $m4->navKeys(DeviceModeService::DEFAULT_MODE));
+
 // ── Verdict ───────────────────────────────────────────────────────────────
 echo $ko === []
     ? "✓ {$ok} vérifications passées\n"
