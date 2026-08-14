@@ -7,46 +7,30 @@ use App\Kitchen\core\Http\ApiClient;
 /**
  * L'équipe d'un magasin, et qui y travaille aujourd'hui.
  *
- * Deux questions distinctes, donc deux endpoints :
+ * ── Une seule source ── (révision du 13/08/2026)
+ * `GET /shops/{id}/schedule?date=…` — le planning du jour. Il répond, et il
+ * porte les personnes : c'est donc lui, et lui seul, qui dit qui peut signer
+ * une tâche ce jour-là.
  *
- *   • `/franchisee-employees` — QUI EXISTE. La fiche de chaque employé du
- *     franchisé, avec son état d'activité. C'est la liste de référence.
- *   • `/shops/{id}/schedule`  — QUI TRAVAILLE, un jour donné. Le planning ne
- *     porte pas de noms mais des identifiants : c'est le croisement des deux
- *     qui donne « qui peut signer une tâche aujourd'hui ».
+ * `/franchisee-employees` a été retiré. Il servait à obtenir les noms, que le
+ * planning devait ensuite désigner par identifiant — deux appels, un
+ * croisement, et un point de panne de plus pour une question à laquelle une
+ * seule route sait répondre. Et la bonne : quelqu'un qui n'est pas au planning
+ * ne travaille pas, sa fiche existât-elle.
  *
- * Le même couple sert les checklists et la cuisson : savoir qui est en atelier
- * n'appartient à aucun des deux modules.
+ * Le même endpoint sert les checklists et la cuisson : savoir qui est en
+ * atelier n'appartient à aucun des deux modules.
  *
  * ── Aucun repli ──
- * Si l'une des deux routes ne répond pas, on rend null. L'écran nomme alors la
- * route manquante — « API à créer : GET /shops/{id}/schedule » — au lieu de
- * proposer une liste tirée d'ailleurs. Pendant que le back se construit, une
- * liste plausible venue d'une autre source masque précisément le trou qu'on
- * cherche.
+ * S'il ne répond pas, on rend null. L'écran nomme alors la route au lieu de
+ * proposer une liste tirée d'ailleurs : une liste plausible venue d'une autre
+ * source masque précisément le trou qu'on cherche.
  */
 class StaffRepository
 {
     public function __construct(
         private ApiClient $apiClient
     ) {}
-
-    /**
-     * Les employés du franchisé.
-     *
-     * @return array<int, array<string, mixed>>|null
-     *         null = l'API ne sert pas la liste. Distinct de [] — « personne
-     *         n'est de service » et « on ne sait pas qui travaille » ne se
-     *         disent pas pareil à l'écran.
-     */
-    public function getEmployees(int $shopId): ?array
-    {
-        // Une seule adresse. Le repli sur /shops/{id}/employees a été retiré le
-        // 13/08/2026 : deux routes pour une même question, c'est une réponse
-        // qui peut venir de deux endroits sans qu'on sache lequel — et c'est
-        // exactement ce qui empêche de voir qu'une des deux ne répond pas.
-        return $this->rows($this->apiClient->get('/franchisee-employees'));
-    }
 
     /**
      * Le planning d'un jour.

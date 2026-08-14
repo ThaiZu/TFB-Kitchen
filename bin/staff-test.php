@@ -69,55 +69,93 @@ check('champ vide → gardé', $ids(StaffService::activeOnly([
 check('liste vide', StaffService::activeOnly([]), []);
 
 // ── Qui est au planning ─────────────────────────────────────────────────────
+// Revision du 13/08/2026 : une seule source. /franchisee-employees a ete
+// retire — le planning porte les personnes, il n'y a plus rien a croiser.
 $J = '2026-08-06';
+$noms = fn(array $rows) => array_map(fn($r) => $r['id'] . ':' . $r['name'], $rows);
 
-check('employee_id', StaffService::scheduledIds([
-    ['employee_id' => 11], ['employee_id' => 12],
-], $J), ['11', '12']);
+check('à plat', $noms(StaffService::peopleOf([
+    ['employee_id' => 11, 'name' => 'Nathan Colin'],
+    ['employee_id' => 12, 'name' => 'Aïcha Benali'],
+], $J)), ['11:Nathan Colin', '12:Aïcha Benali']);
 
-check('les autres noms de champ', StaffService::scheduledIds([
-    ['franchisee_employee_id' => 21],
-    ['id_employee' => 22],
-    ['id_franchisee_employee' => 23],
-    ['user_id' => 24],
-], $J), ['21', '22', '23', '24']);
+check('fiche imbriquée', $noms(StaffService::peopleOf([
+    ['id' => 901, 'employee' => ['id' => 31, 'name' => 'Marek Kowalski']],
+], $J)), ['31:Marek Kowalski']);
 
-check('fiche imbriquée', StaffService::scheduledIds([
-    ['employee' => ['id' => 31, 'name' => 'Nathan']],
-], $J), ['31']);
+// L'« id » d'une ligne de planning est celui du SERVICE, pas de la personne :
+// le lire comme un employe attribuerait la tache au mauvais identifiant.
+check("l'id du service n'est pas celui de l'employé", $noms(StaffService::peopleOf([
+    ['id' => 901, 'employee_id' => 31, 'name' => 'Marek'],
+], $J)), ['31:Marek']);
 
-// Nombre ou chaîne : la même personne, une seule fois.
-check('nombre et chaîne dédoublonnés', StaffService::scheduledIds([
-    ['employee_id' => 41], ['employee_id' => '41'],
-], $J), ['41']);
+check('les autres noms de champ', $noms(StaffService::peopleOf([
+    ['franchisee_employee_id' => 21, 'name' => 'A'],
+    ['id_employee' => 22, 'name' => 'B'],
+    ['id_franchisee_employee' => 23, 'name' => 'C'],
+    ['user_id' => 24, 'name' => 'D'],
+], $J)), ['21:A', '22:B', '23:C', '24:D']);
 
-check('lignes d\'un autre jour écartées', StaffService::scheduledIds([
-    ['employee_id' => 51, 'date' => $J],
-    ['employee_id' => 52, 'date' => '2026-08-05'],
-], $J), ['51']);
+check('prénom + nom recomposés', $noms(StaffService::peopleOf([
+    ['employee_id' => 41, 'first_name' => 'Sofia', 'last_name' => 'Ferreira'],
+    ['employee_id' => 42, 'prenom' => 'Ali'],
+], $J)), ['41:Sofia Ferreira', '42:Ali']);
 
-check('date horodatée acceptée', StaffService::scheduledIds([
-    ['employee_id' => 61, 'date' => $J . ' 06:00:00'],
-], $J), ['61']);
+check('full_name / display_name', $noms(StaffService::peopleOf([
+    ['employee_id' => 51, 'full_name' => 'X Y'],
+    ['employee_id' => 52, 'display_name' => 'Z W'],
+], $J)), ['51:X Y', '52:Z W']);
 
-check('autres noms de date', StaffService::scheduledIds([
-    ['employee_id' => 71, 'work_date' => $J],
-    ['employee_id' => 72, 'day' => '2026-08-05'],
-    ['employee_id' => 73, 'scheduled_for_date' => $J],
-], $J), ['71', '73']);
+check('initiales calculées', StaffService::peopleOf([
+    ['employee_id' => 61, 'name' => 'Nathan Colin'],
+], $J)[0]['initials'], 'NC');
 
-// Une ligne sans date n'est pas suspecte : l'endpoint filtre déjà.
-check('ligne sans date gardée', StaffService::scheduledIds([
-    ['employee_id' => 81],
-], $J), ['81']);
+// Deux services dans la journee : une seule personne. Sans dedoublonnage, elle
+// apparait deux fois et on doute d'avoir touche le bon badge.
+check('deux services → une personne', $noms(StaffService::peopleOf([
+    ['employee_id' => 71, 'name' => 'Ali', 'start' => '06:00'],
+    ['employee_id' => 71, 'name' => 'Ali', 'start' => '14:00'],
+], $J)), ['71:Ali']);
+check('nombre et chaîne : la même personne', $noms(StaffService::peopleOf([
+    ['employee_id' => 71, 'name' => 'Ali'],
+    ['employee_id' => '71', 'name' => 'Ali'],
+], $J)), ['71:Ali']);
 
-check('lignes illisibles ignorées', StaffService::scheduledIds([
-    'bruit',
-    ['rien' => 1],
+// Une ligne d'un autre jour ferait signer quelqu'un qui n'etait pas la.
+check("lignes d'un autre jour écartées", $noms(StaffService::peopleOf([
+    ['employee_id' => 81, 'name' => 'A', 'date' => $J],
+    ['employee_id' => 82, 'name' => 'B', 'date' => '2026-08-05'],
+], $J)), ['81:A']);
+check('date horodatée acceptée', $noms(StaffService::peopleOf([
+    ['employee_id' => 83, 'name' => 'A', 'date' => $J . ' 06:00:00'],
+], $J)), ['83:A']);
+check('autres noms de date', $noms(StaffService::peopleOf([
+    ['employee_id' => 84, 'name' => 'A', 'work_date' => $J],
+    ['employee_id' => 85, 'name' => 'B', 'day' => '2026-08-05'],
+], $J)), ['84:A']);
+check('ligne sans date gardée', $noms(StaffService::peopleOf([
+    ['employee_id' => 86, 'name' => 'A'],
+], $J)), ['86:A']);
+
+// Un badge sans nom ne se choisit pas : signer sous « #47 » ne vaut pas mieux
+// que ne pas signer.
+check('sans nom → écartée', StaffService::peopleOf([
     ['employee_id' => 91],
-], $J), ['91']);
+], $J), []);
+check('sans identifiant → écartée', StaffService::peopleOf([
+    ['name' => 'Sans id'],
+], $J), []);
+check('lignes illisibles ignorées', $noms(StaffService::peopleOf([
+    'bruit', ['rien' => 1], ['employee_id' => 92, 'name' => 'A'],
+], $J)), ['92:A']);
 
-check('planning vide', StaffService::scheduledIds([], $J), []);
+// Une fiche explicitement desactivee ne signe pas, meme inscrite au planning.
+check('fiche désactivée écartée', $noms(StaffService::peopleOf([
+    ['employee' => ['id' => 93, 'name' => 'Parti', 'is_active' => false]],
+    ['employee' => ['id' => 94, 'name' => 'Présent']],
+], $J)), ['94:Présent']);
+
+check('planning vide', StaffService::peopleOf([], $J), []);
 
 // ── Ce que l'écran en fait ──────────────────────────────────────────────────
 // Revision du 13/08/2026 : plus de repli. Si une route ne repond pas, on ne

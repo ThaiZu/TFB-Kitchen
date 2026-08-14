@@ -8,10 +8,9 @@ use App\Kitchen\core\Support\GlobalRegistry;
 /**
  * Qui travaille aujourd'hui.
  *
- * Deux sources croisées : la liste des employés du franchisé, et le planning du
- * jour. Un employé est proposé pour signer une tâche s'il est ACTIF et s'il est
- * AU PLANNING de la date consultée. Le croisement se fait ici, sur des
- * identifiants, parce que le planning ne porte pas de noms.
+ * Une seule source : `GET /shops/{id}/schedule?date=…`. Qui est au planning
+ * travaille ; qui n'y est pas ne travaille pas, sa fiche existât-elle. Le
+ * planning porte les personnes, il n'y a donc rien à croiser.
  *
  * ── Rien n'est inventé ── (révision du 13/08/2026)
  * Si l'une des deux routes ne répond pas, on ne propose PERSONNE et l'écran
@@ -73,32 +72,93 @@ class StaffService
             return null;
         }
 
-        $employees = $this->staffRepository->getEmployees($shopId);
-        if ($employees === null) {
-            $this->missing = 'GET /franchisee-employees';
-            return null;
-        }
-
-        $employees = self::activeOnly($employees);
-
         // Sans date, la question « qui est de service » n'a pas de sens : ce
         // n'est pas une route manquante, c'est un appel qui ne la pose pas.
-        if ($date === null || $date === '') {
-            return array_map(fn(array $e) => self::card($e, null), $employees);
-        }
+        $date = ($date === null || $date === '') ? date('Y-m-d') : $date;
 
         $rows = $this->staffRepository->getSchedule($shopId, $date);
         if ($rows === null) {
             $this->missing = 'GET /shops/{id}/schedule?date=' . $date;
-            return array_map(fn(array $e) => self::card($e, null), $employees);
+            return null;
         }
 
-        $scheduled = self::scheduledIds($rows, $date);
+        $people = self::peopleOf($rows, $date);
 
-        return array_map(
-            fn(array $e) => self::card($e, in_array((string)($e['id'] ?? ''), $scheduled, true)),
-            $employees
-        );
+        // Des lignes de planning dont aucune ne donne un nom : la route répond,
+        // mais pas dans la forme attendue. C'est un problème d'API, pas un jour
+        // sans personne — et le dire évite de chercher au back-office ce qui se
+        // règle chez le développeur.
+        if ($people === [] && $rows !== []) {
+            $this->missing = 'GET /shops/{id}/schedule — réponse sans nom d\'employé';
+        }
+
+        return $people;
+    }
+
+    /**
+     * Les personnes d'un planning, dédoublonnées.
+     *
+     * ── Ce qu'on lit, et pourquoi si largement ──
+     * Une ligne de planning porte tantôt l'employé à plat, tantôt une fiche
+     * imbriquée, et le nom sous trois ou quatre orthographes. On accepte donc
+     * plusieurs formes — ce n'est pas de la complaisance : chacune correspond à
+     * une façon dont la liste se viderait en silence, et une liste vide rend la
+     * checklist inachevable.
+     *
+     * ── Deux exigences fermes ──
+     * Un identifiant ET un nom. Un badge sans nom ne se choisit pas, et signer
+     * sous « #47 » ne vaut pas mieux que ne pas signer.
+     *
+     * ── Le dédoublonnage n'est pas cosmétique ──
+     * Quelqu'un qui fait deux services dans la journée a deux lignes. Sans lui,
+     * il apparaîtrait deux fois dans la modale — et on douterait d'avoir touché
+     * le bon.
+     *
+     * @param array<int, array<string, mixed>> $rows
+     * @return array<int, array{id: mixed, name: string, initials: string, on_schedule: ?bool}>
+     */
+    public static function peopleOf(array $rows, string $date): array
+    {
+        $out = [];
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            // Une ligne datée d'un autre jour est écartée même si l'endpoint
+            // est censé filtrer : une ligne de la veille laissée passer ferait
+            // signer quelqu'un qui n'était pas là.
+            foreach (['date', 'day', 'work_date', 'scheduled_for_date'] as $k) {
+                if (!empty($row[$k]) && is_string($row[$k])) {
+                    if (substr(trim($row[$k]), 0, 10) !== $date) {
+                        continue 2;
+                    }
+                    break;
+                }
+            }
+
+            $fiche = (isset($row['employee']) && is_array($row['employee'])) ? $row['employee'] : $row;
+
+            // Une fiche explicitement désactivée ne signe pas, même inscrite au
+            // planning. On n'écarte que ce qui est EXPLICITEMENT inactif.
+            if (self::activeOnly([$fiche]) === []) {
+                continue;
+            }
+
+            $id = self::idOf($row, $fiche);
+            if ($id === null) {
+                continue;
+            }
+            $name = self::nameOf($fiche);
+            if ($name === '') {
+                continue;
+            }
+
+            // Deux services dans la journée : une seule personne.
+            $out[$id] = self::card(['id' => $id, 'name' => $name], true);
+        }
+
+        return array_values($out);
     }
 
     /** @return array{id: mixed, name: string, initials: string, on_schedule: ?bool} */
@@ -110,6 +170,46 @@ class StaffService
             'initials'    => self::initials((string)($e['name'] ?? '')),
             'on_schedule' => $onSchedule,
         ];
+    }
+
+    /** L'identifiant, en chaîne : l'API rend tantôt 12, tantôt « 12 ». */
+    private static function idOf(array $row, array $fiche): ?string
+    {
+        foreach (['employee_id', 'franchisee_employee_id', 'id_employee',
+                  'id_franchisee_employee', 'user_id'] as $k) {
+            if (isset($row[$k]) && $row[$k] !== '') {
+                return (string)$row[$k];
+            }
+        }
+        // La fiche imbriquée porte son id sous « id » ; la ligne de planning,
+        // elle, garde « id » pour le service lui-même — on ne le lit donc que
+        // sur la fiche.
+        if ($fiche !== $row && isset($fiche['id']) && $fiche['id'] !== '') {
+            return (string)$fiche['id'];
+        }
+
+        return null;
+    }
+
+    /** Le nom affichable, ou une chaîne vide si la ligne n'en porte aucun. */
+    private static function nameOf(array $e): string
+    {
+        foreach (['name', 'full_name', 'employee_name', 'display_name', 'label'] as $k) {
+            if (!empty($e[$k]) && is_string($e[$k])) {
+                return trim($e[$k]);
+            }
+        }
+
+        $prenom = '';
+        $nom    = '';
+        foreach (['first_name', 'firstname', 'prenom', 'given_name'] as $k) {
+            if (!empty($e[$k]) && is_string($e[$k])) { $prenom = trim($e[$k]); break; }
+        }
+        foreach (['last_name', 'lastname', 'nom', 'family_name', 'surname'] as $k) {
+            if (!empty($e[$k]) && is_string($e[$k])) { $nom = trim($e[$k]); break; }
+        }
+
+        return trim($prenom . ' ' . $nom);
     }
 
     /**
@@ -200,53 +300,6 @@ class StaffService
 
             return true;
         }));
-    }
-
-    /**
-     * Les identifiants d'employés présents au planning, en chaînes.
-     *
-     * Comparer en chaînes est délibéré : l'API rend tantôt 12, tantôt "12", et
-     * une comparaison typée ferait disparaître la moitié de l'équipe sans rien
-     * signaler.
-     *
-     * Une ligne datée d'un autre jour est écartée même si l'endpoint est censé
-     * filtrer : c'est une question de service, pas de confiance — une ligne de
-     * la veille laissée passer ferait signer quelqu'un qui n'était pas là.
-     *
-     * @param array<int, array<string, mixed>> $rows
-     * @return array<int, string>
-     */
-    public static function scheduledIds(array $rows, string $date): array
-    {
-        $ids = [];
-        foreach ($rows as $row) {
-            if (!is_array($row)) {
-                continue;
-            }
-
-            foreach (['date', 'day', 'work_date', 'scheduled_for_date'] as $k) {
-                if (!empty($row[$k]) && is_string($row[$k])) {
-                    if (substr(trim($row[$k]), 0, 10) !== $date) {
-                        continue 2;
-                    }
-                    break;
-                }
-            }
-
-            foreach (['employee_id', 'franchisee_employee_id', 'id_employee', 'id_franchisee_employee', 'user_id'] as $k) {
-                if (isset($row[$k]) && $row[$k] !== '') {
-                    $ids[] = (string)$row[$k];
-                    continue 2;
-                }
-            }
-
-            // Un planning peut aussi imbriquer la fiche complète.
-            if (isset($row['employee']) && is_array($row['employee']) && isset($row['employee']['id'])) {
-                $ids[] = (string)$row['employee']['id'];
-            }
-        }
-
-        return array_values(array_unique($ids));
     }
 
     private static function initials(string $name): string

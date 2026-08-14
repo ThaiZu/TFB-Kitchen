@@ -60,39 +60,28 @@ function mock_employees(): array
 }
 
 /**
- * Les employés du franchisé — la liste de référence.
+ * Le planning d'un jour — la seule source du personnel depuis le 13/08/2026.
  *
- * Volontairement plus large que le planning, et volontairement bruitée : une
- * fiche désactivée, une autre archivée, un identifiant rendu en chaîne. C'est
- * ce que le front doit savoir encaisser, et le bouchon ne sert à rien s'il ne
- * sert que des données propres.
- */
-function mock_franchisee_employees(): array
-{
-    return [
-        ['id' => 41, 'name' => 'Nathan Colin',    'is_active' => true],
-        ['id' => 42, 'name' => 'Aïcha Benali',    'is_active' => true],
-        ['id' => '43', 'name' => 'Marek Kowalski', 'is_active' => true],
-        ['id' => 44, 'name' => 'Ali',             'is_active' => true],
-        ['id' => 45, 'name' => 'Sofia Ferreira',  'is_active' => true],
-        ['id' => 46, 'name' => 'Yannick Dubois',  'is_active' => false],
-        ['id' => 47, 'name' => 'Claire Petit',    'status' => 'ARCHIVED'],
-    ];
-}
-
-/**
- * Le planning d'un jour : des identifiants et des heures, pas des noms.
- *
- * Trois personnes de service, dont une dont l'identifiant est rendu en chaîne
- * là où la fiche le rend en nombre — c'est le cas qui ferait disparaître
- * quelqu'un si la comparaison était typée.
+ * Il porte les personnes : identifiant ET nom. Volontairement bruité, parce
+ * qu'un bouchon qui ne sert que des données propres ne sert à rien :
+ *   • « id » est celui du SERVICE, pas de l'employé — le confondre
+ *     attribuerait la tâche au mauvais identifiant ;
+ *   • un identifiant rendu en chaîne là où les autres sont des nombres ;
+ *   • une personne qui fait deux services dans la journée ;
+ *   • une fiche imbriquée plutôt qu'à plat.
  */
 function mock_schedule(string $date): array
 {
     return [
-        ['id' => 901, 'employee_id' => 41,   'date' => $date, 'start' => '06:00', 'end' => '14:00'],
-        ['id' => 902, 'employee_id' => '43', 'date' => $date, 'start' => '06:00', 'end' => '14:00'],
-        ['id' => 903, 'employee_id' => 44,   'date' => $date, 'start' => '13:00', 'end' => '20:00'],
+        ['id' => 901, 'employee_id' => 41,   'name' => 'Nathan Colin',
+         'date' => $date, 'start' => '06:00', 'end' => '14:00'],
+        ['id' => 902, 'employee_id' => '43', 'name' => 'Marek Kowalski',
+         'date' => $date, 'start' => '06:00', 'end' => '14:00'],
+        ['id' => 903, 'employee' => ['id' => 44, 'name' => 'Ali'],
+         'date' => $date, 'start' => '13:00', 'end' => '20:00'],
+        // Ali revient le soir : deux lignes, une seule personne à l'écran.
+        ['id' => 904, 'employee' => ['id' => 44, 'name' => 'Ali'],
+         'date' => $date, 'start' => '20:00', 'end' => '22:00'],
     ];
 }
 

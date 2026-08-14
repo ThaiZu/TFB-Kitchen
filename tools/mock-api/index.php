@@ -400,13 +400,9 @@ if ($method === 'GET' && $m('/devices/me/config')) {
     ok(mock_device_config());
 }
 
-// Qui existe : la liste de reference du franchise, etat d'activite compris.
-if ($method === 'GET' && $m('/franchisee-employees')) {
-    ok(mock_franchisee_employees());
-}
-
-// Qui travaille, un jour donne. Le planning ne porte pas de noms : c'est son
-// croisement avec la liste ci-dessus qui dit qui peut signer une tache.
+// Qui travaille, un jour donne — et la SEULE source du personnel depuis le
+// 13/08/2026. /franchisee-employees a ete retire : le planning porte les
+// personnes, il n'y a plus rien a croiser.
 if ($method === 'GET' && $m('/shops/\d+/schedule')) {
     // ?empty=1 : un planning servi mais qui ne designe personne. C'est le cas
     // qui vidait la liste et rendait toute la checklist invalidable.
