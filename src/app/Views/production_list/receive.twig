@@ -1,0 +1,19 @@
+{% extends 'layouts/base.twig' %}
+{% block title %}{{ translations.receive_plan }}{% endblock %}
+{% block head %}{% include 'components/stock_batch_style.twig' %}{% endblock %}
+{% block content %}
+<div class="sb-head"><div><h1>{{ translations.receive_plan }} · {{ plan_date }}</h1><p class="sb-muted">{{ translations.receive_plan_hint }}</p></div><a class="sb-button sb-secondary" href="{{ ROOT }}/production?date={{ plan_date }}">{{ translations.view_saved }}</a></div>
+{% if not available %}<p class="sb-card sb-warn" role="alert">{{ translations.unavailable }}</p>
+{% elseif not saved_plan.exists %}<p class="sb-card">{{ translations.no_saved_plan }}</p>
+{% else %}
+{% if not is_today %}<p class="sb-card sb-warn">{{ translations.today_only }}</p>{% elseif not has_shift %}<p class="sb-card sb-warn">{{ translations.shift_required }} <a href="{{ ROOT }}/checklist">{{ translations.open_shift }}</a></p>{% endif %}
+<div class="sb-card sb-tools"><input id="sbSearch" class="sb-search" type="search" placeholder="{{ translations.search }}" aria-label="{{ translations.search }}"><a class="sb-button sb-secondary" href="{{ ROOT }}/production/receive?date={{ plan_date }}">{{ translations.reload }}</a></div>
+<div id="sbNotice" class="sb-notice" role="status" aria-live="polite" hidden></div>
+<div class="sb-card sb-scroll"><table class="sb-table"><thead><tr><th>{{ translations.select_receipt }}</th><th>{{ translations.product }}</th><th>{{ translations.planned }}</th><th>{{ translations.produced }}</th><th>{{ translations.to_receive }}</th><th>{{ translations.result }}</th></tr></thead><tbody>
+{% for sector in saved_plan.sectors %}{% for category in sector.categories %}<tr class="sb-group"><td colspan="6">{{ sector.name ?: translations.unassigned_sector }} / {{ category.name ?: translations.uncategorized }}</td></tr>
+{% for line in category.lines %}
+<tr data-stock-row data-product="{{ line.id_product }}" data-name="{{ line.name }}" data-produced="{{ line.produced_quantity }}" data-supported="1"><td><input class="sb-selected" type="checkbox" aria-label="{{ translations.select_receipt }} — {{ line.name }}" {% if line.remaining_quantity > 0 %}checked{% endif %} {% if not is_today or not has_shift %}disabled{% endif %}></td><td><b>{{ line.name }}</b></td><td>{{ line.planned_quantity + 0 }}</td><td>{{ line.produced_quantity + 0 }}</td><td><input class="sb-quantity" type="number" min="0" max="999999" step="0.0001" value="{{ line.remaining_quantity }}" aria-label="{{ translations.to_receive }} — {{ line.name }}" {% if not is_today or not has_shift %}disabled{% endif %}></td><td class="sb-result"></td></tr>
+{% endfor %}{% endfor %}{% endfor %}</tbody></table></div>
+<div class="sb-card sb-actions sb-tools"><span id="sbSummary"></span><button id="sbSave" class="sb-button" type="button" {% if not is_today or not has_shift %}disabled{% endif %}>{{ translations.receive_selected }}</button></div>
+{% set stock_mode = 'production' %}{% set batch_date = plan_date %}{% include 'components/stock_batch_script.twig' %}
+{% endif %}{% endblock %}

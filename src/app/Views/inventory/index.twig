@@ -1,0 +1,23 @@
+{% extends 'layouts/base.twig' %}
+{% block title %}{{ translations.title }}{% endblock %}
+{% block head %}{% include 'components/stock_batch_style.twig' %}{% endblock %}
+{% block content %}
+<div class="sb-head"><div><h1>{{ translations.title }}</h1><p class="sb-muted">{{ translations.subtitle }}</p></div><a class="sb-button sb-secondary" href="{{ ROOT }}/inventory">{{ translations.reload }}</a></div>
+{% if not available %}<p role="alert" class="sb-card sb-warn">{{ translations.unavailable }}</p>
+{% else %}
+<div class="sb-card"><p>{{ translations.snapshot_hint }}</p><p>{{ translations.unit_hint }}</p>
+{% if not has_shift %}<p class="sb-warn">{{ translations.shift_required }} <a href="{{ ROOT }}/checklist">{{ translations.open_shift }}</a></p>{% endif %}
+<p id="sbHiddenHint" class="sb-muted">{{ translations.hidden_hint }}: <b>{{ lines|filter(line => not line.inventory_initialized_at or line.in_stock == 0)|length }}</b>. {{ translations.show_all_hint }}</p>
+<div class="sb-tools"><input id="sbSearch" class="sb-search" type="search" placeholder="{{ translations.search }}" aria-label="{{ translations.search }}"><label><input id="sbZeros" type="checkbox"> {{ translations.show_zeros }}</label><button class="sb-button sb-secondary" id="sbSelectVisible" type="button" {% if not has_shift %}disabled{% endif %}>{{ translations.select_visible }}</button></div></div>
+<div id="sbNotice" class="sb-notice" role="status" aria-live="polite" hidden></div>
+<div class="sb-card sb-scroll"><table class="sb-table"><thead><tr><th>{{ translations.counted }}</th><th>{{ translations.product }}</th><th>{{ translations.recorded }}</th><th>{{ translations.counted_quantity }}</th><th>{{ translations.result }}</th></tr></thead><tbody>
+{% for line in lines %}
+{% set supported = line.is_piece_based and not line.is_divisible %}
+<tr data-stock-row data-product="{{ line.id_product }}" data-name="{{ line.name }}" data-stock="{{ line.in_stock }}" data-initialized="{{ line.inventory_initialized_at }}" data-movement="{{ line.last_movement_id }}" data-supported="{{ supported ? '1' : '0' }}" {% if not line.inventory_initialized_at or line.in_stock == 0 %}hidden{% endif %}>
+<td><input class="sb-selected" type="checkbox" aria-label="{{ translations.counted }} — {{ line.name }}" {% if not has_shift or not supported %}disabled{% endif %}></td><td><b>{{ line.name }}</b>{% if not supported %}<small class="sb-warn">{{ translations.unsupported }}</small>{% endif %}</td>
+<td>{% if line.inventory_initialized_at %}{{ line.in_stock + 0 }}{% else %}<span class="sb-warn">{{ translations.uninitialized }}</span>{% endif %}{% if line.reserved_quantity > 0 %}<small>{{ translations.reserved }}: {{ line.reserved_quantity + 0 }}</small>{% endif %}</td>
+<td><input class="sb-quantity" type="number" min="0" max="99999999.9999" step="0.0001" value="{{ line.inventory_initialized_at ? line.in_stock : '' }}" placeholder="{{ translations.enter_count }}" aria-label="{{ translations.counted_quantity }} — {{ line.name }}" {% if not has_shift or not supported %}disabled{% endif %}></td><td class="sb-result"></td></tr>
+{% else %}<tr><td colspan="5">{{ translations.empty }}</td></tr>{% endfor %}</tbody></table></div>
+<div class="sb-card sb-actions sb-tools"><span id="sbSummary"></span><button id="sbSave" class="sb-button" type="button" {% if not has_shift %}disabled{% endif %}>{{ translations.save }}</button></div>
+{% set stock_mode = 'inventory' %}{% set batch_date = snapshot_date %}{% include 'components/stock_batch_script.twig' %}
+{% endif %}{% endblock %}

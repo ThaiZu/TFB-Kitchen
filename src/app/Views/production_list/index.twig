@@ -1,0 +1,169 @@
+{% extends "layouts/base.twig" %}
+
+{% block title %}{{ translations.title }}{% endblock %}
+
+{% block head %}
+<style>
+    .pl-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:18px; }
+    .pl-head h1 { margin:0; font-size:1.35rem; font-weight:800; }
+    .pl-head p { margin:4px 0 0; color:var(--c-muted,#766f68); font-size:.85rem; }
+    .pl-card { background:#fff; border:1px solid var(--c-line,rgba(36,26,22,.1)); border-radius:16px; padding:16px; margin-bottom:12px; }
+    .pl-form { display:flex; flex-wrap:wrap; align-items:end; gap:12px; }
+    .pl-field { min-width:170px; flex:1 1 170px; }
+    .pl-field label { display:block; margin-bottom:5px; font-weight:700; font-size:.78rem; }
+    .pl-field input,.pl-field select { width:100%; min-height:44px; border:1px solid #d7d0c8; border-radius:10px; padding:8px 10px; }
+    .pl-button { min-height:44px; border:0; border-radius:10px; padding:8px 14px; background:var(--c-primary,#8D1D2C); color:#fff; font-weight:700; }
+    .pl-print { background:#fff; color:var(--c-primary,#8D1D2C); border:1px solid var(--c-primary,#8D1D2C); }
+    .pl-formula { margin:0; font-size:.9rem; line-height:1.55; }
+    .pl-status { display:flex; gap:10px; align-items:flex-start; border-radius:12px; padding:12px; margin-top:12px; font-size:.85rem; }
+    .pl-status--warn { background:#fff6e9; color:#6d4811; }
+    .pl-status--ok { background:#edf8ef; color:#24603a; }
+    .pl-table { width:100%; border-collapse:collapse; }
+    .pl-table th,.pl-table td { padding:10px 7px; border-bottom:1px solid #eee7e0; text-align:left; }
+    .pl-table th { color:var(--c-muted,#766f68); font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; }
+    .pl-table td:last-child,.pl-table th:last-child { text-align:right; }
+    .pl-empty { color:var(--c-muted,#766f68); font-size:.9rem; }
+    @media print { .app-topbar,.app-nav-sheet,.app-bottom-nav,.pl-form,.api-todo { display:none !important; } .app-content { padding:0 !important; } .pl-card { border-color:#bbb; break-inside:avoid; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="pl-head"><div><h1>{{ translations.title }}</h1><p>{{ translations.subtitle }}</p></div><a class="pl-button pl-print" href="{{ ROOT }}/production?date={{ plan_date }}">{{ translations.view_saved }}</a></section>
+<div id="plMessage" class="pl-status" role="status" aria-live="polite" hidden></div>
+<section class="pl-card">
+<form class="pl-form" method="get" action="{{ ROOT }}/production-list">
+<div class="pl-field"><label for="plDate">{{ translations.date }}</label><input id="plDate" type="date" name="date" value="{{ plan_date }}"></div>
+<div class="pl-field"><label for="plMargin">{{ translations.margin }}</label><input id="plMargin" type="number" min="0" max="10000" step="0.0001" name="margin" value="{{ margin }}"></div>
+<button class="pl-button" type="submit">{{ translations.build }}</button>
+</form></section>
+<section class="pl-card"><h2 class="h6 fw-bold">{{ translations.calculation_title }}</h2><p class="pl-formula">{{ translations.formula }}</p><p class="mb-0 text-muted small">{{ translations.history_window }}: {{ history_from }} — {{ history_to }}</p></section>
+{% if not available %}
+<section class="pl-card"><p class="pl-status pl-status--warn">{{ translations.unavailable }}</p></section>
+{% else %}
+<section class="pl-card">
+<h2 class="h6 fw-bold">{{ translations.plan_title }}</h2>
+<p class="text-muted small">{{ translations.save_hint }}</p>
+{% if revision == 0 %}<p class="pl-status pl-status--warn">{{ translations.save_first }}</p>{% endif %}
+{% if not is_today %}<p class="pl-status pl-status--warn">{{ translations.today_only }}</p>{% elseif not has_shift %}<p class="pl-status pl-status--warn">{{ translations.shift_required }} <a href="{{ ROOT }}/checklist">{{ translations.open_shift }}</a></p>{% endif %}
+{% if lines is empty %}<p class="pl-empty">{{ translations.empty }}</p>{% else %}
+<div class="pl-form pl-actions" style="margin-bottom:12px"><div class="pl-field"><label for="plSearch">{{ translations.search }}</label><input id="plSearch" type="search" autocomplete="off"></div><div class="pl-field"><label for="plGrouping">{{ translations.group_by }}</label><select id="plGrouping"><option value="sector_category">{{ translations.group_sector_category }}</option><option value="sector">{{ translations.group_sector }}</option><option value="category">{{ translations.group_category }}</option></select></div><label><input id="plRemaining" type="checkbox" checked> {{ translations.only_remaining }}</label></div>
+<div class="pl-table-wrap"><table class="pl-table"><thead><tr><th>{{ translations.product }}</th><th>{{ translations.average }}</th><th>{{ translations.order_quantity }}</th><th>{{ translations.stock_quantity }}</th><th>{{ translations.stock_credit }}</th><th>{{ translations.suggested }}</th><th>{{ translations.planned }}</th><th>{{ translations.produced }}</th><th>{{ translations.remaining }}</th><th class="pl-actions">{{ translations.batch }}</th></tr></thead><tbody id="plBody">
+{% for line in lines %}
+{% set remaining = max(0, line.suggested_quantity - line.produced_quantity) %}
+<tr data-product="{{ line.id_product }}" data-name="{{ line.name }}" data-sector-id="{{ line.sector_id|default(0) }}" data-sector="{{ line.sector_name ?: translations.unassigned_sector }}" data-category-id="{{ line.id_category|default(0) }}" data-category="{{ line.category_name ?: translations.uncategorized }}" data-remaining="{{ remaining }}" data-produced="{{ line.produced_quantity }}" data-saved-plan="{{ line.planned_quantity }}"><td><b>{{ line.name }}</b>{% if not line.inventory_initialized_at|default(null) %}<small class="pl-tracking">{{ translations.tracking_disabled }}</small>{% endif %}</td>
+<td>{{ line.average_quantity|number_format(4, '.', '') + 0 }}</td><td>{{ line.ordered_quantity|number_format(4, '.', '') + 0 }}{% if line.orders_changed %}<small class="pl-tracking">{{ translations.orders_changed }}: {{ line.current_ordered_quantity|number_format(4, '.', '') + 0 }}</small>{% endif %}</td><td>{{ line.stock_quantity|default(0) + 0 }}{% if line.stock_reserved_other_days|default(0) > 0 %}<small class="pl-tracking">{{ translations.stock_held }}: {{ line.stock_reserved_other_days + 0 }}</small>{% endif %}</td><td>{{ line.stock_credit_quantity|default(0) + 0 }}</td><td>{{ line.suggested_quantity|number_format(4, '.', '') + 0 }}</td>
+<td><input class="pl-plan-input" type="number" min="0" max="999999" step="0.0001" value="{{ line.suggested_quantity }}" aria-label="{{ translations.planned }} — {{ line.name }}"></td>
+<td>{{ line.produced_quantity|number_format(4, '.', '') + 0 }}</td><td><b class="pl-remaining-value">{{ remaining|number_format(4, '.', '') + 0 }}</b></td>
+<td class="pl-actions">{% if is_today and has_shift and revision > 0 and line.inventory_tracking_enabled %}<form class="pl-receive"><input type="number" name="quantity" min="0.0001" max="999999" step="0.0001" required placeholder="0" aria-label="{{ translations.batch }} — {{ line.name }}"><button class="pl-button" type="submit">{{ translations.receive }}</button></form>{% else %}—{% endif %}</td></tr>
+{% endfor %}</tbody></table></div>
+<p class="text-muted small">{{ translations.stock_note }}</p>
+<button class="pl-button pl-save" id="plSave" type="button">{{ translations.save }}</button>
+{% endif %}
+</section>
+{% if production_history|default([]) is not empty %}
+<section class="pl-card"><h2 class="h6 fw-bold">{{ translations.production_history }}</h2><p class="text-muted small">{{ translations.production_history_hint }}</p>
+<table class="pl-table"><thead><tr><th>{{ translations.product }}</th><th>{{ translations.planned }}</th><th>{{ translations.produced }}</th></tr></thead><tbody>
+{% for line in production_history %}<tr><td>{{ line.name }}</td><td>{{ line.planned_quantity + 0 }}</td><td>{{ line.produced_quantity + 0 }}</td></tr>{% endfor %}
+</tbody></table></section>
+{% endif %}
+{% if excluded_products is not empty %}<section class="pl-card"><h2 class="h6 fw-bold">{{ translations.excluded }}</h2><p class="text-muted small">{{ translations.weighted_unsupported }}</p><ul>{% for product in excluded_products %}<li>{{ product.name }}</li>{% endfor %}</ul></section>{% endif %}
+{% endif %}
+<style>
+.pl-table-wrap{overflow-x:auto}.pl-group th{background:#f4efe8;color:#8D1D2C;text-align:left!important;font-size:.85rem}.pl-group--sector th{background:#8D1D2C;color:#fff}.pl-group--category th{padding-left:18px}.pl-table input{width:90px;min-height:44px;border:1px solid #d7d0c8;border-radius:8px;padding:8px}.pl-receive{display:flex;gap:8px;align-items:center}.pl-table td{vertical-align:middle}.pl-tracking{display:block;color:#8c5b19;font-size:.7rem;max-width:230px}.pl-save{margin-top:16px}.pl-button:disabled{opacity:.55;cursor:wait}.pl-status[hidden]{display:none}.pl-table th{white-space:nowrap}.pl-status a{margin-left:8px}.pl-table td:first-child{min-width:155px}.pl-plan-input{font-weight:700}
+@media(max-width:650px){.pl-head{align-items:center}.pl-head h1{font-size:1.15rem}.pl-print{padding:7px}.pl-card{padding:12px}.pl-table{font-size:.85rem}}
+@media print{.pl-actions,.pl-save,#plMessage{display:none!important}.pl-table-wrap{overflow:visible}.pl-table input{border:0;padding:0;width:65px}}
+</style>
+<script>
+(() => {
+ const root = {{ ROOT|json_encode|raw }}, date = {{ plan_date|json_encode|raw }}, margin = {{ margin|json_encode|raw }}, revision = {{ revision|json_encode|raw }};
+ const messages = {{ translations|json_encode(constant('JSON_HEX_TAG'))|raw }};
+ const notice = document.getElementById('plMessage');
+ const show = (key, ok=false) => { notice.hidden=false; notice.className='pl-status '+(ok?'pl-status--ok':'pl-status--warn'); notice.textContent=messages[key] || messages.failed; notice.scrollIntoView({block:'nearest'}); };
+ const planRows = [...document.querySelectorAll('tr[data-product]')];
+ let busy = false, dirty = planRows.some(row=>Number(row.querySelector('.pl-plan-input').value)!==Number(row.dataset.savedPlan));
+ if(dirty)show('proposal_applied');
+ const dateChanged = () => document.getElementById('plDate').value !== date;
+ document.getElementById('plMargin').addEventListener('input',()=>{dirty=true;});
+ let groupHeaders=[];
+ const filter = () => {
+   const term=document.getElementById('plSearch')?.value.toLocaleLowerCase() || '';
+   const remaining=document.getElementById('plRemaining')?.checked;
+   planRows.forEach(row=>{row.hidden=!row.dataset.name.toLocaleLowerCase().includes(term)||(remaining && Number(row.dataset.remaining)<=0);});
+   groupHeaders.forEach(group=>{group.element.hidden=group.rows.every(row=>row.hidden);});
+ };
+ const grouping=document.getElementById('plGrouping');
+ const regroup = () => {
+   const body=document.getElementById('plBody');if(!body)return;
+   groupHeaders.forEach(group=>group.element.remove());groupHeaders=[];
+   const mode=grouping.value, fields=mode==='category'?['category']:mode==='sector'?['sector']:['sector','category'];
+   const sorted=[...planRows].sort((a,b)=>{
+     for(const field of fields){const diff=a.dataset[field].localeCompare(b.dataset[field],undefined,{numeric:true}) || Number(a.dataset[field+'Id'])-Number(b.dataset[field+'Id']);if(diff)return diff;}
+     return a.dataset.name.localeCompare(b.dataset.name,undefined,{numeric:true});
+   });
+   const active=[];
+   sorted.forEach(row=>{
+     fields.forEach((field,index)=>{
+       const key=fields.slice(0,index+1).map(name=>row.dataset[name+'Id']).join(':');
+       if(active[index]?.key!==key){
+         const element=document.createElement('tr'),cell=document.createElement('th');
+         element.className='pl-group pl-group--'+field;cell.colSpan=10;cell.scope='rowgroup';cell.textContent=row.dataset[field];element.append(cell);body.append(element);
+         active[index]={key,element,rows:[]};groupHeaders.push(active[index]);
+       }
+       active[index].rows.push(row);
+     });
+     body.append(row);
+   });
+   filter();
+ };
+ if(grouping){
+   try{const choice=localStorage.getItem('kitchen-production-grouping');if(['sector_category','sector','category'].includes(choice))grouping.value=choice;}catch(_){}
+   grouping.addEventListener('change',()=>{regroup();try{localStorage.setItem('kitchen-production-grouping',grouping.value);}catch(_){}});
+   regroup();
+ }
+ document.getElementById('plSearch')?.addEventListener('input',filter);
+ document.getElementById('plRemaining')?.addEventListener('change',filter);
+ const storagePrefix = 'production-receipt:'+root+':'+{{ shop_id|default(0)|json_encode|raw }}+':'+date+':';
+ document.querySelectorAll('.pl-plan-input').forEach(input => input.addEventListener('input', () => {
+   dirty=true;
+   const row=input.closest('tr'), remaining=Math.max(0,Number((Number(input.value)-Number(row.dataset.produced)).toFixed(4)));
+   row.dataset.remaining=String(remaining);row.querySelector('.pl-remaining-value').textContent=remaining;filter();
+ }));
+ const request = async (action, payload) => {
+   const response = await fetch(root+'/production-list/'+action, {method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},body:JSON.stringify(payload)});
+   const data = await response.json();
+   if (!response.ok || !data.success) {const error = new Error(data.reason || (response.status===409?'conflict':response.status===422?'invalid_input':'failed')); error.status=response.status; throw error;}
+ };
+ const lock = value => {busy=value;document.querySelectorAll('.pl-receive button,#plSave').forEach(button=>button.disabled=value);};
+ const save = document.getElementById('plSave');
+ save?.addEventListener('click',async()=>{
+   if(busy)return;if(dateChanged()){show('date_changed');return;}
+   const rows=[...document.querySelectorAll('tr[data-product]')];
+   if(rows.some(row=>!row.querySelector('.pl-plan-input').reportValidity()))return;
+   lock(true);
+   try{await request('save',{date,margin:Number(document.getElementById('plMargin').value),revision,lines:rows.map(row=>({id_product:Number(row.dataset.product),planned_quantity:Number(row.querySelector('.pl-plan-input').value)}))});dirty=false;location.assign(root+'/production?date='+encodeURIComponent(date));}
+   catch(error){show(error.message);lock(false);}
+ });
+ document.querySelectorAll('.pl-receive').forEach(form=>{
+   const id=Number(form.closest('tr').dataset.product), input=form.elements.quantity, storageKey=storagePrefix+id;
+   let pending=null;
+   try{pending=JSON.parse(sessionStorage.getItem(storageKey));}catch(_){}
+   if(pending){input.value=pending.quantity;input.readOnly=true;show('retry_hint');}
+   form.addEventListener('submit',async event=>{
+     event.preventDefault();if(busy)return;if(dateChanged()){show('date_changed');return;}if(dirty && !pending){show('save_first');return;}
+     lock(true);
+     try{
+       if(!pending){pending={date,id_product:id,quantity:Number(input.value),idempotency_key:crypto.randomUUID(),expected_revision:revision,expected_produced_quantity:Number(form.closest('tr').dataset.produced)};sessionStorage.setItem(storageKey,JSON.stringify(pending));}
+       input.readOnly=true;
+       await request('receive',pending);
+       sessionStorage.removeItem(storageKey);pending=null;sessionStorage.setItem('production-result','received');location.reload();
+     }catch(error){
+       // Keep the same receipt key after a timeout: the server may already have accepted the batch.
+       if(error.status>=400 && error.status<500 && error.status!==409){sessionStorage.removeItem(storageKey);pending=null;input.readOnly=false;}
+       show(error.status?error.message:'retry_hint');lock(false);
+     }
+   });
+ });
+ try{const result=sessionStorage.getItem('production-result');if(result){sessionStorage.removeItem('production-result');if(!dirty)show(result,true);}}catch(_){}
+})();
+</script>
+{% endblock %}
