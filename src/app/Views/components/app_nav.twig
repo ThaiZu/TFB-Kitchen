@@ -7,58 +7,71 @@
    le layout, donc aucune vue n'a à la passer). #}
 {% import "components/_icons.twig" as icons %}
 
-{# Une seule entrée pour la production : besoins, planning, MEP et stock sont
-   quatre questions du même module, pas quatre modules. #}
-{% set items = items ?? [
+{# Dashboard destinations remain reachable from every screen. #}
+{% set navigation_items = [
+    { key: 'inventory', label: translations.nav_inventory, icon: 'package', href: ROOT ~ '/inventory' },
     {
         key:   'dashboard',
-        label: translations.kitchen_dashboard ?? 'Tableau de bord',
+        label: translations.kitchen_dashboard,
         icon:  'home',
         href:  ROOT ~ '/dashboard'
     },
     {
         key:   'production',
-        label: translations.production ?? 'Production',
+        label: translations.production,
         icon:  'list-checks',
         href:  ROOT ~ '/production'
     },
     {
+        key:   'production_list',
+        module_key: 'production',
+        label: translations.nav_production_list,
+        icon: 'calendar-check',
+        href: ROOT ~ '/production-list'
+    },
+    {
+        key: 'production_cards',
+        module_key: 'knowledge',
+        label: translations.nav_production_cards,
+        icon: 'package',
+        href: ROOT ~ '/knowledge/products'
+    },
+    {
         key:   'checklists',
-        label: translations.checklists ?? 'Checklists',
+        label: translations.checklists,
         icon:  'clipboard-check',
         href:  ROOT ~ '/checklists'
     },
     {
         key:   'orders',
-        label: translations.orders ?? 'Commandes',
+        label: translations.orders,
         icon:  'receipt',
         href:  ROOT ~ '/orders'
     },
     {
         key:   'knowledge',
-        label: translations.knowledge ?? 'Base de connaissances',
+        label: translations.knowledge,
         icon:  'notebook',
         href:  ROOT ~ '/knowledge'
     },
     {
         key:   'complaints',
-        label: translations.complaints ?? 'Réclamations',
+        label: translations.complaints,
         icon:  'circle-alert',
         href:  ROOT ~ '/complaints'
     },
     {
         key:   'webshop',
-        label: translations.webshop ?? 'WebShop',
+        label: translations.webshop,
         icon:  'store',
         href:  ROOT ~ '/webshop'
     }
 ] %}
 
-{# Le mode de la tablette filtre le menu — voir core/Support/DeviceMode. Une
-   tablette de comptoir n'a pas à faire défiler les écrans du fournil pour
-   trouver le sien. Le filtre s'applique aux clés, pas aux libellés : ajouter
-   une section ne demande que de la déclarer dans DeviceModeService. #}
-{% set items = items|filter(it => it.key in (nav_keys | default([]))) %}
+{# Dashboard links are part of the application shell, not optional device
+   shortcuts. Keep the device configuration for additional modules only. #}
+{% set dashboard_navigation_keys = ['dashboard', 'production', 'production_list', 'inventory', 'production_cards', 'checklists', 'orders', 'knowledge'] %}
+{% set navigation_items = navigation_items|filter(it => it.key in dashboard_navigation_keys or it.key in (nav_keys|default([]))) %}
 
 <div class="app-nav-backdrop" id="appNavBackdrop" aria-hidden="true"></div>
 
@@ -66,17 +79,17 @@
      id="appNavSheet"
      role="dialog"
      aria-modal="true"
-     aria-label="{{ translations.menu ?? 'Menu' }}">
+     aria-label="{{ translations.menu }}">
 
     <div class="app-nav-sheet-header">
-        <p class="app-nav-sheet-title">{{ translations.menu ?? 'Menu' }}</p>
-        <button class="app-nav-sheet-close" id="appNavClose" aria-label="{{ translations.close ?? 'Fermer' }}">
+        <p class="app-nav-sheet-title">{{ translations.menu }}</p>
+        <button class="app-nav-sheet-close" id="appNavClose" aria-label="{{ translations.close }}">
             {{ icons.svg('x', 20) }}
         </button>
     </div>
 
     <div class="app-nav-grid">
-        {% for it in items %}
+        {% for it in navigation_items %}
             {% set is_active = (active_nav ?? '') == it.key %}
             {# « wip » et « disabled » portent le même badge mais pas le même
                comportement : une section en chantier dont l'écran existe déjà
@@ -91,7 +104,7 @@
                 <span class="app-nav-card-label">{{ it.label }}</span>
                 {% if is_disabled or is_wip %}
                     <span class="app-nav-card-tag badge bg-warning text-dark">
-                        {{ translations.under_construction ?? 'En construction' }}
+                        {{ translations.under_construction }}
                     </span>
                 {% endif %}
             </a>
@@ -106,14 +119,14 @@
         <span class="app-nav-profile-avatar" aria-hidden="true">{{ _initials }}</span>
         <span class="app-nav-profile-txt">
             <span class="app-nav-profile-name">{{ _dn }}</span>
-            <span class="app-nav-profile-sub">{{ user.role ?? (translations.my_profile ?? 'Mon profil') }}</span>
+            <span class="app-nav-profile-sub">{{ user.role ?? (translations.my_profile) }}</span>
         </span>
         <span class="app-nav-profile-chev">{{ icons.svg('chevron-right', 16) }}</span>
     </a>
 
     <a href="{{ ROOT }}/logout" class="app-nav-logout">
         {{ icons.svg('log-out', 17) }}
-        <span>{{ translations.logout ?? 'Déconnexion' }}</span>
+        <span>{{ translations.logout }}</span>
     </a>
 
     <div class="app-nav-sheet-handle"></div>

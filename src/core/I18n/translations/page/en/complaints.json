@@ -51,5 +51,8 @@
   "select_material": "Select product...",
   "no_delivered_orders": "No delivered orders found",
   "invalid_quantity_message": "The entered quantity is out of the allowed range.",
-  "home": "Home"
+  "home": "Home",
+  "file_load_error": "File download error",
+  "connection_error": "Connection error",
+  "camera_access_error": "Camera access is unavailable"
 }

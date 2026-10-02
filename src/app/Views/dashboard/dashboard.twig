@@ -133,24 +133,35 @@
 
     {# ── Actions rapides ── #}
     <div class="dash-grid">
+        <a href="{{ ROOT }}/inventory" class="dash-action">
+            <div class="dash-action-top"><span class="dash-action-ic ic-ruby">{{ icons.svg('package',22) }}</span></div>
+            <div class="dash-action-body"><p class="dash-action-title">{{ translations.nav_inventory }}</p><p class="dash-action-sub">{{ translations.inventory_subtitle }}</p></div>
+        </a>
 
-        {# Production — en construction. Le badge partage la ligne de l'icône :
-           sur sa propre ligne il décalait le titre vers le bas et cette carte
-           ne s'alignait plus avec les trois autres. #}
-        <div class="dash-action is-disabled">
+        {# Production en cours : l'écran existe déjà et reste le point d'entrée
+           pour le travail de l'atelier. #}
+        <a href="{{ ROOT }}/production" class="dash-action">
             <div class="dash-action-top">
-                <span class="dash-action-ic ic-gris">{{ icons.svg('list-checks', 22) }}</span>
+                <span class="dash-action-ic ic-ruby">{{ icons.svg('list-checks', 22) }}</span>
             </div>
             <div class="dash-action-body">
-                <div class="dash-action-titleline">
-                    <p class="dash-action-title text-muted">{{ translations.todays_production }}</p>
-                    <span class="dash-wip">
-                        {{ icons.svg('clock', 12) }}{{ translations.under_construction|default('W budowie') }}
-                    </span>
-                </div>
+                <p class="dash-action-title">{{ translations.todays_production }}</p>
                 <p class="dash-action-sub">{{ translations.todays_production_subtitle }}</p>
             </div>
-        </div>
+        </a>
+
+        {# Le nouvel atelier de planification est distinct de la production en
+           cours : il prépare une date choisie et explique encore les données
+           nécessaires à son calcul complet. #}
+        <a href="{{ ROOT }}/production-list" class="dash-action">
+            <div class="dash-action-top">
+                <span class="dash-action-ic ic-vert">{{ icons.svg('calendar-check', 22) }}</span>
+            </div>
+            <div class="dash-action-body">
+                <p class="dash-action-title">{{ translations.production_list }}</p>
+                <p class="dash-action-sub">{{ translations.production_list_subtitle }}</p>
+            </div>
+        </a>
 
         {# Fiches de production #}
         <a href="{{ ROOT }}/knowledge/products" class="dash-action">
@@ -189,7 +200,7 @@
     {# ── Statistiques du jour ── #}
     <p class="dash-note">
         {{ icons.svg('circle-alert', 15) }}
-        {{ translations.stats_from_checklists|default('Statystyki oparte o checklisty z dnia dzisiejszego') }}
+        {{ translations.stats_from_checklists }}
     </p>
 
     <div class="dash-stats">
@@ -198,7 +209,7 @@
                 <div class="dash-stat-lbl">{{ translations.tasks_todo }}</div>
                 <div class="dash-stat-val">{{ stats.tasks_todo|default(0) }}</div>
                 {% if employee_stats is not null %}
-                    <div class="dash-stat-personal">{{ translations.tasks_for_you|default('Dla Ciebie') }}: {{ employee_stats.tasks_todo }}</div>
+                    <div class="dash-stat-personal">{{ translations.tasks_for_you }}: {{ employee_stats.tasks_todo }}</div>
                 {% endif %}
             </div>
             <span class="dash-stat-ic ic-ruby">{{ icons.svg('list-checks', 20) }}</span>
@@ -209,7 +220,7 @@
             <div>
                 <div class="dash-stat-lbl">{{ translations.tasks_in_progress }}</div>
                 <span class="dash-wip mt-1">
-                    {{ icons.svg('clock', 12) }}{{ translations.under_construction|default('W budowie') }}
+                    {{ icons.svg('clock', 12) }}{{ translations.under_construction }}
                 </span>
                 <div class="dash-stat-val text-muted">–</div>
             </div>
@@ -221,7 +232,7 @@
                 <div class="dash-stat-lbl">{{ translations.tasks_completed }}</div>
                 <div class="dash-stat-val">{{ stats.tasks_completed|default(0) }}</div>
                 {% if employee_stats is not null %}
-                    <div class="dash-stat-personal">{{ translations.tasks_for_you|default('Dla Ciebie') }}: {{ employee_stats.tasks_completed }}</div>
+                    <div class="dash-stat-personal">{{ translations.tasks_for_you }}: {{ employee_stats.tasks_completed }}</div>
                 {% endif %}
             </div>
             <span class="dash-stat-ic ic-vert">{{ icons.svg('check-circle', 20) }}</span>
@@ -233,16 +244,16 @@
         <div class="dash-kb-id">
             <span class="dash-action-ic ic-ruby">{{ icons.svg('notebook', 22) }}</span>
             <div class="dash-kb-txt">
-                <div class="dash-kb-title">{{ translations.knowledge|default('Baza wiedzy') }}</div>
-                <div class="dash-kb-sub">{{ translations.knowledge_overview_subtitle|default('Karty techniczne produktów i przepisy') }}</div>
+                <div class="dash-kb-title">{{ translations.knowledge }}</div>
+                <div class="dash-kb-sub">{{ translations.knowledge_overview_subtitle }}</div>
             </div>
         </div>
         <div class="dash-kb-actions">
             <a href="{{ ROOT }}/knowledge/products" class="btn btn-sm btn-outline-secondary">
-                {{ icons.svg('package', 15) }} {{ translations.products|default('Produkty') }}
+                {{ icons.svg('package', 15) }} {{ translations.products }}
             </a>
             <a href="{{ ROOT }}/knowledge" class="btn btn-sm btn-outline-primary">
-                {{ icons.svg('layers', 15) }} {{ translations.view_all|default('Tout voir') }}
+                {{ icons.svg('layers', 15) }} {{ translations.view_all }}
             </a>
         </div>
     </div>
@@ -250,16 +261,16 @@
     <div class="modal fade" id="dashboardShiftEntryModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Kto obsługuje tablet?</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+                <h5 class="modal-title">{{ translations.tablet_worker_title }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ translations.close }}"></button>
             </div>
             <div class="modal-body">
                 <div class="form-check form-switch mb-3">
                     <input class="form-check-input" type="checkbox" role="switch" id="dashboardGuestSwitch" checked>
-                    <label class="form-check-label" for="dashboardGuestSwitch">Przejdź anonimowo</label>
+                    <label class="form-check-label" for="dashboardGuestSwitch">{{ translations.dashboard_shift_guest_mode }}</label>
                 </div>
                 <div id="dashboardEmployeeLogin" class="d-none">
-                    <p class="text-muted small">Wybierz siebie z grafiku i podaj PIN.</p>
+                    <p class="text-muted small">{{ translations.dashboard_shift_hint }}</p>
                     <div class="tablet-worker-grid mb-3" id="dashboardEntryEmployees">
                         {% for employee in entry_employees %}
                             <button type="button" class="tablet-worker-badge" data-employee-id="{{ employee.id }}">
@@ -271,10 +282,10 @@
                     <input type="hidden" id="dashboardEmployeeId">
                     <input type="hidden" id="dashboardEmployeePin">
                     <div id="dashboardPinGroup" class="d-none">
-                        <label class="form-label">PIN wybranego pracownika</label>
+                        <label class="form-label">{{ translations.tablet_worker_pin_label }}</label>
                         <div class="tablet-pin-boxes" id="dashboardPinBoxes">
                             {% for i in 1..4 %}
-                                <input type="password" class="tablet-pin-box dashboard-pin-box" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="PIN {{ i }}">
+                                <input type="password" class="tablet-pin-box dashboard-pin-box" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="{{ translations.tablet_worker_pin_digit }} {{ i }}">
                             {% endfor %}
                         </div>
                     </div>
@@ -282,8 +293,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Anuluj</button>
-                <button type="button" class="btn btn-success" id="dashboardEntryContinue">Kontynuuj</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ translations.tablet_worker_cancel }}</button>
+                <button type="button" class="btn btn-success" id="dashboardEntryContinue">{{ translations.dashboard_shift_continue }}</button>
             </div>
         </div></div>
     </div>
@@ -304,6 +315,10 @@
     const alert = document.getElementById('dashboardEntryAlert');
     const continueButton = document.getElementById('dashboardEntryContinue');
     const hasActiveShift = {{ has_active_shift ? 'true' : 'false' }};
+    const dashboardTranslations = {
+        selectionError: {{ translations.dashboard_shift_selection_error|json_encode|raw }},
+        startError: {{ translations.dashboard_shift_start_error|json_encode|raw }}
+    };
     let destination = null;
 
     document.querySelectorAll('[data-shift-required-link]').forEach((link) => {
@@ -370,7 +385,7 @@
             return;
         }
         if (!employeeId.value || pin.value.length !== 4) {
-            alert.textContent = 'Wybierz pracownika i podaj PIN.';
+            alert.textContent = dashboardTranslations.selectionError;
             alert.classList.remove('d-none');
             return;
         }
@@ -382,7 +397,7 @@
                 body: new URLSearchParams({employee_id: employeeId.value, pin: pin.value.trim()}),
             });
             const data = await response.json();
-            if (!response.ok || !data.success) throw new Error(data.message || 'Nie udało się zalogować pracownika.');
+            if (!response.ok || !data.success) throw new Error(data.message || dashboardTranslations.startError);
             window.location.assign(destination || '{{ ROOT }}/dashboard');
         } catch (error) {
             alert.textContent = error.message;

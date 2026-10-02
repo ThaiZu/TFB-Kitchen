@@ -11,6 +11,8 @@
   "quick_actions": "Szybkie akcje",
   "todays_production": "Dzisiejsza produkcja",
   "todays_production_subtitle": "Zobacz co dziś robić, priorytety i statusy.",
+  "production_list": "Lista produkcyjna",
+  "production_list_subtitle": "Przygotuj i wydrukuj plan produkcji na wybrany dzień.",
   "production_cards": "Karty produkcyjne",
   "production_cards_subtitle": "Przeglądaj receptury, składniki i instrukcje krok po kroku.",
   "checklists": "Checklisty",
@@ -26,5 +28,12 @@
   "production": "Produkcja",
   "knowledge": "Baza wiedzy",
   "cards": "Karty",
-  "orders": "Zamówienia"
+  "orders": "Zamówienia",
+  "dashboard_shift_guest_mode": "Przejdź anonimowo",
+  "dashboard_shift_hint": "Wybierz siebie z grafiku i podaj PIN.",
+  "dashboard_shift_continue": "Kontynuuj",
+  "dashboard_shift_selection_error": "Wybierz pracownika i podaj PIN.",
+  "dashboard_shift_start_error": "Nie udało się zalogować pracownika.",
+  "nav_inventory": "Inwentaryzacja",
+  "inventory_subtitle": "Policz produkty i potwierdź rzeczywisty stan magazynu."
 }

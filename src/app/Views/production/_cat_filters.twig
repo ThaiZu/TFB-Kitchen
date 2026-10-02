@@ -6,7 +6,7 @@
 {% if categories|length > 1 %}
     <div class="cat-filters" data-target="{{ target }}">
         <button type="button" class="cat-chip is-on" data-cat="">
-            {{ translations.cat_all | default('Toutes') }}
+            {{ translations.cat_all }}
         </button>
         {% for c in categories %}
             <button type="button" class="cat-chip" data-cat="{{ c }}">{{ c }}</button>

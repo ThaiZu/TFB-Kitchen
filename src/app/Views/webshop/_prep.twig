@@ -7,20 +7,20 @@
    Un seul bouton par ligne, et il porte l'étape SUIVANTE, pas l'état actuel :
    au comptoir on ne consulte pas un statut, on avance. #}
 {% set verbs = {
-    'preparing': translations.ws_go_prep  | default('Je prépare'),
-    'ready':     translations.ws_go_ready | default('C\'est prêt'),
-    'delivered': translations.ws_go_done  | default('Remis au client')
+    'preparing': translations.ws_go_prep,
+    'ready':     translations.ws_go_ready,
+    'delivered': translations.ws_go_done
 } %}
 
 {% if orders is null %}
     <div class="card mt-3"><div class="card-body ws-state">
-        <p>{{ translations.ws_not_served | default("Les commandes ne sont pas encore servies par le webshop.") }}</p>
+        <p>{{ translations.ws_not_served }}</p>
     </div></div>
 
 {% elseif orders is empty %}
     <div class="card mt-3"><div class="card-body ws-state">
-        <h2>{{ translations.ws_no_order | default('Aucune commande aujourd\'hui') }}</h2>
-        <p>{{ translations.ws_no_order_hint | default("Rien à préparer pour l'instant. Les nouvelles commandes arriveront ici.") }}</p>
+        <h2>{{ translations.ws_no_order }}</h2>
+        <p>{{ translations.ws_no_order_hint }}</p>
     </div></div>
 
 {% else %}
@@ -49,7 +49,7 @@
                         {# Rien à faire : pas de bouton mort. Une commande remise
                            reste visible le temps du service — c'est la preuve
                            qu'elle est partie — mais elle n'appelle plus rien. #}
-                        <span class="ws-done">{{ translations.ws_is_done | default('Remise') }}</span>
+                        <span class="ws-done">{{ translations.ws_is_done }}</span>
                     {% endif %}
                 </div>
             </article>

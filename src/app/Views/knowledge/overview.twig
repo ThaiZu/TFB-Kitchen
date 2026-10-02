@@ -1,11 +1,11 @@
 {% extends "layouts/base.twig" %}
 
-{% block title %}{{ translations.knowledge_overview|default('Knowledge') }}{% endblock %}
+{% block title %}{{ translations.knowledge_overview }}{% endblock %}
 
 {% block page_heading %}
     <div class="page-heading">
-        <h3>{{ translations.knowledge_overview|default('Knowledge') }}</h3>
-        <p class="text-subtitle text-muted">{{ translations.knowledge_overview_subtitle|default('Przegląd dostępnych zasobów wiedzy w firmie') }}</p>
+        <h3>{{ translations.knowledge_overview }}</h3>
+        <p class="text-subtitle text-muted">{{ translations.knowledge_overview_subtitle }}</p>
 
         {# Breadcrumb to show user's location #}
     </div>
@@ -54,7 +54,7 @@
                                         </div>
                                     </div>
                                     <div class="d-flex align-items-center text-success">
-                                        <span class="fw-semibold">{{ translations.go_to_products|default('Go to products') }}</span>
+                                        <span class="fw-semibold">{{ translations.go_to_products }}</span>
                                         <i class="bi bi-arrow-right ms-2"></i>
                                     </div>
                                 </div>

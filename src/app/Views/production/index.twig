@@ -26,7 +26,7 @@
 {% extends "layouts/base.twig" %}
 {% import "components/_icons.twig" as icons %}
 
-{% block title %}{{ translations.production_title | default('Production') }}{% endblock %}
+{% block title %}{{ translations.production_title }}{% endblock %}
 
 {% block head %}
 <style>
@@ -864,9 +864,9 @@
 
 {% block page_heading %}
     <div class="page-heading">
-        <h3>{{ translations.production_title | default('Production') }}</h3>
+        <h3>{{ translations.production_title }}</h3>
         <p class="text-subtitle text-muted">
-            {{ translations.production_subtitle | default('Mise en place, cuissons et stock de la journée') }}
+            {{ translations.production_subtitle }}
         </p>
     </div>
 {% endblock %}
@@ -893,31 +893,31 @@
        ce qui suit en dépend — jusqu'aux compteurs. #}
     {% include "production/_sectors.twig" %}
 
-    <nav class="pr-two" aria-label="{{ translations.production_title | default('Production') }}">
+    <nav class="pr-two" aria-label="{{ translations.production_title }}">
         <a class="pr-two-t {{ on_needs ? 'is-active' : '' }}" href="{{ needs_href }}"
            {{ on_needs ? 'aria-current="page"' : '' }}>
-            <b>{{ translations.prod_view_needs_hint | default('Ce qui manque') }}</b>
-            <small>{{ translations.prod_view_decide | default('décider') }}</small>
+            <b>{{ translations.prod_view_needs_hint }}</b>
+            <small>{{ translations.prod_view_decide }}</small>
             {% if tab_needs is not null %}
                 <span class="pr-two-n">
                     {{ tab_needs }}
                     {{ tab_needs > 1
-                        ? (translations.prod_view_needs_n | default('produits'))
-                        : (translations.prod_view_needs_1 | default('produit')) }}
+                        ? (translations.prod_view_needs_n)
+                        : (translations.prod_view_needs_1) }}
                 </span>
             {% endif %}
         </a>
         <a class="pr-two-t {{ active_view == 'planning' ? 'is-active' : '' }}"
            href="{{ ROOT }}/production?view=planning{{ sector_qs }}"
            {{ active_view == 'planning' ? 'aria-current="page"' : '' }}>
-            <b>{{ translations.prod_view_workshop | default("L'atelier") }}</b>
-            <small>{{ translations.prod_view_execute | default('exécuter') }}</small>
+            <b>{{ translations.prod_view_workshop }}</b>
+            <small>{{ translations.prod_view_execute }}</small>
             {% if flow.in_progress is not null %}
                 <span class="pr-two-n">
                     {{ flow.in_progress }}
                     {{ flow.in_progress > 1
-                        ? (translations.prod_view_batches_n | default('fournées'))
-                        : (translations.prod_view_batches_1 | default('fournée')) }}
+                        ? (translations.prod_view_batches_n)
+                        : (translations.prod_view_batches_1) }}
                 </span>
             {% endif %}
         </a>
@@ -931,12 +931,12 @@
     {% if on_side %}
         <a class="pr-back" href="{{ needs_href }}">
             {{ icons.svg('chevron-left', 17) }}
-            {{ translations.prod_back | default('Retour à « Ce qui manque »') }}
+            {{ translations.prod_back }}
         </a>
     {% endif %}
 
     {% if on_needs %}
-        <nav class="pr-periods" aria-label="{{ translations.prod_view_needs | default('Besoins') }}">
+        <nav class="pr-periods" aria-label="{{ translations.prod_view_needs }}">
             {% for p in tabs %}
                 <a class="cat-chip {{ active_view == p.key ? 'is-on' : '' }}"
                    href="{{ ROOT }}/production?view={{ p.key }}{{ sector_qs }}"
@@ -957,13 +957,13 @@
         <div class="mep-sub">
             <a href="{{ ROOT }}/production?view=stock{{ sector_qs }}"
                class="{{ active_view == 'stock' ? 'is-active' : '' }}">
-                <b>{{ translations.stock_title | default('Stock live') }}</b>
-                <small>{{ translations.stock_sub_hint | default('Face aux ventes prévues') }}</small>
+                <b>{{ translations.stock_title }}</b>
+                <small>{{ translations.stock_sub_hint }}</small>
             </a>
             <a href="{{ ROOT }}/production?view=minimums{{ sector_qs }}"
                class="{{ active_view == 'minimums' ? 'is-active' : '' }}">
-                <b>{{ translations.min_title | default('Minimum en magasin') }}</b>
-                <small>{{ translations.min_sub_hint | default('Le plancher de vitrine') }}</small>
+                <b>{{ translations.min_title }}</b>
+                <small>{{ translations.min_sub_hint }}</small>
             </a>
         </div>
     {% endif %}
@@ -986,7 +986,7 @@
            coûterait la seule vue où l'on voit deux fournées se chevaucher sur
            un four. #}
         <details class="pr-fold bk-later">
-            <summary>{{ translations.fil_see_plan | default('Voir le plan de la journée') }}</summary>
+            <summary>{{ translations.fil_see_plan }}</summary>
             {% include "baking/_gantt.twig" %}
         </details>
     {% elseif active_view == 'stock' %}

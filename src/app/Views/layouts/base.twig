@@ -11,11 +11,15 @@
 {% import "components/_icons.twig" as icons %}
 {% set p = current_path|default('') %}
 {% set active_nav =
+    p starts with '/inventory' ? 'inventory' :
     p starts with '/dashboard'  ? 'dashboard'  :
+    p starts with '/production-list' ? 'production_list' :
     p starts with '/production' ? 'production' :
     p starts with '/baking'     ? 'baking'     :
     p starts with '/checklists' ? 'checklists' :
     p starts with '/orders'     ? 'orders'     :
+    p starts with '/knowledge/products' ? 'production_cards' :
+    p starts with '/knowledge/product/' ? 'production_cards' :
     p starts with '/knowledge'  ? 'knowledge'  :
     p starts with '/complaints' ? 'complaints' :
     p starts with '/webshop'    ? ('ws_' ~ (current_view | default('prep'))) :
@@ -73,7 +77,7 @@
 
     {# Coque (structure) puis design system (habillage) : l'ordre compte. #}
     <link rel="stylesheet" href="{{ ROOT }}/assets/css/app-shell.css">
-    <link rel="stylesheet" href="{{ ROOT }}/assets/css/atelier-theme.css">
+    <link rel="stylesheet" href="{{ ROOT }}/assets/css/atelier-theme.css?v={{ atelier_theme_version }}">
 
     {# ── L'application s'installe ──
        Manifeste et service worker : la tablette de magasin gagne son icône
@@ -84,7 +88,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="{{ translations.module_name ?? 'Kitchen' }}">
+    <meta name="apple-mobile-web-app-title" content="{{ translations.module_name }}">
     <link rel="apple-touch-icon" href="{{ ROOT }}/assets/brand/icon-192.png">
 
     {# Les bibliothèques d'un seul écran se déclarent dans cet écran. #}
@@ -121,7 +125,7 @@
                    sortir la tablette de son rôle sans le dire. #}
                 <a href="{{ ROOT }}{{ mode_home | default('/dashboard') }}" class="app-brand">
                     <img src="{{ ROOT }}/assets/brand/logo.png" alt="L'Atelier" class="app-brand-logo">
-                    <span class="app-brand-module">{{ translations.module_name ?? 'Kitchen' }}</span>
+                    <span class="app-brand-module">{{ translations.module_name }}</span>
                 </a>
 
                 <div class="d-flex align-items-center gap-2">
@@ -130,28 +134,28 @@
                         <div class="dropdown">
                             <button type="button" class="badge rounded-pill app-shift-status app-shift-status--active border-0"
                                     data-bs-toggle="dropdown" aria-expanded="false"
-                                    title="{{ translations.shift_signing | default('Aktywny pracownik') }}">
+                                    title="{{ translations.shift_signing }}">
                                 <i class="bi bi-person-workspace" aria-hidden="true"></i>
                                 {{ checklist_identity.initials }} · {{ checklist_identity.name }}
                                 <i class="bi bi-chevron-down app-shift-status-chevron" aria-hidden="true"></i>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
-                                <li><button type="button" class="dropdown-item" data-shift-action="change">{{ translations.shift_change | default('Zmień użytkownika') }}</button></li>
+                                <li><button type="button" class="dropdown-item" data-shift-action="change">{{ translations.shift_change }}</button></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><button type="button" class="dropdown-item text-danger" data-shift-action="logout">{{ translations.shift_logout | default('Wyloguj pracownika') }}</button></li>
+                                <li><button type="button" class="dropdown-item text-danger" data-shift-action="logout">{{ translations.shift_logout }}</button></li>
                             </ul>
                         </div>
                     {% else %}
                         <button type="button" class="badge rounded-pill app-shift-status app-shift-status--anonymous border-0" data-shift-action="login">
                             <i class="bi bi-person-plus" aria-hidden="true"></i>
-                            {{ translations.shift_anonymous | default('Tryb anonimowy') }}
+                            {{ translations.shift_anonymous }}
                             <i class="bi bi-chevron-right app-shift-status-chevron" aria-hidden="true"></i>
                         </button>
                     {% endif %}
                     </div>
                     {% block topbar_actions %}{% endblock %}
                     <button class="app-hamburger" id="appHamburger"
-                            aria-label="{{ translations.menu ?? 'Menu' }}"
+                            aria-label="{{ translations.menu }}"
                             aria-expanded="false" aria-controls="appNavSheet">
                         {{ icons.svg('menu') }}
                     </button>
@@ -165,29 +169,29 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="tabletWorkerModalTitle">Kto obsługuje tablet?</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+                <h5 class="modal-title" id="tabletWorkerModalTitle">{{ translations.tablet_worker_title }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ translations.close }}"></button>
             </div>
             <div class="modal-body">
-                <p class="text-muted small mb-3">Wybierz osobę z dzisiejszego grafiku i potwierdź PIN-em.</p>
+                <p class="text-muted small mb-3">{{ translations.tablet_worker_hint }}</p>
                 <div id="tabletWorkerError" class="alert alert-danger d-none" role="alert"></div>
                 <div id="tabletWorkerList" class="tablet-worker-grid mb-3"></div>
-                <div id="tabletWorkerEmpty" class="text-muted d-none">Brak pracowników w dzisiejszym grafiku.</div>
+                <div id="tabletWorkerEmpty" class="text-muted d-none">{{ translations.tablet_worker_empty }}</div>
                 <input type="hidden" id="tabletWorkerId">
                 <div id="tabletWorkerPinGroup" class="d-none">
-                    <label class="form-label">PIN wybranego pracownika</label>
+                    <label class="form-label">{{ translations.tablet_worker_pin_label }}</label>
                     <div class="tablet-pin-boxes" id="tabletWorkerPinBoxes">
                         {% for i in 1..4 %}
                             <input type="password" class="tablet-pin-box" inputmode="numeric" pattern="[0-9]*"
-                                   maxlength="1" autocomplete="off" aria-label="PIN {{ i }}">
+                                   maxlength="1" autocomplete="off" aria-label="{{ translations.tablet_worker_pin_digit }} {{ i }}">
                         {% endfor %}
                     </div>
                     <input type="hidden" id="tabletWorkerPin">
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Anuluj</button>
-                <button type="button" class="btn btn-primary" id="tabletWorkerStart" disabled>Rozpocznij obsługę</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ translations.tablet_worker_cancel }}</button>
+                <button type="button" class="btn btn-primary" id="tabletWorkerStart" disabled>{{ translations.tablet_worker_start }}</button>
             </div>
         </div>
     </div>
@@ -205,7 +209,7 @@
            doit gêner. #}
         {% if missing_api is not empty %}
             <div class="api-todo" role="status">
-                <span class="api-todo-tag">{{ translations.api_missing | default('API à créer') }}</span>
+                <span class="api-todo-tag">{{ translations.api_missing }}</span>
                 {% for route in missing_api %}<code>{{ route }}</code>{% endfor %}
             </div>
         {% endif %}
@@ -219,7 +223,7 @@
                 <div class="row mt-4">
                     <div class="col-12 text-center">
                         <a href="{{ error_back_url|default(ROOT ~ '/Dashboard') }}" class="btn btn-secondary">
-                            ← {{ translations.back|default('back') }}
+                            ← {{ translations.back }}
                         </a>
                     </div>
                 </div>
@@ -239,26 +243,31 @@
    profil reste dans tous les modes, c'est par lui qu'on revient aux réglages —
    une tablette dont on ne peut plus changer le mode serait à réinstaller. #}
 {% set tabs = {
-    'dashboard':  { href: ROOT ~ '/dashboard',  icon: 'home',            label: translations.nav_dashboard  ?? 'Pulpit' },
-    'production': { href: ROOT ~ '/production', icon: 'list-checks',     label: translations.nav_production ?? 'Production' },
-    'checklists': { href: ROOT ~ '/checklists', icon: 'clipboard-check', label: translations.nav_checklists ?? 'Checklists' },
-    'orders':     { href: ROOT ~ '/orders',     icon: 'receipt',         label: translations.nav_orders     ?? 'Commandes' },
-    'knowledge':  { href: ROOT ~ '/knowledge',  icon: 'notebook',        label: translations.knowledge      ?? 'Connaissances' },
-    'complaints': { href: ROOT ~ '/complaints', icon: 'circle-alert',    label: translations.complaints     ?? 'Réclamations' },
-    'webshop':    { href: ROOT ~ '/webshop',    icon: 'store',           label: translations.webshop        ?? 'WebShop' },
-    'ws_prep':    { href: ROOT ~ '/webshop?view=prep',  icon: 'clipboard-check', label: translations.ws_prep  ?? 'Préparation' },
-    'ws_stock':   { href: ROOT ~ '/webshop?view=stock', icon: 'store',           label: translations.ws_stock ?? 'Stock du jour' },
-    'ws_board':   { href: ROOT ~ '/webshop?view=board', icon: 'home',            label: translations.ws_board ?? 'Tableau de bord' }
+    'dashboard':  { href: ROOT ~ '/dashboard',  icon: 'home',            label: translations.nav_dashboard },
+    'production': { href: ROOT ~ '/production', icon: 'list-checks',     label: translations.nav_production },
+    'inventory': { href: ROOT ~ '/inventory', icon: 'package', label: translations.nav_inventory },
+    'production_list': { href: ROOT ~ '/production-list', icon: 'calendar-check', label: translations.nav_production_list },
+    'production_cards': { href: ROOT ~ '/knowledge/products', icon: 'package', label: translations.nav_production_cards },
+    'checklists': { href: ROOT ~ '/checklists', icon: 'clipboard-check', label: translations.nav_checklists },
+    'orders':     { href: ROOT ~ '/orders',     icon: 'receipt',         label: translations.nav_orders },
+    'knowledge':  { href: ROOT ~ '/knowledge',  icon: 'notebook',        label: translations.knowledge },
+    'complaints': { href: ROOT ~ '/complaints', icon: 'circle-alert',    label: translations.complaints },
+    'webshop':    { href: ROOT ~ '/webshop',    icon: 'store',           label: translations.webshop },
+    'ws_prep':    { href: ROOT ~ '/webshop?view=prep',  icon: 'clipboard-check', label: translations.ws_prep },
+    'ws_stock':   { href: ROOT ~ '/webshop?view=stock', icon: 'store',           label: translations.ws_stock },
+    'ws_board':   { href: ROOT ~ '/webshop?view=board', icon: 'home',            label: translations.ws_board }
 } %}
-<nav class="app-tabbar-bar" aria-label="{{ translations.menu ?? 'Navigation' }}">
-    {# Pas de liste par défaut ici : la barre affiche ce que la table
-       pwa_kitchen_param décrit, et rien si elle ne répond pas. Le bandeau
-       « API à créer » en haut de page dit alors pourquoi. Un quatuor codé en
-       dur ferait une barre qui a l'air normale au-dessus d'un écran vide. #}
-    {% for key in tab_keys | default([]) %}
+{# These destinations are always shown on the dashboard and must remain
+   reachable on every page, even when optional device configuration is absent. #}
+{% set visible_tab_keys = ['dashboard', 'production', 'production_list', 'inventory', 'production_cards', 'checklists', 'orders', 'knowledge'] %}
+{% for key in tab_keys|default([]) %}
+    {% if key not in visible_tab_keys %}{% set visible_tab_keys = visible_tab_keys|merge([key]) %}{% endif %}
+{% endfor %}
+<nav class="app-tabbar-bar" aria-label="{{ translations.menu }}">
+    {% for key in visible_tab_keys %}
         {% set t = tabs[key] %}
         {% if t %}
-            <a href="{{ t.href }}" class="app-tab {{ active_nav == key ? 'is-active' : '' }}">
+            <a href="{{ t.href }}" class="app-tab {{ active_nav == key ? 'is-active' : '' }}" aria-current="{{ active_nav == key ? 'page' : 'false' }}">
                 {% if key == 'orders' %}
                     <span class="app-tab-ic">
                         {{ icons.svg(t.icon, 23) }}
@@ -276,7 +285,7 @@
     {% set _pp = _dn2|split(' ') %}
     <a href="{{ ROOT }}/me" class="app-tab app-tab-profile {{ active_nav == 'me' ? 'is-active' : '' }}">
         <span class="app-tab-avatar" aria-hidden="true">{{ (_pp[0]|first ~ (_pp[1] is defined ? _pp[1]|first : ''))|upper }}</span>
-        <span>{{ translations.nav_profile ?? 'Profil' }}</span>
+        <span>{{ translations.nav_profile }}</span>
     </a>
 </nav>
 
@@ -330,6 +339,13 @@
     var pin = document.getElementById('tabletWorkerPin');
     var pinBoxes = Array.prototype.slice.call(document.querySelectorAll('.tablet-pin-box'));
     var start = document.getElementById('tabletWorkerStart');
+    var workerTranslations = {
+        loading: {{ translations.tablet_worker_loading|json_encode|raw }},
+        rosterError: {{ translations.tablet_worker_roster_error|json_encode|raw }},
+        employeeFallback: {{ translations.tablet_worker_employee_fallback|json_encode|raw }},
+        selectionError: {{ translations.tablet_worker_selection_error|json_encode|raw }},
+        startError: {{ translations.tablet_worker_start_error|json_encode|raw }}
+    };
     function showWorkerError(message) {
         error.textContent = message;
         error.classList.remove('d-none');
@@ -391,7 +407,7 @@
     async function openWorkerModal() {
         if (!workerModal) return;
         clearWorkerError();
-        list.innerHTML = '<div class="text-muted">Ładowanie pracowników…</div>';
+        list.innerHTML = '<div class="text-muted">' + workerTranslations.loading + '</div>';
         empty.classList.add('d-none');
         employeeId.value = '';
         pinBoxes.forEach(function (box) { box.value = ''; });
@@ -404,7 +420,7 @@
             var response = await fetch(ROOT + '/ajax/tablet-worker/roster', { credentials: 'same-origin' });
             var data = await response.json();
             if (!response.ok || !data.success) {
-                throw new Error(data.message || 'Nie można pobrać grafiku.');
+                throw new Error(data.message || workerTranslations.rosterError);
             }
             list.innerHTML = '';
             (data.employees || []).forEach(function (employee) {
@@ -412,7 +428,7 @@
                 button.type = 'button';
                 button.className = 'tablet-worker-badge';
                 button.dataset.tabletWorkerId = employee.id;
-                var name = employee.name || ('Pracownik #' + employee.id);
+                var name = employee.name || (workerTranslations.employeeFallback + ' #' + employee.id);
                 var initials = employee.initials || name.split(/\s+/).map(function (part) { return part.charAt(0); }).join('').slice(0, 2);
                 button.innerHTML = '<span class="tablet-worker-initials"></span><span class="tablet-worker-name"></span>';
                 button.querySelector('.tablet-worker-initials').textContent = initials || '—';
@@ -423,13 +439,13 @@
             empty.classList.toggle('d-none', list.children.length > 0);
         } catch (err) {
             list.innerHTML = '';
-            showWorkerError(err.message || 'Nie można pobrać grafiku.');
+            showWorkerError(err.message || workerTranslations.rosterError);
         }
     }
 
     start.addEventListener('click', async function () {
         if (!employeeId.value || pin.value.length !== 4) {
-            showWorkerError('Wybierz pracownika i wpisz PIN.');
+            showWorkerError(workerTranslations.selectionError);
             return;
         }
         start.disabled = true;
@@ -442,12 +458,12 @@
             });
             var data = await response.json();
             if (!response.ok || !data.success) {
-                throw new Error(data.message || 'Nie udało się rozpocząć obsługi.');
+                throw new Error(data.message || workerTranslations.startError);
             }
             workerModal.hide();
             window.location.reload();
         } catch (err) {
-            showWorkerError(err.message || 'Nie udało się rozpocząć obsługi.');
+            showWorkerError(err.message || workerTranslations.startError);
             start.disabled = false;
         }
     });

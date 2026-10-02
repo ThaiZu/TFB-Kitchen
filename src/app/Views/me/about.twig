@@ -1,6 +1,6 @@
 {% extends "layouts/base.twig" %}
 
-{% block title %}{{ translations.settings_title | default('Réglages') }}{% endblock %}
+{% block title %}{{ translations.settings_title }}{% endblock %}
 
 {% block head %}
 <style>
@@ -116,8 +116,8 @@
         {# L'écran ne fait plus « à propos » : il porte le mode de la tablette,
            qui décide de ce qu'elle affiche. Le titre doit le dire, sinon on
            cherchera les réglages ailleurs. #}
-        <h3>{{ translations.settings_heading | default('Réglages') }}</h3>
-        <p class="text-subtitle text-muted">{{ translations.settings_subtitle | default("Réglages de cet appareil et données du compte.") }}</p>
+        <h3>{{ translations.settings_heading }}</h3>
+        <p class="text-subtitle text-muted">{{ translations.settings_subtitle }}</p>
     </div>
 {% endblock %}
 
@@ -133,16 +133,16 @@
        Contrat : docs/MODE_TABLETTE.md #}
     <form method="post" action="{{ ROOT }}/me/settings" class="card mb-3">
         <div class="card-body">
-            <div class="set-title">{{ translations.mode_title | default('Mode de cette tablette') }}</div>
-            <div class="set-sub mb-3">{{ translations.mode_hint | default("Détermine les menus affichés sur cet appareil. Le réglage appartient à la tablette, pas au compte.") }}</div>
+            <div class="set-title">{{ translations.mode_title }}</div>
+            <div class="set-sub mb-3">{{ translations.mode_hint }}</div>
 
             {% set mode_meta = {
-                'gestion':    { icon: 'clipboard-check', name: translations.mode_gestion    | default('Gestion'),
-                                what: translations.mode_gestion_what    | default('Tableau de bord et indicateurs, checklists et contrôle qualité, base de connaissances, réclamations.') },
-                'production': { icon: 'list-check',      name: translations.mode_production | default('Production'),
-                                what: translations.mode_production_what | default("Besoins, planning de l'atelier, mise en place, stock et commandes.") },
-                'webshop':    { icon: 'shop',            name: translations.mode_webshop    | default('WebShop'),
-                                what: translations.mode_webshop_what    | default('Ouvre le back-office franchisé de la boutique : tournées, stock, assortiment, clients B2B.') }
+                'gestion':    { icon: 'clipboard-check', name: translations.mode_gestion,
+                                what: translations.mode_gestion_what },
+                'production': { icon: 'list-check',      name: translations.mode_production,
+                                what: translations.mode_production_what },
+                'webshop':    { icon: 'shop',            name: translations.mode_webshop,
+                                what: translations.mode_webshop_what }
             } %}
 
             <div class="mode-grid">
@@ -165,7 +165,7 @@
                         </span>
                         <span class="mode-opt-what">{{ meta.what }}</span>
                         {% if device_mode == m %}
-                            <span class="mode-opt-now">{{ translations.mode_current | default('Mode actuel') }}</span>
+                            <span class="mode-opt-now">{{ translations.mode_current }}</span>
                         {% endif %}
                         {% if blocked %}
                             {# La raison, pas « indisponible » : les quatre causes
@@ -174,13 +174,13 @@
                                juste en dessous. #}
                             <span class="mode-opt-why">
                                 {% if webshop_blocker == 'no_url' %}
-                                    {{ translations.webshop_no_url | default("Aucune adresse de back-office n'est enregistrée sur cette tablette.") }}
+                                    {{ translations.webshop_no_url }}
                                 {% elseif webshop_blocker == 'bad_url' %}
-                                    {{ translations.webshop_bad_url | default("L'adresse enregistrée n'est pas une adresse web (elle doit commencer par http:// ou https://).") }}
+                                    {{ translations.webshop_bad_url }}
                                 {% elseif webshop_blocker == 'bad_token' %}
-                                    {{ translations.webshop_bad_token | default("Le jeton enregistré n'a pas la forme attendue — vérifiez qu'il a été collé en entier, sans espace.") }}
+                                    {{ translations.webshop_bad_token }}
                                 {% else %}
-                                    {{ translations.webshop_no_token | default("Aucun jeton d'appareil n'est enregistré sur cette tablette.") }}
+                                    {{ translations.webshop_no_token }}
                                 {% endif %}
                             </span>
                         {% endif %}
@@ -192,16 +192,16 @@
                Réglages › Tablette Kitchen. Il n'y a pas d'identifiant de
                boutique à saisir : elle est portée par l'URL et par le jeton. #}
             <div class="set-field">
-                <label for="webshopUrl">{{ translations.backoffice_url | default('URL du back-office WebShop') }}</label>
+                <label for="webshopUrl">{{ translations.backoffice_url }}</label>
                 <input type="url" id="webshopUrl" name="webshop_url"
                        inputmode="url" autocomplete="off" spellcheck="false"
                        placeholder="https://exemple.tld/webshop/backoffice_franchisee/?shop=2"
                        value="{{ webshop_base_local }}">
                 <small>
                     {% if webshop_base_global and webshop_base %}
-                        {{ translations.webshop_url_from_server | default('Valeur du serveur utilisée :') }} {{ webshop_base }}
+                        {{ translations.webshop_url_from_server }} {{ webshop_base }}
                     {% else %}
-                        {{ translations.webshop_url_hint | default("Laisser vide pour utiliser l'adresse configurée sur le serveur.") }}
+                        {{ translations.webshop_url_hint }}
                     {% endif %}
                 </small>
             </div>
@@ -213,19 +213,19 @@
                caractères sont affichés — assez pour reconnaître celui qui est
                en place, pas assez pour le recopier. #}
             <div class="set-field">
-                <label for="webshopToken">{{ translations.device_token | default("Jeton d'appareil") }}</label>
+                <label for="webshopToken">{{ translations.device_token }}</label>
                 <input type="password" id="webshopToken" name="webshop_token"
                        autocomplete="off" spellcheck="false"
                        autocapitalize="off" autocorrect="off"
                        placeholder="{{ token_hint
-                            ? (translations.device_token_set | default('Jeton enregistré')) ~ ' ' ~ token_hint
-                            : (translations.device_token_ph | default('64 caractères fournis par le back-office')) }}"
+                            ? (translations.device_token_set) ~ ' ' ~ token_hint
+                            : (translations.device_token_ph) }}"
                        value="">
                 <small>
                     {% if token_hint %}
-                        {{ translations.device_token_keep | default('Laisser vide pour conserver le jeton enregistré.') }}
+                        {{ translations.device_token_keep }}
                     {% else %}
-                        {{ translations.device_token_hint | default('Back-office → Réglages → Tablette Kitchen. Il vaut pour une seule boutique et reste révocable de là-bas.') }}
+                        {{ translations.device_token_hint }}
                     {% endif %}
                 </small>
             </div>
@@ -233,12 +233,12 @@
             {% if token_hint %}
                 <label class="set-clear">
                     <input type="checkbox" name="webshop_token_clear" value="1">
-                    <span>{{ translations.device_token_clear | default('Effacer le jeton de cette tablette') }}</span>
+                    <span>{{ translations.device_token_clear }}</span>
                 </label>
             {% endif %}
 
             <button type="submit" class="set-save">
-                {{ translations.mode_save | default('Enregistrer le mode') }}
+                {{ translations.mode_save }}
             </button>
         </div>
     </form>
@@ -253,19 +253,19 @@
         <div class="card-body">
             <div class="set-row">
                 <div class="set-txt">
-                    <div class="set-title">{{ translations.sound_order_label|default('Son des nouvelles commandes') }}</div>
-                    <div class="set-sub">{{ translations.sound_order_hint|default("Un bip signale l'arrivée d'une commande sur cet appareil.") }}</div>
+                    <div class="set-title">{{ translations.sound_order_label }}</div>
+                    <div class="set-sub">{{ translations.sound_order_hint }}</div>
                 </div>
 
                 <button type="button" class="set-switch" id="soundOrderToggle"
                         role="switch" aria-checked="false"
-                        aria-label="{{ translations.sound_order_label|default('Son des nouvelles commandes') }}">
+                        aria-label="{{ translations.sound_order_label }}">
                     <span class="set-switch-knob"></span>
                 </button>
             </div>
 
             <button type="button" class="btn btn-outline-secondary btn-sm mt-3" id="soundOrderTest">
-                <i class="bi bi-volume-up me-1"></i>{{ translations.sound_order_test|default('Tester le son') }}
+                <i class="bi bi-volume-up me-1"></i>{{ translations.sound_order_test }}
             </button>
         </div>
     </div>
@@ -278,7 +278,7 @@
     <div class="card">
         <div class="card-body text-center" style="padding:26px 20px;">
             <p style="margin:0;color:var(--c-muted, #7a7168);font-size:.9rem;">
-                {{ translations.device_unreachable | default("Les données de l'appareil ne sont pas disponibles pour le moment.") }}
+                {{ translations.device_unreachable }}
             </p>
         </div>
     </div>

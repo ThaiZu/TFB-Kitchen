@@ -8,12 +8,12 @@
    geste — prévenir la cuisine, retirer le produit de la vente. #}
 {% if stock is null %}
     <div class="card mt-3"><div class="card-body ws-state">
-        <p>{{ translations.ws_not_served_stock | default("Le stock n'est pas encore servi par le webshop.") }}</p>
+        <p>{{ translations.ws_not_served_stock }}</p>
     </div></div>
 
 {% elseif stock is empty %}
     <div class="card mt-3"><div class="card-body ws-state">
-        <p>{{ translations.ws_no_stock | default('Aucun produit dans le catalogue du jour.') }}</p>
+        <p>{{ translations.ws_no_stock }}</p>
     </div></div>
 
 {% else %}
@@ -21,8 +21,8 @@
         <p class="ws-out-band">
             {{ out_count }}
             {{ out_count > 1
-                ? (translations.ws_out_n | default('produits en rupture'))
-                : (translations.ws_out_1 | default('produit en rupture')) }}
+                ? (translations.ws_out_n)
+                : (translations.ws_out_1) }}
         </p>
     {% endif %}
 
@@ -39,12 +39,12 @@
                            Les confondre ferait annoncer une rupture sur un
                            produit dont on ne sait rien. #}
                         <b class="is-unknown">—</b>
-                        <small>{{ translations.ws_qty_unknown | default('non servi') }}</small>
+                        <small>{{ translations.ws_qty_unknown }}</small>
                     {% else %}
                         <b>{{ p.qty|number_format(0, ',', ' ') }}</b>
                         <small>{{ p.out
-                            ? (translations.ws_out_label | default('rupture'))
-                            : (translations.ws_in_stock | default('en stock')) }}</small>
+                            ? (translations.ws_out_label)
+                            : (translations.ws_in_stock) }}</small>
                     {% endif %}
                 </div>
             </article>

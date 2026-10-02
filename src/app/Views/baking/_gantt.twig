@@ -9,7 +9,7 @@
 <div class="card mt-3">
     <div class="card-body">
         <h2 class="bk-h">
-            {{ translations.baking_overview | default("Ce qu'il reste de la journée") }}
+            {{ translations.baking_overview }}
             {%- if active_stage != 'all' %} — {{ translations['stage_' ~ active_stage] | lower }}{% endif %}
         </h2>
 
@@ -60,8 +60,8 @@
                                                 {{ start < window.from ? 'is-clipped' : '' }}"
                                          style="left:{{ (segFrom - window.from) / span * 100 }}%;width:{{ (segTo - segFrom) / span * 100 }}%"
                                          title="{{ translations['stage_' ~ k] }} — {{ b.isStageValidated(k)
-                                                    ? translations.plan_validated | default('validé')
-                                                    : translations.plan_forecast | default('prévu') }}"></div>
+                                                    ? translations.plan_validated
+                                                    : translations.plan_forecast }}"></div>
                                 {% endif %}
                             {% endfor %}
 
@@ -82,13 +82,13 @@
         </div>
 
         <div class="bk-legend">
-            <span><i class="bk-sw" style="background:#1F4F6B"></i>{{ translations.stage_prep | default('Préparation')|lower }}</span>
-            <span><i class="bk-sw" style="background:#8D1D2C"></i>{{ translations.stage_cook | default('Cuisson')|lower }}</span>
-            <span><i class="bk-sw" style="background:#C17A2A"></i>{{ translations.stage_finish | default('Finition')|lower }}</span>
-            <span><i class="bk-sw" style="background:var(--c-secondary,#F2C9A0);border-radius:999px"></i>{{ translations.baking_shelf_legend | default('mise en rayon') }}</span>
+            <span><i class="bk-sw" style="background:#1F4F6B"></i>{{ translations.stage_prep|lower }}</span>
+            <span><i class="bk-sw" style="background:#8D1D2C"></i>{{ translations.stage_cook|lower }}</span>
+            <span><i class="bk-sw" style="background:#C17A2A"></i>{{ translations.stage_finish|lower }}</span>
+            <span><i class="bk-sw" style="background:var(--c-secondary,#F2C9A0);border-radius:999px"></i>{{ translations.baking_shelf_legend }}</span>
             <span class="bk-legend-sep">
-                <i class="bk-sw bk-sw-planned"></i>{{ translations.plan_forecast | default('prévu') }}
-                <i class="bk-sw bk-sw-done"></i>{{ translations.plan_validated | default('validé') }}
+                <i class="bk-sw bk-sw-planned"></i>{{ translations.plan_forecast }}
+                <i class="bk-sw bk-sw-done"></i>{{ translations.plan_validated }}
             </span>
         </div>
     </div>

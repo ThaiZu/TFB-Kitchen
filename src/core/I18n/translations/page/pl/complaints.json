@@ -51,5 +51,8 @@
   "select_material": "Wybierz produkt...",
   "no_delivered_orders": "Brak dostarczonych zamówień",
   "invalid_quantity_message": "Podana ilość jest poza dozwolonym zakresem.",
-  "home": "Strona główna"
+  "home": "Strona główna",
+  "file_load_error": "Błąd pobierania pliku",
+  "connection_error": "Błąd połączenia",
+  "camera_access_error": "Brak dostępu do kamery"
 }

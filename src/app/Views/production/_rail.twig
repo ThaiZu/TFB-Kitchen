@@ -14,31 +14,31 @@
 {% set rail = [
     {
         n: '1',
-        label: translations.rail_1 | default('Veille'),
+        label: translations.rail_1,
         href:  ROOT ~ '/production?view=mep' ~ sector_qs,
         on:    active_view == 'mep'
     },
     {
         n: '2',
-        label: translations.rail_2 | default('Fabriqué'),
+        label: translations.rail_2,
         href:  ROOT ~ '/production?view=planning' ~ sector_qs,
         on:    active_view == 'planning'
     },
     {
         n: '3',
-        label: translations.rail_3 | default('En rayon'),
+        label: translations.rail_3,
         href:  ROOT ~ '/production?view=' ~ needs_key ~ sector_qs,
         on:    active_view in periods|map(p => p.key)
     },
     {
         n: '4',
-        label: translations.rail_4 | default('En vente'),
+        label: translations.rail_4,
         href:  ROOT ~ '/production?view=stock' ~ sector_qs,
         on:    active_view in ['stock', 'minimums']
     }
 ] %}
 
-<nav class="pr-rail" aria-label="{{ translations.flow_title | default('Parcours du produit') }}">
+<nav class="pr-rail" aria-label="{{ translations.flow_title }}">
     {% for s in rail %}
         {# L'étape 3 porte le vert : c'est elle qui met le stock en vente, et le
            lien entre le geste et son effet doit rester visible même réduit. #}

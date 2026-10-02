@@ -9,8 +9,8 @@
 
     var ROOT = {{ ROOT | json_encode | raw }};
     var MSG  = {
-        err: {{ (translations.board_launch_error   | default("La fournée n'a pas pu être programmée.")) | json_encode | raw }},
-        ok:  {{ (translations.board_launch_success | default('Fournée programmée : elle est passée en préparation.')) | json_encode | raw }}
+        err: {{ (translations.board_launch_error) | json_encode | raw }},
+        ok:  {{ (translations.board_launch_success) | json_encode | raw }}
     };
 
     var alertEl = document.getElementById('minAlert');

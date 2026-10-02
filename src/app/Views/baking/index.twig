@@ -23,7 +23,7 @@
 {% extends "layouts/base.twig" %}
 {% import "components/_icons.twig" as icons %}
 
-{% block title %}{{ translations.baking_title | default('Plan de production') }}{% endblock %}
+{% block title %}{{ translations.baking_title }}{% endblock %}
 
 {% block head %}
 <style>{% include "baking/_styles.twig" %}</style>
@@ -32,9 +32,9 @@
 {% block page_heading %}
     <div class="page-heading d-flex align-items-end justify-content-between gap-3 flex-wrap">
         <div>
-            <h3>{{ translations.baking_title | default('Plan de production') }}</h3>
+            <h3>{{ translations.baking_title }}</h3>
             <p class="text-subtitle text-muted mb-0">
-                {{ translations.baking_subtitle | default('Ce qui reste à produire, replanifié en continu') }}
+                {{ translations.baking_subtitle }}
             </p>
         </div>
         <div class="app-title" style="font-family:var(--font-display);font-size:1.5rem;" id="bkClock">
@@ -47,12 +47,12 @@
 
     {# ── Filtres ── #}
     {% set stages = [
-        { key: 'all',    label: translations.filter_all  | default('Tout') },
-        { key: 'prep',   label: translations.stage_prep  | default('Préparation') },
-        { key: 'cook',   label: translations.stage_cook  | default('Cuisson') },
-        { key: 'finish', label: translations.stage_finish| default('Finition') }
+        { key: 'all',    label: translations.filter_all },
+        { key: 'prep',   label: translations.stage_prep },
+        { key: 'cook',   label: translations.stage_cook },
+        { key: 'finish', label: translations.stage_finish }
     ] %}
-    <nav class="bk-filters" aria-label="{{ translations.baking_title | default('Plan de production') }}">
+    <nav class="bk-filters" aria-label="{{ translations.baking_title }}">
         {% for s in stages %}
             <a class="bk-f bk-f-{{ s.key }} {{ active_stage == s.key ? 'is-on' : '' }}"
                href="{{ ROOT }}/baking{{ s.key == 'all' ? '' : '?stage=' ~ s.key }}"
@@ -69,9 +69,9 @@
        même moment que « où en sont les finitions ». Les deux filtres se
        croisent : l'étape reste un lien serveur, le four masque à l'écran. #}
     {% if ovens|length > 1 %}
-        <nav class="bk-ovens" aria-label="{{ translations.oven_filter | default('Four') }}">
+        <nav class="bk-ovens" aria-label="{{ translations.oven_filter }}">
             <button type="button" class="cat-chip is-on" data-oven="">
-                {{ translations.oven_all | default('Tous les fours') }}
+                {{ translations.oven_all }}
             </button>
             {% for o in ovens %}
                 <button type="button" class="cat-chip" data-oven="{{ o }}">{{ o }}</button>
@@ -84,7 +84,7 @@
         <div class="card mt-3">
             <div class="card-body bk-state">
                 {{ icons.svg('flame', 40) }}
-                <p>{{ translations.baking_not_served | default("Le plan de cuisson n'est pas encore servi par l'API. L'écran est prêt : il s'affichera dès que l'endpoint répondra.") }}</p>
+                <p>{{ translations.baking_not_served }}</p>
             </div>
         </div>
 
@@ -93,7 +93,7 @@
         <div class="card mt-3">
             <div class="card-body bk-state">
                 {{ icons.svg('check-check', 40) }}
-                <p>{{ translations.baking_empty | default('Aucune fournée en cours.') }}</p>
+                <p>{{ translations.baking_empty }}</p>
             </div>
         </div>
 

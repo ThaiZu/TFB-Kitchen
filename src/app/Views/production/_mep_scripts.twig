@@ -7,12 +7,12 @@
 (function () {
     var ROOT = {{ ROOT | json_encode | raw }};
     var MSG  = {
-        errValidate: {{ (translations.mep_error      | default("La validation n'a pas pu être enregistrée.")) | json_encode | raw }},
-        okValidate:  {{ (translations.mep_success    | default('MEP validée : les produits sont en vente.')) | json_encode | raw }},
-        errSave:     {{ (translations.mep_next_error | default("L'enregistrement n'a pas pu être effectué.")) | json_encode | raw }},
-        okSave:      {{ (translations.mep_next_saved | default('MEP de demain enregistrée.')) | json_encode | raw }},
-        batch:       {{ (translations.prod_batch     | default('Fournée')) | json_encode | raw }},
-        byUnit:      {{ (translations.mep_by_unit    | default("à l'unité")) | json_encode | raw }}
+        errValidate: {{ (translations.mep_error) | json_encode | raw }},
+        okValidate:  {{ (translations.mep_success) | json_encode | raw }},
+        errSave:     {{ (translations.mep_next_error) | json_encode | raw }},
+        okSave:      {{ (translations.mep_next_saved) | json_encode | raw }},
+        batch:       {{ (translations.prod_batch) | json_encode | raw }},
+        byUnit:      {{ (translations.mep_by_unit) | json_encode | raw }}
     };
 
     var alertEl = document.getElementById('mepAlert');

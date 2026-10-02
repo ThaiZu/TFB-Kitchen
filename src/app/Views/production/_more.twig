@@ -17,32 +17,32 @@
 {% set rows = [
     {
         icon:  'package',
-        label: translations.stock_title | default('Stock live'),
-        hint:  translations.stock_sub_hint | default('Face aux ventes prévues'),
+        label: translations.stock_title,
+        hint:  translations.stock_sub_hint,
         href:  ROOT ~ '/production?view=stock' ~ sector_qs,
         n:     stock_ref_count,
-        unit:  translations.more_refs | default('références')
+        unit:  translations.more_refs
     },
     {
         icon:  'store',
-        label: translations.min_title | default('Minimum en magasin'),
-        hint:  translations.min_sub_hint | default('Le plancher de vitrine'),
+        label: translations.min_title,
+        hint:  translations.min_sub_hint,
         href:  ROOT ~ '/production?view=minimums' ~ sector_qs,
         n:     min_below_count,
-        unit:  translations.more_below | default('sous le seuil')
+        unit:  translations.more_below
     },
     {
         icon:  'square-pen',
-        label: translations.more_mep | default('MEP de demain'),
-        hint:  translations.more_mep_hint | default("Ce qu'on prépare ce soir"),
+        label: translations.more_mep,
+        hint:  translations.more_mep_hint,
         href:  ROOT ~ '/production?view=mep&mep=afternoon' ~ sector_qs,
         n:     mep_next_count,
-        unit:  translations.more_lines | default('lignes')
+        unit:  translations.more_lines
     }
 ] %}
 
-<section class="pr-more" aria-label="{{ translations.more_title | default('Consulter') }}">
-    <p class="pr-cat-title">{{ translations.more_title | default('Consulter') }}</p>
+<section class="pr-more" aria-label="{{ translations.more_title }}">
+    <p class="pr-cat-title">{{ translations.more_title }}</p>
     {% for r in rows %}
         <a class="pr-more-row" href="{{ r.href }}">
             <span class="pr-more-ic">{{ icons.svg(r.icon, 17) }}</span>

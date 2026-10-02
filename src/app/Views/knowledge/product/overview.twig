@@ -1,7 +1,7 @@
 {% extends "layouts/base.twig" %}
 {% import "components/_icons.twig" as icons %}
 
-{% block title %}{{ translations.products|default('Products') }}{% endblock %}
+{% block title %}{{ translations.products }}{% endblock %}
 
 
 {% block head %}
@@ -159,8 +159,8 @@
 
 {% block page_heading %}
     <div class="page-heading">
-        <h3>{{ translations.products|default('Products') }}</h3>
-        <p class="text-subtitle text-muted">{{ translations.products_overview_subtitle|default('Znajdź produkt i przeglądaj jego kartę techniczną') }}</p>
+        <h3>{{ translations.products }}</h3>
+        <p class="text-subtitle text-muted">{{ translations.products_overview_subtitle }}</p>
 
         {# Breadcrumb to show user's location #}
     </div>
@@ -180,13 +180,13 @@
                     <div class="kp-search">
                         <div class="kp-search-field">
                             <label for="productSearch" class="form-label fw-semibold">
-                                {{ translations.search|default('Rechercher') }}
+                                {{ translations.search }}
                             </label>
                             <input
                                 type="search"
                                 class="form-control"
                                 id="productSearch"
-                                placeholder="{{ translations.search_products|default('Wyszukaj produkt po nazwie...') }}"
+                                placeholder="{{ translations.search_products }}"
                                 autocomplete="off"
                                 inputmode="search"
                             >
@@ -194,10 +194,10 @@
 
                         <div class="kp-search-cat">
                             <label for="categoryFilter" class="form-label fw-semibold">
-                                {{ translations.filter_category|default('Filtruj po kategorii') }}
+                                {{ translations.filter_category }}
                             </label>
                             <select class="form-select" id="categoryFilter">
-                                <option value="">{{ translations.all_categories|default('Wszystkie kategorie') }}</option>
+                                <option value="">{{ translations.all_categories }}</option>
                             </select>
                         </div>
                     </div>
@@ -209,15 +209,15 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4 class="card-title mb-0">{{ translations.products_list|default('Lista produktów') }}</h4>
-                    <span class="badge bg-primary" id="productCount">{{ products|length }} {{ translations.products_total|default('produktów') }}</span>
+                    <h4 class="card-title mb-0">{{ translations.products_list }}</h4>
+                    <span class="badge bg-primary" id="productCount">{{ products|length }} {{ translations.products_total }}</span>
                 </div>
                 <div class="card-body">
 
                     {# No results message #}
                     <div id="noResults" class="alert alert-info d-none" role="alert">
                         <i class="bi bi-info-circle me-2"></i>
-                        {{ translations.no_products_found|default('Nie znaleziono produktów pasujących do wyszukiwania') }}
+                        {{ translations.no_products_found }}
                     </div>
 
                     {# Products grid #}
@@ -240,12 +240,12 @@
                                         <span class="kp-photo-flags">
                                             {% if product.getIsVegetarian() %}
                                                 <span class="kp-flag kp-flag-veg">
-                                                    {{ icons.svg('leaf', 12) }}{{ translations.vegetarian|default('Végétarien') }}
+                                                    {{ icons.svg('leaf', 12) }}{{ translations.vegetarian }}
                                                 </span>
                                             {% endif %}
                                             {% if product.getIsPreparedBeforeSales() %}
                                                 <span class="kp-flag kp-flag-prep">
-                                                    {{ icons.svg('clock', 12) }}{{ translations.prepared_before|default('Préparé à l\'avance') }}
+                                                    {{ icons.svg('clock', 12) }}{{ translations.prepared_before }}
                                                 </span>
                                             {% endif %}
                                         </span>
@@ -254,7 +254,7 @@
                                     <p class="kp-name product-name">{{ product.getName() }}</p>
                                     <div class="kp-cat">
                                         {{ icons.svg('tag', 13) }}
-                                        <span class="product-category">{{ product.getCategoryName() ?: translations.no_category|default('Sans catégorie') }}</span>
+                                        <span class="product-category">{{ product.getCategoryName() ?: translations.no_category }}</span>
                                     </div>
 
                                     <div class="kp-meta">
@@ -265,13 +265,13 @@
                                         {% endif %}
                                         {% if product.getShelfLifeMinutes() %}
                                             <span class="kp-chip">
-                                                {{ icons.svg('timer', 13) }}{{ (product.getShelfLifeMinutes() / 60)|round }} {{ translations.hours|default('h') }}
+                                                {{ icons.svg('timer', 13) }}{{ (product.getShelfLifeMinutes() / 60)|round }} {{ translations.hours }}
                                             </span>
                                         {% endif %}
                                     </div>
 
                                     <div class="kp-foot">
-                                        <span>{{ translations.view_card|default('Voir la fiche') }}</span>
+                                        <span>{{ translations.view_card }}</span>
                                         {{ icons.svg('chevron-right', 17) }}
                                     </div>
                                 </a>
@@ -336,7 +336,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         // Update count and show/hide no results message
-        productCount.textContent = visibleCount + ' {{ translations.products_total|default("produktów") }}';
+        productCount.textContent = visibleCount + ' {{ translations.products_total }}';
 
         if (visibleCount === 0) {
             noResults.classList.remove('d-none');

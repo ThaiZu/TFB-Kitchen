@@ -1,6 +1,6 @@
 {% extends "layouts/base.twig" %}
 
-{% block title %}{{ translations.checklists_title | default('Checklisty') }}{% endblock %}
+{% block title %}{{ translations.checklists_title }}{% endblock %}
 
 {% block head %}
 <style>
@@ -305,8 +305,8 @@
 
 {% block page_heading %}
     <div class="page-heading">
-        <h3>{{ translations.checklists_title | default('Checklisty') }}</h3>
-        <p class="text-subtitle text-muted">{{ translations.checklists_subtitle | default('Przeglądaj zadania dzienne zgrupowane według checklisty.') }}</p>
+        <h3>{{ translations.checklists_title }}</h3>
+        <p class="text-subtitle text-muted">{{ translations.checklists_subtitle }}</p>
     </div>
 {% endblock %}
 
@@ -325,10 +325,10 @@
         <summary class="cl-filters-sum">
             <span class="cl-filters-ic" aria-hidden="true"><i class="bi bi-funnel"></i></span>
             <span class="cl-filters-txt">
-                <b>{{ translations.filter_title | default('Date et checklist') }}</b>
+                <b>{{ translations.filter_title }}</b>
                 <small>
                     {{ selected_date }}{% if focused_name %} · {{ focused_name }}{% endif %}
-                    {%- if auto_focus %} · {{ translations.filter_auto | default('choisie selon l\'heure') }}{% endif -%}
+                    {%- if auto_focus %} · {{ translations.filter_auto }}{% endif -%}
                 </small>
             </span>
             <span class="cl-filters-chev" aria-hidden="true"><i class="bi bi-chevron-down"></i></span>
@@ -341,7 +341,7 @@
                             {# Data #}
                             <div class="col-12 col-md-8">
                                 <label for="dateInput" class="form-label fw-semibold">
-                                    {{ translations.filter_date | default('Data') }}
+                                    {{ translations.filter_date }}
                                 </label>
                                 <input type="date"
                                        name="date"
@@ -355,7 +355,7 @@
                             <div class="col-12 col-md-4">
                                 <button type="submit" class="btn btn-primary w-100">
                                     <i class="bi bi-funnel me-1"></i>
-                                    {{ translations.filter_apply | default('Pokaż') }}
+                                    {{ translations.filter_apply }}
                                 </button>
                             </div>
                         </div>
@@ -370,7 +370,7 @@
                            script ne fait qu'éviter le second tap. #}
                         <fieldset class="cl-pick-set">
                             <legend class="form-label fw-semibold">
-                                {{ translations.filter_checklist | default('Checklista') }}
+                                {{ translations.filter_checklist }}
                             </legend>
 
                             <div class="cl-pick">
@@ -381,7 +381,7 @@
                                     <input type="radio" name="checklist_id" value=""
                                            {{ selected_checklist_id is empty ? 'checked' : '' }}>
                                     <span class="cl-pick-name">
-                                        {{ translations.filter_checklist_all | default('— wszystkie —') }}
+                                        {{ translations.filter_checklist_all }}
                                     </span>
                                 </label>
 
@@ -401,7 +401,7 @@
                                         </span>
                                         <span class="cl-pick-count">
                                             {{ cl.tasks_done }}/{{ cl.tasks_total }}
-                                            {{ translations.tasks_done_of | default('wyk.') }}
+                                            {{ translations.tasks_done_of }}
                                         </span>
                                     </label>
                                 {% endfor %}
@@ -433,15 +433,15 @@
                             <div class="d-flex gap-3">
                                 <div class="summary-stat">
                                     <div class="stat-value stat-total">{{ progress.summary.total }}</div>
-                                    <div class="stat-label">{{ translations.summary_total | default('Łącznie') }}</div>
+                                    <div class="stat-label">{{ translations.summary_total }}</div>
                                 </div>
                                 <div class="summary-stat">
                                     <div class="stat-value stat-done">{{ progress.summary.done }}</div>
-                                    <div class="stat-label">{{ translations.summary_done | default('Wykonane') }}</div>
+                                    <div class="stat-label">{{ translations.summary_done }}</div>
                                 </div>
                                 <div class="summary-stat">
                                     <div class="stat-value stat-missed">{{ progress.summary.not_done }}</div>
-                                    <div class="stat-label">{{ translations.summary_not_done | default('Niewykonane') }}</div>
+                                    <div class="stat-label">{{ translations.summary_not_done }}</div>
                                 </div>
                             </div>
                         </div>
@@ -467,7 +467,7 @@
         {% if progress.tasks is empty %}
             <div class="text-center text-muted py-5">
                 <i class="bi bi-clipboard-x" style="font-size:2.5rem;opacity:.3;"></i>
-                <p class="mt-3 mb-0">{{ translations.no_tasks | default('Brak zadań dla tej checklisty w wybranym dniu.') }}</p>
+                <p class="mt-3 mb-0">{{ translations.no_tasks }}</p>
             </div>
         {% else %}
             {# ── Tâches ──
@@ -488,28 +488,28 @@
                                 {{ task.name }}
                                 {% if task.is_mandatory %}
                                     <i class="bi bi-star-fill task-mandatory-icon"
-                                       title="{{ translations.mandatory | default('Obowiązkowe') }}"></i>
+                                       title="{{ translations.mandatory }}"></i>
                                 {% endif %}
                                 {% if task.requires_photo %}
                                     <i class="bi bi-camera-fill tk-photo-icon"
-                                       title="{{ translations.photo_required | default('Wymagane zdjęcie') }}"></i>
+                                       title="{{ translations.photo_required }}"></i>
                                 {% endif %}
                             </div>
                             {% if status == 'DONE' %}
                                 <span class="task-badge badge-done">
-                                    <i class="bi bi-check-circle-fill me-1"></i>{{ translations.status_done | default('Wykonane') }}
+                                    <i class="bi bi-check-circle-fill me-1"></i>{{ translations.status_done }}
                                 </span>
                             {% elseif status == 'SKIPPED' %}
                                 <span class="task-badge badge-skipped">
-                                    <i class="bi bi-skip-forward-fill me-1"></i>{{ translations.status_skipped | default('Pominięte') }}
+                                    <i class="bi bi-skip-forward-fill me-1"></i>{{ translations.status_skipped }}
                                 </span>
                             {% elseif status == 'FAILED' %}
                                 <span class="task-badge badge-failed">
-                                    <i class="bi bi-x-circle-fill me-1"></i>{{ translations.status_failed | default('Nieudane') }}
+                                    <i class="bi bi-x-circle-fill me-1"></i>{{ translations.status_failed }}
                                 </span>
                             {% else %}
                                 <span class="task-badge badge-pending">
-                                    <i class="bi bi-circle me-1"></i>{{ translations.status_pending | default('Oczekuje') }}
+                                    <i class="bi bi-circle me-1"></i>{{ translations.status_pending }}
                                 </span>
                             {% endif %}
                         </div>
@@ -518,7 +518,7 @@
                             {% if task.execution_time %}
                                 <span class="tk-chip">
                                     <i class="bi bi-clock"></i>
-                                    {{ translations.col_planned_time | default('Planowana godz.') }}
+                                    {{ translations.col_planned_time }}
                                     <strong>{{ task.execution_time|slice(0,5) }}</strong>
                                 </span>
                             {% endif %}
@@ -531,8 +531,8 @@
                                 <span class="tk-chip">
                                     <i class="bi bi-{{ status == 'FAILED' ? 'x-circle' : 'check2' }}"></i>
                                     {{ status == 'FAILED'
-                                       ? (translations.col_reported_at | default('Signalée à'))
-                                       : (translations.col_completed_at | default('Zrealizowane')) }}
+                                       ? (translations.col_reported_at)
+                                       : (translations.col_completed_at) }}
                                     <strong>{{ task.completed_at|slice(11,5) }}</strong>
                                 </span>
                             {% endif %}
@@ -564,7 +564,7 @@
                                         data-task-name="{{ task.name }}"
                                         data-date="{{ selected_date }}"
                                         data-requires-photo="{{ task.requires_photo ? '1' : '0' }}">
-                                    <i class="bi bi-check2"></i>{{ translations.btn_complete | default('Wykonaj') }}
+                                    <i class="bi bi-check2"></i>{{ translations.btn_complete }}
                                 </button>
                                 {# Le refus, lui, passe TOUJOURS par la fenêtre :
                                    il exige une raison écrite. #}
@@ -573,8 +573,8 @@
                                         data-task-id="{{ task.task_id }}"
                                         data-task-name="{{ task.name }}"
                                         data-date="{{ selected_date }}"
-                                        aria-label="{{ translations.btn_not_done | default('Non effectuée') }}">
-                                    <i class="bi bi-x-circle"></i><span>{{ translations.btn_not_done | default('Non effectuée') }}</span>
+                                        aria-label="{{ translations.btn_not_done }}">
+                                    <i class="bi bi-x-circle"></i><span>{{ translations.btn_not_done }}</span>
                                 </button>
                             </div>
                         {% endif %}
@@ -603,7 +603,7 @@
                             </div>
 
                             <div class="d-flex justify-content-between align-items-center mb-2 small text-muted">
-                                <span>{{ cl.tasks_done }} / {{ cl.tasks_total }} {{ translations.tasks_done_of | default('wykonanych') }}</span>
+                                <span>{{ cl.tasks_done }} / {{ cl.tasks_total }} {{ translations.tasks_done_of }}</span>
                                 <span class="fw-semibold {% if pct == 100 %}text-success{% elseif pct > 0 %}text-warning{% else %}text-secondary{% endif %}">
                                     {{ pct }}%
                                 </span>
@@ -624,9 +624,9 @@
             <i class="bi bi-clipboard-x" style="font-size:2.5rem;opacity:.3;"></i>
             <p class="mt-3 mb-0">
                 {% if employee_mode and employee_no_tasks %}
-                    {{ translations.no_employee_tasks | default('Nie masz dziś zadań przypisanych do swojego stanowiska.') }}
+                    {{ translations.no_employee_tasks }}
                 {% else %}
-                    {{ translations.no_checklists | default('Brak aktywnych checklist dla wybranego dnia.') }}
+                    {{ translations.no_checklists }}
                 {% endif %}
             </p>
         </div>
@@ -660,10 +660,10 @@
         <span class="shift-av">{{ shift.initials }}</span>
         <span class="shift-txt">
             <b>{{ shift.name }}</b>
-            <small>{{ translations.shift_signing | default('signe les tâches de cette checklist') }}</small>
+            <small>{{ translations.shift_signing }}</small>
         </span>
         <button type="button" class="shift-x" id="shiftClose">
-            {{ translations.shift_change | default('Changer') }}
+            {{ translations.shift_change }}
         </button>
     </div>
 {% endif %}
@@ -677,11 +677,11 @@
                    fenêtre sert aux deux issues, et se tromper d'issue se
                    corrige mal — une tâche signée ne se dé-signe pas. #}
                 <h5 class="modal-title" id="completeTaskModalLabel"
-                    data-title-done="{{ translations.modal_complete_title | default('Oznacz zadanie jako wykonane') }}"
-                    data-title-fail="{{ translations.modal_fail_title | default('Déclarer la tâche non effectuée') }}">
-                    {{ translations.modal_complete_title | default('Oznacz zadanie jako wykonane') }}
+                    data-title-done="{{ translations.modal_complete_title }}"
+                    data-title-fail="{{ translations.modal_fail_title }}">
+                    {{ translations.modal_complete_title }}
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ translations.close }}"></button>
             </div>
             <div class="modal-body">
                 <p class="text-muted small mb-3" id="modalTaskName"></p>
@@ -699,7 +699,7 @@
                    attribuée à la personne déclarée en haut de l'écran. #}
                 <div class="mb-3{{ shift ? ' d-none' : '' }}" id="modalWhoBlock">
                     <label class="form-label fw-semibold">
-                        {{ translations.modal_employee_label | default('Pracownik') }} <span class="text-danger">*</span>
+                        {{ translations.modal_employee_label }} <span class="text-danger">*</span>
                     </label>
 
                     {# Le filtrage se fait cote serveur : `employees` porte deja
@@ -731,17 +731,17 @@
                     {% if roster_mode == 'missing' %}
                         <p class="emp-note">
                             <i class="bi bi-info-circle"></i>
-                            {{ translations.roster_api_missing | default("La liste vient de l'API, qui ne répond pas encore — voir le bandeau en haut de l'écran.") }}
+                            {{ translations.roster_api_missing }}
                         </p>
                     {% elseif roster_mode == 'empty' %}
                         <p class="emp-note">
                             <i class="bi bi-info-circle"></i>
-                            {{ translations.no_one_scheduled | default("Personne n'est au planning ce jour-là.") }}
+                            {{ translations.no_one_scheduled }}
                         </p>
                     {% elseif roster_mode == 'none' %}
                         <p class="emp-note">
                             <i class="bi bi-info-circle"></i>
-                            {{ translations.no_employees | default('Aucun employé actif.') }}
+                            {{ translations.no_employees }}
                         </p>
                     {% endif %}
 
@@ -758,12 +758,12 @@
                    validation, fait de la saisie du code le geste qui conclut. #}
                 <div class="mb-3">
                     <label for="modalNoteInput" class="form-label fw-semibold">
-                        <span id="modalNoteLabel">{{ translations.modal_note_label | default('Notatka (opcjonalnie)') }}</span>
+                        <span id="modalNoteLabel">{{ translations.modal_note_label }}</span>
                         <span class="text-danger d-none" id="modalNoteRequired">*</span>
                     </label>
                     <textarea id="modalNoteInput" class="form-control" rows="2" maxlength="255"
-                              data-label-note="{{ translations.modal_note_label | default('Notatka (opcjonalnie)') }}"
-                              data-label-reason="{{ translations.modal_reason_label | default('Pourquoi la tâche n\'a pas été faite') }}"></textarea>
+                              data-label-note="{{ translations.modal_note_label }}"
+                              data-label-reason="{{ translations.modal_reason_label }}"></textarea>
                 </div>
 
                 {# ── PIN ──
@@ -772,7 +772,7 @@
                    le pavé numérique de façon fiable et ne montrait rien. #}
                 <div class="mb-1{{ shift ? ' d-none' : '' }}" id="modalPinBlock">
                     <label class="form-label fw-semibold">
-                        {{ translations.modal_pin_label | default('PIN') }} <span class="text-danger">*</span>
+                        {{ translations.modal_pin_label }} <span class="text-danger">*</span>
                     </label>
                     <div class="pin-boxes" id="pinBoxes">
                         {% for i in 1..4 %}
@@ -782,7 +782,7 @@
                                    pattern="[0-9]*"
                                    maxlength="1"
                                    autocomplete="off"
-                                   aria-label="{{ translations.modal_pin_label | default('PIN') }} {{ i }}">
+                                   aria-label="{{ translations.modal_pin_label }} {{ i }}">
                         {% endfor %}
                     </div>
                     <input type="hidden" id="modalPinInput">
@@ -791,21 +791,21 @@
                 <div class="form-check form-switch mb-3{{ shift ? ' d-none' : '' }}" id="modalStayLoggedBlock">
                     <input class="form-check-input" type="checkbox" role="switch" id="modalStayLogged">
                     <label class="form-check-label" for="modalStayLogged">
-                        {{ translations.complete_stay_logged | default('Pozostań zalogowany po wykonaniu zadania') }}
+                        {{ translations.complete_stay_logged }}
                     </label>
                 </div>
 
                 <div id="modalPhotoSection" class="mb-1 d-none">
                     <label class="form-label fw-semibold">
-                        {{ translations.modal_photo_label | default('Zdjęcie') }}
+                        {{ translations.modal_photo_label }}
                         <span class="text-danger">*</span>
                     </label>
                     <div class="d-flex gap-2 mb-2">
                         <button type="button" class="btn btn-outline-secondary btn-sm" id="modalOpenCameraBtn">
-                            <i class="bi bi-camera me-1"></i>{{ translations.modal_photo_take | default('Prendre la photo') }}
+                            <i class="bi bi-camera me-1"></i>{{ translations.modal_photo_take }}
                         </button>
                         <button type="button" class="btn btn-outline-secondary btn-sm" id="modalClearPhotoBtn">
-                            <i class="bi bi-trash me-1"></i>{{ translations.modal_photo_clear | default('Effacer') }}
+                            <i class="bi bi-trash me-1"></i>{{ translations.modal_photo_clear }}
                         </button>
                     </div>
                     {# ── Pas de « choisir un fichier » ──
@@ -826,20 +826,20 @@
                                style="width:100%;border-radius:8px;background:#000;max-height:220px;object-fit:cover;"></video>
                         <div class="d-flex gap-2 mt-1">
                             <button type="button" class="btn btn-sm btn-primary" id="modalTakePhotoBtn">
-                                <i class="bi bi-camera me-1"></i>{{ translations.modal_photo_shoot | default('Déclencher') }}
+                                <i class="bi bi-camera me-1"></i>{{ translations.modal_photo_shoot }}
                             </button>
                             <button type="button" class="btn btn-sm btn-outline-secondary" id="modalCloseCameraBtn">
-                                <i class="bi bi-x-circle me-1"></i>{{ translations.modal_photo_close | default('Fermer') }}
+                                <i class="bi bi-x-circle me-1"></i>{{ translations.modal_photo_close }}
                             </button>
                         </div>
                         <canvas id="modalPhotoCanvas" style="display:none;"></canvas>
                     </div>
                     <div id="modalPhotoPreview" class="mt-2 d-none">
-                        <img id="modalPhotoPreviewImg" alt="Podgląd"
+                        <img id="modalPhotoPreviewImg" alt="{{ translations.modal_photo_label }}"
                              style="max-width:100%;border-radius:8px;border:1px solid rgba(0,0,0,.1);">
                     </div>
                     <div class="text-muted small mt-1">
-                        {{ translations.modal_photo_hint | default('Photographiez ce que vous venez de constater.') }}
+                        {{ translations.modal_photo_hint }}
                     </div>
                 </div>
 
@@ -847,16 +847,16 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    {{ translations.modal_btn_cancel | default('Anuluj') }}
+                    {{ translations.modal_btn_cancel }}
                 </button>
                 {# Le bouton porte la couleur de l'issue : vert pour « faite »,
                    rouge pour « non faite ». Un même bouton vert pour les deux
                    laisserait déclarer un échec avec le geste de la réussite. #}
                 <button type="button" class="btn btn-success" id="modalConfirmBtn"
-                        data-label-done="{{ translations.modal_btn_confirm | default('Zatwierdź') }}"
-                        data-label-fail="{{ translations.modal_btn_fail | default('Déclarer non effectuée') }}">
+                        data-label-done="{{ translations.modal_btn_confirm }}"
+                        data-label-fail="{{ translations.modal_btn_fail }}">
                     <span id="modalBtnSpinner" class="spinner-border spinner-border-sm me-1 d-none"></span>
-                    <span id="modalConfirmLabel">{{ translations.modal_btn_confirm | default('Zatwierdź') }}</span>
+                    <span id="modalConfirmLabel">{{ translations.modal_btn_confirm }}</span>
                 </button>
             </div>
         </div>
@@ -867,15 +867,15 @@
 (function () {
     const ROOT = {{ ROOT | json_encode | raw }};
     const translations = {
-        complete_success:                  {{ (translations.complete_success | default('Zadanie zostało oznaczone jako wykonane.')) | json_encode | raw }},
-        complete_error_invalid_pin:        {{ (translations.complete_error_invalid_pin | default('Nieprawidłowy PIN.')) | json_encode | raw }},
-        complete_error_employee_not_found: {{ (translations.complete_error_employee_not_found | default('Nie znaleziono pracownika.')) | json_encode | raw }},
-        complete_error_generic:            {{ (translations.complete_error_generic | default('Błąd podczas oznaczania zadania. Spróbuj ponownie.')) | json_encode | raw }},
-        complete_error_employee_required:  {{ (translations.complete_error_employee_required | default('Wybierz pracownika.')) | json_encode | raw }},
-        complete_error_pin_required:       {{ (translations.complete_error_pin_required | default('Wprowadź PIN.')) | json_encode | raw }},
-        complete_error_photo_required:     {{ (translations.complete_error_photo_required | default('To zadanie wymaga zdjęcia. Dodaj zdjęcie przed zatwierdzeniem.')) | json_encode | raw }},
-        complete_error_note_required:      {{ (translations.complete_error_note_required | default("Indiquez pourquoi la tâche n'a pas été faite.")) | json_encode | raw }},
-        complete_error_no_eligible:        {{ (translations.complete_error_no_eligible | default('Brak w grafiku pracowników uprawnionych do wykonania tego zadania.')) | json_encode | raw }},
+        complete_success:                  {{ (translations.complete_success) | json_encode | raw }},
+        complete_error_invalid_pin:        {{ (translations.complete_error_invalid_pin) | json_encode | raw }},
+        complete_error_employee_not_found: {{ (translations.complete_error_employee_not_found) | json_encode | raw }},
+        complete_error_generic:            {{ (translations.complete_error_generic) | json_encode | raw }},
+        complete_error_employee_required:  {{ (translations.complete_error_employee_required) | json_encode | raw }},
+        complete_error_pin_required:       {{ (translations.complete_error_pin_required) | json_encode | raw }},
+        complete_error_photo_required:     {{ (translations.complete_error_photo_required) | json_encode | raw }},
+        complete_error_note_required:      {{ (translations.complete_error_note_required) | json_encode | raw }},
+        complete_error_no_eligible:        {{ (translations.complete_error_no_eligible) | json_encode | raw }},
     };
 
     let currentTaskId       = null;

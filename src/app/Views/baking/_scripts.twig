@@ -21,7 +21,7 @@
     var ROOT  = {{ ROOT | json_encode | raw }};
     var STAGE = gantt ? gantt.dataset.stage : 'all';
     var URL   = ROOT + '/ajax/baking' + (STAGE !== 'all' ? '?stage=' + STAGE : '');
-    var ERR   = {{ (translations.baking_error | default("L'étape n'a pas pu être enregistrée.")) | json_encode | raw }};
+    var ERR   = {{ (translations.baking_error) | json_encode | raw }};
 
     var FROM = gantt ? parseInt(gantt.dataset.from, 10) : 0;
     var TO   = gantt ? parseInt(gantt.dataset.to, 10) : 60;
@@ -59,16 +59,16 @@
     // ce repeint, « dans 12 min » resterait affiché une heure durant, puisque
     // le rechargement n'a lieu qu'au changement de statut.
     var OMSG = {
-        late: {{ (translations.order_late | default('en retard de')) | json_encode | raw }},
-        now:  {{ (translations.order_now  | default('maintenant')) | json_encode | raw }},
-        'in': {{ (translations.order_in   | default('dans')) | json_encode | raw }}
+        late: {{ (translations.order_late) | json_encode | raw }},
+        now:  {{ (translations.order_now) | json_encode | raw }},
+        'in': {{ (translations.order_in) | json_encode | raw }}
     };
     function paintOrders(batches) {
         batches.forEach(function (b) {
             var el = document.querySelector('.bk-order[data-id="' + b.id + '"] .bk-order-when span');
             if (!el) return;
             var n = b.left;
-            el.textContent = n < 0 ? OMSG.late + ' ' + (-n) + ' min'
+            el.textContent = n < 0 ? OMSG.late + ' ' + (-n) + ' {{ translations.minutes|escape('js') }}'
                            : (n === 0 ? OMSG.now : OMSG['in'] + ' ' + n + ' min');
             el.classList.toggle('is-late', n < 0);
             el.classList.toggle('is-soon', n >= 0 && n <= 5);
@@ -139,8 +139,8 @@
     if (sheet) {
         var TIME_STEP = 5;                       // l'atelier ne raisonne pas à la minute
         var A = {
-            planned: {{ (translations.order_planned | default('Planifié : %s min')) | json_encode | raw }},
-            go:      {{ (translations.order_confirm | default('Valider')) | json_encode | raw }}
+            planned: {{ (translations.order_planned) | json_encode | raw }},
+            go:      {{ (translations.order_confirm) | json_encode | raw }}
         };
 
         var recall = document.getElementById('bkRecall');
@@ -163,9 +163,9 @@
         // lieu d'attendre que quelqu'un pense à changer d'écran.
         var shelfStep = document.getElementById('bkShelfStep');
         var SH = {
-            err: {{ (translations.shelf_error   | default("La mise en rayon n'a pas pu être enregistrée.")) | json_encode | raw }},
-            ok:  {{ (translations.shelf_success | default('Mis en rayon : les produits sont en vente.')) | json_encode | raw }},
-            made:{{ (translations.shelf_step_made | default('Fournée de %s')) | json_encode | raw }}
+            err: {{ (translations.shelf_error) | json_encode | raw }},
+            ok:  {{ (translations.shelf_success) | json_encode | raw }},
+            made:{{ (translations.shelf_step_made) | json_encode | raw }}
         };
         var shelfQty = 0;
         var shelfMax = 0;
@@ -179,7 +179,7 @@
         var RES_KEY = 'kitchen.shelfReserve';
         var TODAY   = resBox ? (resBox.dataset.today || '') : '';
         var RES = {
-            title: {{ (translations.reserve_go | default('Mettre en magasin')) | json_encode | raw }}
+            title: {{ (translations.reserve_go) | json_encode | raw }}
         };
 
         function resLoad() {
@@ -210,7 +210,7 @@
                 var b = document.createElement('b');
                 b.textContent = e.name || '—';
                 var s = document.createElement('small');
-                s.textContent = e.qty + ' ' + (e.unit || 'pc');
+                s.textContent = e.qty + ' ' + (e.unit || '{{ translations.unit_piece|escape('js') }}');
                 txt.appendChild(b); txt.appendChild(s);
 
                 var go = document.createElement('button');
@@ -251,7 +251,7 @@
             shelfMax = Math.max(0, parseFloat(order.qty) || 0);
             shelfQty = shelfMax;
             document.getElementById('bkShelfName').textContent = order.name || '';
-            document.getElementById('bkShelfUnit').textContent = order.unit || 'pc';
+            document.getElementById('bkShelfUnit').textContent = order.unit || '{{ translations.unit_piece|escape('js') }}';
             paintShelf();
             document.querySelector('#bkAssign .bk-sheet-panel:not(.bk-shelf-panel)').hidden = true;
             shelfStep.hidden = false;

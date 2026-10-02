@@ -11,6 +11,8 @@
   "quick_actions": "Actions rapides",
   "todays_production": "Production du jour",
   "todays_production_subtitle": "Voir ce qu'il y a à faire aujourd'hui, les priorités et les statuts.",
+  "production_list": "Liste de production",
+  "production_list_subtitle": "Préparez et imprimez le plan de production pour une date choisie.",
   "production_cards": "Fiches de production",
   "production_cards_subtitle": "Consultez les recettes, les ingrédients et les instructions étape par étape.",
   "checklists": "Listes de contrôle",
@@ -26,5 +28,12 @@
   "production": "Production",
   "knowledge": "Base de connaissances",
   "cards": "Fiches",
-  "orders": "Commandes"
+  "orders": "Commandes",
+  "dashboard_shift_guest_mode": "Continuer anonymement",
+  "dashboard_shift_hint": "Choisissez-vous dans le planning du jour et saisissez le PIN.",
+  "dashboard_shift_continue": "Continuer",
+  "dashboard_shift_selection_error": "Choisissez un employé et saisissez le PIN.",
+  "dashboard_shift_start_error": "Impossible de connecter l'employé.",
+  "nav_inventory": "Inventaire",
+  "inventory_subtitle": "Comptez les produits et confirmez le stock physique."
 }

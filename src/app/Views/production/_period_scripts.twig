@@ -9,10 +9,10 @@
 
     var ROOT = {{ ROOT | json_encode | raw }};
     var MSG  = {
-        err:       {{ (translations.shelf_error    | default("La mise en rayon n'a pas pu être enregistrée.")) | json_encode | raw }},
-        ok:        {{ (translations.shelf_success  | default('Mis en rayon : les produits sont en vente.')) | json_encode | raw }},
-        launchErr: {{ (translations.board_launch_error   | default("La fournée n'a pas pu être programmée.")) | json_encode | raw }},
-        launchOk:  {{ (translations.board_launch_success | default('Fournée programmée : elle est passée en préparation.')) | json_encode | raw }}
+        err:       {{ (translations.shelf_error) | json_encode | raw }},
+        ok:        {{ (translations.shelf_success) | json_encode | raw }},
+        launchErr: {{ (translations.board_launch_error) | json_encode | raw }},
+        launchOk:  {{ (translations.board_launch_success) | json_encode | raw }}
     };
 
     var alertEl = document.getElementById('prShelfAlert');

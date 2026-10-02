@@ -1,6 +1,6 @@
 {% extends "layouts/base.twig" %}
 
-{% block title %}{{ product.getName() }} – {{ translations.technical_sheet|default('Karta techniczna') }}{% endblock %}
+{% block title %}{{ product.getName() }} – {{ translations.technical_sheet }}{% endblock %}
 
 {% block head %}
 <style>
@@ -446,7 +446,7 @@
        mains. En pied de page, il fallait parcourir toute la fiche. #}
     <a href="{{ ROOT }}/knowledge/products" class="fiche-back">
         <i class="bi bi-arrow-left"></i>
-        <span>{{ translations.back_to_products|default('Wróć do listy produktów') }}</span>
+        <span>{{ translations.back_to_products }}</span>
     </a>
 {% endblock %}
 
@@ -483,7 +483,7 @@
             {% else %}
                 <div class="fiche-hero-empty">
                     <i class="bi bi-box-seam"></i>
-                    <span>{{ translations.no_photo|default('Brak zdjęcia') }}</span>
+                    <span>{{ translations.no_photo }}</span>
                 </div>
             {% endif %}
         </div>
@@ -493,7 +493,7 @@
             <div class="fiche-header-left">
                 {% if obj %}
                     <div class="fiche-category-label">
-                        {{ obj.getCategoryName() ?: translations.no_category|default('Brak kategorii') }}
+                        {{ obj.getCategoryName() ?: translations.no_category }}
                     </div>
                 {% endif %}
                 <h1 class="fiche-product-name">{{ product.getName() }}</h1>
@@ -518,7 +518,7 @@
                             {% set m = obj.getShelfLifeMinutes() % 60 %}
                             <span class="fiche-badge fiche-badge-dlc">
                                 <i class="bi bi-clock me-1"></i>DLC
-                                {% if h > 0 %}{{ h }}{{ translations.hours|default('h') }}{% endif %}{% if m > 0 %} {{ m }}min{% endif %}
+                                {% if h > 0 %}{{ h }}{{ translations.hours }}{% endif %}{% if m > 0 %} {{ m }}min{% endif %}
                                 {% if obj.getShelfLifeCategory() %} · {{ obj.getShelfLifeCategory() }}{% endif %}
                             </span>
                         {% endif %}
@@ -529,12 +529,12 @@
                         {% endif %}
                         {% if obj.getIsVegetarian() %}
                             <span class="fiche-badge fiche-badge-veg">
-                                <i class="bi bi-leaf me-1"></i>{{ translations.vegetarian|default('Wegetariańskie') }}
+                                <i class="bi bi-leaf me-1"></i>{{ translations.vegetarian }}
                             </span>
                         {% endif %}
                         {% if obj.getIsPreparedBeforeSales() %}
                             <span class="fiche-badge fiche-badge-prep">
-                                <i class="bi bi-clock-history me-1"></i>{{ translations.prepared_before|default('Przygotowane wcześniej') }}
+                                <i class="bi bi-clock-history me-1"></i>{{ translations.prepared_before }}
                             </span>
                         {% endif %}
                         {% if obj.getNutriscore() %}
@@ -557,7 +557,7 @@
 
                 {# SKŁAD (składniki jako chipy) #}
                 <h4 class="fiche-section-title">
-                    <i class="bi bi-journal-text me-1"></i>{{ translations.composition|default('Skład') }}
+                    <i class="bi bi-journal-text me-1"></i>{{ translations.composition }}
                 </h4>
                 {% if recipe and recipe.hasElements() %}
                     <div class="ingredient-chips">
@@ -590,7 +590,7 @@
 
                 {# ALERGENY #}
                 <h4 class="fiche-section-title">
-                    <i class="bi bi-exclamation-triangle me-1"></i>{{ translations.allergens|default('Alergeny') }}
+                    <i class="bi bi-exclamation-triangle me-1"></i>{{ translations.allergens }}
                 </h4>
                 {% if allAllergens is not empty %}
                     <div class="allergen-chips">
@@ -598,15 +598,15 @@
                             <span class="allergen-chip">{{ allergen }}</span>
                         {% endfor %}
                     </div>
-                    <p class="allergen-note">→ {{ translations.allergens_check|default('Sprawdź skład przed podaniem osobom uczulonym') }}</p>
+                    <p class="allergen-note">→ {{ translations.allergens_check }}</p>
                 {% else %}
-                    <p class="text-muted small">{{ translations.no_allergens|default('Brak zidentyfikowanych alergenów') }}</p>
+                    <p class="text-muted small">{{ translations.no_allergens }}</p>
                 {% endif %}
 
                 {# PRZECHOWYWANIE #}
                 {% if obj %}
                 <h4 class="fiche-section-title">
-                    <i class="bi bi-thermometer-half me-1"></i>{{ translations.storage_conditions|default('Warunki przechowywania i serwowania') }}
+                    <i class="bi bi-thermometer-half me-1"></i>{{ translations.storage_conditions }}
                 </h4>
                 <div class="fiche-note-box">
                     <p>
@@ -615,16 +615,16 @@
                             {% if obj.getStorageDescription() %} — {{ obj.getStorageDescription() }}{% endif %}
                         {% endif %}
                         {% if obj.getStorageTemperature() %}
-                            <br>🌡️ {{ translations.storage_temperature|default('Temperatura') }}: <strong>{{ obj.getStorageTemperature() }}°C</strong>
+                            <br>🌡️ {{ translations.storage_temperature }}: <strong>{{ obj.getStorageTemperature() }}°C</strong>
                         {% endif %}
                         {% if obj.getReheatingTimeMinutes() and obj.getReheatingTimeMinutes() > 0 %}
-                            <br>🔥 {{ translations.reheating|default('Podgrzewanie') }}: <strong>{{ obj.getReheatingTimeMinutes() }} min</strong>
+                            <br>🔥 {{ translations.reheating }}: <strong>{{ obj.getReheatingTimeMinutes() }} min</strong>
                             {% if obj.getReheatingTemperatureCelsius() and obj.getReheatingTemperatureCelsius() > 0 %}
                                 / <strong>{{ obj.getReheatingTemperatureCelsius() }}°C</strong>
                             {% endif %}
                         {% endif %}
                         {% if obj.getPositioningName() %}
-                            <br>📍 {{ translations.positioning|default('Pozycjonowanie') }}: <strong>{{ obj.getPositioningName() }}</strong>
+                            <br>📍 {{ translations.positioning }}: <strong>{{ obj.getPositioningName() }}</strong>
                             {% if obj.getPositioningDescription() %} — {{ obj.getPositioningDescription() }}{% endif %}
                         {% endif %}
                     </p>
@@ -632,17 +632,17 @@
 
                 {# INFORMACJE DODATKOWE #}
                 <h4 class="fiche-section-title mt-3">
-                    <i class="bi bi-info-circle me-1"></i>{{ translations.product_details|default('Szczegóły produktu') }}
+                    <i class="bi bi-info-circle me-1"></i>{{ translations.product_details }}
                 </h4>
                 {% if obj.getSingleWeight() %}
                     <div class="fiche-info-row">
-                        <span class="fiche-info-label">{{ translations.single_weight|default('Waga jednostkowa') }}</span>
+                        <span class="fiche-info-label">{{ translations.single_weight }}</span>
                         <span class="fiche-info-value">{{ obj.getSingleWeight() }} g</span>
                     </div>
                 {% endif %}
                 {% if recipe and recipe.getYieldQuantity() %}
                     <div class="fiche-info-row">
-                        <span class="fiche-info-label">{{ translations.yield|default('Wydajność receptury') }}</span>
+                        <span class="fiche-info-label">{{ translations.yield }}</span>
                         <span class="fiche-info-value">{{ recipe.getYieldQuantity() }} pcs</span>
                     </div>
                 {% endif %}
@@ -652,16 +652,16 @@
                    n'est que du bruit. #}
                 {% if obj.getQuantityPerLabel() or obj.getTaxValPerc() %}
                     <details class="fiche-admin">
-                        <summary>{{ translations.admin_data|default('Données de gestion') }}</summary>
+                        <summary>{{ translations.admin_data }}</summary>
                         {% if obj.getQuantityPerLabel() %}
                             <div class="fiche-info-row">
-                                <span class="fiche-info-label">{{ translations.quantity_per_label|default('Ilość na etykiecie') }}</span>
+                                <span class="fiche-info-label">{{ translations.quantity_per_label }}</span>
                                 <span class="fiche-info-value">{{ obj.getQuantityPerLabel() }}</span>
                             </div>
                         {% endif %}
                         {% if obj.getTaxValPerc() %}
                             <div class="fiche-info-row">
-                                <span class="fiche-info-label">{{ translations.tax|default('Stawka VAT') }}</span>
+                                <span class="fiche-info-label">{{ translations.tax }}</span>
                                 <span class="fiche-info-value">{{ obj.getTaxValPerc() }}%</span>
                             </div>
                         {% endif %}
@@ -691,7 +691,7 @@
                 {# KROKI PRZYGOTOWANIA #}
                 {% if preparation and preparation.hasSteps() %}
                     <h4 class="fiche-section-title" style="margin-top:{% if preparation.hasTypes() %}0{% else %}0{% endif %}">
-                        <i class="bi bi-list-ol me-1"></i>{{ translations.preparation|default('Przygotowanie') }}
+                        <i class="bi bi-list-ol me-1"></i>{{ translations.preparation }}
                     </h4>
                     {% for step in preparation.getSteps() %}
                         <div class="fiche-step">
@@ -707,7 +707,7 @@
                 {# RECEPTURA SZCZEGÓŁOWA (drzewo składników z ilościami) #}
                 {% if recipe and recipe.hasElements() %}
                     <h4 class="fiche-section-title">
-                        <i class="bi bi-diagram-3 me-1"></i>{{ translations.recipe_quantities|default('Ilości składników') }}
+                        <i class="bi bi-diagram-3 me-1"></i>{{ translations.recipe_quantities }}
                     </h4>
                     {% for element in recipe.getElements() %}
                         {% if element.getType() == 'ingredient' %}
@@ -737,7 +737,7 @@
                 {# WYMAGANE KOMPETENCJE #}
                 {% if product.hasCompetences() %}
                     <h4 class="fiche-section-title">
-                        <i class="bi bi-mortarboard me-1"></i>{{ translations.required_competences|default('Wymagane kompetencje') }}
+                        <i class="bi bi-mortarboard me-1"></i>{{ translations.required_competences }}
                     </h4>
                     {% for competence in product.getCompetences() %}
                         <div class="competence-item">
@@ -762,7 +762,7 @@
         <div class="fiche-plano">
             <div class="fiche-plano-header">
                 <span class="fiche-plano-title">
-                    <i class="bi bi-images me-1"></i>{{ translations.planogram|default('Prezentacja & Opakowanie') }}
+                    <i class="bi bi-images me-1"></i>{{ translations.planogram }}
                 </span>
                 {% if package %}
                     <span class="text-muted" style="font-size:0.8rem">
@@ -778,15 +778,15 @@
                 <div class="col-12 col-md-6">
                     <div class="plano-photo" style="height:120px; flex-direction:column; gap:6px;">
                         <i class="bi bi-easel" style="font-size:1.8rem; color:#ced4da"></i>
-                        <span style="font-size:0.78rem; color:#adb5bd">{{ translations.photo_presentation|default('Prezentacja') }}</span>
-                        <span style="font-size:0.68rem; color:#ced4da; font-style:italic">{{ translations.coming_soon|default('Wkrótce') }}</span>
+                        <span style="font-size:0.78rem; color:#adb5bd">{{ translations.photo_presentation }}</span>
+                        <span style="font-size:0.68rem; color:#ced4da; font-style:italic">{{ translations.coming_soon }}</span>
                     </div>
                 </div>
                 <div class="col-12 col-md-6">
                     <div class="plano-photo" style="height:120px; flex-direction:column; gap:6px;">
                         <i class="bi bi-layout-wtf" style="font-size:1.8rem; color:#ced4da"></i>
-                        <span style="font-size:0.78rem; color:#adb5bd">{{ translations.photo_display|default('Ekspozycja') }}</span>
-                        <span style="font-size:0.68rem; color:#ced4da; font-style:italic">{{ translations.coming_soon|default('Wkrótce') }}</span>
+                        <span style="font-size:0.78rem; color:#adb5bd">{{ translations.photo_display }}</span>
+                        <span style="font-size:0.68rem; color:#ced4da; font-style:italic">{{ translations.coming_soon }}</span>
                     </div>
                 </div>
 
@@ -794,15 +794,15 @@
                 {% if package and package.hasMaterials() %}
                     <div class="col-12">
                         <h6 class="fiche-section-title mb-2" style="margin-top:0">
-                            <i class="bi bi-box me-1"></i>{{ translations.packaging_materials|default('Materiały opakowaniowe') }}
+                            <i class="bi bi-box me-1"></i>{{ translations.packaging_materials }}
                         </h6>
                         <table class="table table-sm table-hover package-materials-table mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th>{{ translations.material_name|default('Materiał') }}</th>
-                                    <th class="text-center">{{ translations.quantity|default('Ilość') }}</th>
-                                    <th class="text-center">{{ translations.unit|default('Jedn.') }}</th>
-                                    <th class="text-end">{{ translations.price_gross|default('Cena brutto') }}</th>
+                                    <th>{{ translations.material_name }}</th>
+                                    <th class="text-center">{{ translations.quantity }}</th>
+                                    <th class="text-center">{{ translations.unit }}</th>
+                                    <th class="text-end">{{ translations.price_gross }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -823,7 +823,7 @@
                 {% if not package or not package.hasMaterials() %}
                     <div class="col-12 text-center text-muted py-3">
                         <i class="bi bi-image" style="font-size:2rem"></i>
-                        <p class="mt-2 small">{{ translations.no_media|default('Brak zdjęć i materiałów opakowaniowych') }}</p>
+                        <p class="mt-2 small">{{ translations.no_media }}</p>
                     </div>
                 {% endif %}
 
@@ -843,7 +843,7 @@
         <div class="fiche-plano">
             <div class="fiche-plano-header">
                 <span class="fiche-plano-title">
-                    <i class="bi bi-images me-1"></i>{{ translations.photos|default('Zdjecia') }}
+                    <i class="bi bi-images me-1"></i>{{ translations.photos }}
                 </span>
             </div>
             <div class="plano-photos">
@@ -854,7 +854,7 @@
                              class="fiche-zoomable"
                              onclick="ficheLightboxOpen(this)"
                              onerror="ficheImgErrorSmall(this)">
-                        <span class="fiche-photo-label">{{ translations.photo_1|default('Zdjecie 1') }}</span>
+                        <span class="fiche-photo-label">{{ translations.photo_1 }}</span>
                     </div>
                 {% endif %}
                 {% if hasPhoto2gallery %}
@@ -864,7 +864,7 @@
                              class="fiche-zoomable"
                              onclick="ficheLightboxOpen(this)"
                              onerror="ficheImgErrorSmall(this)">
-                        <span class="fiche-photo-label">{{ translations.photo_2|default('Zdjecie 2') }}</span>
+                        <span class="fiche-photo-label">{{ translations.photo_2 }}</span>
                     </div>
                 {% endif %}
                 {% if hasPhoto3gallery %}
@@ -874,7 +874,7 @@
                              class="fiche-zoomable"
                              onclick="ficheLightboxOpen(this)"
                              onerror="ficheImgErrorSmall(this)">
-                        <span class="fiche-photo-label">{{ translations.photo_3|default('Zdjecie 3') }}</span>
+                        <span class="fiche-photo-label">{{ translations.photo_3 }}</span>
                     </div>
                 {% endif %}
                 {% if hasMainGallery %}
@@ -884,7 +884,7 @@
                              class="fiche-zoomable"
                              onclick="ficheLightboxOpen(this)"
                              onerror="ficheImgErrorSmall(this)">
-                        <span class="fiche-photo-label">{{ translations.main_photo|default('Glowne') }}</span>
+                        <span class="fiche-photo-label">{{ translations.main_photo }}</span>
                     </div>
                 {% endif %}
             </div>
@@ -907,7 +907,7 @@ function ficheImgError(img) {
     var p = img.parentElement;
     img.remove();
     p.innerHTML = '<i class="bi bi-box-seam" style="font-size:2.5rem;color:#ced4da"></i>'
-                + '<span style="margin-top:8px;font-size:0.78rem">{{ translations.no_photo|default("Brak zdj\u0119cia") }}</span>';
+                + '<span style="margin-top:8px;font-size:0.78rem">{{ translations.no_photo }}</span>';
 }
 function ficheImgErrorSmall(img) {
     var p = img.parentElement;

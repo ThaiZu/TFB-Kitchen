@@ -5,7 +5,7 @@
    finiraient par se contredire, et c'est le back-office qui fait foi. #}
 {% if kpis is empty %}
     <div class="card mt-3"><div class="card-body ws-state">
-        <p>{{ translations.ws_no_kpi | default("Aucun indicateur pour aujourd'hui.") }}</p>
+        <p>{{ translations.ws_no_kpi }}</p>
     </div></div>
 {% else %}
     <div class="ws-kpis">

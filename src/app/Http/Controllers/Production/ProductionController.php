@@ -29,7 +29,8 @@ class ProductionController extends Controller
         private StockOutlookService $outlookService,
         private OrderBookService $orderBook,
         private MinimumService $minimumService,
-        private StaffService $staffService
+        private StaffService $staffService,
+        private \App\Kitchen\app\Services\ProductionList\ProductionListService $dailyPlanService
     ) {}
 
     /**
@@ -48,6 +49,11 @@ class ProductionController extends Controller
      */
     public function index(): void
     {
+        if (empty($_GET['view']) || $_GET['view']==='daily') {
+            $date=$this->dailyPlanService->readDate($_GET['date'] ?? null);
+            $this->view('production_list/saved',$this->dailyPlanService->saved($date));
+            return;
+        }
         $today   = date('Y-m-d');
         $periods = $this->productionService->getPeriods();
         $view    = $this->readView($periods);

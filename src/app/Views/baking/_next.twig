@@ -10,11 +10,11 @@
 {% import "components/_icons.twig" as icons %}
 
 {% set verbs = {
-    'start_prep':  translations.order_start_prep  | default('Commencer la préparation'),
-    'prep_done':   translations.order_prep_done   | default('Terminer la préparation'),
-    'bake':        translations.order_bake        | default('Enfourner'),
-    'out':         translations.order_out         | default('Sortir du four'),
-    'finish_done': translations.order_finish_done | default('Finition terminée')
+    'start_prep':  translations.order_start_prep,
+    'prep_done':   translations.order_prep_done,
+    'bake':        translations.order_bake,
+    'out':         translations.order_out,
+    'finish_done': translations.order_finish_done
 } %}
 {% set kinds = { 'start_prep': 'prep', 'prep_done': 'prep', 'bake': 'cook', 'out': 'cook', 'finish_done': 'finish' } %}
 
@@ -28,7 +28,7 @@
    qu'elle ne voit pas, et le serveur n'a rien à enregistrer tant que le produit
    n'est pas en vente. #}
 <div class="bk-reserve mt-3" id="bkReserve" hidden data-today="{{ today | default('') }}">
-    <p class="bk-reserve-t">{{ translations.reserve_title | default('En réserve — pas encore en vente') }}</p>
+    <p class="bk-reserve-t">{{ translations.reserve_title }}</p>
     <div id="bkReserveList"></div>
 </div>
 
@@ -40,7 +40,7 @@
 
     <div class="card mt-3">
         <div class="card-body">
-            <h2 class="bk-h">{{ translations.order_title | default('Prochaine action') }}</h2>
+            <h2 class="bk-h">{{ translations.order_title }}</h2>
 
             {% for b in orders|slice(0, 3) %}
                 {% set k    = kinds[b.actionKey] | default('prep') %}
@@ -73,11 +73,11 @@
                            il se lit avant l'heure, pas après. #}
                         <span class="{{ left < 0 ? 'is-late' : (left <= 5 ? 'is-soon' : '') }}">
                             {%- if left < 0 -%}
-                                {{ translations.order_late | default('en retard de') }} {{ -left }} min
+                                {{ translations.order_late }} {{ -left }} min
                             {%- elseif left == 0 -%}
-                                {{ translations.order_now | default('maintenant') }}
+                                {{ translations.order_now }}
                             {%- else -%}
-                                {{ translations.order_in | default('dans') }} {{ left }} min
+                                {{ translations.order_in }} {{ left }} min
                             {%- endif -%}
                         </span>
                     </span>
@@ -86,7 +86,7 @@
 
             {% if orders|length > 3 %}
                 <p class="bk-more">
-                    {{ translations.order_more | default('+ %s autres fournées en cours')|replace({'%s': orders|length - 3}) }}
+                    {{ translations.order_more|replace({'%s': orders|length - 3}) }}
                 </p>
             {% endif %}
         </div>
@@ -103,9 +103,9 @@
 <div class="bk-sheet" id="bkAssign" hidden>
     <div class="bk-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="bkAssignTitle">
         <header class="bk-sheet-head">
-            <p class="bk-sheet-kicker">{{ translations.order_kicker | default('Ordre à donner') }}</p>
+            <p class="bk-sheet-kicker">{{ translations.order_kicker }}</p>
             <button type="button" class="bk-sheet-x" id="bkAssignClose"
-                    aria-label="{{ translations.close | default('Fermer') }}">
+                    aria-label="{{ translations.close }}">
                 {{ icons.svg('x', 18) }}
             </button>
         </header>
@@ -122,16 +122,16 @@
             </span>
         </div>
 
-        <p class="bk-sheet-lbl">{{ translations.order_who | default("Qui s'en occupe ?") }}</p>
+        <p class="bk-sheet-lbl">{{ translations.order_who }}</p>
 
         {% if not staff_available %}
             {# La route est nommée par le bandeau en haut de l'écran. Ici on dit
                seulement ce que ça change pour le geste en cours. #}
             <p class="emp-note">
-                {{ translations.staff_not_served | default("L'équipe vient de l'API, qui ne répond pas encore : l'ordre peut être validé sans nom.") }}
+                {{ translations.staff_not_served }}
             </p>
         {% elseif staff is empty %}
-            <p class="emp-note">{{ translations.no_employees | default('Aucun employé disponible.') }}</p>
+            <p class="emp-note">{{ translations.no_employees }}</p>
         {% else %}
             <div class="emp-grid" id="bkStaff">
                 {% for e in staff %}
@@ -143,18 +143,18 @@
             </div>
         {% endif %}
 
-        <p class="bk-sheet-lbl">{{ translations.order_time | default('Temps imparti') }}</p>
+        <p class="bk-sheet-lbl">{{ translations.order_time }}</p>
         <div class="bk-time">
-            <button type="button" class="bk-time-step" data-step="-1" aria-label="− 5 min">−</button>
-            <span class="bk-time-val"><b id="bkTimeVal">0</b> min</span>
-            <button type="button" class="bk-time-step" data-step="1" aria-label="+ 5 min">+</button>
+            <button type="button" class="bk-time-step" data-step="-1" aria-label="{{ translations.decrease }} 5 {{ translations.minutes }}">−</button>
+            <span class="bk-time-val"><b id="bkTimeVal">0</b> {{ translations.minutes }}</span>
+            <button type="button" class="bk-time-step" data-step="1" aria-label="{{ translations.increase }} 5 {{ translations.minutes }}">+</button>
         </div>
         <p class="bk-sheet-hint" id="bkTimeHint"></p>
 
         <button type="button" class="bk-sheet-go" id="bkAssignGo">
             <span id="bkAssignSpin" class="spinner-border spinner-border-sm d-none"></span>
             {{ icons.svg('check', 19) }}
-            <span id="bkAssignGoLabel">{{ translations.order_confirm | default('Valider') }}</span>
+            <span id="bkAssignGoLabel">{{ translations.order_confirm }}</span>
         </button>
     </div>
 
@@ -166,41 +166,41 @@
     <div class="bk-sheet-panel bk-shelf-panel" id="bkShelfStep" hidden
          role="dialog" aria-modal="true" aria-labelledby="bkShelfTitle">
         <header class="bk-sheet-head">
-            <p class="bk-sheet-kicker">{{ translations.shelf_step_kicker | default('Fournée terminée') }}</p>
+            <p class="bk-sheet-kicker">{{ translations.shelf_step_kicker }}</p>
             {# La croix et « garder en réserve » sont la même sortie : deux
                libellés pour un seul geste laissaient croire à deux issues, dont
                une qui aurait annulé quelque chose. Rien n'est annulable ici —
                la fournée est faite. #}
             <button type="button" class="bk-sheet-x" id="bkShelfClose"
-                    aria-label="{{ translations.shelf_step_later | default('Garder en réserve') }}">
+                    aria-label="{{ translations.shelf_step_later }}">
                 {{ icons.svg('x', 18) }}
             </button>
         </header>
 
         <div class="bk-recall f-shelf">
             <span class="bk-recall-verb" id="bkShelfTitle">
-                {{ translations.shelf_step_title | default('Mettre en magasin') }}
+                {{ translations.shelf_step_title }}
             </span>
             <span class="bk-recall-what">
                 <b id="bkShelfName">—</b>
-                <span>{{ translations.shelf_step_hint | default("c'est ce geste qui met le produit en vente") }}</span>
+                <span>{{ translations.shelf_step_hint }}</span>
             </span>
         </div>
 
-        <p class="bk-sheet-lbl">{{ translations.shelf_step_qty | default('Quantité mise en rayon') }}</p>
+        <p class="bk-sheet-lbl">{{ translations.shelf_step_qty }}</p>
         <div class="bk-time">
-            <button type="button" class="bk-time-step" data-shelf-step="-1" aria-label="−">−</button>
+            <button type="button" class="bk-time-step" data-shelf-step="-1" aria-label="{{ translations.decrease }}">−</button>
             <span class="bk-time-val">
                 <b id="bkShelfQty">0</b> <span id="bkShelfUnit">pc</span>
             </span>
-            <button type="button" class="bk-time-step" data-shelf-step="1" aria-label="+">+</button>
+            <button type="button" class="bk-time-step" data-shelf-step="1" aria-label="{{ translations.increase }}">+</button>
         </div>
         <p class="bk-sheet-hint" id="bkShelfHint"></p>
 
         <button type="button" class="bk-sheet-go bk-sheet-go-shelf" id="bkShelfGo">
             <span id="bkShelfSpin" class="spinner-border spinner-border-sm d-none"></span>
             {{ icons.svg('store', 19) }}
-            {{ translations.shelf_step_go | default('Mettre en magasin') }}
+            {{ translations.shelf_step_go }}
         </button>
         {# « Plus tard » ne disait pas ce qu'il laissait derrière lui, et pesait
            autant que l'enregistrement : même taille, même forme, un bouton
@@ -211,8 +211,8 @@
             {# Le soulignement ne porte que sur le libellé : appliqué au bouton
                entier, il barre aussi la conséquence, qui n'est pas cliquable et
                se met alors à ressembler à un second lien. #}
-            <span class="bk-later-lbl">{{ translations.shelf_step_later | default('Garder en réserve') }}</span>
-            <small>{{ translations.shelf_step_later_hint | default("le produit ne sera pas en vente — rappel gardé en haut de l'atelier") }}</small>
+            <span class="bk-later-lbl">{{ translations.shelf_step_later }}</span>
+            <small>{{ translations.shelf_step_later_hint }}</small>
         </button>
     </div>
 </div>

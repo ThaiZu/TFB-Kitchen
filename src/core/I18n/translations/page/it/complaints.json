@@ -51,5 +51,8 @@
   "select_material": "Seleziona prodotto...",
   "no_delivered_orders": "Nessun ordine consegnato",
   "invalid_quantity_message": "La quantità è fuori dall'intervallo consentito.",
-  "home": "Home"
+  "home": "Home",
+  "file_load_error": "Errore di download del file",
+  "connection_error": "Errore di connessione",
+  "camera_access_error": "Accesso alla fotocamera non disponibile"
 }

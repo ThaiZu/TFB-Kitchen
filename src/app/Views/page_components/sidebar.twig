@@ -24,16 +24,12 @@
                         <span>{{ translations.kitchen_dashboard }}</span>
                     </a>
                 </li>
-                {# ✗ PRODUKCJA – W TRAKCIE BUDOWY #}
-                <li class="sidebar-item" title="{{ translations.under_construction|default('W budowie') }}"
-                    style="opacity:.5; pointer-events:none; cursor:not-allowed;">
-                    <span class="sidebar-link text-muted">
+                {# PRODUKCJA #}
+                <li class="sidebar-item {{ p starts with '/production' ? 'active' : '' }}">
+                    <a href="{{ ROOT }}/production" class="sidebar-link">
                         <i class="bi bi-list-check"></i>
                         <span>{{ translations.production }}</span>
-                        <span class="badge bg-warning text-dark ms-auto" style="font-size:.6rem; padding:.2rem .4rem;">
-                            <i class="bi bi-tools"></i>
-                        </span>
-                    </span>
+                    </a>
                 </li>
                 {# ✓ BAZA WIEDZY #}
                 <li class="sidebar-item {{ p starts with '/knowledge' ? 'active' : '' }}">

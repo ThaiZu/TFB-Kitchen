@@ -99,6 +99,9 @@ class Controller
         // distinguer « la fonctionnalité n'y est pas » de « le navigateur
         // montre une page d'hier ».
         $data['app_build'] = APP_BUILD;
+        // Content-based URL invalidates the service worker's cached stylesheet.
+        $themeFile = __DIR__ . '/../../../../public/assets/css/atelier-theme.css';
+        $data['atelier_theme_version'] = substr(hash_file('sha256', $themeFile), 0, 16);
         $data['current_path'] = '/' . trim($_GET['url'] ?? '', '/');
 
         // Le mode de la tablette décide de la navigation, donc de toutes les

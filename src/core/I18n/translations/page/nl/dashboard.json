@@ -11,6 +11,8 @@
   "quick_actions": "Snelle acties",
   "todays_production": "Productie van vandaag",
   "todays_production_subtitle": "Bekijk wat er vandaag gedaan moet worden, prioriteiten en statussen.",
+  "production_list": "Productielijst",
+  "production_list_subtitle": "Bereid het productieplan voor een gekozen dag voor en druk het af.",
   "production_cards": "Productiekaarten",
   "production_cards_subtitle": "Bekijk recepten, ingrediënten en stapsgewijze instructies.",
   "checklists": "Checklists",
@@ -26,5 +28,12 @@
   "production": "Productie",
   "knowledge": "Kennisbank",
   "cards": "Kaarten",
-  "orders": "Bestellingen"
+  "orders": "Bestellingen",
+  "dashboard_shift_guest_mode": "Anoniem doorgaan",
+  "dashboard_shift_hint": "Selecteer jezelf uit het rooster van vandaag en voer je pincode in.",
+  "dashboard_shift_continue": "Doorgaan",
+  "dashboard_shift_selection_error": "Selecteer een medewerker en voer de pincode in.",
+  "dashboard_shift_start_error": "De medewerker kon niet worden aangemeld.",
+  "nav_inventory": "Inventarisatie",
+  "inventory_subtitle": "Tel de producten en bevestig de fysieke voorraad."
 }

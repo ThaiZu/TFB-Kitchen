@@ -191,7 +191,7 @@
                     <i class="bi bi-clipboard2-x me-2"></i>{{ translations.complaint_details }}
                     <code class="ms-2 text-primary fw-semibold" id="modalComplaintKey" style="font-size:.85rem;"></code>
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ translations.close }}"></button>
             </div>
             <div class="modal-body">
                 <div class="row g-3">
@@ -484,10 +484,10 @@ function downloadAttachment(id) {
                 a.click();
                 document.body.removeChild(a);
             } else {
-                showSnack(false, 'Błąd pobierania pliku');
+                showSnack(false, '{{ translations.file_load_error|escape('js') }}');
             }
         })
-        .catch(() => showSnack(false, 'Błąd połączenia'));
+        .catch(() => showSnack(false, '{{ translations.connection_error|escape('js') }}'));
 }
 </script>
 {% endblock %}

@@ -14,9 +14,9 @@
    celle-ci enchaîne sur la mise en magasin — le seul geste qui crédite le stock
    vendable. Voir baking/_scripts.twig et docs/ENDPOINTS_PRODUCTION.md. #}
 {% set labels = {
-    'prep':   translations.stage_prep   | default('Préparation'),
-    'cook':   translations.stage_cook   | default('Cuisson'),
-    'finish': translations.stage_finish | default('Finition')
+    'prep':   translations.stage_prep,
+    'cook':   translations.stage_cook,
+    'finish': translations.stage_finish
 } %}
 
 {% set running = batches|filter(b => not b.isWaiting) %}
@@ -59,15 +59,15 @@
 
             <div class="f-eta">
                 <b>{{ b.shelfClock }}</b>
-                <small>{{ translations.baking_shelf | default('rayon') }}</small>
+                <small>{{ translations.baking_shelf }}</small>
             </div>
 
-            {% set action = k == 'cook'   ? translations.baking_btn_out       | default('Sortir du four')
+            {% set action = k == 'cook'   ? translations.baking_btn_out
                           : k == 'finish' ? (b.finishLabel
-                                                ? b.finishLabel ~ ' ' ~ (translations.baking_btn_done | default('terminé'))
-                                                : translations.baking_btn_finish_done | default('Finition terminée'))
-                          : b.isReadyToBake ? translations.baking_btn_bake     | default('Enfourner')
-                                            : translations.baking_btn_prep_done| default('Préparation terminée') %}
+                                                ? b.finishLabel ~ ' ' ~ (translations.baking_btn_done)
+                                                : translations.baking_btn_finish_done)
+                          : b.isReadyToBake ? translations.baking_btn_bake
+                                            : translations.baking_btn_prep_done %}
             <div class="f-go">
                 <button type="button" class="bk-act f-btn"
                         data-id="{{ b.id }}"
@@ -84,7 +84,7 @@
                     {{ action }}
                 </button>
                 {% if is_last %}
-                    <span class="f-then">{{ translations.fil_then_shelf | default('puis en magasin') }}</span>
+                    <span class="f-then">{{ translations.fil_then_shelf }}</span>
                 {% endif %}
             </div>
         </article>
@@ -93,7 +93,7 @@
     {% if running is empty %}
         <div class="card">
             <div class="card-body pr-state">
-                <p>{{ translations.baking_empty | default('Aucune fournée en cours.') }}</p>
+                <p>{{ translations.baking_empty }}</p>
             </div>
         </div>
     {% endif %}
@@ -105,7 +105,7 @@
 {% if later is not empty %}
     <details class="bk-later">
         <summary>
-            {{ translations.baking_later | default('À venir') }}
+            {{ translations.baking_later }}
             <span class="pr-cat-count">{{ later|length }}</span>
         </summary>
         <div class="fil">
@@ -130,11 +130,11 @@
                     </div>
                     <div class="f-eta">
                         <b>{{ b.shelfClock }}</b>
-                        <small>{{ translations.baking_shelf | default('rayon') }}</small>
+                        <small>{{ translations.baking_shelf }}</small>
                     </div>
                     <div class="f-go">
                         <span class="f-wait">
-                            {{ translations.baking_starts_at | default('Commence à') }} {{ b.prepStartClock }}
+                            {{ translations.baking_starts_at }} {{ b.prepStartClock }}
                         </span>
                     </div>
                 </article>

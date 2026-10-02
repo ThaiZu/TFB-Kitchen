@@ -9,7 +9,7 @@
     if (!list) return;
 
     var ROOT = {{ ROOT | json_encode | raw }};
-    var ERR  = {{ (translations.ws_error | default("La commande n'a pas pu être mise à jour.")) | json_encode | raw }};
+    var ERR  = {{ (translations.ws_error) | json_encode | raw }};
 
     list.addEventListener('click', function (e) {
         var b = e.target.closest('.ws-act');

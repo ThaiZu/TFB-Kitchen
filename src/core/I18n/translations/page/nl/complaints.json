@@ -51,5 +51,8 @@
   "select_material": "Product selecteren...",
   "no_delivered_orders": "Geen geleverde bestellingen",
   "invalid_quantity_message": "De hoeveelheid valt buiten het bereik.",
-  "home": "Home"
+  "home": "Home",
+  "file_load_error": "Fout bij downloaden van bestand",
+  "connection_error": "Verbindingsfout",
+  "camera_access_error": "Geen toegang tot de camera"
 }
