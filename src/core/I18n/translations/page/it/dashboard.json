@@ -34,6 +34,6 @@
   "dashboard_shift_continue": "Continua",
   "dashboard_shift_selection_error": "Seleziona un dipendente e inserisci il PIN.",
   "dashboard_shift_start_error": "Impossibile accedere come dipendente.",
-  "nav_inventory": "Inventario",
+  "nav_inventory": "Stato prodotti",
   "inventory_subtitle": "Conta i prodotti e conferma la giacenza fisica."
 }

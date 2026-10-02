@@ -26,6 +26,14 @@ class ApiClient
             $headers[] = 'Authorization: Bearer ' . $jwtToken;
         }
 
+        // The Kitchen server, not browser JavaScript, forwards the HttpOnly
+        // signed shift context. API endpoints that attribute an irreversible
+        // operation to an employee can therefore verify it independently.
+        $shiftToken = $_COOKIE['kitchen_shift'] ?? '';
+        if (is_string($shiftToken) && $shiftToken !== '') {
+            $headers[] = 'X-Kitchen-Shift: ' . $shiftToken;
+        }
+
         $language = $this->userHeaderProvider->getLanguage();
 
         if ($language) {
@@ -160,26 +168,30 @@ class ApiClient
         curl_setopt($ch, CURLOPT_HTTPHEADER, array_merge($headers, ['Content-Type: application/json']));
 
         $result = curl_exec($ch);
-
+        $response_code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        $response_code = curl_getinfo($ch)['http_code'];
+        // A few Kitchen writes (notably the atomic waste report) need the
+        // conflict payload returned by the API.  Keep the legacy fields below
+        // intact, but expose the decoded body to callers that need it.
+        $decoded_data = is_string($result) ? json_decode($result, true) : null;
+        $decoded_data = is_array($decoded_data) ? $decoded_data : [];
         $response['message'] = "";
         $response['inserted_id'] = -1;
         $response['success'] = false;
         $response['error'] = [];
         $response['code'] = $response_code;
+        $response['data'] = $decoded_data;
 
         if($response_code == 200 || $response_code == 201 || $response_code == 204)
         {
-            $decoded_data = json_decode($result, true);
             $response['message'] = $decoded_data['message'] ?? null;
             $response['inserted_id'] = $decoded_data['inserted_id'] ?? null;
             $response['success'] = true;
 
         } else {
-            $decoded_data = json_decode($result, true);
             $response['description'] = $decoded_data['description'] ?? null;
+            $response['errors'] = is_array($decoded_data['errors'] ?? null) ? $decoded_data['errors'] : [];
         }
 
 

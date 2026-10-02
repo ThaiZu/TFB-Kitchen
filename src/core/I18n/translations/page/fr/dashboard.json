@@ -34,6 +34,6 @@
   "dashboard_shift_continue": "Continuer",
   "dashboard_shift_selection_error": "Choisissez un employé et saisissez le PIN.",
   "dashboard_shift_start_error": "Impossible de connecter l'employé.",
-  "nav_inventory": "Inventaire",
+  "nav_inventory": "État des produits",
   "inventory_subtitle": "Comptez les produits et confirmez le stock physique."
 }

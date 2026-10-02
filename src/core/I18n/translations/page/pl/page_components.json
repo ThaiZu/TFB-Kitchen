@@ -108,6 +108,6 @@
   "api_missing": "API do utworzenia",
   "nav_production_list": "Lista produkcyjna",
   "nav_production_cards": "Karty produkcyjne",
-  "nav_inventory": "Inwentaryzacja",
+  "nav_inventory": "Stan produktów",
   "inventory_subtitle": "Policz produkty i potwierdź rzeczywisty stan magazynu."
 }

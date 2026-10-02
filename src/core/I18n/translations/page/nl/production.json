@@ -1,5 +1,9 @@
 {
   "baking_at_batch": "per baksel",
+  "report_waste": "Afval melden",
+  "report_waste_hint": "Leg werkelijk productverlies vast.",
+  "settle_tomorrow": "Producten voor morgen afrekenen",
+  "settle_tomorrow_hint": "Bevestig wat blijft en wat afval is.",
   "baking_btn_bake": "In de oven",
   "baking_btn_done": "klaar",
   "baking_btn_finish_done": "Afwerking klaar",

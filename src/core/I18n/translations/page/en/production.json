@@ -1,5 +1,9 @@
 {
   "baking_at_batch": "per batch",
+  "report_waste": "Report waste",
+  "report_waste_hint": "Record actual product loss.",
+  "settle_tomorrow": "Settle products for tomorrow",
+  "settle_tomorrow_hint": "Confirm what remains and what is waste.",
   "baking_btn_bake": "Load the oven",
   "baking_btn_done": "done",
   "baking_btn_finish_done": "Finishing done",

@@ -55,7 +55,12 @@ foreach (['pl', 'en', 'fr', 'nl', 'it'] as $language) {
 }
 $expect($container->get(\App\Kitchen\app\Http\Controllers\Inventory\InventoryController::class) instanceof \App\Kitchen\app\Http\Controllers\Inventory\InventoryController, 'Inventory controller resolves in production DI');
 $dispatcher=\FastRoute\simpleDispatcher(require __DIR__.'/../src/core/Bootstrap/routes.php');
-foreach ([['GET','/inventory'],['POST','/inventory/count'],['GET','/production/receive']] as [$method,$path]) {
+foreach ([
+    ['GET','/inventory'], ['POST','/inventory/count'],
+    ['GET','/inventory/waste-data'], ['POST','/inventory/waste'],
+    ['GET','/inventory/carryover-data'], ['POST','/inventory/carryover'],
+    ['GET','/production/receive'],
+] as [$method,$path]) {
     $expect($dispatcher->dispatch($method,$path)[0] === \FastRoute\Dispatcher::FOUND,'New route resolves '.$method.' '.$path);
 }
 echo "$checks real controller navigation checks passed\n";

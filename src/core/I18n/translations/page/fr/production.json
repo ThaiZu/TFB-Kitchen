@@ -1,5 +1,9 @@
 {
   "baking_at_batch": "au lot",
+  "report_waste": "Déclarer des déchets",
+  "report_waste_hint": "Enregistrez la perte réelle de produits.",
+  "settle_tomorrow": "Clôturer les produits pour demain",
+  "settle_tomorrow_hint": "Confirmez ce qui reste et ce qui est un déchet.",
   "baking_btn_bake": "Enfourner",
   "baking_btn_done": "terminé",
   "baking_btn_finish_done": "Finition terminée",

@@ -38,6 +38,22 @@
         href:  ROOT ~ '/production?view=mep&mep=afternoon' ~ sector_qs,
         n:     mep_next_count,
         unit:  translations.more_lines
+    },
+    {
+        icon:  'circle-alert',
+        label: translations.report_waste,
+        hint:  translations.report_waste_hint,
+        href:  ROOT ~ '/inventory?tab=waste',
+        n:     null,
+        unit:  ''
+    },
+    {
+        icon:  'calendar-check',
+        label: translations.settle_tomorrow,
+        hint:  translations.settle_tomorrow_hint,
+        href:  ROOT ~ '/inventory?tab=tomorrow',
+        n:     null,
+        unit:  ''
     }
 ] %}
 

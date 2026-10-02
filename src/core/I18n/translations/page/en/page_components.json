@@ -108,6 +108,6 @@
   "api_missing": "API to create",
   "nav_production_list": "Production plan",
   "nav_production_cards": "Production cards",
-  "nav_inventory": "Inventory count",
+  "nav_inventory": "Product stock",
   "inventory_subtitle": "Count products and confirm physical stock."
 }

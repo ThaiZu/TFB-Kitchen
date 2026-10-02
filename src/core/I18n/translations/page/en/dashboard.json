@@ -34,6 +34,6 @@
   "dashboard_shift_continue": "Continue",
   "dashboard_shift_selection_error": "Select an employee and enter the PIN.",
   "dashboard_shift_start_error": "The employee could not be signed in.",
-  "nav_inventory": "Inventory count",
+  "nav_inventory": "Product stock",
   "inventory_subtitle": "Count products and confirm physical stock."
 }

@@ -108,6 +108,6 @@
   "api_missing": "API à créer",
   "nav_production_list": "Plan de production",
   "nav_production_cards": "Fiches de production",
-  "nav_inventory": "Inventaire",
+  "nav_inventory": "État des produits",
   "inventory_subtitle": "Comptez les produits et confirmez le stock physique."
 }

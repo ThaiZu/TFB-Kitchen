@@ -1,5 +1,9 @@
 {
   "baking_at_batch": "a infornata",
+  "report_waste": "Segnala scarti",
+  "report_waste_hint": "Registra la perdita effettiva di prodotti.",
+  "settle_tomorrow": "Chiudi prodotti per domani",
+  "settle_tomorrow_hint": "Conferma cosa resta e cosa è scarto.",
   "baking_btn_bake": "Inforna",
   "baking_btn_done": "finita",
   "baking_btn_finish_done": "Rifinitura finita",

@@ -108,6 +108,6 @@
   "api_missing": "API aan te maken",
   "nav_production_list": "Productieplan",
   "nav_production_cards": "Productiekaarten",
-  "nav_inventory": "Inventarisatie",
+  "nav_inventory": "Productvoorraad",
   "inventory_subtitle": "Tel de producten en bevestig de fysieke voorraad."
 }

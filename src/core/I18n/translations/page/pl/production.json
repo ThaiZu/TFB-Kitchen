@@ -1,5 +1,9 @@
 {
   "baking_at_batch": "partiami",
+  "report_waste": "Zgłoś odpady",
+  "report_waste_hint": "Zapisz rzeczywistą utratę produktów.",
+  "settle_tomorrow": "Rozlicz produkty na jutro",
+  "settle_tomorrow_hint": "Potwierdź, co zostaje, a co jest odpadem.",
   "baking_btn_bake": "Włóż do pieca",
   "baking_btn_done": "gotowe",
   "baking_btn_finish_done": "Wykończenie gotowe",

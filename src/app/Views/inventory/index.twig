@@ -3,6 +3,7 @@
 {% block head %}{% include 'components/stock_batch_style.twig' %}{% endblock %}
 {% block content %}
 <div class="sb-head"><div><h1>{{ translations.title }}</h1><p class="sb-muted">{{ translations.subtitle }}</p></div><a class="sb-button sb-secondary" href="{{ ROOT }}/inventory">{{ translations.reload }}</a></div>
+<nav class="sb-tabs" aria-label="{{ translations.title }}"><a class="is-active" aria-current="page" href="{{ ROOT }}/inventory">{{ translations.tab_state }}</a><a href="{{ ROOT }}/inventory?tab=waste">{{ translations.tab_waste }}</a><a href="{{ ROOT }}/inventory?tab=tomorrow">{{ translations.tab_tomorrow }}</a></nav>
 {% if not available %}<p role="alert" class="sb-card sb-warn">{{ translations.unavailable }}</p>
 {% else %}
 <div class="sb-card"><p>{{ translations.snapshot_hint }}</p><p>{{ translations.unit_hint }}</p>

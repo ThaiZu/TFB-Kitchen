@@ -34,6 +34,6 @@
   "dashboard_shift_continue": "Kontynuuj",
   "dashboard_shift_selection_error": "Wybierz pracownika i podaj PIN.",
   "dashboard_shift_start_error": "Nie udało się zalogować pracownika.",
-  "nav_inventory": "Inwentaryzacja",
+  "nav_inventory": "Stan produktów",
   "inventory_subtitle": "Policz produkty i potwierdź rzeczywisty stan magazynu."
 }
