@@ -124,5 +124,28 @@ jobs:
             "$SSH_USER@$SSH_HOST" \
             'test -f /opt/tfbuddy/apps/test-tfbuddy/kitchen/vendor/autoload.php'
 
+      - name: Health check Kitchen TEST
+        run: |
+          URL="https://test.tfbuddy.com/kitchen/health.php"
+
+          for attempt in 1 2 3 4 5; do
+            STATUS=$(curl -sS \
+              --max-time 10 \
+              -o /dev/null \
+              -w '%{http_code}' \
+              "$URL") || STATUS=000
+
+            if [ "$STATUS" = "204" ]; then
+              echo "Kitchen TEST is healthy (HTTP 204)"
+              exit 0
+            fi
+
+            echo "Health check attempt $attempt: HTTP $STATUS"
+            sleep 3
+          done
+
+          echo "Kitchen TEST health check FAILED"
+          exit 1
+
       - name: Done
         run: echo "Kitchen TEST deployment completed successfully."
