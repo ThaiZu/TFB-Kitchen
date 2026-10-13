@@ -1,0 +1,125 @@
+
+name: Deploy Kitchen TEST
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-kitchen-test
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/master'
+    name: Kitchen TEST - Deploy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: curl, mbstring, pdo_mysql, zip, gd, bcmath
+          tools: composer:v2
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: |
+          composer install \
+            --no-dev \
+            --prefer-dist \
+            --no-interaction \
+            --no-progress \
+            --optimize-autoloader \
+            --no-scripts
+
+      - name: Verify Composer dependencies
+        run: |
+          composer check-platform-reqs --no-dev
+          test -f vendor/autoload.php
+          php -r "require 'vendor/autoload.php'; echo 'Autoload OK' . PHP_EOL;"
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Test SSH connection
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          ssh \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            "$SSH_USER@$SSH_HOST" \
+            'echo "SSH connection OK"'
+
+      - name: Deploy Kitchen code
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          rsync -avz \
+            --delay-updates \
+            --no-perms \
+            --no-owner \
+            --no-group \
+            --omit-dir-times \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='.idea/' \
+            --exclude='.env*' \
+            --exclude='*.key' \
+            --exclude='*.pem' \
+            --exclude='logs/' \
+            --exclude='/vendor/' \
+            -e 'ssh -o BatchMode=yes -o StrictHostKeyChecking=yes' \
+            ./ \
+            "$SSH_USER@$SSH_HOST:/opt/tfbuddy/apps/test-tfbuddy/kitchen/"
+
+      - name: Deploy Composer dependencies
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          rsync -avz \
+            --delete-delay \
+            --delay-updates \
+            --no-perms \
+            --no-owner \
+            --no-group \
+            --omit-dir-times \
+            -e 'ssh -o BatchMode=yes -o StrictHostKeyChecking=yes' \
+            vendor/ \
+            "$SSH_USER@$SSH_HOST:/opt/tfbuddy/apps/test-tfbuddy/kitchen/vendor/"
+
+      - name: Verify deployed autoloader
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          ssh \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            "$SSH_USER@$SSH_HOST" \
+            'test -f /opt/tfbuddy/apps/test-tfbuddy/kitchen/vendor/autoload.php'
+
+      - name: Done
+        run: echo "Kitchen TEST deployment completed successfully."
