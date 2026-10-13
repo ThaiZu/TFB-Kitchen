@@ -2,6 +2,9 @@
 name: Deploy Kitchen TEST
 
 on:
+  push:
+    branches:
+      - master
   workflow_dispatch:
 
 permissions:
