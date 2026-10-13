@@ -91,6 +91,7 @@ foreach ([
     ['GET','/inventory/carryover-data'], ['POST','/inventory/carryover'],
     ['GET','/production/today'],
     ['POST','/ajax/production/today/cycles/confirm'],
+    ['GET','/production/waste'], ['POST','/ajax/production/waste'],
     ['GET','/production/receive'],
 ] as [$method,$path]) {
     $expect($dispatcher->dispatch($method,$path)[0] === \FastRoute\Dispatcher::FOUND,'New route resolves '.$method.' '.$path);

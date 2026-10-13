@@ -1,6 +1,7 @@
 {
   "title": "Productie van vandaag",
   "subtitle": "Producten die nog gemaakt moeten worden volgens het opgeslagen plan.",
+  "report_waste": "Afval melden",
   "reload": "Vernieuwen",
   "unavailable": "Het productieplan van vandaag kon niet worden geladen. Probeer het straks opnieuw.",
   "no_plan": "Er is nog geen productieplan voor vandaag opgeslagen in Panel.",

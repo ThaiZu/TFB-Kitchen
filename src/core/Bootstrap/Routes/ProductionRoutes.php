@@ -6,6 +6,7 @@ return function (RouteCollector $r) {
 
     $controller = \App\Kitchen\app\Http\Controllers\Production\ProductionController::class;
     $todayController = \App\Kitchen\app\Http\Controllers\Production\TodayProductionController::class;
+    $wasteController = \App\Kitchen\app\Http\Controllers\Production\ProductionWasteController::class;
 
     // Compact execution list backed by the canonical Panel production plan.
     $r->addRoute('GET', '/production/today', [
@@ -19,6 +20,17 @@ return function (RouteCollector $r) {
     $r->addRoute('POST', '/ajax/production/today/cycles/target', [
         'controller' => $todayController,
         'method'     => 'adjustCycleTarget',
+    ]);
+
+    // A single, tablet-friendly waste declaration. It delegates to the same
+    // atomic inventory contract as the detailed inventory screen.
+    $r->addRoute('GET', '/production/waste', [
+        'controller' => $wasteController,
+        'method'     => 'index',
+    ]);
+    $r->addRoute('POST', '/ajax/production/waste', [
+        'controller' => $wasteController,
+        'method'     => 'create',
     ]);
 
     // Écran unique, quatre vues : matin, midi, après-midi, stock.

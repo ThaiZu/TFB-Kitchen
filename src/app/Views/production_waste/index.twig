@@ -1,0 +1,86 @@
+{% extends 'layouts/base.twig' %}
+
+{% block title %}{{ translations.title }}{% endblock %}
+
+{% block head %}
+<style>
+    .pw-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px}.pw-head h1{margin:0;font-size:1.45rem;font-weight:800}.pw-head p{margin:4px 0 0;color:var(--c-muted,#766f68);font-size:.9rem}.pw-back{min-height:44px;display:inline-flex;align-items:center;padding:8px 14px;border:1px solid var(--c-primary,#8d1d2c);border-radius:10px;color:var(--c-primary,#8d1d2c);font-weight:700;text-decoration:none;white-space:nowrap}.pw-card{padding:16px;margin-bottom:12px;background:#fff;border:1px solid var(--c-line,rgba(36,26,22,.1));border-radius:16px}.pw-form{display:grid;gap:14px}.pw-label{display:grid;gap:6px;color:#403831;font-weight:800}.pw-field{width:100%;min-height:48px;padding:10px 12px;border:1px solid #cfc5bb;border-radius:10px;background:#fff;color:#302923;font:inherit}.pw-field:focus{border-color:var(--c-primary,#8d1d2c);outline:2px solid color-mix(in srgb,var(--c-primary,#8d1d2c) 16%,transparent)}.pw-stock{margin:0;color:var(--c-muted,#766f68);font-size:.9rem}.pw-reasons{display:flex;flex-wrap:wrap;gap:8px}.pw-product-results{min-height:42px}.pw-reason{min-height:42px;padding:8px 12px;border:1px solid #cfc5bb;border-radius:999px;background:#fff;color:#403831;font:800 .9rem/1.15 inherit;cursor:pointer}.pw-reason.is-selected{border-color:var(--c-primary,#8d1d2c);background:var(--c-primary,#8d1d2c);color:#fff}.pw-product-hint{margin:0;color:var(--c-muted,#766f68);font-size:.86rem}.pw-submit{min-height:52px;border:0;border-radius:11px;background:var(--c-primary,#8d1d2c);color:#fff;font:800 1rem/1 inherit;cursor:pointer}.pw-submit:disabled,.pw-reason:disabled{cursor:not-allowed;opacity:.55}.pw-notice{margin:0 0 12px;padding:13px 14px;border-radius:11px;background:#fff6e9;color:#6d4811}.pw-notice--error{background:#fff1f1;color:#98262a}.pw-notice--success{background:#edf7ee;color:#236c35}.pw-help{margin:0;color:var(--c-muted,#766f68);font-size:.88rem}.pw-comment[hidden]{display:none}@media(max-width:500px){.pw-head h1{font-size:1.25rem}.pw-head{align-items:center}}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="pw-head">
+    <div><h1>{{ translations.title }}</h1><p>{{ translations.subtitle }}</p></div>
+    <a class="pw-back" href="{{ ROOT }}/production/today">{{ translations.back_to_plan }}</a>
+</section>
+
+{% if not available %}
+    <p class="pw-notice pw-notice--error" role="alert">{{ translations.unavailable }}</p>
+{% elseif not reasons_available %}
+    <p class="pw-notice pw-notice--error" role="alert">{{ translations.reasons_unavailable }}</p>
+{% else %}
+    {% if not has_shift %}<p class="pw-notice pw-notice--error">{{ translations.shift_required }}</p>{% endif %}
+    <p id="pwNotice" class="pw-notice" role="status" aria-live="polite" hidden></p>
+    <section class="pw-card">
+        <form id="pwForm" class="pw-form">
+            <label class="pw-label" for="pwProductSearch">{{ translations.product }}
+                <input id="pwProduct" type="hidden" required>
+                <input id="pwProductSearch" class="pw-field" type="search" autocomplete="off" placeholder="{{ translations.product_search }}" {% if not has_shift %}disabled{% endif %}>
+            </label>
+            <div id="pwProducts" class="pw-reasons pw-product-results" role="listbox" aria-label="{{ translations.product }}"></div>
+            <p id="pwStock" class="pw-stock"></p>
+            <label class="pw-label" for="pwQuantity">{{ translations.quantity }}
+                <input id="pwQuantity" class="pw-field" type="number" min="1" step="1" inputmode="numeric" required {% if not has_shift %}disabled{% endif %}>
+            </label>
+            <div class="pw-label">{{ translations.reason }}
+                <input id="pwReason" type="hidden" required>
+                <div id="pwReasons" class="pw-reasons" role="group" aria-label="{{ translations.reason }}"></div>
+            </div>
+            <label id="pwCommentWrap" class="pw-label pw-comment" for="pwComment" hidden>{{ translations.comment }}
+                <textarea id="pwComment" class="pw-field" rows="3" maxlength="500"></textarea>
+            </label>
+            <p class="pw-help">{{ translations.help }}</p>
+            <button id="pwSave" class="pw-submit" type="submit" {% if not has_shift %}disabled{% endif %}>{{ translations.save }}</button>
+        </form>
+    </section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if available and reasons_available %}
+<script>
+(() => {
+    const root={{ ROOT|json_encode|raw }}, messages={{ translations|json_encode(constant('JSON_HEX_TAG'))|raw }};
+    const screen={{ {lines: lines, reasons: reasons, has_shift: has_shift}|json_encode(constant('JSON_HEX_TAG'))|raw }};
+    const form=document.getElementById('pwForm'), product=document.getElementById('pwProduct'), productSearch=document.getElementById('pwProductSearch'), products=document.getElementById('pwProducts'), quantity=document.getElementById('pwQuantity'), reason=document.getElementById('pwReason'), reasons=document.getElementById('pwReasons'), comment=document.getElementById('pwComment'), commentWrap=document.getElementById('pwCommentWrap'), stock=document.getElementById('pwStock'), save=document.getElementById('pwSave'), notice=document.getElementById('pwNotice');
+    const newId=()=>window.crypto?.randomUUID ? crypto.randomUUID() : `production-waste-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    let busy=false, requestId=newId();
+    const reportable=line=>Boolean(Number(line.is_piece_based))&&!Boolean(Number(line.is_divisible))&&line.inventory_initialized_at!==null&&line.inventory_initialized_at!==''&&Number(line.in_stock)>0;
+    const fmt=value=>Number(value).toLocaleString(undefined,{maximumFractionDigits:4});
+    const selectedLine=()=>screen.lines.find(line=>String(line.id_product)===product.value);
+    const selectedReason=()=>screen.reasons.find(item=>item.key===reason.value);
+    const message=(text,type='')=>{notice.hidden=false;notice.textContent=text;notice.className=`pw-notice ${type ? `pw-notice--${type}` : ''}`;};
+    const newRequest=()=>{if(!busy) requestId=newId();};
+    function updateProduct(){const line=selectedLine();stock.textContent=line?messages.in_stock.replace('%s',fmt(line.in_stock)):'';}
+    function updateReason(){const required=Boolean(selectedReason()?.comment_required);commentWrap.hidden=!required;comment.required=required;if(!required)comment.value='';}
+    function renderProducts(){
+        const term=productSearch.value.trim().toLocaleLowerCase();products.replaceChildren();
+        if(term.length<2){const hint=document.createElement('p');hint.className='pw-product-hint';hint.textContent=messages.product_search_hint;products.append(hint);return;}
+        const matches=screen.lines.filter(reportable).filter(line=>String(line.name||'').toLocaleLowerCase().includes(term)).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''))).slice(0,20);
+        if(!matches.length){const hint=document.createElement('p');hint.className='pw-product-hint';hint.textContent=messages.product_not_found;products.append(hint);return;}
+        matches.forEach(line=>{const button=document.createElement('button');button.type='button';button.className='pw-reason';button.textContent=`${line.name} · ${fmt(line.in_stock)}`;const selected=String(line.id_product)===product.value;button.classList.toggle('is-selected',selected);button.setAttribute('aria-selected',selected?'true':'false');button.addEventListener('click',()=>{product.value=String(line.id_product);productSearch.value=String(line.name||'');newRequest();updateProduct();renderProducts();});products.append(button);});
+    }
+    function fill(){
+        screen.reasons.forEach(item=>{const button=document.createElement('button');button.type='button';button.className='pw-reason';button.textContent=item.label;button.dataset.reason=item.key;button.setAttribute('aria-pressed','false');button.disabled=!screen.has_shift;button.addEventListener('click',()=>{reason.value=item.key;reasons.querySelectorAll('[data-reason]').forEach(candidate=>{const selected=candidate.dataset.reason===item.key;candidate.classList.toggle('is-selected',selected);candidate.setAttribute('aria-pressed',selected?'true':'false');});newRequest();updateReason();});reasons.append(button);});
+    }
+    productSearch.addEventListener('input',()=>{product.value='';newRequest();updateProduct();renderProducts();});quantity.addEventListener('input',newRequest);comment.addEventListener('input',newRequest);
+    form.addEventListener('submit',async event=>{event.preventDefault();if(busy)return;const line=selectedLine(), selected=selectedReason(), amount=String(quantity.value||''), note=comment.value.trim();if(!line||!selected||!/^[1-9]\d{0,7}$/.test(amount)||Number(amount)>Number(line.in_stock)||(selected.comment_required&&!note)){message(messages.invalid,'error');return;}
+        busy=true;save.disabled=true;const original=save.textContent;save.textContent=messages.saving;
+        const payload={idempotency_key:requestId,lines:[{id_product:Number(line.id_product),quantity:amount,reason:selected.key,expected_in_stock:String(line.in_stock),expected_movement_id:String(line.last_movement_id)}]};if(note)payload.lines[0].comment=note;
+        try{const response=await fetch(root+'/ajax/production/waste',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},body:JSON.stringify(payload)});const result=await response.json();if(!response.ok||result.success!==true){message(messages[result.reason]||messages.failed,'error');if(result.reason==='conflict')window.setTimeout(()=>window.location.reload(),700);return;}message(messages.saved,'success');window.setTimeout(()=>window.location.reload(),450);}catch(_){message(messages.network,'error');}finally{busy=false;save.disabled=!screen.has_shift;save.textContent=original;}
+    });
+    fill();renderProducts();updateProduct();updateReason();
+})();
+</script>
+{% endif %}
+{% endblock %}

@@ -53,7 +53,10 @@
         <h1>{{ translations.title }}</h1>
         <p>{{ translations.subtitle }}</p>
     </div>
-    <a class="pt-reload" href="{{ ROOT }}/production/today">{{ translations.reload }}</a>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end">
+        <a class="pt-reload" href="{{ ROOT }}/production/waste">{{ translations.report_waste }}</a>
+        <a class="pt-reload" href="{{ ROOT }}/production/today">{{ translations.reload }}</a>
+    </div>
 </section>
 
 {% if not available %}

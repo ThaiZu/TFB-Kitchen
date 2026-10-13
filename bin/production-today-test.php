@@ -90,7 +90,7 @@ $check($invalidTarget === ['success'=>false,'reason'=>'invalid_input','code'=>42
 
 foreach (['pl', 'en', 'fr', 'nl', 'it'] as $language) {
     $translations = json_decode(file_get_contents(__DIR__ . '/../src/core/I18n/translations/page/' . $language . '/production_today.json'), true, 512, JSON_THROW_ON_ERROR);
-    foreach (['title', 'reload', 'unavailable', 'no_plan', 'empty', 'starts_at', 'product', 'to_make', 'uncategorized', 'total', 'confirm_cycle', 'confirm_question', 'confirming', 'confirmed', 'confirm_conflict', 'confirm_failed', 'shift_required', 'adjust_help', 'edit_cycle', 'save_cycle', 'cancel_edit', 'increase', 'decrease', 'saving_target', 'target_saved', 'target_failed', 'target_conflict'] as $key) {
+    foreach (['title', 'reload', 'report_waste', 'unavailable', 'no_plan', 'empty', 'starts_at', 'product', 'to_make', 'uncategorized', 'total', 'confirm_cycle', 'confirm_question', 'confirming', 'confirmed', 'confirm_conflict', 'confirm_failed', 'shift_required', 'adjust_help', 'edit_cycle', 'save_cycle', 'cancel_edit', 'increase', 'decrease', 'saving_target', 'target_saved', 'target_failed', 'target_conflict'] as $key) {
         $check(is_string($translations[$key] ?? null) && $translations[$key] !== '', 'Translation ' . $language . ': ' . $key);
     }
 }
