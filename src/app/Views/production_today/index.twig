@@ -10,10 +10,11 @@
     .pt-reload { min-height:44px; display:inline-flex; align-items:center; padding:8px 14px; border:1px solid var(--c-primary,#8d1d2c); border-radius:10px; color:var(--c-primary,#8d1d2c); font-weight:700; text-decoration:none; white-space:nowrap; }
     .pt-card { margin-bottom:12px; overflow:hidden; background:#fff; border:1px solid var(--c-line,rgba(36,26,22,.1)); border-radius:16px; }
     .pt-table-wrap { overflow-x:auto; }
-    .pt-table { width:100%; min-width:560px; border-collapse:collapse; table-layout:fixed; }
+    .pt-table { width:100%; min-width:640px; border-collapse:collapse; table-layout:fixed; }
     .pt-table th,.pt-table td { padding:13px 12px; border-bottom:1px solid #eee7e0; }
     .pt-table thead th { color:var(--c-muted,#766f68); font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; text-align:center; vertical-align:bottom; }
-    .pt-table .pt-product-heading,.pt-table .pt-product { width:42%; text-align:left; }
+    .pt-table .pt-product-heading,.pt-table .pt-product { width:34%; text-align:left; }
+    .pt-table .pt-stock-heading,.pt-table .pt-stock { width:82px; text-align:center; font-variant-numeric:tabular-nums; }
     .pt-table .pt-cycle-heading { min-width:110px; }
     .pt-table .pt-total-heading,.pt-table .pt-total { width:96px; border-left:2px solid #d9d0c7; text-align:center; }
     .pt-table .pt-total-heading { color:#37302c; font-weight:800; }
@@ -43,7 +44,7 @@
     .pt-confirm-feedback { display:none; margin:0 0 12px; padding:12px 14px; border-radius:10px; background:#edf7ee; color:#236c35; font-weight:700; }
     .pt-confirm-feedback.is-visible { display:block; }
     .pt-confirm-feedback.is-error { background:#fff1f1; color:#9a2626; }
-    @media (max-width:500px) { .pt-head h1 { font-size:1.25rem; } .pt-table th,.pt-table td { padding-inline:10px; } .pt-table { min-width:500px; } .pt-table .pt-product-heading,.pt-table .pt-product { width:38%; } .pt-table .pt-cycle-heading { min-width:92px; } }
+    @media (max-width:500px) { .pt-head h1 { font-size:1.25rem; } .pt-table th,.pt-table td { padding-inline:10px; } .pt-table { min-width:580px; } .pt-table .pt-product-heading,.pt-table .pt-product { width:30%; } .pt-table .pt-cycle-heading { min-width:92px; } }
 </style>
 {% endblock %}
 
@@ -75,6 +76,7 @@
                 <thead>
                     <tr>
                         <th class="pt-product-heading">{{ translations.product }}</th>
+                        <th class="pt-stock-heading">{{ translations.current_stock }}</th>
                         {% for cycle in cycles %}
                             <th class="pt-cycle-heading {{ cycle.is_current ? 'pt-current-cycle' : '' }}">
                                 <span>{{ cycle.name }}</span>
@@ -105,10 +107,11 @@
                 </thead>
                 <tbody>
                     {% for category in categories %}
-                        <tr class="pt-category"><th colspan="{{ cycles|length + 2 }}">{{ category.name ?: translations.uncategorized }}</th></tr>
+                        <tr class="pt-category"><th colspan="{{ cycles|length + 3 }}">{{ category.name ?: translations.uncategorized }}</th></tr>
                         {% for line in category.lines %}
                             <tr>
                                 <td class="pt-product"><strong>{{ line.name }}</strong></td>
+                                <td class="pt-stock">{% if line.current_stock is not null %}{{ line.current_stock + 0 }}{% else %}—{% endif %}</td>
                                 {% for cycle in cycles %}
                                     {% set quantity = line.quantities[cycle.key]|default(null) %}
                                     <td class="pt-cycle-cell {{ cycle.is_current ? 'pt-current-cycle' : '' }}">

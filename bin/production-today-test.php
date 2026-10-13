@@ -40,6 +40,7 @@ $api = new class extends ApiClient {
                     'name' => 'Croissant',
                     'quantity' => '12.0000',
                     'target_quantity' => '14.0000',
+                    'current_stock' => '0.0000',
                     'id_category' => 4,
                     'category_name' => 'Viennoiseries',
                 ]],
@@ -63,6 +64,7 @@ $api = new class extends ApiClient {
                     'name' => 'Baguette',
                     'quantity' => '8.0000',
                     'target_quantity' => '8.0000',
+                    'current_stock' => '18.0000',
                     'id_category' => 2,
                     'category_name' => 'Pains',
                 ]],
@@ -85,12 +87,13 @@ $check($view['categories'][1]['lines'][0]['quantities'] === ['c1' => '12.0000', 
 $check($view['categories'][1]['lines'][0]['total_quantity'] === '16.0000', 'Calculates the remaining total across all cycles');
 $check($view['categories'][1]['lines'][0]['target_quantities'] === ['c1' => '14.0000', 'c2' => '4.0000'], 'Keeps an adjusted cycle target separate from the remaining quantity');
 $check($view['categories'][1]['lines'][0]['cycle_lines'] === ['c1' => '9001', 'c2' => '9002'], 'Keeps opaque cycle-line IDs for the target-save contract');
+$check($view['categories'][1]['lines'][0]['current_stock'] === '0.0000', 'Keeps a meaningful zero current stock for a planned product');
 $invalidTarget=(new TodayProductionService(new TodayProductionRepository($api)))->adjustCycleTarget([]);
 $check($invalidTarget === ['success'=>false,'reason'=>'invalid_input','code'=>422], 'Rejects malformed target saves without turning a recoverable validation error into a server error');
 
 foreach (['pl', 'en', 'fr', 'nl', 'it'] as $language) {
     $translations = json_decode(file_get_contents(__DIR__ . '/../src/core/I18n/translations/page/' . $language . '/production_today.json'), true, 512, JSON_THROW_ON_ERROR);
-    foreach (['title', 'reload', 'report_waste', 'unavailable', 'no_plan', 'empty', 'starts_at', 'product', 'to_make', 'uncategorized', 'total', 'confirm_cycle', 'confirm_question', 'confirming', 'confirmed', 'confirm_conflict', 'confirm_failed', 'shift_required', 'adjust_help', 'edit_cycle', 'save_cycle', 'cancel_edit', 'increase', 'decrease', 'saving_target', 'target_saved', 'target_failed', 'target_conflict'] as $key) {
+    foreach (['title', 'reload', 'report_waste', 'unavailable', 'no_plan', 'empty', 'starts_at', 'product', 'current_stock', 'to_make', 'uncategorized', 'total', 'confirm_cycle', 'confirm_question', 'confirming', 'confirmed', 'confirm_conflict', 'confirm_failed', 'shift_required', 'adjust_help', 'edit_cycle', 'save_cycle', 'cancel_edit', 'increase', 'decrease', 'saving_target', 'target_saved', 'target_failed', 'target_conflict'] as $key) {
         $check(is_string($translations[$key] ?? null) && $translations[$key] !== '', 'Translation ' . $language . ': ' . $key);
     }
 }

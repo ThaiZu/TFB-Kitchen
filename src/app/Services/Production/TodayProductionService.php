@@ -161,6 +161,9 @@ final class TodayProductionService
                         'quantities' => [],
                         'target_quantities' => [],
                         'cycle_lines' => [],
+                        'current_stock' => array_key_exists('current_stock', $line) && $line['current_stock'] !== null
+                            ? (string) $line['current_stock']
+                            : null,
                         'total_quantity' => '0.0000',
                     ];
                 }

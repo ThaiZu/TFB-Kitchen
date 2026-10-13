@@ -8,6 +8,7 @@
   "empty": "Wszystkie pozycje z dzisiejszego planu zostały już wykonane.",
   "starts_at": "Start",
   "product": "Produkt",
+  "current_stock": "Stan bieżący",
   "to_make": "Do wykonania",
   "uncategorized": "Pozostałe produkty",
   "total": "Razem",

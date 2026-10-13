@@ -8,6 +8,7 @@
   "empty": "Toutes les lignes du plan du jour ont déjà été réalisées.",
   "starts_at": "Début",
   "product": "Produit",
+  "current_stock": "Stock actuel",
   "to_make": "À préparer",
   "uncategorized": "Autres produits",
   "total": "Total",

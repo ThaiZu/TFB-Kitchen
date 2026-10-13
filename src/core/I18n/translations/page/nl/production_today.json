@@ -8,6 +8,7 @@
   "empty": "Alle regels uit het plan van vandaag zijn al uitgevoerd.",
   "starts_at": "Start",
   "product": "Product",
+  "current_stock": "Huidige voorraad",
   "to_make": "Te maken",
   "uncategorized": "Andere producten",
   "total": "Totaal",

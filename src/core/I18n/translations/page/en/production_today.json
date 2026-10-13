@@ -8,6 +8,7 @@
   "empty": "All items from today's plan have already been completed.",
   "starts_at": "Starts",
   "product": "Product",
+  "current_stock": "Current stock",
   "to_make": "To make",
   "uncategorized": "Other products",
   "total": "Total",
