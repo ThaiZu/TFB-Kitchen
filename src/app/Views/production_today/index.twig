@@ -1,0 +1,184 @@
+{% extends 'layouts/base.twig' %}
+
+{% block title %}{{ translations.title }}{% endblock %}
+
+{% block head %}
+<style>
+    .pt-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:16px; }
+    .pt-head h1 { margin:0; font-size:1.45rem; font-weight:800; }
+    .pt-head p { margin:4px 0 0; color:var(--c-muted,#766f68); font-size:.9rem; }
+    .pt-reload { min-height:44px; display:inline-flex; align-items:center; padding:8px 14px; border:1px solid var(--c-primary,#8d1d2c); border-radius:10px; color:var(--c-primary,#8d1d2c); font-weight:700; text-decoration:none; white-space:nowrap; }
+    .pt-card { margin-bottom:12px; overflow:hidden; background:#fff; border:1px solid var(--c-line,rgba(36,26,22,.1)); border-radius:16px; }
+    .pt-table-wrap { overflow-x:auto; }
+    .pt-table { width:100%; min-width:560px; border-collapse:collapse; table-layout:fixed; }
+    .pt-table th,.pt-table td { padding:13px 12px; border-bottom:1px solid #eee7e0; }
+    .pt-table thead th { color:var(--c-muted,#766f68); font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; text-align:center; vertical-align:bottom; }
+    .pt-table .pt-product-heading,.pt-table .pt-product { width:42%; text-align:left; }
+    .pt-table .pt-cycle-heading { min-width:110px; }
+    .pt-table .pt-total-heading,.pt-table .pt-total { width:96px; border-left:2px solid #d9d0c7; text-align:center; }
+    .pt-table .pt-total-heading { color:#37302c; font-weight:800; }
+    .pt-cycle-heading span,.pt-cycle-heading small { display:block; }
+    .pt-cycle-heading span { color:#37302c; font-size:.8rem; font-weight:800; text-transform:none; letter-spacing:0; }
+    .pt-cycle-heading small { margin-top:3px; font-size:.7rem; font-weight:700; }
+    .pt-table .pt-category th { padding:9px 12px; border-top:1px solid #d9d0c7; border-bottom:1px solid #d9d0c7; background:#f4efe8; color:#62594f; font-size:.72rem; font-weight:800; letter-spacing:.06em; text-align:left; text-transform:uppercase; }
+    .pt-table .pt-cycle-cell { text-align:center; font-variant-numeric:tabular-nums; }
+    .pt-table .pt-current-cycle { border-inline:3px solid var(--c-primary,#8d1d2c); background:#fff7f7; }
+    .pt-table thead .pt-current-cycle { border-top:3px solid var(--c-primary,#8d1d2c); color:var(--c-primary,#8d1d2c); }
+    .pt-table tbody tr:last-child td { border-bottom:0; }
+    .pt-cycle-confirm { display:block; width:100%; min-height:38px; margin-top:8px; padding:6px 8px; border:0; border-radius:8px; background:var(--c-primary,#8d1d2c); color:#fff; font:700 .72rem/1.15 inherit; cursor:pointer; }
+    .pt-cycle-confirm:disabled { cursor:wait; opacity:.65; }
+    .pt-cycle-edit,.pt-cycle-save,.pt-cycle-cancel { display:block; width:100%; min-height:34px; margin-top:7px; padding:5px 6px; border-radius:8px; font:700 .7rem/1.15 inherit; cursor:pointer; }
+    .pt-cycle-edit { border:1px solid var(--c-primary,#8d1d2c); background:#fff; color:var(--c-primary,#8d1d2c); }
+    .pt-cycle-save { border:0; background:#3e7a4a; color:#fff; }
+    .pt-cycle-cancel { border:0; background:transparent; color:#685f57; text-decoration:underline; }
+    .pt-cycle-save[hidden],.pt-cycle-cancel[hidden],.pt-target-editor[hidden] { display:none; }
+    .pt-target-editor { display:flex; align-items:center; justify-content:center; gap:3px; }
+    .pt-target-editor button { width:28px; height:34px; border:1px solid #cfc5bb; border-radius:7px; background:#fff; color:#4b423a; font-size:1.1rem; font-weight:800; }
+    .pt-target-editor input { width:52px; min-height:34px; border:1px solid #cfc5bb; border-radius:7px; text-align:center; font:800 1rem/1 inherit; color:#352e29; }
+    .pt-adjust-help { margin:0 0 12px; padding:11px 13px; border-left:4px solid var(--c-primary,#8d1d2c); background:#f9f4f0; color:#62594f; font-size:.86rem; }
+    .pt-quantity { font-size:1.08rem; font-weight:800; color:var(--c-primary,#8d1d2c); }
+    .pt-empty-quantity { color:#aaa198; font-weight:700; }
+    .pt-notice { margin:0; padding:16px; border-radius:14px; background:#fff6e9; color:#6d4811; }
+    .pt-notice--plain { background:#f4efe8; color:var(--c-muted,#766f68); }
+    .pt-confirm-feedback { display:none; margin:0 0 12px; padding:12px 14px; border-radius:10px; background:#edf7ee; color:#236c35; font-weight:700; }
+    .pt-confirm-feedback.is-visible { display:block; }
+    .pt-confirm-feedback.is-error { background:#fff1f1; color:#9a2626; }
+    @media (max-width:500px) { .pt-head h1 { font-size:1.25rem; } .pt-table th,.pt-table td { padding-inline:10px; } .pt-table { min-width:500px; } .pt-table .pt-product-heading,.pt-table .pt-product { width:38%; } .pt-table .pt-cycle-heading { min-width:92px; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="pt-head">
+    <div>
+        <h1>{{ translations.title }}</h1>
+        <p>{{ translations.subtitle }}</p>
+    </div>
+    <a class="pt-reload" href="{{ ROOT }}/production/today">{{ translations.reload }}</a>
+</section>
+
+{% if not available %}
+    <p class="pt-notice" role="alert">{{ translations.unavailable }}</p>
+{% elseif not exists %}
+    <p class="pt-notice pt-notice--plain">{{ translations.no_plan }}</p>
+{% elseif cycles is empty %}
+    <p class="pt-notice pt-notice--plain">{{ translations.empty }}</p>
+{% else %}
+    {% if not can_confirm %}<p class="pt-notice">{{ translations.shift_required }}</p>{% endif %}
+    <p class="pt-adjust-help">{{ translations.adjust_help }}</p>
+    <p class="pt-confirm-feedback" data-production-confirm-feedback role="status" aria-live="polite"></p>
+    <section class="pt-card">
+        <div class="pt-table-wrap">
+            <table class="pt-table">
+                <thead>
+                    <tr>
+                        <th class="pt-product-heading">{{ translations.product }}</th>
+                        {% for cycle in cycles %}
+                            <th class="pt-cycle-heading {{ cycle.is_current ? 'pt-current-cycle' : '' }}">
+                                <span>{{ cycle.name }}</span>
+                                <small>{{ cycle.time }}{% if cycle.end_time %}–{{ cycle.end_time }}{% endif %}</small>
+                                {% if can_adjust and id_plan and cycle.id_cycle %}
+                                    <button class="pt-cycle-edit" type="button" data-cycle-edit data-cycle="{{ cycle.id_cycle }}">{{ translations.edit_cycle }}</button>
+                                    <form method="post" action="{{ ROOT }}/ajax/production/today/cycles/target" data-production-cycle-target data-cycle="{{ cycle.id_cycle }}" hidden
+                                        data-saving="{{ translations.saving_target }}" data-success="{{ translations.target_saved }}" data-failed="{{ translations.target_failed }}" data-conflict="{{ translations.target_conflict }}">
+                                        <input type="hidden" name="date" value="{{ date }}"><input type="hidden" name="id_plan" value="{{ id_plan }}"><input type="hidden" name="id_cycle" value="{{ cycle.id_cycle }}">
+                                        <button class="pt-cycle-save" type="submit">{{ translations.save_cycle }}</button>
+                                        <button class="pt-cycle-cancel" type="button" data-cycle-cancel data-cycle="{{ cycle.id_cycle }}">{{ translations.cancel_edit }}</button>
+                                    </form>
+                                {% endif %}
+                                {% if can_confirm and id_plan and cycle.id_cycle %}
+                                    <form method="post" action="{{ ROOT }}/ajax/production/today/cycles/confirm" data-production-cycle-confirm
+                                        data-question="{{ translations.confirm_question }}" data-confirming="{{ translations.confirming }}"
+                                        data-success="{{ translations.confirmed }}" data-conflict="{{ translations.confirm_conflict }}" data-failed="{{ translations.confirm_failed }}">
+                                        <input type="hidden" name="date" value="{{ date }}">
+                                        <input type="hidden" name="id_plan" value="{{ id_plan }}">
+                                        <input type="hidden" name="id_cycle" value="{{ cycle.id_cycle }}">
+                                        <button class="pt-cycle-confirm" type="submit">{{ translations.confirm_cycle }}</button>
+                                    </form>
+                                {% endif %}
+                            </th>
+                        {% endfor %}
+                        <th class="pt-total-heading">{{ translations.total }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for category in categories %}
+                        <tr class="pt-category"><th colspan="{{ cycles|length + 2 }}">{{ category.name ?: translations.uncategorized }}</th></tr>
+                        {% for line in category.lines %}
+                            <tr>
+                                <td class="pt-product"><strong>{{ line.name }}</strong></td>
+                                {% for cycle in cycles %}
+                                    {% set quantity = line.quantities[cycle.key]|default(null) %}
+                                    <td class="pt-cycle-cell {{ cycle.is_current ? 'pt-current-cycle' : '' }}">
+                                        {% if quantity is not null %}
+                                            <span class="pt-quantity">{{ quantity + 0 }}</span>
+                                            {% set target = line.target_quantities[cycle.key]|default(quantity) %}
+                                            {% set cycle_line = line.cycle_lines[cycle.key]|default('') %}
+                                            {% if can_adjust and cycle_line %}
+                                                <span class="pt-target-editor" data-target-editor data-cycle="{{ cycle.id_cycle }}" hidden>
+                                                    <button type="button" data-target-step="-1" aria-label="{{ translations.decrease }}">−</button>
+                                                    <input type="number" min="0" step="1" inputmode="numeric" value="{{ target + 0 }}" data-target-input data-cycle="{{ cycle.id_cycle }}" data-cycle-line="{{ cycle_line }}" data-product="{{ line.id_product }}">
+                                                    <button type="button" data-target-step="1" aria-label="{{ translations.increase }}">+</button>
+                                                </span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="pt-empty-quantity">—</span>
+                                        {% endif %}
+                                    </td>
+                                {% endfor %}
+                                <td class="pt-total"><span class="pt-quantity">{{ line.total_quantity + 0 }}</span></td>
+                            </tr>
+                        {% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(() => {
+    const feedback=document.querySelector('[data-production-confirm-feedback]');
+    const show=(message,error=false) => { if (!feedback) return; feedback.textContent=message; feedback.classList.add('is-visible'); feedback.classList.toggle('is-error',error); };
+    const requestId=() => 'kitchen-cycle-'+(window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    const requestIdFor=form => form.dataset.requestId || (form.dataset.requestId=requestId());
+    const setEditing=(cycle,editing) => {
+        document.querySelectorAll(`[data-target-editor][data-cycle="${cycle}"]`).forEach(node => node.hidden=!editing);
+        document.querySelectorAll(`[data-production-cycle-target][data-cycle="${cycle}"]`).forEach(node => node.hidden=!editing);
+        document.querySelectorAll(`[data-cycle-edit][data-cycle="${cycle}"]`).forEach(node => node.hidden=editing);
+    };
+    document.querySelectorAll('[data-cycle-edit]').forEach(button => button.addEventListener('click', () => setEditing(button.dataset.cycle,true)));
+    document.querySelectorAll('[data-cycle-cancel]').forEach(button => button.addEventListener('click', () => { setEditing(button.dataset.cycle,false); window.location.reload(); }));
+    document.querySelectorAll('[data-target-step]').forEach(button => button.addEventListener('click', () => {
+        const input=button.parentElement.querySelector('[data-target-input]');
+        input.value=Math.max(0,(parseInt(input.value,10)||0)+parseInt(button.dataset.targetStep,10));
+    }));
+    document.querySelectorAll('[data-production-cycle-target]').forEach(form => form.addEventListener('submit', async event => {
+        event.preventDefault(); const cycle=form.dataset.cycle; const button=form.querySelector('[type="submit"]'); const original=button.textContent; button.disabled=true; button.textContent=form.dataset.saving || original;
+        const value=name => form.querySelector(`[name="${name}"]`)?.value || '';
+        const lines=[...document.querySelectorAll(`[data-target-input][data-cycle="${cycle}"]`)].map(input => ({id_cycle_line:input.dataset.cycleLine,id_product:Number(input.dataset.product),target_quantity:`${Math.max(0,parseInt(input.value,10)||0)}.0000`}));
+        try {
+            const response=await fetch(form.action,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},body:JSON.stringify({date:value('date'),id_plan:value('id_plan'),id_cycle:value('id_cycle'),request_id:requestIdFor(form),lines})});
+            const result=await response.json();
+            if (!response.ok || result.success!==true) { show(result.reason==='conflict' ? form.dataset.conflict : form.dataset.failed,true); button.disabled=false; button.textContent=original; return; }
+            show(form.dataset.success); window.setTimeout(() => window.location.reload(),350);
+        } catch (_) { show(form.dataset.failed,true); button.disabled=false; button.textContent=original; }
+    }));
+    document.querySelectorAll('[data-production-cycle-confirm]').forEach(form => form.addEventListener('submit', async event => {
+        event.preventDefault();
+        if (!window.confirm(form.dataset.question || 'Confirm?')) return;
+        const button=form.querySelector('button'); button.disabled=true; const original=button.textContent; button.textContent=form.dataset.confirming || original;
+        const value=name => form.querySelector(`[name="${name}"]`)?.value || '';
+        try {
+            const response=await fetch(form.action,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},body:JSON.stringify({date:value('date'),id_plan:value('id_plan'),id_cycle:value('id_cycle'),request_id:requestIdFor(form)})});
+            const result=await response.json();
+            if (!response.ok || result.success!==true) {
+                show(result.reason==='conflict' ? form.dataset.conflict : form.dataset.failed,true); button.disabled=false; button.textContent=original; return;
+            }
+            show(form.dataset.success); window.setTimeout(() => window.location.reload(),500);
+        } catch (_) { show(form.dataset.failed,true); button.disabled=false; button.textContent=original; }
+    }));
+})();
+</script>
+{% endblock %}
