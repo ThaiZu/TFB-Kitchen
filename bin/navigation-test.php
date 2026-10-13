@@ -41,7 +41,7 @@ foreach (['pl', 'en', 'fr', 'nl', 'it'] as $language) {
             $themeHash = substr(hash_file('sha256', __DIR__ . '/../public/assets/css/atelier-theme.css'), 0, 16);
             $expect($xpath->query('//link[@href="' . ROOT . '/assets/css/atelier-theme.css?v=' . $themeHash . '"]')->length === 1, 'Stylesheet URL tracks its content');
             foreach (["//*[@id='appNavSheet']", "//nav[contains(@class,'app-tabbar-bar')]"] as $scope) {
-                foreach (['dashboard', 'production', 'production-list', 'inventory', 'knowledge/products', 'checklists', 'orders', 'knowledge'] as $destination) {
+                foreach (['dashboard', 'production/today', 'production-list', 'inventory', 'knowledge/products', 'checklists', 'orders', 'knowledge'] as $destination) {
                     $links = $xpath->query($scope . '//a[@href="' . ROOT . '/' . $destination . '"]');
                     $expect($links->length === 1, "$language / $mode / $path missing or duplicate $destination in $scope");
                     $expect(trim($links->item(0)->textContent) !== '', "Translated label for $destination");
@@ -50,6 +50,36 @@ foreach (['pl', 'en', 'fr', 'nl', 'it'] as $language) {
             if ($language === 'pl' && $mode === 'production' && $path === 'dashboard') {
                 file_put_contents(sys_get_temp_dir() . '/kitchen-runtime-navigation.html', $html);
             }
+
+            $_GET['url'] = 'production/today';
+            ob_start();
+            $container->get(Controller::class)->view('production_today/index', [
+                'available' => true,
+                'exists' => true,
+                'date' => '2026-10-13',
+                'id_plan' => '1',
+                'can_confirm' => true,
+                'cycles' => [[
+                    'id_cycle' => '1',
+                    'key' => 'c1',
+                    'name' => 'Morning',
+                    'time' => '06:00',
+                    'end_time' => '10:00',
+                    'is_current' => true,
+                ]],
+                'categories' => [[
+                    'id_category' => 1,
+                    'name' => 'Viennoiseries',
+                    'lines' => [[
+                        'id_product' => 1,
+                        'name' => 'Croissant',
+                        'quantities' => ['c1' => '12.0000'],
+                        'total_quantity' => '12.0000',
+                    ]],
+                ]],
+            ]);
+            $todayHtml = ob_get_clean();
+            $expect(str_contains($todayHtml, 'Croissant') && str_contains($todayHtml, '>12<') && str_contains($todayHtml, 'pt-current-cycle') && str_contains($todayHtml, 'data-production-cycle-confirm'), 'Today production view renders grouped active cycle confirmation: ' . $language);
         }
     }
 }
@@ -59,6 +89,8 @@ foreach ([
     ['GET','/inventory'], ['POST','/inventory/count'],
     ['GET','/inventory/waste-data'], ['POST','/inventory/waste'],
     ['GET','/inventory/carryover-data'], ['POST','/inventory/carryover'],
+    ['GET','/production/today'],
+    ['POST','/ajax/production/today/cycles/confirm'],
     ['GET','/production/receive'],
 ] as [$method,$path]) {
     $expect($dispatcher->dispatch($method,$path)[0] === \FastRoute\Dispatcher::FOUND,'New route resolves '.$method.' '.$path);

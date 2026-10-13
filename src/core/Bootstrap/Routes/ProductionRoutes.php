@@ -5,6 +5,21 @@ use FastRoute\RouteCollector;
 return function (RouteCollector $r) {
 
     $controller = \App\Kitchen\app\Http\Controllers\Production\ProductionController::class;
+    $todayController = \App\Kitchen\app\Http\Controllers\Production\TodayProductionController::class;
+
+    // Compact execution list backed by the canonical Panel production plan.
+    $r->addRoute('GET', '/production/today', [
+        'controller' => $todayController,
+        'method'     => 'index',
+    ]);
+    $r->addRoute('POST', '/ajax/production/today/cycles/confirm', [
+        'controller' => $todayController,
+        'method'     => 'confirmCycle',
+    ]);
+    $r->addRoute('POST', '/ajax/production/today/cycles/target', [
+        'controller' => $todayController,
+        'method'     => 'adjustCycleTarget',
+    ]);
 
     // Écran unique, quatre vues : matin, midi, après-midi, stock.
     $r->addRoute('GET', '/production', [
