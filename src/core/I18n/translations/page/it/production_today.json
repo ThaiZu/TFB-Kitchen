@@ -1,6 +1,7 @@
 {
   "title": "Produzione di oggi",
   "subtitle": "Prodotti ancora da preparare secondo il piano salvato.",
+  "report_waste": "Segnala scarto",
   "reload": "Aggiorna",
   "unavailable": "Non è stato possibile caricare il piano di produzione di oggi. Riprova tra poco.",
   "no_plan": "Non è ancora stato salvato alcun piano di produzione per oggi in Panel.",
