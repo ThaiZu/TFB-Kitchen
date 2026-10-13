@@ -1,0 +1,22 @@
+{
+  "title": "Aggiunta manuale di scorte",
+  "subtitle": "Aggiungi temporaneamente prodotti alle scorte per permettere alle vendite di continuare senza interruzioni.",
+  "back_to_plan": "Produzione di oggi",
+  "unavailable": "Impossibile caricare le scorte dei prodotti. Riprova.",
+  "shift_required": "Avvia il turno per aggiungere manualmente le scorte.",
+  "product": "Prodotto",
+  "product_search": "Digita almeno 2 lettere del prodotto",
+  "product_search_hint": "Digita almeno 2 lettere per cercare un prodotto.",
+  "product_not_found": "Nessun prodotto supportato trovato.",
+  "current_stock": "Scorta attuale: %s pz.",
+  "stock_after": "Scorta dopo l’aggiunta: %s pz.",
+  "quantity": "Quantità da aggiungere",
+  "help": "È una protezione temporanea. Il salvataggio aumenta la scorta e lascia una traccia della correzione manuale; non conferma la produzione.",
+  "save": "Aggiungi scorte",
+  "saving": "Salvataggio…",
+  "saved": "Le scorte sono state aumentate. La vista verrà aggiornata.",
+  "invalid": "Scegli un prodotto e inserisci un numero intero positivo.",
+  "conflict": "La scorta del prodotto è cambiata nel frattempo. La lista verrà aggiornata.",
+  "failed": "Impossibile aggiungere le scorte. Riprova.",
+  "network": "Il risultato del salvataggio non è stato confermato. Riprova senza modificare i dati."
+}

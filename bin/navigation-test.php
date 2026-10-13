@@ -84,6 +84,7 @@ foreach (['pl', 'en', 'fr', 'nl', 'it'] as $language) {
     }
 }
 $expect($container->get(\App\Kitchen\app\Http\Controllers\Inventory\InventoryController::class) instanceof \App\Kitchen\app\Http\Controllers\Inventory\InventoryController, 'Inventory controller resolves in production DI');
+$expect($container->get(\App\Kitchen\app\Http\Controllers\Production\ProductionStockAdjustmentController::class) instanceof \App\Kitchen\app\Http\Controllers\Production\ProductionStockAdjustmentController, 'Production stock-adjustment controller resolves in production DI');
 $dispatcher=\FastRoute\simpleDispatcher(require __DIR__.'/../src/core/Bootstrap/routes.php');
 foreach ([
     ['GET','/inventory'], ['POST','/inventory/count'],
@@ -92,6 +93,7 @@ foreach ([
     ['GET','/production/today'],
     ['POST','/ajax/production/today/cycles/confirm'],
     ['GET','/production/waste'], ['POST','/ajax/production/waste'],
+    ['GET','/production/stock-correction'], ['POST','/ajax/production/stock-correction'],
     ['GET','/production/receive'],
 ] as [$method,$path]) {
     $expect($dispatcher->dispatch($method,$path)[0] === \FastRoute\Dispatcher::FOUND,'New route resolves '.$method.' '.$path);

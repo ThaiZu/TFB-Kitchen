@@ -1,0 +1,22 @@
+{
+  "title": "Ręczne dodanie stanu",
+  "subtitle": "Tymczasowo dodaj produkty na stan, aby sprzedaż mogła działać bez przerwy.",
+  "back_to_plan": "Produkcja na dziś",
+  "unavailable": "Nie udało się pobrać stanów produktów. Spróbuj ponownie.",
+  "shift_required": "Rozpocznij zmianę, aby ręcznie dodać stan.",
+  "product": "Produkt",
+  "product_search": "Wpisz co najmniej 2 litery produktu",
+  "product_search_hint": "Wpisz co najmniej 2 litery, aby wyszukać produkt.",
+  "product_not_found": "Nie znaleziono obsługiwanego produktu.",
+  "current_stock": "Stan bieżący: %s szt.",
+  "stock_after": "Stan po dodaniu: %s szt.",
+  "quantity": "Ilość do dodania",
+  "help": "To tymczasowy bezpiecznik. Zapis zwiększa stan i zostawia ślad korekty ręcznej; nie potwierdza produkcji.",
+  "save": "Dodaj stan",
+  "saving": "Zapisywanie…",
+  "saved": "Stan został zwiększony. Widok zostanie odświeżony.",
+  "invalid": "Wybierz produkt i wpisz dodatnią liczbę sztuk.",
+  "conflict": "Stan produktu zmienił się w międzyczasie. Lista zostanie odświeżona.",
+  "failed": "Nie udało się dodać stanu. Spróbuj ponownie.",
+  "network": "Wynik zapisu nie został potwierdzony. Ponów bez zmiany danych."
+}

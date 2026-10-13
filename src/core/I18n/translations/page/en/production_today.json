@@ -2,6 +2,7 @@
   "title": "Today's production",
   "subtitle": "Products still to make according to the saved plan.",
   "report_waste": "Report waste",
+  "stock_adjustment": "Add stock manually",
   "reload": "Refresh",
   "unavailable": "Today's production plan could not be loaded. Please try again shortly.",
   "no_plan": "No production plan has been saved in Panel for today.",

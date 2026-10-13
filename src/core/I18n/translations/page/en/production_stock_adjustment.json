@@ -1,0 +1,22 @@
+{
+  "title": "Manual stock addition",
+  "subtitle": "Temporarily add products to stock so that sales can continue without interruption.",
+  "back_to_plan": "Today's production",
+  "unavailable": "Product stocks could not be loaded. Please try again.",
+  "shift_required": "Start your shift to add stock manually.",
+  "product": "Product",
+  "product_search": "Type at least 2 letters of the product name",
+  "product_search_hint": "Type at least 2 letters to find a product.",
+  "product_not_found": "No supported product was found.",
+  "current_stock": "Current stock: %s pcs.",
+  "stock_after": "Stock after addition: %s pcs.",
+  "quantity": "Quantity to add",
+  "help": "This is a temporary safety fuse. Saving increases stock and leaves a manual-adjustment audit trail; it does not confirm production.",
+  "save": "Add stock",
+  "saving": "Saving…",
+  "saved": "Stock has been increased. The view will refresh.",
+  "invalid": "Choose a product and enter a positive whole number.",
+  "conflict": "The product stock changed in the meantime. The list will refresh.",
+  "failed": "Stock could not be added. Please try again.",
+  "network": "The save result was not confirmed. Retry without changing the data."
+}

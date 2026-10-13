@@ -2,6 +2,7 @@
   "title": "Produkcja na dziś",
   "subtitle": "Produkty, które pozostały do wykonania zgodnie z zapisanym planem.",
   "report_waste": "Zgłoś odpad",
+  "stock_adjustment": "Dodaj stan ręcznie",
   "reload": "Odśwież",
   "unavailable": "Nie udało się pobrać dzisiejszego planu produkcji. Spróbuj ponownie za chwilę.",
   "no_plan": "Plan produkcji na dziś nie został jeszcze zapisany w panelu.",

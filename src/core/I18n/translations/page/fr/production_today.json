@@ -2,6 +2,7 @@
   "title": "Production du jour",
   "subtitle": "Produits restant à préparer selon le plan enregistré.",
   "report_waste": "Déclarer un déchet",
+  "stock_adjustment": "Ajouter du stock manuellement",
   "reload": "Actualiser",
   "unavailable": "Le plan de production du jour est indisponible. Réessayez dans un instant.",
   "no_plan": "Aucun plan de production n’a encore été enregistré dans Panel pour aujourd’hui.",
