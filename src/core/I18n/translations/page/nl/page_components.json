@@ -92,6 +92,7 @@
   "tablet_worker_pin_label": "Pincode van de geselecteerde medewerker",
   "tablet_worker_roster_error": "Het rooster kon niet worden geladen.",
   "tablet_worker_selection_error": "Selecteer een medewerker en voer de pincode in.",
+  "tablet_worker_session_expired": "De medewerkerssessie is verlopen. Selecteer een medewerker en voer de pincode in om verder te gaan.",
   "tablet_worker_start": "Dienst starten",
   "tablet_worker_start_error": "De dienst kon niet worden gestart.",
   "tablet_worker_title": "Wie gebruikt de tablet?",
@@ -109,5 +110,6 @@
   "nav_production_list": "Productieplan",
   "nav_production_cards": "Productiekaarten",
   "nav_inventory": "Productvoorraad",
+  "nav_material_stocktaking": "Grondstoffeninventarisatie",
   "inventory_subtitle": "Tel de producten en bevestig de fysieke voorraad."
 }

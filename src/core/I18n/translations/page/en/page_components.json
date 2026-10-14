@@ -92,6 +92,7 @@
   "tablet_worker_pin_label": "Selected employee's PIN",
   "tablet_worker_roster_error": "The schedule could not be loaded.",
   "tablet_worker_selection_error": "Select an employee and enter the PIN.",
+  "tablet_worker_session_expired": "The employee session has expired. To continue, select an employee and enter the PIN.",
   "tablet_worker_start": "Start shift",
   "tablet_worker_start_error": "The shift could not be started.",
   "tablet_worker_title": "Who is using the tablet?",
@@ -109,5 +110,6 @@
   "nav_production_list": "Production plan",
   "nav_production_cards": "Production cards",
   "nav_inventory": "Product stock",
+  "nav_material_stocktaking": "Material stocktaking",
   "inventory_subtitle": "Count products and confirm physical stock."
 }

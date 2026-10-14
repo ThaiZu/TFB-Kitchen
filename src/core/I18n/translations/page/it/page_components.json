@@ -92,6 +92,7 @@
   "tablet_worker_pin_label": "PIN del dipendente selezionato",
   "tablet_worker_roster_error": "Impossibile caricare il turno.",
   "tablet_worker_selection_error": "Seleziona un dipendente e inserisci il PIN.",
+  "tablet_worker_session_expired": "La sessione del dipendente è scaduta. Per continuare, seleziona un dipendente e inserisci il PIN.",
   "tablet_worker_start": "Inizia il turno",
   "tablet_worker_start_error": "Impossibile iniziare il turno.",
   "tablet_worker_title": "Chi usa il tablet?",
@@ -109,5 +110,6 @@
   "nav_production_list": "Piano di produzione",
   "nav_production_cards": "Schede di produzione",
   "nav_inventory": "Stato prodotti",
+  "nav_material_stocktaking": "Inventario materie prime",
   "inventory_subtitle": "Conta i prodotti e conferma la giacenza fisica."
 }

@@ -11,6 +11,7 @@
 {% import "components/_icons.twig" as icons %}
 {% set p = current_path|default('') %}
 {% set active_nav =
+    p starts with '/material-stocktaking' ? 'material_stocktaking' :
     p starts with '/inventory' ? 'inventory' :
     p starts with '/dashboard'  ? 'dashboard'  :
     p starts with '/production-list' ? 'production_list' :
@@ -344,8 +345,13 @@
         rosterError: {{ translations.tablet_worker_roster_error|json_encode|raw }},
         employeeFallback: {{ translations.tablet_worker_employee_fallback|json_encode|raw }},
         selectionError: {{ translations.tablet_worker_selection_error|json_encode|raw }},
-        startError: {{ translations.tablet_worker_start_error|json_encode|raw }}
+        startError: {{ translations.tablet_worker_start_error|json_encode|raw }},
+        sessionExpired: {{ translations.tablet_worker_session_expired|json_encode|raw }}
     };
+    var resumeCurrentWork = false;
+    if (modalElement) {
+        modalElement.addEventListener('hidden.bs.modal', function () { resumeCurrentWork = false; });
+    }
     function showWorkerError(message) {
         error.textContent = message;
         error.classList.remove('d-none');
@@ -404,9 +410,12 @@
         });
     });
 
-    async function openWorkerModal() {
+    async function openWorkerModal(options) {
+        options = options || {};
+        resumeCurrentWork = options.resume === true;
         if (!workerModal) return;
         clearWorkerError();
+        if (options.message) showWorkerError(options.message);
         list.innerHTML = '<div class="text-muted">' + workerTranslations.loading + '</div>';
         empty.classList.add('d-none');
         employeeId.value = '';
@@ -461,6 +470,11 @@
                 throw new Error(data.message || workerTranslations.startError);
             }
             workerModal.hide();
+            if (resumeCurrentWork) {
+                resumeCurrentWork = false;
+                window.dispatchEvent(new CustomEvent('kitchen:worker-session-restored'));
+                return;
+            }
             window.location.reload();
         } catch (err) {
             showWorkerError(err.message || workerTranslations.startError);
@@ -491,6 +505,13 @@
         } finally {
             button.disabled = false;
         }
+    });
+
+    // Zapisy są blokowane po 30 minutach bezczynności. Moduł zgłasza ten
+    // sygnał dopiero po odpowiedzi serwera, dzięki czemu wpisane dane nie
+    // znikają i pracownik może potwierdzić swoją tożsamość w tym samym widoku.
+    window.addEventListener('kitchen:worker-session-expired', function () {
+        openWorkerModal({ resume: true, message: workerTranslations.sessionExpired });
     });
 })();
 </script>
