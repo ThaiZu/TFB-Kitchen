@@ -13,8 +13,9 @@ class ProductService
     {
     }
 
-    public function getAll()
+    public function getAvailableToSale(array $options = [])
     {
-        return $this->productRepository->getAll(GlobalRegistry::get('lang_code'));
+        $shopId = (int)(GlobalRegistry::get('user')['shop_id'] ?? 0);
+        return $this->productRepository->getAvailableToSale($shopId, $options);
     }
 }

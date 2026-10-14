@@ -14,6 +14,6 @@ class DeviceService
 
     public function getMe()
     {
-        return $this->deviceRepository->getMe(GlobalRegistry::get('user')['device_id']);
+        return $this->deviceRepository->getMe();
     }
 }

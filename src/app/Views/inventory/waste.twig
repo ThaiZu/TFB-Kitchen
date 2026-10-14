@@ -1,0 +1,99 @@
+{% extends 'layouts/base.twig' %}
+{% block title %}{{ translations.title }} · {{ translations.tab_waste }}{% endblock %}
+{% block head %}
+<style>
+.wp-head,.wp-tools,.wp-summary-top,.wp-history-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.wp-head h1{font-size:1.4rem;margin:0}.wp-muted{color:#766f68}.wp-tabs{display:flex;gap:5px;padding:5px;margin:14px 0;background:#f4efe8;border-radius:12px}.wp-tabs a{flex:1;min-height:44px;display:flex;align-items:center;justify-content:center;border-radius:8px;color:#766f68;text-decoration:none;font-weight:700}.wp-tabs a.is-active{background:#fff;color:#8D1D2C;box-shadow:0 1px 4px #00000014}.wp-card{padding:16px;margin:14px 0;border:1px solid #e7dfd6;border-radius:16px;background:#fff}.wp-search,.wp-field,.wp-select,.wp-textarea{width:100%;min-height:44px;border:1px solid #d7d0c8;border-radius:9px;padding:8px;background:#fff}.wp-tools{align-items:flex-start}.wp-search-wrap{flex:1 1 230px}.wp-toggle{display:flex;align-items:center;min-height:44px;gap:7px;font-weight:600}.wp-products{display:grid;gap:9px}.wp-product{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid #e7dfd6;border-radius:14px;background:#fff}.wp-product-main{min-width:0;flex:1}.wp-product-name{font-weight:800;line-height:1.25}.wp-product-meta,.wp-product-limit,.wp-history-meta{font-size:.78rem;margin-top:3px}.wp-product-meta,.wp-history-meta{color:#766f68}.wp-product-limit{color:#8D1D2C}.wp-button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 14px;border:0;border-radius:10px;background:#8D1D2C;color:#fff;text-decoration:none;font-weight:700}.wp-button.wp-secondary{background:#f4efe8;color:#8D1D2C}.wp-button:disabled{opacity:.5;cursor:not-allowed}.wp-notice{padding:12px;border-radius:10px;margin:12px 0;background:#f4efe8}.wp-notice.wp-error{background:#fae9e9;color:#8D1D2C}.wp-notice.wp-ok{background:#e5f2e8;color:#24603a}.wp-notice[hidden]{display:none}.wp-cart{display:grid;gap:8px}.wp-cart-line{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #eee7e0}.wp-cart-line:last-child{border-bottom:0}.wp-cart-text{min-width:0;flex:1}.wp-cart-text b,.wp-cart-text small{display:block}.wp-cart-text small{color:#766f68}.wp-icon-button{min-width:44px;min-height:44px;border:1px solid #d7d0c8;border-radius:9px;background:#fff;color:#8D1D2C;font-weight:800}.wp-sticky{position:sticky;bottom:calc(var(--app-tabbar-h,72px) + 8px);z-index:4;box-shadow:0 -2px 10px #00000009}.wp-history{display:grid;gap:8px}.wp-history-line{padding:11px 0;border-bottom:1px solid #eee7e0}.wp-history-line:last-child{border-bottom:0}.wp-history-line b,.wp-history-line small{display:block}.wp-modal-note{font-size:.85rem;color:#766f68}.wp-label{display:block;font-weight:700;font-size:.85rem;margin:14px 0 5px}.wp-comment[hidden]{display:none}@media(max-width:600px){.wp-card{padding:12px}.wp-head h1{font-size:1.2rem}.wp-product{align-items:flex-start}.wp-product .wp-button{flex:0 0 auto}.wp-modal-bottom{display:flex;align-items:flex-end;min-height:calc(100% - .5rem)}.wp-modal-bottom .modal-content{border-radius:18px 18px 0 0}.wp-modal-bottom .modal-dialog{margin:0;width:100%}}
+</style>
+{% endblock %}
+{% block content %}
+<div class="wp-head"><div><h1>{{ translations.title }}</h1><p class="wp-muted">{{ translations.waste_subtitle }}</p></div><a class="wp-button wp-secondary" href="{{ ROOT }}/inventory?tab=waste">{{ translations.reload }}</a></div>
+<nav class="wp-tabs" aria-label="{{ translations.title }}"><a href="{{ ROOT }}/inventory">{{ translations.tab_state }}</a><a class="is-active" aria-current="page" href="{{ ROOT }}/inventory?tab=waste">{{ translations.tab_waste }}</a><a href="{{ ROOT }}/inventory?tab=tomorrow">{{ translations.tab_tomorrow }}</a></nav>
+
+<div id="wpNotice" class="wp-notice" role="status" aria-live="polite" hidden></div>
+{% if not available %}
+<p class="wp-card wp-notice wp-error">{{ translations.unavailable }}</p>
+{% elseif not reasons_available %}
+<p class="wp-card wp-notice wp-error">{{ translations.waste_reasons_unavailable }}</p>
+{% else %}
+{% if not has_shift %}<p class="wp-card wp-notice wp-error">{{ translations.shift_required }} <a href="{{ ROOT }}/checklist">{{ translations.open_shift }}</a></p>{% endif %}
+<section class="wp-card" aria-label="{{ translations.tab_waste }}">
+    <div class="wp-tools"><div class="wp-search-wrap"><label class="visually-hidden" for="wpSearch">{{ translations.search }}</label><input id="wpSearch" class="wp-search" type="search" autocomplete="off" placeholder="{{ translations.search }}"></div><label class="wp-toggle"><input id="wpShowAll" type="checkbox"> {{ translations.waste_show_all }}</label></div>
+    <p id="wpHiddenHint" class="wp-muted">{{ translations.waste_default_hint }}</p>
+</section>
+<section id="wpProducts" class="wp-products" aria-live="polite"></section>
+
+<section class="wp-card"><div class="wp-summary-top"><h2 class="h5 mb-0">{{ translations.waste_report }}</h2><span id="wpSummary" class="wp-muted"></span></div><div id="wpCart" class="wp-cart"></div></section>
+<section class="wp-card wp-sticky"><button id="wpSave" class="wp-button w-100" type="button" {% if not has_shift %}disabled{% endif %}>{{ translations.waste_save }}</button></section>
+
+<section class="wp-card"><div class="wp-history-top"><h2 class="h5 mb-0">{{ translations.waste_today }}</h2><span id="wpHistoryDate" class="wp-muted">{{ today }}</span></div>{% if not history_available %}<p class="wp-product-limit">{{ translations.waste_history_unavailable }}</p>{% endif %}<div id="wpHistory" class="wp-history"></div></section>
+
+<div class="modal fade" id="wpProductModal" tabindex="-1" aria-labelledby="wpProductModalTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable modal-dialog-centered wp-modal-bottom"><div class="modal-content"><div class="modal-header"><h2 class="modal-title fs-5" id="wpProductModalTitle"></h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ translations.close }}"></button></div><form id="wpProductForm"><div class="modal-body"><p id="wpProductStock" class="wp-modal-note"></p><label class="wp-label" for="wpQuantity">{{ translations.waste_quantity }}</label><input id="wpQuantity" class="wp-field" type="number" min="1" step="1" inputmode="numeric" required><label class="wp-label" for="wpReason">{{ translations.waste_reason }}</label><select id="wpReason" class="wp-select" required></select><div id="wpCommentWrap" class="wp-comment"><label class="wp-label" for="wpComment">{{ translations.waste_comment }}</label><textarea id="wpComment" class="wp-textarea" maxlength="500" rows="3"></textarea><p class="wp-modal-note">{{ translations.waste_comment_hint }}</p></div><p id="wpFormError" class="wp-product-limit" hidden></p></div><div class="modal-footer"><button type="button" class="wp-button wp-secondary" data-bs-dismiss="modal">{{ translations.close }}</button><button class="wp-button" type="submit">{{ translations.waste_add }}</button></div></form></div></div></div>
+
+<script>
+(() => {
+ const root={{ ROOT|json_encode|raw }}, messages={{ translations|json_encode(constant('JSON_HEX_TAG'))|raw }};
+ let screen={{ {lines: lines, reasons: reasons, history: history, today: today, timezone: timezone, available: available, reasons_available: reasons_available, history_available: history_available, has_shift: has_shift}|json_encode(constant('JSON_HEX_TAG'))|raw }};
+ const storageKey='kitchen-waste-draft:'+root+':'+{{ shop_id|json_encode|raw }};
+ const products=document.getElementById('wpProducts'), cart=document.getElementById('wpCart'), history=document.getElementById('wpHistory'), save=document.getElementById('wpSave'), notice=document.getElementById('wpNotice'), search=document.getElementById('wpSearch'), showAll=document.getElementById('wpShowAll');
+ const modalEl=document.getElementById('wpProductModal'), modal=new bootstrap.Modal(modalEl), form=document.getElementById('wpProductForm'), quantity=document.getElementById('wpQuantity'), reason=document.getElementById('wpReason'), comment=document.getElementById('wpComment'), commentWrap=document.getElementById('wpCommentWrap'), formError=document.getElementById('wpFormError');
+ let modalProduct=null, busy=false;
+ const uuid=()=>window.crypto?.randomUUID ? crypto.randomUUID() : ('waste-'+Date.now()+'-'+Math.random().toString(16).slice(2));
+ const freshDraft=()=>({idempotency_key:uuid(),lines:[],attempted:false});
+ let draft=freshDraft();
+ try { const saved=JSON.parse(sessionStorage.getItem(storageKey)); if(saved&&typeof saved.idempotency_key==='string'&&Array.isArray(saved.lines)) draft=saved; } catch (_) {}
+ const persist=()=>sessionStorage.setItem(storageKey,JSON.stringify(draft));
+ const changed=()=>{ if(draft.attempted){draft.idempotency_key=uuid();draft.attempted=false;} persist(); };
+ const supported=p=>Boolean(Number(p.is_piece_based))&&!Boolean(Number(p.is_divisible));
+ const initialized=p=>p.inventory_initialized_at!==null&&p.inventory_initialized_at!=='';
+ const reportable=p=>supported(p)&&initialized(p)&&Number(p.in_stock)>0;
+ const labelFor=key=>(screen.reasons||[]).find(r=>r.key===key)?.label||'';
+ const format=n=>Number(n).toLocaleString(undefined,{maximumFractionDigits:4});
+ const unit=p=>supported(p)?messages.waste_unit_piece:messages.waste_unit_unavailable;
+ function show(message,type=''){ notice.hidden=false;notice.textContent=message;notice.className='wp-notice '+(type?'wp-'+type:''); }
+ function reasonRequiresComment(){ return Boolean((screen.reasons||[]).find(r=>r.key===reason.value)?.comment_required); }
+ function renderProducts(){
+   const term=(search.value||'').trim().toLocaleLowerCase(), all=showAll.checked;
+   products.replaceChildren(); let total=0;
+   (screen.lines||[]).forEach(p=>{
+     if(term&&!String(p.name||'').toLocaleLowerCase().includes(term)) return;
+     if(!all&&!reportable(p)) return;
+     total++;
+     const card=document.createElement('article');card.className='wp-product';
+     const main=document.createElement('div');main.className='wp-product-main';
+     const name=document.createElement('div');name.className='wp-product-name';name.textContent=p.name||'—';
+     const meta=document.createElement('div');meta.className='wp-product-meta';meta.textContent=initialized(p)?(messages.waste_stock+': '+format(p.in_stock)+' '+unit(p)):messages.uninitialized;
+     main.append(name,meta);
+     if(!reportable(p)){const limit=document.createElement('div');limit.className='wp-product-limit';limit.textContent=!supported(p)?messages.waste_unsupported:(!initialized(p)?messages.waste_uninitialized:messages.waste_zero);main.append(limit);}
+     const button=document.createElement('button');button.type='button';button.className='wp-button';button.textContent=draft.lines.some(l=>Number(l.id_product)===Number(p.id_product))?messages.waste_edit:messages.waste_add;button.disabled=!reportable(p)||!screen.has_shift;button.addEventListener('click',()=>openProduct(p));
+     card.append(main,button);products.append(card);
+   });
+   if(!total){const empty=document.createElement('p');empty.className='wp-card wp-muted';empty.textContent=all?messages.empty:messages.waste_no_reportable;products.append(empty);}
+ }
+ function renderCart(){
+   cart.replaceChildren(); const summary=document.getElementById('wpSummary');summary.textContent=messages.selected_count+': '+draft.lines.length;
+   if(!draft.lines.length){const empty=document.createElement('p');empty.className='wp-muted mb-0';empty.textContent=messages.waste_empty;cart.append(empty);return;}
+   draft.lines.forEach(line=>{
+     const product=(screen.lines||[]).find(p=>Number(p.id_product)===Number(line.id_product));const row=document.createElement('div');row.className='wp-cart-line';
+     const text=document.createElement('div');text.className='wp-cart-text';const title=document.createElement('b');title.textContent=product?.name||'—';const sub=document.createElement('small');sub.textContent=line.quantity+' '+unit(product||{})+' · '+labelFor(line.reason)+(line.comment?' · '+line.comment:'');text.append(title,sub);
+     const edit=document.createElement('button');edit.type='button';edit.className='wp-icon-button';edit.textContent=messages.waste_edit;edit.addEventListener('click',()=>product&&openProduct(product));
+     const remove=document.createElement('button');remove.type='button';remove.className='wp-icon-button';remove.textContent='×';remove.setAttribute('aria-label',messages.waste_remove);remove.addEventListener('click',()=>{draft.lines=draft.lines.filter(l=>Number(l.id_product)!==Number(line.id_product));changed();renderCart();renderProducts();});row.append(text,edit,remove);cart.append(row);
+   });
+ }
+ function timeFromApi(value){const m=String(value||'').match(/T(\d{2}:\d{2})/);return m?m[1]:'';}
+ function renderHistory(){history.replaceChildren();document.getElementById('wpHistoryDate').textContent=screen.today||'';if(!screen.history_available)return;if(!(screen.history||[]).length){const empty=document.createElement('p');empty.className='wp-muted mb-0';empty.textContent=messages.waste_history_empty;history.append(empty);return;}screen.history.forEach(item=>{const row=document.createElement('article');row.className='wp-history-line';const title=document.createElement('b');title.textContent=(timeFromApi(item.created_at)?timeFromApi(item.created_at)+' · ':'')+(item.product_name||'—')+' · '+format(item.quantity)+' '+messages.waste_unit_piece;const meta=document.createElement('small');meta.className='wp-history-meta';meta.textContent=(item.reason_label||'')+(item.employee_name?' · '+item.employee_name:'')+(item.comment?' · '+item.comment:'');row.append(title,meta);history.append(row);});}
+ function openProduct(product){
+   modalProduct=product;formError.hidden=true;document.getElementById('wpProductModalTitle').textContent=product.name||'—';document.getElementById('wpProductStock').textContent=messages.waste_stock+': '+format(product.in_stock)+' '+unit(product);
+   const existing=draft.lines.find(l=>Number(l.id_product)===Number(product.id_product));quantity.value=existing?.quantity||'';reason.replaceChildren();(screen.reasons||[]).forEach(r=>{const option=document.createElement('option');option.value=r.key;option.textContent=r.label;option.selected=(existing?.reason||screen.reasons[0]?.key)===r.key;reason.append(option);});comment.value=existing?.comment||'';toggleComment();modal.show();setTimeout(()=>quantity.focus(),250);
+ }
+ function toggleComment(){const required=reasonRequiresComment();commentWrap.hidden=!required;comment.required=false;comment.setAttribute('aria-required',required?'true':'false');if(!required)comment.value='';}
+ reason.addEventListener('change',toggleComment);
+ form.addEventListener('submit',event=>{event.preventDefault();if(!modalProduct)return;const q=String(quantity.value||'');const c=comment.value.trim();if(!/^[1-9]\d{0,7}$/.test(q)||Number(q)>Number(modalProduct.in_stock)||(reasonRequiresComment()&&!c)){formError.hidden=false;formError.textContent=messages.waste_invalid_line;return;}const line={id_product:Number(modalProduct.id_product),quantity:q,reason:reason.value,expected_in_stock:String(modalProduct.in_stock),expected_movement_id:String(modalProduct.last_movement_id)};if(c)line.comment=c;draft.lines=draft.lines.filter(l=>Number(l.id_product)!==Number(line.id_product));draft.lines.push(line);changed();modal.hide();renderCart();renderProducts();});
+ function validateDraft(){if(!draft.lines.length)return false;return draft.lines.every(line=>/^[1-9]\d{0,7}$/.test(String(line.quantity))&&labelFor(line.reason)&&(!reasonRequires(line.reason)||String(line.comment||'').trim()));}
+ function reasonRequires(key){return Boolean((screen.reasons||[]).find(r=>r.key===key)?.comment_required);}
+ async function refresh(){try{const response=await fetch(root+'/inventory/waste-data',{credentials:'same-origin',headers:{'X-Requested-With':'XMLHttpRequest'}});const data=await response.json();if(response.ok&&data.success&&data.data){screen=data.data;renderProducts();renderHistory();}}catch(_){/* The draft remains local; no offline submission is scheduled. */}}
+ save.addEventListener('click',async()=>{if(busy)return;if(!screen.has_shift){show(messages.shift_required,'error');return;}if(!validateDraft()){show(messages.waste_invalid_report,'error');return;}busy=true;save.disabled=true;draft.attempted=true;persist();try{const response=await fetch(root+'/inventory/waste',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},body:JSON.stringify({idempotency_key:draft.idempotency_key,lines:draft.lines})});const data=await response.json();if(!response.ok||!data.success){if(data.reason==='conflict'){show(messages.waste_conflict,'error');await refresh();}else show(messages[data.reason]||messages.waste_failed,'error');return;}const savedItems=data.data?.items||[];const warnings=savedItems.filter(i=>i.reservation_warning);savedItems.forEach(item=>{const product=(screen.lines||[]).find(p=>Number(p.id_product)===Number(item.id_product));if(product){product.in_stock=item.stock_after;product.last_movement_id=String(item.movement_id);}});draft=freshDraft();sessionStorage.removeItem(storageKey);renderCart();renderProducts();show(warnings.length?messages.waste_saved_warning.replace('%s',warnings.map(i=>i.reservation_shortfall_quantity).join(', ')):messages.waste_saved,warnings.length?'error':'ok');await refresh();}catch(_){show(messages.waste_network,'error');}finally{busy=false;save.disabled=!screen.has_shift;}});
+ search.addEventListener('input',renderProducts);showAll.addEventListener('change',renderProducts);renderProducts();renderCart();renderHistory();
+})();
+</script>
+{% endif %}
+{% endblock %}

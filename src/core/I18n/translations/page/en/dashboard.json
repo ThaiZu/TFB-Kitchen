@@ -2,34 +2,38 @@
   "kitchen_portal": "Kitchen Portal",
   "kitchen_app_short": "Kitchen",
   "franchise_ecosystem": "Franchise Network Ecosystem",
-
   "menu": "Menu",
   "account": "Account",
   "logout": "Logout",
   "my_profile": "My Profile",
-
   "kitchen_dashboard": "Kitchen Dashboard",
   "kitchen_dashboard_subtitle": "Quick overview of today's production and key tasks.",
-
   "quick_actions": "Quick Actions",
   "todays_production": "Today's Production",
   "todays_production_subtitle": "See what to do today, priorities, and statuses.",
+  "production_list": "Production list",
+  "production_list_subtitle": "Prepare and print a production plan for a selected day.",
   "production_cards": "Production Cards",
   "production_cards_subtitle": "Browse recipes, ingredients, and step-by-step instructions.",
   "checklists": "Checklists",
   "checklists_subtitle": "Check off daily tasks: opening, cleaning, closing.",
   "my_orders": "My Orders",
   "my_orders_subtitle": "Order ingredients from suppliers.",
-
   "tasks_todo": "Tasks To Do",
   "tasks_in_progress": "In Progress",
   "tasks_completed": "Completed Today",
+  "tasks_for_you": "For You",
   "last_update": "Last Update",
   "not_available": "No Data",
-
   "production": "Production",
-  "knowledge": "Knowledge",
+  "knowledge": "Knowledge base",
   "cards": "Cards",
-  "orders": "Orders"
+  "orders": "Orders",
+  "dashboard_shift_guest_mode": "Continue anonymously",
+  "dashboard_shift_hint": "Choose yourself from today's schedule and enter your PIN.",
+  "dashboard_shift_continue": "Continue",
+  "dashboard_shift_selection_error": "Select an employee and enter the PIN.",
+  "dashboard_shift_start_error": "The employee could not be signed in.",
+  "nav_inventory": "Product stock",
+  "inventory_subtitle": "Count products and confirm physical stock."
 }
-

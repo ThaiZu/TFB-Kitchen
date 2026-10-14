@@ -5,7 +5,11 @@
             <div class="d-flex justify-content-center">
                 <div class="logo">
                     <a href="{{ ROOT }}/dashboard" class="d-flex align-items-center gap-2 text-decoration-none">
-                        <img src="{{ ROOT }}/assets/images/logo/logo.png" alt="Logo" style="height:40px;">
+                        {# assets/images/logo/logo.png n'existe pas dans le dépôt : le logo
+                           était une image cassée sur toutes les pages. On pointe sur le
+                           logo de marque réellement livré. #}
+                        <img src="{{ ROOT }}/assets/images/atelier_logo.jpg" alt="L'Atelier By"
+                             style="max-height:78px; max-width:190px; width:auto; height:auto;">
                     </a>
                 </div>
             </div>
@@ -20,16 +24,12 @@
                         <span>{{ translations.kitchen_dashboard }}</span>
                     </a>
                 </li>
-                {# ✗ PRODUKCJA – W TRAKCIE BUDOWY #}
-                <li class="sidebar-item" title="{{ translations.under_construction|default('W budowie') }}"
-                    style="opacity:.5; pointer-events:none; cursor:not-allowed;">
-                    <span class="sidebar-link text-muted">
+                {# PRODUKCJA #}
+                <li class="sidebar-item {{ p starts with '/production' ? 'active' : '' }}">
+                    <a href="{{ ROOT }}/production" class="sidebar-link">
                         <i class="bi bi-list-check"></i>
                         <span>{{ translations.production }}</span>
-                        <span class="badge bg-warning text-dark ms-auto" style="font-size:.6rem; padding:.2rem .4rem;">
-                            <i class="bi bi-tools"></i>
-                        </span>
-                    </span>
+                    </a>
                 </li>
                 {# ✓ BAZA WIEDZY #}
                 <li class="sidebar-item {{ p starts with '/knowledge' ? 'active' : '' }}">

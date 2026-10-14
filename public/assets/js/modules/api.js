@@ -1,5 +1,5 @@
 export async function api(endpoint, { method = 'GET', data = null, headers = {} } = {}) {
-    let url = '/supplier' + endpoint;
+    let url = '/kitchen' + endpoint;
     const opts = { method, headers: { ...headers } };
 
     if (method === 'GET' && data) {
@@ -21,8 +21,9 @@ export async function api(endpoint, { method = 'GET', data = null, headers = {} 
 
     return {
         ok:      res.ok,
-        success:      res.success,
-        status:  res.status,
+        success:  res.ok,
+        status:   res.ok ? 'success' : 'error',
+        httpStatus: res.status,
         data:    payload,
         ...payload
     };

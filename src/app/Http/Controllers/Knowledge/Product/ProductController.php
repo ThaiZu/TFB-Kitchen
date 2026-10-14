@@ -18,7 +18,7 @@ class ProductController extends Controller
     #[Route('GET', '/knowledge/products')]
     public function index()
     {
-        $data['products'] = $this->productService->getAll();
+        $data['products'] = $this->productService->getAvailableToSale();
 
         $this->view("knowledge/product/overview", $data);
     }

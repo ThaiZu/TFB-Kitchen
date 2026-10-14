@@ -2,30 +2,30 @@
 
 {% block title %}500{% endblock %}
 
+{# Le SVG Mazer référencé ici n'a jamais été déployé : la page
+   d'erreur affichait une image cassée. Le code suffit, et il ne
+   dépend d'aucun fichier. #}
 {% block illustration %}
-    <img class="merr-illu" src="{{ ROOT }}/assets/mazer/static/images/samples/error-500.svg" alt="Server error">
+    <div class="merr-code" aria-hidden="true">500</div>
 {% endblock %}
 
 {% block error_title %}
-    {{ translations.server_error ?? 'Server error' }}
+    {{ translations.server_error }}
 {% endblock %}
 
 {% block error_subtitle %}
-    {{ translations.server_error_subtitle ?? 'Something went wrong on our side. Please try again.' }}
+    {{ translations.server_error_subtitle }}
 {% endblock %}
 
 {% block actions %}
     <a href="{{ ROOT }}/Dashboard" class="btn btn-outline-primary btn-lg w-100">
         <i class="bi bi-arrow-left me-1"></i>
-        {{ translations.back ?? 'Back' }}
+        {{ translations.back }}
     </a>
 
     <button type="button" class="btn btn-primary btn-lg w-100" onclick="location.reload()">
         <i class="bi bi-arrow-clockwise me-1"></i>
-        {{ translations.reload ?? 'Reload' }}
+        {{ translations.reload }}
     </button>
 {% endblock %}
 
-{% block footer %}
-    <div class="small text-muted mt-3">Error code: 500</div>
-{% endblock %}

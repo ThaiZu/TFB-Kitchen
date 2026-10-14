@@ -38,7 +38,7 @@
   "compensation_method_replacement": "Remplacement",
   "compensation_method_credit_note": "Note de crédit",
   "compensation_method_refund": "Remboursement",
-  "attachment": "Télécharger",
+  "attachment": "Pièce jointe",
   "attachments": "Pièces jointes",
   "no_complaints_found": "Aucune réclamation ne correspond aux critères.",
   "no_complaints_hint": "Changez le filtre.",
@@ -51,5 +51,8 @@
   "select_material": "Sélectionner un produit...",
   "no_delivered_orders": "Aucune commande livrée",
   "invalid_quantity_message": "La quantité saisie est hors de la plage autorisée.",
-  "home": "Accueil"
+  "home": "Accueil",
+  "file_load_error": "Erreur de téléchargement du fichier",
+  "connection_error": "Erreur de connexion",
+  "camera_access_error": "Accès à la caméra indisponible"
 }

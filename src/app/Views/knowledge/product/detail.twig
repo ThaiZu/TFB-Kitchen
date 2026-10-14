@@ -1,6 +1,6 @@
 {% extends "layouts/base.twig" %}
 
-{% block title %}{{ product.getName() }} – {{ translations.technical_sheet|default('Karta techniczna') }}{% endblock %}
+{% block title %}{{ product.getName() }} – {{ translations.technical_sheet }}{% endblock %}
 
 {% block head %}
 <style>
@@ -10,6 +10,57 @@
         border-radius: 8px;
         overflow: hidden;
         background: #fff;
+    }
+
+    /* --- RETOUR --- */
+    .fiche-back {
+        display: inline-flex; align-items: center; gap: 8px;
+        min-height: 44px; padding: 0 16px 0 12px;
+        margin-bottom: 12px;
+        border: 1px solid rgba(141,29,44,.3);
+        border-radius: var(--r-pill, 999px);
+        background: rgba(141,29,44,.06);
+        color: var(--c-primary, #8D1D2C);
+        font-size: .9rem; font-weight: 600; text-decoration: none;
+        transition: background .15s ease, border-color .15s ease;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .fiche-back:hover {
+        background: rgba(141,29,44,.12); border-color: rgba(141,29,44,.5);
+        color: var(--c-primary, #8D1D2C);
+    }
+    .fiche-back:active { transform: scale(.98); }
+    .fiche-back i { font-size: 1.05rem; line-height: 1; }
+
+    /* --- PHOTO EN TÊTE --- */
+    .fiche-hero {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        /* Bornée : en 16/9 pleine largeur sur une tablette en paysage, elle
+           ferait 600 px et repousserait la fiche entière sous la ligne de
+           flottaison. On veut voir l'image ET commencer à lire. */
+        max-height: 42vh;
+        background: repeating-linear-gradient(45deg, #f2ece4 0 14px, #ece5da 14px 28px);
+        border-bottom: 1px solid #dee2e6;
+        overflow: hidden;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .fiche-hero img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: zoom-in; }
+    .fiche-hero-empty {
+        display: flex; flex-direction: column; align-items: center; gap: 8px;
+        color: #b9ada0;
+    }
+    .fiche-hero-empty i { font-size: 2.6rem; }
+    .fiche-hero-empty span { font-size: .85rem; }
+    /* Repère d'agrandissement : sans lui, rien ne dit que la photo s'ouvre. */
+    .fiche-hero-zoom {
+        position: absolute; right: 12px; bottom: 12px;
+        width: 38px; height: 38px; border-radius: 50%;
+        background: rgba(255,255,255,.92); color: #241f1c;
+        display: flex; align-items: center; justify-content: center;
+        font-size: .9rem; box-shadow: 0 4px 12px -6px rgba(0,0,0,.5);
+        pointer-events: none;
     }
 
     /* --- HEADER --- */
@@ -75,7 +126,7 @@
     .fiche-header-photo img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
         border-radius: 6px;
     }
     .fiche-photo-label {
@@ -92,17 +143,27 @@
     }
 
     /* --- MAIN 2-KOLUMNY --- */
-    .fiche-main {
-        display: flex;
-        min-height: 400px;
+    /* ── Corps de la fiche ──
+       Une seule colonne, à toutes les largeurs. La fiche se lit alors dans
+       un ordre unique — composition, allergènes, stockage, préparation —
+       le même quel que soit l'écran et quelles que soient les sections
+       présentes. Deux colonnes obligeaient l'œil à choisir un côté, et
+       laissaient la droite vide sur les produits sans étapes. */
+    .fiche-main { display: block; }
+    .fiche-sec { padding: 20px 24px; min-width: 0; }
+    .fiche-sec + .fiche-sec { border-top: 1px solid #dee2e6; }
+
+    /* Repli des données de gestion */
+    .fiche-admin { margin-top: 14px; }
+    .fiche-admin > summary {
+        cursor: pointer; list-style: none;
+        font-size: .78rem; font-weight: 600; color: #8a8178;
+        padding: 9px 0; min-height: 40px;
+        display: flex; align-items: center; gap: 7px;
     }
-    .fiche-col {
-        flex: 1;
-        padding: 20px 24px;
-    }
-    .fiche-col-left {
-        border-right: 1px solid #dee2e6;
-    }
+    .fiche-admin > summary::-webkit-details-marker { display: none; }
+    .fiche-admin > summary::before { content: '⌄'; font-size: 1rem; line-height: 1; }
+    .fiche-admin[open] > summary::before { content: '⌃'; }
 
     /* --- SECTION TITLE --- */
     .fiche-section-title {
@@ -277,7 +338,7 @@
     .plano-photo img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
         border-radius: 6px;
     }
 
@@ -289,27 +350,104 @@
 
     @media (max-width: 768px) {
         .fiche-main { flex-direction: column; }
-        .fiche-col-left { border-right: none; border-bottom: 1px solid #dee2e6; }
         .fiche-header { flex-direction: column; }
-        .fiche-header-photo { width: 100%; min-width: unset; height: 200px; }
+        .fiche-hero { aspect-ratio: 4 / 3; max-height: 38vh; }
         .plano-photos { flex-direction: column; }
+    }
+
+    /* ══ TABLETTE ═══════════════════════════════════════════════════════
+       C'est l'écran réel de cette fiche : une tablette posée près du four,
+       consultée debout, à bout de bras, avec les mains occupées.
+
+       Deux colonnes ne passaient en une seule qu'en dessous de 768 px. Une
+       tablette en portrait fait 810 : elle restait donc en deux colonnes,
+       chacune trop étroite — les puces d'allergènes se cassaient, tandis
+       que la colonne de droite restait à moitié vide. Le seuil monte à
+       1024 px : portrait sur une colonne, paysage sur deux.
+       ══════════════════════════════════════════════════════════════════ */
+    /* Sur tablette, la fiche est lue plus loin de l'œil qu'un téléphone et
+       plus loin qu'un écran de bureau. Les tailles d'origine — 0,72 à
+       0,88 rem — y sont trop petites : tout le corps de texte remonte d'un
+       cran, sans toucher à la mise en page. */
+    @media (min-width: 600px) and (max-width: 1366px) {
+        .fiche-section-title  { font-size: .82rem; letter-spacing: .06em; }
+        .fiche-info-row       { font-size: .95rem; padding: 11px 0; }
+        .fiche-info-label     { min-width: 190px; }
+        .fiche-step           { font-size: .98rem; padding: 14px 0; line-height: 1.55; }
+        .fiche-step-num       { width: 30px; height: 30px; min-width: 30px; font-size: .82rem; }
+        .fiche-note-box p     { font-size: .95rem; line-height: 1.6; }
+        .fiche-product-desc   { font-size: 1rem; }
+        .fiche-badge          { font-size: .85rem; padding: 5px 12px; }
+        .allergen-note        { font-size: .88rem; }
+        .package-materials-table td,
+        .package-materials-table th { font-size: .95rem; padding: 11px 10px; }
+        .fiche-sec            { padding: 22px 26px; }
+    }
+
+    /* En portrait, l'intitulé et sa valeur se disputaient la largeur : le
+       libellé réservait 190 px et la valeur se cassait en deux lignes. Ils
+       passent l'un au-dessus de l'autre. */
+    @media (max-width: 820px) {
+        .fiche-info-row { flex-direction: column; align-items: flex-start; gap: 2px; }
+        .fiche-info-label { min-width: 0; }
+        .fiche-info-value { font-size: 1.02rem; }
+    }
+
+    /* Les vignettes de photo servent de déclencheur à la visionneuse :
+       elles doivent se viser au doigt, pas au curseur. */
+    @media (pointer: coarse) {
+        .fiche-hero { min-height: 180px; }
+        .plano-photo { min-height: 120px; }
+    }
+
+    /* --- LIGHTBOX --- */
+    .fiche-lightbox {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: rgba(0,0,0,0.88);
+        align-items: center;
+        justify-content: center;
+        cursor: zoom-out;
+    }
+    .fiche-lightbox.active { display: flex; }
+    .fiche-lightbox img {
+        max-width: 92vw;
+        max-height: 92vh;
+        object-fit: contain;
+        border-radius: 6px;
+        box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+        cursor: default;
+    }
+    .fiche-lightbox-close {
+        position: fixed;
+        top: 18px;
+        right: 24px;
+        color: #fff;
+        font-size: 2rem;
+        cursor: pointer;
+        opacity: 0.8;
+        line-height: 1;
+        z-index: 10000;
+    }
+    .fiche-lightbox-close:hover { opacity: 1; }
+    .fiche-zoomable {
+        cursor: zoom-in;
     }
 </style>
 {% endblock %}
 
 {% block page_heading %}
-    <div class="page-heading">
-        <h3>{{ translations.technical_sheet|default('Karta techniczna') }}</h3>
-        <p class="text-subtitle text-muted">{{ product.getName() }}</p>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ ROOT }}">{{ translations.home|default('Home') }}</a></li>
-                <li class="breadcrumb-item"><a href="{{ ROOT }}/knowledge">{{ translations.knowledge|default('Wiedza') }}</a></li>
-                <li class="breadcrumb-item"><a href="{{ ROOT }}/knowledge/products">{{ translations.products|default('Produkty') }}</a></li>
-                <li class="breadcrumb-item active" aria-current="page">{{ product.getName() }}</li>
-            </ol>
-        </nav>
-    </div>
+    {# Le titre « Fiche technique » et le nom du produit doublaient ce qui est
+       déjà sous la photo : deux lignes avant l'image, pour ne rien apprendre.
+       Il ne reste que le retour, en haut à gauche — là où on le cherche, et
+       dans le coin qu'atteint le pouce quand la tablette est tenue à deux
+       mains. En pied de page, il fallait parcourir toute la fiche. #}
+    <a href="{{ ROOT }}/knowledge/products" class="fiche-back">
+        <i class="bi bi-arrow-left"></i>
+        <span>{{ translations.back_to_products }}</span>
+    </a>
 {% endblock %}
 
 {% block content %}
@@ -328,12 +466,34 @@
     {# ====================================================== #}
     <div class="fiche-wrap mb-4">
 
+        {# ---- PHOTO, EN TÊTE ET SUR TOUTE LA LARGEUR ----
+           Elle vivait dans un coin de l'en-tête, en 180x130. Or en cuisine
+           on compare ce qu'on a produit à ce qu'on doit obtenir : sur cette
+           fiche, c'est l'image qui porte l'information, pas le texte. Elle
+           passe donc devant, en pleine largeur, bornée en hauteur pour que
+           la lecture puisse commencer sans faire défiler. #}
+        <div class="fiche-hero">
+            {% if photos and photos.hasMainPhoto() %}
+                <img src="{{ photos.getMainPhotoUrl() }}"
+                     alt="{{ product.getName() }}"
+                     class="fiche-zoomable"
+                     onclick="ficheLightboxOpen(this)"
+                     onerror="ficheImgError(this)">
+                <span class="fiche-hero-zoom" aria-hidden="true"><i class="bi bi-arrows-fullscreen"></i></span>
+            {% else %}
+                <div class="fiche-hero-empty">
+                    <i class="bi bi-box-seam"></i>
+                    <span>{{ translations.no_photo }}</span>
+                </div>
+            {% endif %}
+        </div>
+
         {# ---- HEADER ---- #}
         <div class="fiche-header">
             <div class="fiche-header-left">
                 {% if obj %}
                     <div class="fiche-category-label">
-                        {{ obj.getCategoryName() ?: translations.no_category|default('Brak kategorii') }}
+                        {{ obj.getCategoryName() ?: translations.no_category }}
                     </div>
                 {% endif %}
                 <h1 class="fiche-product-name">{{ product.getName() }}</h1>
@@ -358,7 +518,7 @@
                             {% set m = obj.getShelfLifeMinutes() % 60 %}
                             <span class="fiche-badge fiche-badge-dlc">
                                 <i class="bi bi-clock me-1"></i>DLC
-                                {% if h > 0 %}{{ h }}{{ translations.hours|default('h') }}{% endif %}{% if m > 0 %} {{ m }}min{% endif %}
+                                {% if h > 0 %}{{ h }}{{ translations.hours }}{% endif %}{% if m > 0 %} {{ m }}min{% endif %}
                                 {% if obj.getShelfLifeCategory() %} · {{ obj.getShelfLifeCategory() }}{% endif %}
                             </span>
                         {% endif %}
@@ -369,12 +529,12 @@
                         {% endif %}
                         {% if obj.getIsVegetarian() %}
                             <span class="fiche-badge fiche-badge-veg">
-                                <i class="bi bi-leaf me-1"></i>{{ translations.vegetarian|default('Wegetariańskie') }}
+                                <i class="bi bi-leaf me-1"></i>{{ translations.vegetarian }}
                             </span>
                         {% endif %}
                         {% if obj.getIsPreparedBeforeSales() %}
                             <span class="fiche-badge fiche-badge-prep">
-                                <i class="bi bi-clock-history me-1"></i>{{ translations.prepared_before|default('Przygotowane wcześniej') }}
+                                <i class="bi bi-clock-history me-1"></i>{{ translations.prepared_before }}
                             </span>
                         {% endif %}
                         {% if obj.getNutriscore() %}
@@ -389,29 +549,15 @@
                 </div>
             </div>
 
-            {# Zdjęcie główne w nagłówku #}
-            <div class="fiche-header-photo">
-                {% if photos and photos.hasPhoto1() %}
-                    <img src="{{ photos.getPhoto1Url() }}"
-                         alt="{{ product.getName() }}"
-                         onerror="ficheImgError(this)">
-                    <span class="fiche-photo-label">{{ translations.photo_product|default('Zdjęcie produktu') }}</span>
-                {% else %}
-                    <i class="bi bi-box-seam" style="font-size:2.5rem; color:#ced4da"></i>
-                    <span style="margin-top:8px; font-size:0.78rem">{{ translations.no_photo|default('Brak zdjęcia') }}</span>
-                {% endif %}
-            </div>
         </div>
 
         {# ---- MAIN 2 KOLUMNY ---- #}
         <div class="fiche-main">
-
-            {# =========== LEWA KOLUMNA =========== #}
-            <div class="fiche-col fiche-col-left">
+            <div class="fiche-sec">
 
                 {# SKŁAD (składniki jako chipy) #}
                 <h4 class="fiche-section-title">
-                    <i class="bi bi-journal-text me-1"></i>{{ translations.composition|default('Skład') }}
+                    <i class="bi bi-journal-text me-1"></i>{{ translations.composition }}
                 </h4>
                 {% if recipe and recipe.hasElements() %}
                     <div class="ingredient-chips">
@@ -444,7 +590,7 @@
 
                 {# ALERGENY #}
                 <h4 class="fiche-section-title">
-                    <i class="bi bi-exclamation-triangle me-1"></i>{{ translations.allergens|default('Alergeny') }}
+                    <i class="bi bi-exclamation-triangle me-1"></i>{{ translations.allergens }}
                 </h4>
                 {% if allAllergens is not empty %}
                     <div class="allergen-chips">
@@ -452,15 +598,15 @@
                             <span class="allergen-chip">{{ allergen }}</span>
                         {% endfor %}
                     </div>
-                    <p class="allergen-note">→ {{ translations.allergens_check|default('Sprawdź skład przed podaniem osobom uczulonym') }}</p>
+                    <p class="allergen-note">→ {{ translations.allergens_check }}</p>
                 {% else %}
-                    <p class="text-muted small">{{ translations.no_allergens|default('Brak zidentyfikowanych alergenów') }}</p>
+                    <p class="text-muted small">{{ translations.no_allergens }}</p>
                 {% endif %}
 
                 {# PRZECHOWYWANIE #}
                 {% if obj %}
                 <h4 class="fiche-section-title">
-                    <i class="bi bi-thermometer-half me-1"></i>{{ translations.storage_conditions|default('Warunki przechowywania i serwowania') }}
+                    <i class="bi bi-thermometer-half me-1"></i>{{ translations.storage_conditions }}
                 </h4>
                 <div class="fiche-note-box">
                     <p>
@@ -469,16 +615,16 @@
                             {% if obj.getStorageDescription() %} — {{ obj.getStorageDescription() }}{% endif %}
                         {% endif %}
                         {% if obj.getStorageTemperature() %}
-                            <br>🌡️ {{ translations.storage_temperature|default('Temperatura') }}: <strong>{{ obj.getStorageTemperature() }}°C</strong>
+                            <br>🌡️ {{ translations.storage_temperature }}: <strong>{{ obj.getStorageTemperature() }}°C</strong>
                         {% endif %}
                         {% if obj.getReheatingTimeMinutes() and obj.getReheatingTimeMinutes() > 0 %}
-                            <br>🔥 {{ translations.reheating|default('Podgrzewanie') }}: <strong>{{ obj.getReheatingTimeMinutes() }} min</strong>
+                            <br>🔥 {{ translations.reheating }}: <strong>{{ obj.getReheatingTimeMinutes() }} min</strong>
                             {% if obj.getReheatingTemperatureCelsius() and obj.getReheatingTemperatureCelsius() > 0 %}
                                 / <strong>{{ obj.getReheatingTemperatureCelsius() }}°C</strong>
                             {% endif %}
                         {% endif %}
                         {% if obj.getPositioningName() %}
-                            <br>📍 {{ translations.positioning|default('Pozycjonowanie') }}: <strong>{{ obj.getPositioningName() }}</strong>
+                            <br>📍 {{ translations.positioning }}: <strong>{{ obj.getPositioningName() }}</strong>
                             {% if obj.getPositioningDescription() %} — {{ obj.getPositioningDescription() }}{% endif %}
                         {% endif %}
                     </p>
@@ -486,38 +632,46 @@
 
                 {# INFORMACJE DODATKOWE #}
                 <h4 class="fiche-section-title mt-3">
-                    <i class="bi bi-info-circle me-1"></i>{{ translations.product_details|default('Szczegóły produktu') }}
+                    <i class="bi bi-info-circle me-1"></i>{{ translations.product_details }}
                 </h4>
                 {% if obj.getSingleWeight() %}
                     <div class="fiche-info-row">
-                        <span class="fiche-info-label">{{ translations.single_weight|default('Waga jednostkowa') }}</span>
+                        <span class="fiche-info-label">{{ translations.single_weight }}</span>
                         <span class="fiche-info-value">{{ obj.getSingleWeight() }} g</span>
                     </div>
                 {% endif %}
                 {% if recipe and recipe.getYieldQuantity() %}
                     <div class="fiche-info-row">
-                        <span class="fiche-info-label">{{ translations.yield|default('Wydajność receptury') }}</span>
+                        <span class="fiche-info-label">{{ translations.yield }}</span>
                         <span class="fiche-info-value">{{ recipe.getYieldQuantity() }} pcs</span>
                     </div>
                 {% endif %}
-                {% if obj.getQuantityPerLabel() %}
-                    <div class="fiche-info-row">
-                        <span class="fiche-info-label">{{ translations.quantity_per_label|default('Ilość na etykiecie') }}</span>
-                        <span class="fiche-info-value">{{ obj.getQuantityPerLabel() }}</span>
-                    </div>
-                {% endif %}
-                {% if obj.getTaxValPerc() %}
-                    <div class="fiche-info-row">
-                        <span class="fiche-info-label">{{ translations.tax|default('Stawka VAT') }}</span>
-                        <span class="fiche-info-value">{{ obj.getTaxValPerc() }}%</span>
-                    </div>
+                {# Étiquetage et TVA ne servent pas à produire : ils descendent
+                   dans un repli, ouvrable quand on en a besoin. Sur une tablette
+                   de cuisine, un taux de TVA au milieu des conditions de service
+                   n'est que du bruit. #}
+                {% if obj.getQuantityPerLabel() or obj.getTaxValPerc() %}
+                    <details class="fiche-admin">
+                        <summary>{{ translations.admin_data }}</summary>
+                        {% if obj.getQuantityPerLabel() %}
+                            <div class="fiche-info-row">
+                                <span class="fiche-info-label">{{ translations.quantity_per_label }}</span>
+                                <span class="fiche-info-value">{{ obj.getQuantityPerLabel() }}</span>
+                            </div>
+                        {% endif %}
+                        {% if obj.getTaxValPerc() %}
+                            <div class="fiche-info-row">
+                                <span class="fiche-info-label">{{ translations.tax }}</span>
+                                <span class="fiche-info-value">{{ obj.getTaxValPerc() }}%</span>
+                            </div>
+                        {% endif %}
+                    </details>
                 {% endif %}
                 {% endif %}{# /if obj #}
 
-            </div>{# /fiche-col-left #}
+            </div>
 
-            {# =========== PRAWA KOLUMNA =========== #}
-            <div class="fiche-col">
+            <div class="fiche-sec">
 
                 {# PRZYGOTOWANIE – typy #}
                 {% if preparation and preparation.hasTypes() %}
@@ -537,7 +691,7 @@
                 {# KROKI PRZYGOTOWANIA #}
                 {% if preparation and preparation.hasSteps() %}
                     <h4 class="fiche-section-title" style="margin-top:{% if preparation.hasTypes() %}0{% else %}0{% endif %}">
-                        <i class="bi bi-list-ol me-1"></i>{{ translations.preparation|default('Przygotowanie') }}
+                        <i class="bi bi-list-ol me-1"></i>{{ translations.preparation }}
                     </h4>
                     {% for step in preparation.getSteps() %}
                         <div class="fiche-step">
@@ -545,17 +699,15 @@
                             <div>{{ step.getStepDescription() }}</div>
                         </div>
                     {% endfor %}
-                {% elseif not preparation or not preparation.hasTypes() %}
-                    <h4 class="fiche-section-title" style="margin-top:0">
-                        <i class="bi bi-list-ol me-1"></i>{{ translations.preparation|default('Przygotowanie') }}
-                    </h4>
-                    <p class="text-muted small">—</p>
                 {% endif %}
+                {# Une section « Préparation » titrée pour n'afficher qu'un tiret
+                   occupait une place et faisait chercher une information qui
+                   n'existe pas. Sans étapes, elle disparaît. #}
 
                 {# RECEPTURA SZCZEGÓŁOWA (drzewo składników z ilościami) #}
                 {% if recipe and recipe.hasElements() %}
                     <h4 class="fiche-section-title">
-                        <i class="bi bi-diagram-3 me-1"></i>{{ translations.recipe_quantities|default('Ilości składników') }}
+                        <i class="bi bi-diagram-3 me-1"></i>{{ translations.recipe_quantities }}
                     </h4>
                     {% for element in recipe.getElements() %}
                         {% if element.getType() == 'ingredient' %}
@@ -585,7 +737,7 @@
                 {# WYMAGANE KOMPETENCJE #}
                 {% if product.hasCompetences() %}
                     <h4 class="fiche-section-title">
-                        <i class="bi bi-mortarboard me-1"></i>{{ translations.required_competences|default('Wymagane kompetencje') }}
+                        <i class="bi bi-mortarboard me-1"></i>{{ translations.required_competences }}
                     </h4>
                     {% for competence in product.getCompetences() %}
                         <div class="competence-item">
@@ -602,7 +754,7 @@
                     {% endfor %}
                 {% endif %}
 
-            </div>{# /fiche-col-right #}
+            </div>
 
         </div>{# /fiche-main #}
 
@@ -610,7 +762,7 @@
         <div class="fiche-plano">
             <div class="fiche-plano-header">
                 <span class="fiche-plano-title">
-                    <i class="bi bi-images me-1"></i>{{ translations.planogram|default('Prezentacja & Opakowanie') }}
+                    <i class="bi bi-images me-1"></i>{{ translations.planogram }}
                 </span>
                 {% if package %}
                     <span class="text-muted" style="font-size:0.8rem">
@@ -622,45 +774,35 @@
 
             <div class="row g-3">
 
-                {# Zdjęcia planogramu #}
-                {% set hasPhoto2 = photos and photos.hasPhoto2() %}
-                {% set hasPhoto3 = photos and photos.hasPhoto3() %}
-                {% if hasPhoto2 or hasPhoto3 %}
-                    <div class="col-12 col-md-{{ package and package.hasMaterials() ? '5' : '12' }}">
-                        <div class="plano-photos">
-                            {% if hasPhoto2 %}
-                                <div class="plano-photo">
-                                    <img src="{{ photos.getPhoto2Url() }}"
-                                         alt="{{ product.getName() }} – 2"
-                                         onerror="ficheImgErrorSmall(this)">
-                                    <span class="fiche-photo-label">{{ translations.photo_presentation|default('Prezentacja') }}</span>
-                                </div>
-                            {% endif %}
-                            {% if hasPhoto3 %}
-                                <div class="plano-photo">
-                                    <img src="{{ photos.getPhoto3Url() }}"
-                                         alt="{{ product.getName() }} – 3"
-                                         onerror="ficheImgErrorSmall(this)">
-                                    <span class="fiche-photo-label">{{ translations.photo_display|default('Ekspozycja') }}</span>
-                                </div>
-                            {% endif %}
-                        </div>
+                                {# Planogram – modul Prezentacja i Ekspozycja do dobudowania w przyszlosci #}
+                <div class="col-12 col-md-6">
+                    <div class="plano-photo" style="height:120px; flex-direction:column; gap:6px;">
+                        <i class="bi bi-easel" style="font-size:1.8rem; color:#ced4da"></i>
+                        <span style="font-size:0.78rem; color:#adb5bd">{{ translations.photo_presentation }}</span>
+                        <span style="font-size:0.68rem; color:#ced4da; font-style:italic">{{ translations.coming_soon }}</span>
                     </div>
-                {% endif %}
+                </div>
+                <div class="col-12 col-md-6">
+                    <div class="plano-photo" style="height:120px; flex-direction:column; gap:6px;">
+                        <i class="bi bi-layout-wtf" style="font-size:1.8rem; color:#ced4da"></i>
+                        <span style="font-size:0.78rem; color:#adb5bd">{{ translations.photo_display }}</span>
+                        <span style="font-size:0.68rem; color:#ced4da; font-style:italic">{{ translations.coming_soon }}</span>
+                    </div>
+                </div>
 
                 {# Opakowanie – tabela materiałów #}
                 {% if package and package.hasMaterials() %}
-                    <div class="col-12 col-md-{{ (hasPhoto2 or hasPhoto3) ? '7' : '12' }}">
+                    <div class="col-12">
                         <h6 class="fiche-section-title mb-2" style="margin-top:0">
-                            <i class="bi bi-box me-1"></i>{{ translations.packaging_materials|default('Materiały opakowaniowe') }}
+                            <i class="bi bi-box me-1"></i>{{ translations.packaging_materials }}
                         </h6>
                         <table class="table table-sm table-hover package-materials-table mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th>{{ translations.material_name|default('Materiał') }}</th>
-                                    <th class="text-center">{{ translations.quantity|default('Ilość') }}</th>
-                                    <th class="text-center">{{ translations.unit|default('Jedn.') }}</th>
-                                    <th class="text-end">{{ translations.price_gross|default('Cena brutto') }}</th>
+                                    <th>{{ translations.material_name }}</th>
+                                    <th class="text-center">{{ translations.quantity }}</th>
+                                    <th class="text-center">{{ translations.unit }}</th>
+                                    <th class="text-end">{{ translations.price_gross }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -678,10 +820,10 @@
                 {% endif %}
 
                 {# Fallback – brak zdjęć i opakowania #}
-                {% if not hasPhoto2 and not hasPhoto3 and (not package or not package.hasMaterials()) %}
+                {% if not package or not package.hasMaterials() %}
                     <div class="col-12 text-center text-muted py-3">
                         <i class="bi bi-image" style="font-size:2rem"></i>
-                        <p class="mt-2 small">{{ translations.no_media|default('Brak zdjęć i materiałów opakowaniowych') }}</p>
+                        <p class="mt-2 small">{{ translations.no_media }}</p>
                     </div>
                 {% endif %}
 
@@ -690,12 +832,72 @@
 
     </div>{# /fiche-wrap #}
 
-    {# Przycisk powrotu #}
-    <div class="mb-4">
-        <a href="{{ ROOT }}/knowledge/products" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-2"></i>{{ translations.back_to_products|default('Wróć do listy produktów') }}
-        </a>
+
+    {# ---- GALERIA ZDJEC ---- #}
+    {% set hasPhoto1gallery = photos and photos.hasPhoto1() %}
+    {% set hasPhoto2gallery = photos and photos.hasPhoto2() %}
+    {% set hasPhoto3gallery = photos and photos.hasPhoto3() %}
+    {% set hasMainGallery = photos and photos.hasMainPhoto() %}
+    {% if hasPhoto1gallery or hasPhoto2gallery or hasPhoto3gallery or hasMainGallery %}
+    <div class="fiche-wrap mb-4">
+        <div class="fiche-plano">
+            <div class="fiche-plano-header">
+                <span class="fiche-plano-title">
+                    <i class="bi bi-images me-1"></i>{{ translations.photos }}
+                </span>
+            </div>
+            <div class="plano-photos">
+                {% if hasPhoto1gallery %}
+                    <div class="plano-photo">
+                        <img src="{{ photos.getPhoto1Url() }}"
+                             alt="{{ product.getName() }} - photo 1"
+                             class="fiche-zoomable"
+                             onclick="ficheLightboxOpen(this)"
+                             onerror="ficheImgErrorSmall(this)">
+                        <span class="fiche-photo-label">{{ translations.photo_1 }}</span>
+                    </div>
+                {% endif %}
+                {% if hasPhoto2gallery %}
+                    <div class="plano-photo">
+                        <img src="{{ photos.getPhoto2Url() }}"
+                             alt="{{ product.getName() }} - photo 2"
+                             class="fiche-zoomable"
+                             onclick="ficheLightboxOpen(this)"
+                             onerror="ficheImgErrorSmall(this)">
+                        <span class="fiche-photo-label">{{ translations.photo_2 }}</span>
+                    </div>
+                {% endif %}
+                {% if hasPhoto3gallery %}
+                    <div class="plano-photo">
+                        <img src="{{ photos.getPhoto3Url() }}"
+                             alt="{{ product.getName() }} - photo 3"
+                             class="fiche-zoomable"
+                             onclick="ficheLightboxOpen(this)"
+                             onerror="ficheImgErrorSmall(this)">
+                        <span class="fiche-photo-label">{{ translations.photo_3 }}</span>
+                    </div>
+                {% endif %}
+                {% if hasMainGallery %}
+                    <div class="plano-photo">
+                        <img src="{{ photos.getMainPhotoUrl() }}"
+                             alt="{{ product.getName() }} - main"
+                             class="fiche-zoomable"
+                             onclick="ficheLightboxOpen(this)"
+                             onerror="ficheImgErrorSmall(this)">
+                        <span class="fiche-photo-label">{{ translations.main_photo }}</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
+    {% endif %}
+
+    {# Lightbox #}
+    <div class="fiche-lightbox" id="ficheLightbox" onclick="ficheLightboxClose()">
+        <span class="fiche-lightbox-close" onclick="ficheLightboxClose()">&times;</span>
+        <img id="ficheLightboxImg" src="" alt="" onclick="event.stopPropagation()">
+    </div>
+
 
 {% endblock %}
 
@@ -705,12 +907,27 @@ function ficheImgError(img) {
     var p = img.parentElement;
     img.remove();
     p.innerHTML = '<i class="bi bi-box-seam" style="font-size:2.5rem;color:#ced4da"></i>'
-                + '<span style="margin-top:8px;font-size:0.78rem">{{ translations.no_photo|default("Brak zdj\u0119cia") }}</span>';
+                + '<span style="margin-top:8px;font-size:0.78rem">{{ translations.no_photo }}</span>';
 }
 function ficheImgErrorSmall(img) {
     var p = img.parentElement;
     img.remove();
     p.innerHTML = '<i class="bi bi-image" style="font-size:2rem;color:#ced4da"></i>';
 }
+function ficheLightboxOpen(img) {
+    var lb = document.getElementById('ficheLightbox');
+    var lbImg = document.getElementById('ficheLightboxImg');
+    lbImg.src = img.src;
+    lbImg.alt = img.alt;
+    lb.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+function ficheLightboxClose() {
+    document.getElementById('ficheLightbox').classList.remove('active');
+    document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') ficheLightboxClose();
+});
 </script>
 {% endblock %}

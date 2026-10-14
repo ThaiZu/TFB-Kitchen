@@ -21,6 +21,7 @@ class ProductModel implements JsonSerializable{
     private $nutriscore;
     private $allergene;
     private $suggested_sale_price;
+    private $portion_price;
     private $quantity_per_label;
     private $is_piece_based;
     private $id_package;
@@ -35,6 +36,19 @@ class ProductModel implements JsonSerializable{
     private $positioning_description;
     private $storage_name;
     private $storage_description;
+
+    /**
+     * Chemin de la photo principale.
+     *
+     * Le modèle de liste n'en portait aucune : seul ProductDetailModel avait
+     * des photos. Une liste de 573 produits tous coiffés de la même icône ne
+     * se parcourt pas — c'est l'image qui distingue une assiette d'une autre.
+     *
+     * L'endpoint de liste ne renvoie peut-être pas encore le champ ; dans ce
+     * cas il reste à null et les cartes retombent sur l'icône, sans casser.
+     * Voir docs/ENDPOINTS_PHOTOS_PRODUITS.md.
+     */
+    private $main_photo_path;
 
     public function __construct($data) {
         $this->id = $data['id'] ?? null;
@@ -52,6 +66,7 @@ class ProductModel implements JsonSerializable{
         $this->nutriscore = $data['nutriscore'] ?? null;
         $this->allergene = $data['allergene'] ?? null;
         $this->suggested_sale_price = $data['suggested_sale_price'] ?? null;
+        $this->portion_price = $data['portion_price'] ?? null;
         $this->quantity_per_label = $data['quantity_per_label'] ?? null;
         $this->is_piece_based = $data['is_piece_based'] ?? null;
         $this->id_package = $data['id_package'] ?? null;
@@ -66,6 +81,10 @@ class ProductModel implements JsonSerializable{
         $this->positioning_description = $data['positioning_description'] ?? null;
         $this->storage_name = $data['storage_name'] ?? null;
         $this->storage_description = $data['storage_description'] ?? null;
+
+        // Accepté à plat ou sous une clé « photos », selon ce que l'API sert.
+        $this->main_photo_path = $data['main_photo_path']
+            ?? ($data['photos']['main_photo_path'] ?? null);
     }
 
     public function jsonSerialize(): mixed
@@ -86,6 +105,7 @@ class ProductModel implements JsonSerializable{
             'nutriscore' => $this->nutriscore,
             'allergene' => $this->allergene,
             'suggested_sale_price' => $this->suggested_sale_price,
+            'portion_price' => $this->portion_price,
             'quantity_per_label' => $this->quantity_per_label,
             'is_piece_based' => $this->is_piece_based,
             'id_package' => $this->id_package,
@@ -99,8 +119,28 @@ class ProductModel implements JsonSerializable{
             'positioning_name' => $this->positioning_name,
             'positioning_description' => $this->positioning_description,
             'storage_name' => $this->storage_name,
-            'storage_description' => $this->storage_description
+            'storage_description' => $this->storage_description,
+            'main_photo_path' => $this->main_photo_path
         ];
+    }
+
+    public function hasMainPhoto(): bool { return !empty($this->main_photo_path); }
+
+    /**
+     * URL absolue de la photo principale.
+     *
+     * Même résolution que ProductPhotoModel : les chemins arrivent en
+     * « r2://… » et se résolvent sur SHARED_FILES_URL.
+     */
+    public function getMainPhotoUrl(): ?string
+    {
+        if (empty($this->main_photo_path)) {
+            return null;
+        }
+        if (str_starts_with($this->main_photo_path, 'r2://')) {
+            return rtrim(SHARED_FILES_URL, '/') . '/' . ltrim(substr($this->main_photo_path, 5), '/');
+        }
+        return $this->main_photo_path;
     }
 
     public function getId() { return $this->id; }
@@ -122,6 +162,7 @@ class ProductModel implements JsonSerializable{
     public function getNutriscore() { return $this->nutriscore; }
     public function getAllergene() { return $this->allergene; }
     public function getSuggestedSalePrice() { return $this->suggested_sale_price; }
+    public function getPortionPrice() { return $this->portion_price; }
     public function getQuantityPerLabel() { return $this->quantity_per_label; }
     public function getIsPieceBased() { return $this->is_piece_based; }
     public function getIdPackage() { return $this->id_package; }

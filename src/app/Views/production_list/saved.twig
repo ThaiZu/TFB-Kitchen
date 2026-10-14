@@ -1,0 +1,26 @@
+{% extends 'layouts/base.twig' %}
+{% block title %}{{ translations.saved_title }}{% endblock %}
+{% block head %}<style>
+.dp-card{background:#fff;border:1px solid var(--c-line,#e7dfd6);border-radius:16px;padding:18px;margin:14px 0}.dp-header,.dp-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.dp-button{display:inline-flex;align-items:center;min-height:44px;padding:10px 16px;border-radius:10px;background:var(--c-primary,#8D1D2C);color:white;border:0;text-decoration:none}.dp-secondary{background:#f4efe8;color:#8D1D2C}.dp-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.dp-summary b{display:block;font-size:1.6rem}.dp-table{width:100%;border-collapse:collapse}.dp-table th,.dp-table td{padding:10px;border-bottom:1px solid #eee;text-align:right}.dp-table th:first-child,.dp-table td:first-child{text-align:left;width:55%}.dp-sector>h2{color:var(--c-primary,#8D1D2C);font-size:1.2rem;margin:24px 0 6px}.dp-sector h3{font-size:1rem}.dp-muted{color:var(--c-muted,#766f68)}.dp-scroll{overflow-x:auto}.dp-table{min-width:480px}.dp-date{min-height:44px;padding:8px;border:1px solid #d7d0c8;border-radius:8px}@media(max-width:500px){.dp-card{padding:12px}.dp-summary{gap:6px}.dp-summary b{font-size:1.3rem}}
+</style>{% endblock %}
+{% block content %}
+<div class="dp-header"><div><h1>{{ translations.saved_title }} · {{ plan_date }}</h1><p class="dp-muted">{{ translations.saved_explanation }}</p></div><a class="dp-button dp-secondary" href="{{ ROOT }}/production-list?date={{ plan_date }}">{{ translations.edit_plan }}</a></div>
+<form class="dp-actions dp-card" action="{{ ROOT }}/production" method="get"><label>{{ translations.date }} <input class="dp-date" onchange="if(this.value && this.checkValidity()) this.form.requestSubmit()" type="date" name="date" value="{{ plan_date }}" required></label></form>
+{% if available and saved_plan.latest_saved_date|default(null) and saved_plan.latest_saved_date != plan_date %}<div class="dp-card"><p>{{ translations.other_saved_day }}</p><a class="dp-button dp-secondary" href="{{ ROOT }}/production?date={{ saved_plan.latest_saved_date }}">{{ translations.open_latest_plan }} · {{ saved_plan.latest_saved_date }}</a></div>{% endif %}
+{% if pdf_error|default(false) %}<p role="alert" class="dp-card">{{ translations.pdf_failed }}</p>{% endif %}
+{% if not available %}<p role="alert" class="dp-card">{{ translations.unavailable }}</p>
+{% elseif not saved_plan.exists|default(false) %}<div class="dp-card"><p>{{ translations.no_saved_plan }}</p><a class="dp-button" href="{{ ROOT }}/production-list?date={{ plan_date }}">{{ translations.create_plan }}</a></div>
+{% else %}
+<div class="dp-card"><div class="dp-actions">{% if is_today %}<a class="dp-button" href="{{ ROOT }}/production/receive?date={{ plan_date }}">{{ translations.receive_plan }}</a>{% endif %}<p>{{ translations.saved_revision }}: {{ saved_plan.revision }} · {{ plan_date }}</p><a class="dp-button" href="{{ ROOT }}/production/pdf?date={{ plan_date }}">{{ translations.download_saved_pdf }}</a></div><div class="dp-summary"><div>{{ translations.planned }}<b>{{ saved_plan.totals.planned + 0 }}</b></div><div>{{ translations.produced }}<b>{{ saved_plan.totals.produced + 0 }}</b></div><div>{{ translations.remaining }}<b>{{ saved_plan.totals.remaining + 0 }}</b></div></div></div>
+{% set sectors = saved_plan.sectors|default([{'name': '', 'categories': saved_plan.categories}]) %}
+{% for sector in sectors %}
+<section class="dp-sector"><h2>{{ sector.name ?: translations.unassigned_sector }}</h2>
+{% for category in sector.categories %}
+<section class="dp-card"><h3>{{ category.name ?: translations.uncategorized }}</h3><div class="dp-scroll"><table class="dp-table"><thead><tr><th>{{ translations.product }}</th><th>{{ translations.planned }}</th><th>{{ translations.produced }}</th><th>{{ translations.remaining }}</th></tr></thead><tbody>
+{% for line in category.lines %}<tr><td>{{ line.name }}</td><td>{{ line.planned_quantity + 0 }}</td><td>{{ line.produced_quantity + 0 }}</td><td><strong>{{ line.remaining_quantity + 0 }}</strong></td></tr>{% endfor %}
+</tbody></table></div></section>
+{% endfor %}</section>
+{% else %}<p class="dp-card">{{ translations.saved_empty }}</p>{% endfor %}
+{% if saved_plan.production_history %}<section class="dp-card"><h2>{{ translations.production_history }}</h2><p>{{ translations.production_history_hint }}</p><div class="dp-scroll"><table class="dp-table"><thead><tr><th>{{ translations.product }}</th><th>{{ translations.planned }}</th><th>{{ translations.produced }}</th></tr></thead><tbody>{% for line in saved_plan.production_history %}<tr><td>{{ line.name }}</td><td>{{ line.planned_quantity + 0 }}</td><td>{{ line.produced_quantity + 0 }}</td></tr>{% endfor %}</tbody></table></div></section>{% endif %}
+{% endif %}
+{% endblock %}
