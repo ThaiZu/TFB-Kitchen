@@ -92,6 +92,7 @@
   "tablet_worker_pin_label": "PIN wybranego pracownika",
   "tablet_worker_roster_error": "Nie można pobrać grafiku.",
   "tablet_worker_selection_error": "Wybierz pracownika i wpisz PIN.",
+  "tablet_worker_session_expired": "Sesja pracownika wygasła. Aby kontynuować, wybierz pracownika i wpisz PIN.",
   "tablet_worker_start": "Rozpocznij obsługę",
   "tablet_worker_start_error": "Nie udało się rozpocząć obsługi.",
   "tablet_worker_title": "Kto obsługuje tablet?",
@@ -109,5 +110,6 @@
   "nav_production_list": "Lista produkcyjna",
   "nav_production_cards": "Karty produkcyjne",
   "nav_inventory": "Stan produktów",
+  "nav_material_stocktaking": "Inwentaryzacja surowców",
   "inventory_subtitle": "Policz produkty i potwierdź rzeczywisty stan magazynu."
 }

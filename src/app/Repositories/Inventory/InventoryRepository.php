@@ -8,4 +8,6 @@ final class InventoryRepository
     { return $this->apiClient->get("/shops/{$shop}/inventory-count"); }
     public function count(int $shop, int $product, array $payload): array
     { return $this->apiClient->post("/shops/{$shop}/inventory-count/{$product}", $payload); }
+    public function add(int $shop, int $product, array $payload): array
+    { return $this->apiClient->post("/shops/{$shop}/inventory-adjustments/{$product}", $payload); }
 }

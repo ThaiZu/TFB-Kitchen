@@ -1,0 +1,22 @@
+{
+  "title": "Ajout manuel de stock",
+  "subtitle": "Ajoutez temporairement des produits au stock afin de maintenir les ventes sans interruption.",
+  "back_to_plan": "Production du jour",
+  "unavailable": "Impossible de charger les stocks des produits. Réessayez.",
+  "shift_required": "Démarrez votre poste pour ajouter du stock manuellement.",
+  "product": "Produit",
+  "product_search": "Saisissez au moins 2 lettres du produit",
+  "product_search_hint": "Saisissez au moins 2 lettres pour chercher un produit.",
+  "product_not_found": "Aucun produit pris en charge n’a été trouvé.",
+  "current_stock": "Stock actuel : %s pièces.",
+  "stock_after": "Stock après ajout : %s pièces.",
+  "quantity": "Quantité à ajouter",
+  "help": "Il s’agit d’un filet de sécurité temporaire. L’enregistrement augmente le stock et laisse une trace d’ajustement manuel ; il ne confirme pas la production.",
+  "save": "Ajouter au stock",
+  "saving": "Enregistrement…",
+  "saved": "Le stock a été augmenté. La vue va s’actualiser.",
+  "invalid": "Choisissez un produit et saisissez un nombre entier positif.",
+  "conflict": "Le stock du produit a changé entre-temps. La liste va s’actualiser.",
+  "failed": "Impossible d’ajouter le stock. Réessayez.",
+  "network": "Le résultat de l’enregistrement n’a pas été confirmé. Réessayez sans modifier les données."
+}

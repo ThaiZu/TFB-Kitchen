@@ -92,6 +92,7 @@
   "tablet_worker_pin_label": "PIN de l'employé sélectionné",
   "tablet_worker_roster_error": "Impossible de charger le planning.",
   "tablet_worker_selection_error": "Choisissez un employé et saisissez le PIN.",
+  "tablet_worker_session_expired": "La session de l'employé a expiré. Pour continuer, sélectionnez un employé et saisissez son PIN.",
   "tablet_worker_start": "Commencer le service",
   "tablet_worker_start_error": "Impossible de commencer le service.",
   "tablet_worker_title": "Qui utilise la tablette ?",
@@ -109,5 +110,6 @@
   "nav_production_list": "Plan de production",
   "nav_production_cards": "Fiches de production",
   "nav_inventory": "État des produits",
+  "nav_material_stocktaking": "Inventaire des matières premières",
   "inventory_subtitle": "Comptez les produits et confirmez le stock physique."
 }

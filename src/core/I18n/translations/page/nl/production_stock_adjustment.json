@@ -1,0 +1,22 @@
+{
+  "title": "Handmatige voorraadtoevoeging",
+  "subtitle": "Voeg tijdelijk producten aan de voorraad toe zodat de verkoop zonder onderbreking kan doorgaan.",
+  "back_to_plan": "Productie van vandaag",
+  "unavailable": "De productvoorraad kon niet worden geladen. Probeer opnieuw.",
+  "shift_required": "Start uw dienst om handmatig voorraad toe te voegen.",
+  "product": "Product",
+  "product_search": "Typ minimaal 2 letters van het product",
+  "product_search_hint": "Typ minimaal 2 letters om een product te zoeken.",
+  "product_not_found": "Geen ondersteund product gevonden.",
+  "current_stock": "Huidige voorraad: %s st.",
+  "stock_after": "Voorraad na toevoeging: %s st.",
+  "quantity": "Aantal toevoegen",
+  "help": "Dit is een tijdelijke veiligheidsfunctie. Opslaan verhoogt de voorraad en laat een controlespoor van de handmatige correctie achter; het bevestigt geen productie.",
+  "save": "Voorraad toevoegen",
+  "saving": "Opslaan…",
+  "saved": "De voorraad is verhoogd. Het scherm wordt vernieuwd.",
+  "invalid": "Kies een product en voer een positief geheel getal in.",
+  "conflict": "De productvoorraad is intussen gewijzigd. De lijst wordt vernieuwd.",
+  "failed": "De voorraad kon niet worden toegevoegd. Probeer opnieuw.",
+  "network": "Het resultaat van het opslaan is niet bevestigd. Probeer opnieuw zonder de gegevens te wijzigen."
+}

@@ -41,7 +41,9 @@ foreach (['pl', 'en', 'fr', 'nl', 'it'] as $language) {
             $themeHash = substr(hash_file('sha256', __DIR__ . '/../public/assets/css/atelier-theme.css'), 0, 16);
             $expect($xpath->query('//link[@href="' . ROOT . '/assets/css/atelier-theme.css?v=' . $themeHash . '"]')->length === 1, 'Stylesheet URL tracks its content');
             foreach (["//*[@id='appNavSheet']", "//nav[contains(@class,'app-tabbar-bar')]"] as $scope) {
-                foreach (['dashboard', 'production/today', 'production-list', 'inventory', 'knowledge/products', 'checklists', 'orders', 'knowledge'] as $destination) {
+                $destinations = ['dashboard', 'production/today', 'production-list', 'inventory', 'knowledge/products', 'checklists', 'orders', 'knowledge'];
+                if (str_contains($scope, 'appNavSheet')) $destinations[] = 'material-stocktaking';
+                foreach ($destinations as $destination) {
                     $links = $xpath->query($scope . '//a[@href="' . ROOT . '/' . $destination . '"]');
                     $expect($links->length === 1, "$language / $mode / $path missing or duplicate $destination in $scope");
                     $expect(trim($links->item(0)->textContent) !== '', "Translated label for $destination");
@@ -84,14 +86,18 @@ foreach (['pl', 'en', 'fr', 'nl', 'it'] as $language) {
     }
 }
 $expect($container->get(\App\Kitchen\app\Http\Controllers\Inventory\InventoryController::class) instanceof \App\Kitchen\app\Http\Controllers\Inventory\InventoryController, 'Inventory controller resolves in production DI');
+$expect($container->get(\App\Kitchen\app\Http\Controllers\Production\ProductionStockAdjustmentController::class) instanceof \App\Kitchen\app\Http\Controllers\Production\ProductionStockAdjustmentController, 'Production stock-adjustment controller resolves in production DI');
+$expect($container->get(\App\Kitchen\app\Http\Controllers\Material\MaterialStocktakingController::class) instanceof \App\Kitchen\app\Http\Controllers\Material\MaterialStocktakingController, 'Material stocktaking controller resolves in DI');
 $dispatcher=\FastRoute\simpleDispatcher(require __DIR__.'/../src/core/Bootstrap/routes.php');
 foreach ([
     ['GET','/inventory'], ['POST','/inventory/count'],
+    ['GET','/material-stocktaking'], ['POST','/ajax/material-stocktaking/preview'], ['POST','/ajax/material-stocktaking/save'],
     ['GET','/inventory/waste-data'], ['POST','/inventory/waste'],
     ['GET','/inventory/carryover-data'], ['POST','/inventory/carryover'],
     ['GET','/production/today'],
     ['POST','/ajax/production/today/cycles/confirm'],
     ['GET','/production/waste'], ['POST','/ajax/production/waste'],
+    ['GET','/production/stock-correction'], ['POST','/ajax/production/stock-correction'],
     ['GET','/production/receive'],
 ] as [$method,$path]) {
     $expect($dispatcher->dispatch($method,$path)[0] === \FastRoute\Dispatcher::FOUND,'New route resolves '.$method.' '.$path);

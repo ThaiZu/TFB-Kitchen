@@ -1,0 +1,49 @@
+{% extends 'layouts/base.twig' %}
+
+{% block title %}{{ translations.title }}{% endblock %}
+
+{% block head %}
+<style>
+    .psa-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px}.psa-head h1{margin:0;font-size:1.45rem;font-weight:800}.psa-head p{margin:4px 0 0;color:var(--c-muted,#766f68);font-size:.9rem}.psa-back{min-height:44px;display:inline-flex;align-items:center;padding:8px 14px;border:1px solid var(--c-primary,#8d1d2c);border-radius:10px;color:var(--c-primary,#8d1d2c);font-weight:700;text-decoration:none;white-space:nowrap}.psa-card{padding:16px;margin-bottom:12px;background:#fff;border:1px solid var(--c-line,rgba(36,26,22,.1));border-radius:16px}.psa-form{display:grid;gap:14px}.psa-label{display:grid;gap:6px;color:#403831;font-weight:800}.psa-field{width:100%;min-height:48px;padding:10px 12px;border:1px solid #cfc5bb;border-radius:10px;background:#fff;color:#302923;font:inherit}.psa-field:focus{border-color:var(--c-primary,#8d1d2c);outline:2px solid color-mix(in srgb,var(--c-primary,#8d1d2c) 16%,transparent)}.psa-products{display:flex;flex-wrap:wrap;gap:8px;min-height:42px}.psa-product{min-height:42px;padding:8px 12px;border:1px solid #cfc5bb;border-radius:999px;background:#fff;color:#403831;font:800 .9rem/1.15 inherit;cursor:pointer}.psa-product.is-selected{border-color:var(--c-primary,#8d1d2c);background:var(--c-primary,#8d1d2c);color:#fff}.psa-stock,.psa-help{margin:0;color:var(--c-muted,#766f68);font-size:.88rem}.psa-submit{min-height:52px;border:0;border-radius:11px;background:var(--c-primary,#8d1d2c);color:#fff;font:800 1rem/1 inherit;cursor:pointer}.psa-submit:disabled{cursor:not-allowed;opacity:.55}.psa-notice{margin:0 0 12px;padding:13px 14px;border-radius:11px;background:#fff6e9;color:#6d4811}.psa-notice--error{background:#fff1f1;color:#98262a}.psa-notice--success{background:#edf7ee;color:#236c35}@media(max-width:500px){.psa-head h1{font-size:1.25rem}.psa-head{align-items:center}}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="psa-head"><div><h1>{{ translations.title }}</h1><p>{{ translations.subtitle }}</p></div><a class="psa-back" href="{{ ROOT }}/production/today">{{ translations.back_to_plan }}</a></section>
+{% if not available %}
+    <p class="psa-notice psa-notice--error" role="alert">{{ translations.unavailable }}</p>
+{% else %}
+    {% if not has_shift %}<p class="psa-notice psa-notice--error">{{ translations.shift_required }}</p>{% endif %}
+    <p id="psaNotice" class="psa-notice" role="status" aria-live="polite" hidden></p>
+    <section class="psa-card"><form id="psaForm" class="psa-form">
+        <label class="psa-label" for="psaProductSearch">{{ translations.product }}<input id="psaProduct" type="hidden" required><input id="psaProductSearch" class="psa-field" type="search" autocomplete="off" placeholder="{{ translations.product_search }}" {% if not has_shift %}disabled{% endif %}></label>
+        <div id="psaProducts" class="psa-products" role="listbox" aria-label="{{ translations.product }}"></div>
+        <p id="psaStock" class="psa-stock"></p><p id="psaAfter" class="psa-stock"></p>
+        <label class="psa-label" for="psaQuantity">{{ translations.quantity }}<input id="psaQuantity" class="psa-field" type="number" min="1" step="1" inputmode="numeric" required {% if not has_shift %}disabled{% endif %}></label>
+        <p class="psa-help">{{ translations.help }}</p><button id="psaSave" class="psa-submit" type="submit" {% if not has_shift %}disabled{% endif %}>{{ translations.save }}</button>
+    </form></section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if available %}
+<script>
+(() => {
+    const root={{ ROOT|json_encode|raw }}, messages={{ translations|json_encode(constant('JSON_HEX_TAG'))|raw }}, screen={{ {shop_id: shop_id, lines: lines, has_shift: has_shift}|json_encode(constant('JSON_HEX_TAG'))|raw }};
+    const form=document.getElementById('psaForm'), product=document.getElementById('psaProduct'), search=document.getElementById('psaProductSearch'), products=document.getElementById('psaProducts'), quantity=document.getElementById('psaQuantity'), stock=document.getElementById('psaStock'), after=document.getElementById('psaAfter'), save=document.getElementById('psaSave'), notice=document.getElementById('psaNotice');
+    const newId=()=>window.crypto?.randomUUID ? crypto.randomUUID() : `manual-stock-add-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const format=value=>Number(value).toLocaleString(undefined,{maximumFractionDigits:4});
+    const supported=line=>Boolean(Number(line.is_piece_based))&&!Boolean(Number(line.is_divisible));
+    const current=()=>screen.lines.find(line=>String(line.id_product)===product.value);
+    const show=(text,type='')=>{notice.hidden=false;notice.textContent=text;notice.className=`psa-notice ${type ? `psa-notice--${type}` : ''}`;};
+    const storageKey=()=>`kitchen-production-manual-add:${screen.shop_id}:${product.value}`;
+    const updateStock=()=>{const line=current(), amount=/^[1-9]\d{0,7}$/.test(String(quantity.value||''))?Number(quantity.value):0;stock.textContent=line?messages.current_stock.replace('%s',format(line.in_stock)):'';after.textContent=line&&amount>0?messages.stock_after.replace('%s',format(Number(line.in_stock)+amount)):'';};
+    function renderProducts(){const term=search.value.trim().toLocaleLowerCase();products.replaceChildren();if(term.length<2){const hint=document.createElement('p');hint.className='psa-help';hint.textContent=messages.product_search_hint;products.append(hint);return;}const matches=screen.lines.filter(supported).filter(line=>String(line.name||'').toLocaleLowerCase().includes(term)).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''))).slice(0,20);if(!matches.length){const hint=document.createElement('p');hint.className='psa-help';hint.textContent=messages.product_not_found;products.append(hint);return;}matches.forEach(line=>{const button=document.createElement('button');button.type='button';button.className='psa-product';button.textContent=`${line.name} · ${format(line.in_stock)}`;const selected=String(line.id_product)===product.value;button.classList.toggle('is-selected',selected);button.addEventListener('click',()=>{product.value=String(line.id_product);search.value=String(line.name||'');updateStock();renderProducts();});products.append(button);});}
+    search.addEventListener('input',()=>{product.value='';updateStock();renderProducts();});
+    quantity.addEventListener('input',updateStock);
+    form.addEventListener('submit',async event=>{event.preventDefault();const line=current(), amount=String(quantity.value||'');if(!screen.has_shift||!line||!supported(line)||!/^[1-9]\d{0,7}$/.test(amount)){show(messages.invalid,'error');return;}let payload;try{payload=JSON.parse(sessionStorage.getItem(storageKey())||'null');}catch(_){payload=null;}if(!payload||payload.quantity!==amount){payload={id_product:Number(line.id_product),quantity:amount,expected_in_stock:String(line.in_stock),expected_initialized_at:line.inventory_initialized_at||null,expected_movement_id:String(line.last_movement_id),idempotency_key:newId()};sessionStorage.setItem(storageKey(),JSON.stringify(payload));}save.disabled=true;const original=save.textContent;save.textContent=messages.saving;try{const response=await fetch(root+'/ajax/production/stock-correction',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},body:JSON.stringify(payload)});const result=await response.json();if(!response.ok||result.success!==true){show(messages[result.reason]||messages.failed,'error');if(result.reason==='conflict')window.setTimeout(()=>window.location.reload(),700);return;}sessionStorage.removeItem(storageKey());show(messages.saved,'success');window.setTimeout(()=>window.location.reload(),450);}catch(_){show(messages.network,'error');}finally{save.disabled=!screen.has_shift;save.textContent=original;}});
+    renderProducts();updateStock();
+})();
+</script>
+{% endif %}
+{% endblock %}

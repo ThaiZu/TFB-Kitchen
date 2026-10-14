@@ -7,6 +7,7 @@ return function (RouteCollector $r) {
     $controller = \App\Kitchen\app\Http\Controllers\Production\ProductionController::class;
     $todayController = \App\Kitchen\app\Http\Controllers\Production\TodayProductionController::class;
     $wasteController = \App\Kitchen\app\Http\Controllers\Production\ProductionWasteController::class;
+    $stockAdjustmentController = \App\Kitchen\app\Http\Controllers\Production\ProductionStockAdjustmentController::class;
 
     // Compact execution list backed by the canonical Panel production plan.
     $r->addRoute('GET', '/production/today', [
@@ -31,6 +32,14 @@ return function (RouteCollector $r) {
     $r->addRoute('POST', '/ajax/production/waste', [
         'controller' => $wasteController,
         'method'     => 'create',
+    ]);
+    $r->addRoute('GET', '/production/stock-correction', [
+        'controller' => $stockAdjustmentController,
+        'method'     => 'index',
+    ]);
+    $r->addRoute('POST', '/ajax/production/stock-correction', [
+        'controller' => $stockAdjustmentController,
+        'method'     => 'add',
     ]);
 
     // Écran unique, quatre vues : matin, midi, après-midi, stock.
