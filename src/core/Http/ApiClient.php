@@ -43,6 +43,14 @@ class ApiClient
         return $headers;
     }
 
+    private function initializeCurl($url) {
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+
+        return $ch;
+    }
+
 
     public function where($endpoint, $params, $decode_json = true) {
         $queryString = http_build_query($params);
@@ -56,7 +64,7 @@ class ApiClient
 
         $headers = $this->getHeaders();
 
-        $ch = curl_init($url);
+        $ch = $this->initializeCurl($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_HEADER, true); // Pobierz nagłówki
@@ -103,7 +111,7 @@ class ApiClient
         $url = $this->baseUrl . $endpoint;
         $headers = $this->getHeaders();
 
-        $ch = curl_init($url);
+        $ch = $this->initializeCurl($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
@@ -144,7 +152,7 @@ class ApiClient
         $url = $this->baseUrl . $endpoint;
         $headers = $this->getHeaders();
 
-        $ch = curl_init($url);
+        $ch = $this->initializeCurl($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
@@ -161,7 +169,7 @@ class ApiClient
         $url = $this->baseUrl . $endpoint;
         $headers = $this->getHeaders();
 
-        $ch = curl_init($url);
+        $ch = $this->initializeCurl($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
@@ -203,7 +211,7 @@ class ApiClient
         $url = $this->baseUrl . $endpoint;
         $headers = $this->getHeaders();
 
-        $ch = curl_init($url);
+        $ch = $this->initializeCurl($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
@@ -227,7 +235,7 @@ class ApiClient
         $url = $this->baseUrl . $endpoint;
         $headers = $this->getHeaders();
 
-        $ch = curl_init($url);
+        $ch = $this->initializeCurl($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
@@ -264,7 +272,7 @@ class ApiClient
         $url = $this->baseUrl . $endpoint;
         $headers = $this->getHeaders();
 
-        $ch = curl_init($url);
+        $ch = $this->initializeCurl($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
@@ -326,7 +334,7 @@ class ApiClient
             $payload[$fieldName] = new \CURLFile($tmp, $mime, $name);
         }
 
-        $ch = curl_init($url);
+        $ch = $this->initializeCurl($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
