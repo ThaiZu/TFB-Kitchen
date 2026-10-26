@@ -133,6 +133,10 @@
 
     {# ── Actions rapides ── #}
     <div class="dash-grid">
+        <a href="{{ ROOT }}/production-day" class="dash-action">
+            <div class="dash-action-top"><span class="dash-action-ic ic-ruby">{{ icons.svg('list-checks', 22) }}</span></div>
+            <div class="dash-action-body"><p class="dash-action-title">{{ translations.nav_production_day }}</p><p class="dash-action-sub">{{ translations.production_day_subtitle }}</p></div>
+        </a>
         <a href="{{ ROOT }}/inventory" class="dash-action">
             <div class="dash-action-top"><span class="dash-action-ic ic-ruby">{{ icons.svg('package',22) }}</span></div>
             <div class="dash-action-body"><p class="dash-action-title">{{ translations.nav_inventory }}</p><p class="dash-action-sub">{{ translations.inventory_subtitle }}</p></div>

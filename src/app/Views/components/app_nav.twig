@@ -9,6 +9,7 @@
 
 {# Dashboard destinations remain reachable from every screen. #}
 {% set navigation_items = [
+    { key: 'production_day', module_key: 'production', label: translations.nav_production_day, icon: 'list-checks', href: ROOT ~ '/production-day' },
     { key: 'material_stocktaking', label: translations.nav_material_stocktaking, icon: 'clipboard-check', href: ROOT ~ '/material-stocktaking' },
     { key: 'inventory', label: translations.nav_inventory, icon: 'package', href: ROOT ~ '/inventory' },
     {
@@ -71,7 +72,7 @@
 
 {# Dashboard links are part of the application shell, not optional device
    shortcuts. Keep the device configuration for additional modules only. #}
-{% set dashboard_navigation_keys = ['dashboard', 'production', 'production_list', 'inventory', 'material_stocktaking', 'production_cards', 'checklists', 'orders', 'knowledge'] %}
+{% set dashboard_navigation_keys = ['dashboard', 'production_day', 'production', 'production_list', 'inventory', 'material_stocktaking', 'production_cards', 'checklists', 'orders', 'knowledge'] %}
 {% set navigation_items = navigation_items|filter(it => it.key in dashboard_navigation_keys or it.key in (nav_keys|default([]))) %}
 
 <div class="app-nav-backdrop" id="appNavBackdrop" aria-hidden="true"></div>

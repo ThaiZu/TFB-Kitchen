@@ -111,5 +111,7 @@
   "nav_production_cards": "Fiches de production",
   "nav_inventory": "État des produits",
   "nav_material_stocktaking": "Inventaire des matières premières",
-  "inventory_subtitle": "Comptez les produits et confirmez le stock physique."
+  "inventory_subtitle": "Comptez les produits et confirmez le stock physique.",
+  "nav_production_day": "Journée de production",
+  "production_day_subtitle": "Ouverture, production et clôture des stocks restants."
 }

@@ -111,5 +111,7 @@
   "nav_production_cards": "Production cards",
   "nav_inventory": "Product stock",
   "nav_material_stocktaking": "Material stocktaking",
-  "inventory_subtitle": "Count products and confirm physical stock."
+  "inventory_subtitle": "Count products and confirm physical stock.",
+  "nav_production_day": "Production day",
+  "production_day_subtitle": "Opening, current production and remaining stock settlement."
 }
