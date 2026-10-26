@@ -111,5 +111,7 @@
   "nav_production_cards": "Karty produkcyjne",
   "nav_inventory": "Stan produktów",
   "nav_material_stocktaking": "Inwentaryzacja surowców",
-  "inventory_subtitle": "Policz produkty i potwierdź rzeczywisty stan magazynu."
+  "inventory_subtitle": "Policz produkty i potwierdź rzeczywisty stan magazynu.",
+  "nav_production_day": "Dzień produkcyjny",
+  "production_day_subtitle": "Otwarcie dnia, bieżąca produkcja i rozliczenie pozostałych produktów."
 }

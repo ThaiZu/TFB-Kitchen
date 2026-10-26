@@ -111,5 +111,7 @@
   "nav_production_cards": "Productiekaarten",
   "nav_inventory": "Productvoorraad",
   "nav_material_stocktaking": "Grondstoffeninventarisatie",
-  "inventory_subtitle": "Tel de producten en bevestig de fysieke voorraad."
+  "inventory_subtitle": "Tel de producten en bevestig de fysieke voorraad.",
+  "nav_production_day": "Productiedag",
+  "production_day_subtitle": "Opening, productie en afrekening van resterende voorraad."
 }

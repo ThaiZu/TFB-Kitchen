@@ -9,6 +9,11 @@ return function (RouteCollector $r) {
     $wasteController = \App\Kitchen\app\Http\Controllers\Production\ProductionWasteController::class;
     $stockAdjustmentController = \App\Kitchen\app\Http\Controllers\Production\ProductionStockAdjustmentController::class;
 
+    $dayController = \App\Kitchen\app\Http\Controllers\Production\ProductionDayController::class;
+    $r->addRoute('GET','/production-day',['controller'=>$dayController,'method'=>'index']);
+    $r->addRoute('GET','/production-day/data',['controller'=>$dayController,'method'=>'data']);
+    $r->addRoute('POST','/production-day/{operation:open|adjust|close}',['controller'=>$dayController,'method'=>'command']);
+
     // Compact execution list backed by the canonical Panel production plan.
     $r->addRoute('GET', '/production/today', [
         'controller' => $todayController,

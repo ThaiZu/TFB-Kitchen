@@ -12,6 +12,7 @@
 {% set p = current_path|default('') %}
 {% set active_nav =
     p starts with '/material-stocktaking' ? 'material_stocktaking' :
+    p starts with '/production-day' ? 'production_day' :
     p starts with '/inventory' ? 'inventory' :
     p starts with '/dashboard'  ? 'dashboard'  :
     p starts with '/production-list' ? 'production_list' :
@@ -245,6 +246,7 @@
    une tablette dont on ne peut plus changer le mode serait à réinstaller. #}
 {% set tabs = {
     'dashboard':  { href: ROOT ~ '/dashboard',  icon: 'home',            label: translations.nav_dashboard },
+    'production_day': { href: ROOT ~ '/production-day', icon: 'list-checks', label: translations.nav_production_day },
     'production': { href: ROOT ~ '/production/today', icon: 'list-checks', label: translations.nav_production },
     'inventory': { href: ROOT ~ '/inventory', icon: 'package', label: translations.nav_inventory },
     'production_list': { href: ROOT ~ '/production-list', icon: 'calendar-check', label: translations.nav_production_list },
@@ -260,7 +262,7 @@
 } %}
 {# These destinations are always shown on the dashboard and must remain
    reachable on every page, even when optional device configuration is absent. #}
-{% set visible_tab_keys = ['dashboard', 'production', 'production_list', 'inventory', 'production_cards', 'checklists', 'orders', 'knowledge'] %}
+{% set visible_tab_keys = ['dashboard', 'production_day', 'production', 'production_list', 'inventory', 'production_cards', 'checklists', 'orders', 'knowledge'] %}
 {% for key in tab_keys|default([]) %}
     {% if key not in visible_tab_keys %}{% set visible_tab_keys = visible_tab_keys|merge([key]) %}{% endif %}
 {% endfor %}

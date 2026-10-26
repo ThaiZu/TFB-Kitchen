@@ -111,5 +111,7 @@
   "nav_production_cards": "Schede di produzione",
   "nav_inventory": "Stato prodotti",
   "nav_material_stocktaking": "Inventario materie prime",
-  "inventory_subtitle": "Conta i prodotti e conferma la giacenza fisica."
+  "inventory_subtitle": "Conta i prodotti e conferma la giacenza fisica.",
+  "nav_production_day": "Giornata di produzione",
+  "production_day_subtitle": "Apertura, produzione e chiusura delle scorte residue."
 }
