@@ -6,8 +6,8 @@
 </style>
 {% endblock %}
 {% block content %}
-<div class="wp-head"><div><h1>{{ translations.title }}</h1><p class="wp-muted">{{ translations.waste_subtitle }}</p></div><a class="wp-button wp-secondary" href="{{ ROOT }}/inventory?tab=waste">{{ translations.reload }}</a></div>
-<nav class="wp-tabs" aria-label="{{ translations.title }}"><a href="{{ ROOT }}/inventory">{{ translations.tab_state }}</a><a class="is-active" aria-current="page" href="{{ ROOT }}/inventory?tab=waste">{{ translations.tab_waste }}</a><a href="{{ ROOT }}/inventory?tab=tomorrow">{{ translations.tab_tomorrow }}</a></nav>
+<div class="wp-head"><div><h1>{{ translations.title }}</h1><p class="wp-muted">{{ translations.waste_subtitle }}</p></div><a class="wp-button wp-secondary" href="{{ ROOT }}/production-day">{{ translations.reload }}</a></div>
+<nav class="wp-tabs" aria-label="{{ translations.title }}"><a href="{{ ROOT }}/production-day">{{ translations.tab_state }}</a><a class="is-active" aria-current="page" href="{{ ROOT }}/production-day">{{ translations.tab_waste }}</a><a href="{{ ROOT }}/production-day">{{ translations.tab_tomorrow }}</a></nav>
 
 <div id="wpNotice" class="wp-notice" role="status" aria-live="polite" hidden></div>
 {% if not available %}

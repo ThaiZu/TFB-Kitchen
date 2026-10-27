@@ -14,7 +14,7 @@
   "day_cancel": "Anuluj",
   "day_confirm": "Zapisz i potwierdź",
   "day_mandatory": "Obowiązkowy",
-  "day_unsupported": "Ten produkt wymaga obsługi w dotychczasowym magazynie (waga lub podzielne sztuki).",
+  "day_unsupported": "Dodatki personalizacji nie są obsługiwane w dniu produkcyjnym.",
   "day_reason": "Powód wyrzucenia",
   "day_choose": "Wybierz",
   "day_comment": "Komentarz (wymagany dla „Inne”)",
@@ -40,7 +40,7 @@
   "day_opening_quantity": "Ilość na otwarciu",
   "day_opening_hint": "Dodatnie, potwierdzone stany są przenoszone bez ponownego dodawania. Przy zerowym stanie wpisz ilość wyprodukowaną; zwiększenie stanu oznacza dodatkową produkcję.",
   "day_open": "Otwórz dzień",
-  "day_invalid": "Wpisz poprawne, nieujemne ilości całych sztuk; odpady nie mogą przekroczyć stanu.",
+  "day_invalid": "Wpisz poprawną ilość: całe sztuki lub wagę w kg (do 4 miejsc po przecinku). Odpady nie mogą przekroczyć stanu.",
   "day_differences": "Wyjaśnij brakujące produkty",
   "day_differences_hint": "Dla każdej różnicy potwierdź wyrzucenie albo przywróć ilość, która pozostaje dostępna.",
   "day_missing": "Brakująca ilość (do wyrzucenia)",
@@ -72,5 +72,14 @@
   "day_status_open": "Dzień otwarty",
   "day_status_closed": "Dzień zamknięty",
   "day_status_not_open": "Dzień nieotwarty",
-  "day_refreshed": "Pobrano aktualne stany."
+  "day_refreshed": "Pobrano aktualne stany.",
+  "day_pieces": "szt.",
+  "day_increase": "Zwiększ o",
+  "day_decrease": "Zmniejsz o",
+  "day_unassigned": "Nieprzypisane",
+  "day_search_products": "Wyszukaj produkt…",
+  "day_no_results": "Brak pasujących produktów",
+  "day_choose_sector": "Ten dzień ma osobne rozliczenia działów. Wybierz dział produkcyjny u góry ekranu.",
+  "day_all_sectors": "Wszystkie działy",
+  "day_scope_conflict": "Ten dzień był już otwarty dla całego sklepu. Zakończ go w trybie „Wszystkie działy”. Oddzielne dni działów można rozpocząć od następnego dnia."
 }

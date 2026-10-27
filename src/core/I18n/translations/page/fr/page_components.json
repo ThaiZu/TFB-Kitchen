@@ -113,5 +113,11 @@
   "nav_material_stocktaking": "Inventaire des matières premières",
   "inventory_subtitle": "Comptez les produits et confirmez le stock physique.",
   "nav_production_day": "Journée de production",
-  "production_day_subtitle": "Ouverture, production et clôture des stocks restants."
+  "production_day_subtitle": "Ouverture, production et clôture des stocks restants.",
+  "tablet_worker_clear_pin": "Effacer le PIN",
+  "production_sector_mode": "Atelier de production",
+  "production_sector_hint": "Choisissez l’atelier de la tablette. Chaque atelier a sa journée ; les produits non attribués partagent leur stock.",
+  "production_sector_all": "Tous les ateliers",
+  "production_sector_save": "Appliquer",
+  "production_sector_error": "Impossible d’enregistrer l’atelier."
 }

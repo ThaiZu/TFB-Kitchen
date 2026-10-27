@@ -1,0 +1,19 @@
+const {chromium}=require('playwright'),fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const dir=process.env.KITCHEN_DAY_FIXTURE_DIR||require('node:os').tmpdir(),html=fs.readFileSync(path.join(dir,'kitchen-runtime-navigation.html'),'utf8'),root=path.resolve(__dirname,'..');
+(async()=>{const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});try{for(const width of [1024,390]){const page=await browser.newPage({viewport:{width,height:1000}}),requests=[],errors=[];page.on('pageerror',e=>errors.push(e.message));
+await page.route('**/*',route=>{const req=route.request(),url=new URL(req.url());if(url.pathname.startsWith('/kitchen/assets/')){const p=path.join(root,'public',url.pathname.slice('/kitchen/'.length));if(fs.existsSync(p))return route.fulfill({body:fs.readFileSync(p),contentType:p.endsWith('.js')?'application/javascript':p.endsWith('.css')?'text/css':'application/octet-stream'});return route.fulfill({body:''});}
+if(url.pathname.endsWith('/ajax/tablet-worker/roster'))return route.fulfill({json:{success:true,employees:[{id:9,name:'Test Employee',initials:'TE'}]}});
+if(url.pathname.endsWith('/ajax/production-sector')){if(req.method()==='POST')requests.push(req.postDataJSON());return route.fulfill({json:{success:true,items:[{id:1,name:'Bakery'},{id:2,name:'Kitchen'}],selected:null}});}
+if(url.pathname.includes('/ajax/'))return route.fulfill({json:{success:true,total:0,count:0}});
+return route.fulfill({contentType:'text/html',body:html});});
+await page.goto('http://localhost/kitchen/dashboard');
+await page.locator('[data-shift-action=login]').click();await page.locator('[data-tablet-worker-id="9"]').click();
+const worker=page.locator('#tabletWorkerPinBoxes input');for(let i=0;i<4;i++)await worker.nth(i).fill(String(i+1));assert.equal(await page.locator('#tabletWorkerPin').inputValue(),'1234');
+await page.locator('#tabletWorkerPinClear').click();assert.equal(await page.locator('#tabletWorkerPin').inputValue(),'');assert.equal(await page.locator('#tabletWorkerId').inputValue(),'9');assert.equal(await page.locator('#tabletWorkerStart').isDisabled(),true);assert.equal(await worker.first().evaluate(n=>n===document.activeElement),true);
+await page.locator('#tabletWorkerModal [data-bs-dismiss=modal]').first().click();await page.waitForSelector('#tabletWorkerModal.show',{state:'hidden'});
+await page.evaluate(()=>new bootstrap.Modal(document.getElementById('dashboardShiftEntryModal')).show());await page.locator('#dashboardGuestSwitch').uncheck();await page.locator('[data-employee-id="9"]').click();for(let i=0;i<4;i++)await page.locator('#dashboardPinBoxes input').nth(i).fill('7');
+await page.locator('#dashboardPinClear').click();assert.equal(await page.locator('#dashboardEmployeePin').inputValue(),'');assert.equal(await page.locator('#dashboardEmployeeId').inputValue(),'9');assert.equal(await page.locator('#dashboardPinBoxes input').first().evaluate(n=>n===document.activeElement),true);
+await page.locator('#dashboardShiftEntryModal [data-bs-dismiss=modal]').first().click();await page.waitForSelector('#dashboardShiftEntryModal.show',{state:'hidden'});
+await page.locator('#productionSectorButton').click();await page.locator('#productionSectorSelect').selectOption('2');await page.locator('#productionSectorSave').click();await page.waitForURL('**/production-day');assert.deepEqual(requests.at(-1),{sector_id:2});
+assert.equal(await page.locator('a[href="http://localhost/kitchen/production/today"],a[href="http://localhost/kitchen/production-list"],a[href="http://localhost/kitchen/inventory"]').count(),0);assert.deepEqual(errors,[]);await page.close();}
+console.log('Tablet production: clear PIN and focus, independent PIN forms, department selection and clean navigation PASS (tablet/mobile).');}finally{await browser.close();}})().catch(e=>{console.error(e);process.exit(1);});

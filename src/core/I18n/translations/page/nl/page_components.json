@@ -113,5 +113,11 @@
   "nav_material_stocktaking": "Grondstoffeninventarisatie",
   "inventory_subtitle": "Tel de producten en bevestig de fysieke voorraad.",
   "nav_production_day": "Productiedag",
-  "production_day_subtitle": "Opening, productie en afrekening van resterende voorraad."
+  "production_day_subtitle": "Opening, productie en afrekening van resterende voorraad.",
+  "tablet_worker_clear_pin": "PIN wissen",
+  "production_sector_mode": "Productieafdeling",
+  "production_sector_hint": "Kies de tabletafdeling. Elke afdeling heeft een eigen dag; niet-toegewezen producten delen hun voorraad.",
+  "production_sector_all": "Alle afdelingen",
+  "production_sector_save": "Toepassen",
+  "production_sector_error": "Afdeling opslaan mislukt."
 }

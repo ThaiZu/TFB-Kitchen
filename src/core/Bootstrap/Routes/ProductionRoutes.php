@@ -10,15 +10,14 @@ return function (RouteCollector $r) {
     $stockAdjustmentController = \App\Kitchen\app\Http\Controllers\Production\ProductionStockAdjustmentController::class;
 
     $dayController = \App\Kitchen\app\Http\Controllers\Production\ProductionDayController::class;
+    $r->addRoute('GET','/ajax/production-sector',['controller'=>$dayController,'method'=>'sectors']);
+    $r->addRoute('POST','/ajax/production-sector',['controller'=>$dayController,'method'=>'sector']);
     $r->addRoute('GET','/production-day',['controller'=>$dayController,'method'=>'index']);
     $r->addRoute('GET','/production-day/data',['controller'=>$dayController,'method'=>'data']);
     $r->addRoute('POST','/production-day/{operation:open|adjust|close}',['controller'=>$dayController,'method'=>'command']);
 
     // Compact execution list backed by the canonical Panel production plan.
-    $r->addRoute('GET', '/production/today', [
-        'controller' => $todayController,
-        'method'     => 'index',
-    ]);
+    $r->addRoute('GET', '/production/today', ['controller'=>\App\Kitchen\app\Http\Controllers\Production\ProductionDayController::class,'method'=>'legacy',]);
     $r->addRoute('POST', '/ajax/production/today/cycles/confirm', [
         'controller' => $todayController,
         'method'     => 'confirmCycle',
@@ -30,28 +29,19 @@ return function (RouteCollector $r) {
 
     // A single, tablet-friendly waste declaration. It delegates to the same
     // atomic inventory contract as the detailed inventory screen.
-    $r->addRoute('GET', '/production/waste', [
-        'controller' => $wasteController,
-        'method'     => 'index',
-    ]);
+    $r->addRoute('GET', '/production/waste', ['controller'=>\App\Kitchen\app\Http\Controllers\Production\ProductionDayController::class,'method'=>'legacy',]);
     $r->addRoute('POST', '/ajax/production/waste', [
         'controller' => $wasteController,
         'method'     => 'create',
     ]);
-    $r->addRoute('GET', '/production/stock-correction', [
-        'controller' => $stockAdjustmentController,
-        'method'     => 'index',
-    ]);
+    $r->addRoute('GET', '/production/stock-correction', ['controller'=>\App\Kitchen\app\Http\Controllers\Production\ProductionDayController::class,'method'=>'legacy',]);
     $r->addRoute('POST', '/ajax/production/stock-correction', [
         'controller' => $stockAdjustmentController,
         'method'     => 'add',
     ]);
 
     // Écran unique, quatre vues : matin, midi, après-midi, stock.
-    $r->addRoute('GET', '/production', [
-        'controller' => $controller,
-        'method'     => 'index',
-    ]);
+    $r->addRoute('GET', '/production', ['controller'=>\App\Kitchen\app\Http\Controllers\Production\ProductionDayController::class,'method'=>'legacy',]);
 
     // Stock live + propositions de recuisson, dans la même réponse.
     $r->addRoute('GET', '/ajax/production/stock', [

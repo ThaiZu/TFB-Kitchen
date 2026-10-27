@@ -6,6 +6,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 final class ProductionDayController extends Controller
 {
     public function __construct(private ProductionDayService $service) {}
+    public function legacy(): void {header('Location: '.ROOT.'/production-day',true,302);}
     public function index(): void
     {
         header('Cache-Control: private, no-store');
@@ -18,6 +19,14 @@ final class ProductionDayController extends Controller
         if (($_SERVER['HTTP_X_REQUESTED_WITH']??'')!=='XMLHttpRequest' || ($_SERVER['HTTP_SEC_FETCH_SITE']??'')==='cross-site') return $this->json(['success'=>false],403);
         $screen=$this->service->screen(isset($_GET['date'])&&is_string($_GET['date'])?$_GET['date']:null);
         return $this->json(['success'=>$screen['available'],'data'=>$screen['sheet']??null],$screen['available']?200:503);
+    }
+    public function sectors(): JsonResponse {return $this->json($this->service->sectors());}
+    public function sector(): JsonResponse
+    {
+        if(($_SERVER['HTTP_X_REQUESTED_WITH']??'')!=='XMLHttpRequest' || ($_SERVER['HTTP_SEC_FETCH_SITE']??'')==='cross-site' || stripos($_SERVER['CONTENT_TYPE']??'','application/json')!==0)return $this->json(['success'=>false],403);
+        $input=json_decode(file_get_contents('php://input'),true);
+        if(!is_array($input)||array_keys($input)!==['sector_id'])return $this->json(['success'=>false],422);
+        $result=$this->service->selectSector($input['sector_id']);return $this->json($result,$result['code']??200);
     }
     public function command(string $operation): JsonResponse
     {

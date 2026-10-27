@@ -22,7 +22,7 @@
    ici on ne fait que signaler, parce qu'une période dont la MEP n'est pas
    validée n'a rien à mettre en rayon. #}
 {% if mep_available and mep_pending_count > 0 %}
-    <a href="{{ ROOT }}/production?view=mep&mep=morning{{ sector_qs }}" class="mep-banner d-block text-decoration-none mb-3">
+    <a href="{{ ROOT }}/production-day" class="mep-banner d-block text-decoration-none mb-3">
         <h2>{{ translations.mep_banner_title }}</h2>
         <p>{{ translations.mep_banner_text }}</p>
         <span class="mep-banner-btn">
@@ -144,7 +144,7 @@
                                    lien pointe la fournée précise quand elle
                                    existe, le module entier sinon. #}
                                 <a class="pr-tile-head"
-                                   href="{{ ROOT }}/production?view=planning{{ sector_qs }}{{ r.batch ? '&focus=' ~ r.batch.id : '' }}">
+                                   href="{{ ROOT }}/production-day'&focus=' ~ r.batch.id : '' }}">
                                     {% if p.hasMainPhoto %}
                                         <img class="pr-thumb" src="{{ p.mainPhotoUrl }}" alt="" loading="lazy">
                                     {% else %}

@@ -6,8 +6,8 @@
 </style>
 {% endblock %}
 {% block content %}
-<div class="cp-head"><div><h1>{{ translations.title }}</h1><p class="cp-muted">{{ translations.carryover_subtitle }}</p></div><a class="cp-button cp-secondary" href="{{ ROOT }}/inventory?tab=tomorrow">{{ translations.reload }}</a></div>
-<nav class="cp-tabs" aria-label="{{ translations.title }}"><a href="{{ ROOT }}/inventory">{{ translations.tab_state }}</a><a href="{{ ROOT }}/inventory?tab=waste">{{ translations.tab_waste }}</a><a class="is-active" aria-current="page" href="{{ ROOT }}/inventory?tab=tomorrow">{{ translations.tab_tomorrow }}</a></nav>
+<div class="cp-head"><div><h1>{{ translations.title }}</h1><p class="cp-muted">{{ translations.carryover_subtitle }}</p></div><a class="cp-button cp-secondary" href="{{ ROOT }}/production-day">{{ translations.reload }}</a></div>
+<nav class="cp-tabs" aria-label="{{ translations.title }}"><a href="{{ ROOT }}/production-day">{{ translations.tab_state }}</a><a href="{{ ROOT }}/production-day">{{ translations.tab_waste }}</a><a class="is-active" aria-current="page" href="{{ ROOT }}/production-day">{{ translations.tab_tomorrow }}</a></nav>
 <div id="cpNotice" class="cp-notice" role="status" aria-live="polite" hidden></div>
 {% if not available %}<p class="cp-card cp-notice cp-error">{{ translations.carryover_unavailable }}</p>
 {% else %}

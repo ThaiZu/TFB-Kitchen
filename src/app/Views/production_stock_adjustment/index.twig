@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block content %}
-<section class="psa-head"><div><h1>{{ translations.title }}</h1><p>{{ translations.subtitle }}</p></div><a class="psa-back" href="{{ ROOT }}/production/today">{{ translations.back_to_plan }}</a></section>
+<section class="psa-head"><div><h1>{{ translations.title }}</h1><p>{{ translations.subtitle }}</p></div><a class="psa-back" href="{{ ROOT }}/production-day">{{ translations.back_to_plan }}</a></section>
 {% if not available %}
     <p class="psa-notice psa-notice--error" role="alert">{{ translations.unavailable }}</p>
 {% else %}

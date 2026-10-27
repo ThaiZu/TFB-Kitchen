@@ -14,7 +14,7 @@
   "day_cancel": "Annuler",
   "day_confirm": "Enregistrer et confirmer",
   "day_mandatory": "Obligatoire",
-  "day_unsupported": "Utilisez le stock existant pour ce produit (poids ou unités divisibles).",
+  "day_unsupported": "Les suppléments de personnalisation ne sont pas gérés ici.",
   "day_reason": "Motif de perte",
   "day_choose": "Choisir",
   "day_comment": "Commentaire (obligatoire pour Autre)",
@@ -40,7 +40,7 @@
   "day_opening_quantity": "Quantité à l’ouverture",
   "day_opening_hint": "Le stock positif confirmé est conservé sans être ajouté une seconde fois. Pour un stock nul, saisissez la quantité produite ; toute augmentation correspond à une production supplémentaire.",
   "day_open": "Ouvrir la journée",
-  "day_invalid": "Saisissez des quantités entières et positives ou nulles. Les pertes ne peuvent pas dépasser le stock.",
+  "day_invalid": "Saisissez des pièces entières ou un poids en kg avec quatre décimales au maximum. Les pertes ne peuvent pas dépasser le stock.",
   "day_differences": "Résoudre les écarts de stock",
   "day_differences_hint": "Pour chaque écart, confirmez la perte ou rétablissez la quantité qui reste disponible.",
   "day_missing": "Quantité manquante (à jeter)",
@@ -72,5 +72,14 @@
   "day_status_open": "Journée ouverte",
   "day_status_closed": "Journée clôturée",
   "day_status_not_open": "Journée non ouverte",
-  "day_refreshed": "Stock actuel chargé."
+  "day_refreshed": "Stock actuel chargé.",
+  "day_pieces": "pièces",
+  "day_increase": "Augmenter de",
+  "day_decrease": "Diminuer de",
+  "day_unassigned": "Non attribués",
+  "day_search_products": "Rechercher un produit…",
+  "day_no_results": "Aucun produit correspondant",
+  "day_choose_sector": "Cette journée comporte des clôtures par atelier. Sélectionnez un atelier en haut.",
+  "day_all_sectors": "Tous les ateliers",
+  "day_scope_conflict": "Cette journée a déjà été ouverte pour toute la boutique. Terminez-la en mode Tous les ateliers. Commencez les journées séparées le lendemain."
 }

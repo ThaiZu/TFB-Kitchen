@@ -33,15 +33,16 @@ foreach (['pl', 'en', 'fr', 'nl', 'it'] as $language) {
             $_GET['url'] = $path;
             ob_start();
             // A page's generic `items` must never replace the navigation list.
-            $container->get(Controller::class)->view($view, ['items' => [], 'saved_plan' => ['exists' => false]]);
+            $container->get(Controller::class)->view($view, ['items' => [], 'saved_plan' => ['exists' => false], 'entry_employees'=>[['id'=>9,'name'=>'Test Employee','initials'=>'TE']]]);
             $html = ob_get_clean();
             $dom = new DOMDocument();
             @$dom->loadHTML($html);
             $xpath = new DOMXPath($dom);
+            $expect($xpath->query('//a[@href="'.ROOT.'/inventory" or @href="'.ROOT.'/production/today" or @href="'.ROOT.'/production-list"]')->length===0,'Retired views have no visible links');
             $themeHash = substr(hash_file('sha256', __DIR__ . '/../public/assets/css/atelier-theme.css'), 0, 16);
             $expect($xpath->query('//link[@href="' . ROOT . '/assets/css/atelier-theme.css?v=' . $themeHash . '"]')->length === 1, 'Stylesheet URL tracks its content');
             foreach (["//*[@id='appNavSheet']", "//nav[contains(@class,'app-tabbar-bar')]"] as $scope) {
-                $destinations = ['dashboard', 'production/today', 'production-list', 'inventory', 'knowledge/products', 'checklists', 'orders', 'knowledge'];
+                $destinations = ['dashboard', 'production-day', 'knowledge/products', 'checklists', 'orders', 'knowledge'];
                 if (str_contains($scope, 'appNavSheet')) $destinations[] = 'material-stocktaking';
                 foreach ($destinations as $destination) {
                     $links = $xpath->query($scope . '//a[@href="' . ROOT . '/' . $destination . '"]');
@@ -50,7 +51,7 @@ foreach (['pl', 'en', 'fr', 'nl', 'it'] as $language) {
                 }
             }
             if ($language === 'pl' && $mode === 'production' && $path === 'dashboard') {
-                file_put_contents(sys_get_temp_dir() . '/kitchen-runtime-navigation.html', $html);
+                file_put_contents((getenv('KITCHEN_DAY_FIXTURE_DIR')?:sys_get_temp_dir()) . '/kitchen-runtime-navigation.html', $html);
             }
 
             $_GET['url'] = 'production/today';

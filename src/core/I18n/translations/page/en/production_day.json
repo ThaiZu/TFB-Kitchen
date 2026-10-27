@@ -14,7 +14,7 @@
   "day_cancel": "Cancel",
   "day_confirm": "Save and confirm",
   "day_mandatory": "Mandatory",
-  "day_unsupported": "Use the existing inventory for this product (weight or divisible units).",
+  "day_unsupported": "Personalization addons are not handled in the production day.",
   "day_reason": "Waste reason",
   "day_choose": "Select",
   "day_comment": "Comment (required for Other)",
@@ -40,7 +40,7 @@
   "day_opening_quantity": "Opening quantity",
   "day_opening_hint": "Confirmed positive stock is carried without adding it again. For zero stock enter produced quantity; increasing stock records additional production.",
   "day_open": "Open day",
-  "day_invalid": "Enter valid non-negative whole quantities; waste cannot exceed stock.",
+  "day_invalid": "Enter whole pieces or kg with up to four decimal places. Waste cannot exceed stock.",
   "day_differences": "Resolve missing products",
   "day_differences_hint": "For each difference confirm waste or restore the quantity that remains available.",
   "day_missing": "Missing quantity (waste)",
@@ -72,5 +72,14 @@
   "day_status_open": "Day open",
   "day_status_closed": "Day closed",
   "day_status_not_open": "Day not opened",
-  "day_refreshed": "Current stock loaded."
+  "day_refreshed": "Current stock loaded.",
+  "day_pieces": "pcs",
+  "day_increase": "Increase by",
+  "day_decrease": "Decrease by",
+  "day_unassigned": "Unassigned",
+  "day_search_products": "Search products…",
+  "day_no_results": "No matching products",
+  "day_choose_sector": "This day has separate department settlements. Select a production department at the top.",
+  "day_all_sectors": "All departments",
+  "day_scope_conflict": "This day was already opened for the whole shop. Complete it in All departments mode. Start separate department days on the next day."
 }

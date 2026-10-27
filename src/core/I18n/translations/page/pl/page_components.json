@@ -113,5 +113,11 @@
   "nav_material_stocktaking": "Inwentaryzacja surowców",
   "inventory_subtitle": "Policz produkty i potwierdź rzeczywisty stan magazynu.",
   "nav_production_day": "Dzień produkcyjny",
-  "production_day_subtitle": "Otwarcie dnia, bieżąca produkcja i rozliczenie pozostałych produktów."
+  "production_day_subtitle": "Otwarcie dnia, bieżąca produkcja i rozliczenie pozostałych produktów.",
+  "tablet_worker_clear_pin": "Wyczyść PIN",
+  "production_sector_mode": "Dział produkcyjny",
+  "production_sector_hint": "Wybierz dział obsługiwany przez tablet. Każdy dział ma własny dzień; produkty nieprzypisane mają wspólny stan.",
+  "production_sector_all": "Wszystkie działy",
+  "production_sector_save": "Zastosuj",
+  "production_sector_error": "Nie udało się zapisać działu."
 }
