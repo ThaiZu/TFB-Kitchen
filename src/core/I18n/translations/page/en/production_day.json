@@ -86,5 +86,6 @@
   "day_add_product_button": "Add product",
   "day_allocation_hint": "Choose one or more reasons and allocate the entire missing quantity.",
   "day_allocation_total": "Allocated",
-  "day_allocation_error": "The quantities must total the shortage. Complete required comments."
+  "day_allocation_error": "The quantities must total the shortage. Complete required comments.",
+  "day_no_shortages": "All shortages have been resolved. The products remain available. Save to open the day."
 }
