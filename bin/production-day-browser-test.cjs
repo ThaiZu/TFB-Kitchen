@@ -34,14 +34,17 @@ for(const width of [1440,768,390]){
  assert.equal(await page.locator('[data-opening-product]').count(),4);checks++;
  const toolbar=await Promise.all(['#pd-status','.pd-date-form','#pd-refresh'].map(selector=>page.locator(selector).boundingBox()));assert.ok(Math.max(...toolbar.map(b=>b.y+b.height/2))-Math.min(...toolbar.map(b=>b.y+b.height/2))<2,'Status/date/refresh share one row');
  assert.equal(await page.locator('.pd-scope,.pd-meta').count(),0);
- assert.equal(await page.locator('.pd-bottom-dock').count(),0,'No fixed production dock');
- assert.equal(await page.locator('#pd-footer').evaluate(n=>getComputedStyle(n).position),'static','Production actions are in normal document flow');
- const tableRect=await page.locator('.pd-scroll').boundingBox(),actionRect=await page.locator('#pd-footer').boundingBox();assert.ok(actionRect.y>=tableRect.y+tableRect.height,'Actions appear below the product table');
- const buttons=page.locator('.pd-footer-actions button');assert.equal(await buttons.count(),2);await buttons.first().scrollIntoViewIfNeeded();
- const left=await buttons.first().boundingBox(),right=await buttons.last().boundingBox();assert.ok(left.x+left.width<=right.x&&Math.abs(left.y-right.y)<1,'Add and Open actions share one row');
- for(const button of await buttons.all())assert.ok(await button.evaluate(n=>{const r=n.getBoundingClientRect();return n.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),'Action is clickable above bottom navigation');
- assert.equal(await page.locator('.pd-add').isVisible(),false);await page.locator('#pd-add-toggle').click();await page.locator('.pd-add .choices__inner').click();await page.locator('.pd-add .choices__input--cloned').fill('Late');await page.keyboard.press('Escape');
- await page.evaluate(()=>window.scrollTo(0,0));
+ if(await page.locator('.app-tabbar-bar').count())assert.equal(await page.locator('.pd-bottom-dock>.app-tabbar-bar').count(),1,'Footer and navigation share a single dock');
+ await page.setViewportSize({width,height:700});await page.waitForTimeout(100);const compact=await page.locator('#pd-footer').boundingBox();assert.ok(compact.y>=0&&compact.y+compact.height<=701,'Footer remains visible when mobile viewport shrinks');await page.setViewportSize({width,height:1000});
+
+ await page.evaluate(()=>{const rows=document.querySelector('.pd-table tbody');for(let i=0;i<35;i++){const row=document.createElement('tr');row.className='test-scroll-row';row.innerHTML='<td>Scroll fixture</td><td>1</td><td>1</td>';rows.append(row);}window.scrollTo(0,document.body.scrollHeight/2);});
+ await page.waitForTimeout(100);const sticky=await page.locator('#pd-footer').boundingBox();assert.ok(sticky.y>=0&&sticky.y+sticky.height<=1001,'Footer stays in viewport while scrolling');
+ if(await page.locator('.app-tabbar-bar').count()){const nav=await page.locator('.app-tabbar-bar').boundingBox();assert.ok(sticky.y+sticky.height<=nav.y+1,'Footer stays above the real bottom navbar');}
+ const buttons=page.locator('.pd-footer-actions button');assert.equal(await buttons.count(),2);for(const b of await buttons.all()){assert.ok(await b.evaluate(n=>{const r=n.getBoundingClientRect();return n.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),'Footer button can be hit without another element covering it');}
+ assert.equal(await page.locator('#pd-footer').getByRole('button',{name:'Otwórz dzień',exact:true}).count(),1);
+ assert.equal(await page.locator('.pd-add').isVisible(),false);await page.locator('#pd-add-toggle').click();await page.locator('.pd-add .choices__inner').click();await page.locator('.pd-add .choices__input--cloned').fill('Late');const menu=await page.locator('.pd-add .choices__list--dropdown').boundingBox();assert.ok(menu.y>=0&&menu.y+menu.height<=sticky.y+sticky.height,'Search opens above the footer');await page.keyboard.press('Escape');
+ await page.evaluate(()=>window.scrollTo(0,document.body.scrollHeight));await page.waitForTimeout(100);const lastRow=await page.locator('.test-scroll-row').last().boundingBox(),bottomPanel=await page.locator('#pd-footer').boundingBox();assert.ok(lastRow.y+lastRow.height<=bottomPanel.y,'Footer does not cover the final table row');
+ await page.evaluate(()=>{document.querySelectorAll('.test-scroll-row').forEach(n=>n.remove());window.scrollTo(0,0);});
 
  const cell=page.locator('#pd-body td').filter({has:page.locator('.pd-product-name').filter({hasText:'Mandatory cake'})});const nameRect=await cell.locator('.pd-product-name').boundingBox(),badgesRect=await cell.locator('.pd-product-badges').boundingBox();assert.ok(badgesRect.y>=nameRect.y+nameRect.height,'Opening badges appear below product name');
  assert.equal(await cell.locator('.pd-badge').allTextContents().then(x=>x.join(',')),'MSL');assert.equal(await cell.locator('.pd-mandatory-lock').getAttribute('aria-label'),'Obowiązkowy');
