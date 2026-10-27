@@ -32,6 +32,10 @@ for(const width of [1440,390]){
  await page.waitForSelector('[data-opening-product="1"]');
  assert.equal(await page.locator('[data-opening-product]').count(),4);checks++;
  const cell=page.locator('#pd-body td').filter({has:page.locator('.pd-product-name').filter({hasText:'Mandatory cake'})});const nameRect=await cell.locator('.pd-product-name').boundingBox(),badgesRect=await cell.locator('.pd-product-badges').boundingBox();assert.ok(badgesRect.y>=nameRect.y+nameRect.height,'Opening badges appear below product name');
+ assert.equal(await cell.locator('.pd-badge').allTextContents().then(x=>x.join(',')),'MSL');assert.equal(await cell.locator('.pd-mandatory-lock').getAttribute('aria-label'),'Obowiązkowy');
+ assert.equal(await cell.locator('.pd-sector,.pd-unit').count(),0);assert.equal(await cell.locator('.pd-product-name').innerText(),'🔒 Mandatory cake');
+ const weightedRow=page.locator('tr').filter({has:page.locator('[data-opening-product="6"]')});assert.match(await weightedRow.locator('td').nth(1).innerText(),/1\.25\s+kg/);assert.equal(await weightedRow.locator('.pd-mandatory-lock').count(),0);
+
  assert.equal(await page.locator('[data-opening-product="2"]').inputValue(),'0');
  assert.equal(await page.locator('[data-page="stock"]').isDisabled(),true);
  await page.locator('[data-opening-product="1"]').locator('..').getByRole('button',{name:'Zwiększ o 1 szt.',exact:true}).click();assert.equal(await page.locator('[data-opening-product="1"]').inputValue(),'11');await page.locator('[data-opening-product="1"]').locator('..').getByRole('button',{name:'Zmniejsz o 1 szt.',exact:true}).click();

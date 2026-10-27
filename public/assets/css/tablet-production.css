@@ -1,7 +1,7 @@
 .btn.pin-clear{display:flex;justify-content:center;width:max-content;max-width:100%;min-height:44px;margin-left:auto!important;margin-right:auto!important;touch-action:manipulation}
 #productionSectorButton{max-width:230px;white-space:normal;line-height:1.35;padding:9px 12px;min-height:44px;background-color:#f4efe8!important;color:#382b24!important;border:1px solid #8d1d2c!important}
 #productionSectorButton:hover,#productionSectorButton:focus-visible{background-color:#eadbc9!important;color:#382b24!important}
-#productionSectorModal select{min-height:48px}#productionSectorError{color:#8d1d2c}
+#productionSectorList .production-sector-choice{min-height:64px;touch-action:manipulation}#productionSectorList .production-sector-choice:disabled{opacity:.6}#productionSectorList .production-sector-choice:focus-visible{outline:3px solid #8d1d2c;outline-offset:2px}#productionSectorError{color:#8d1d2c}
 .app-topbar-actions{min-width:0}
 @media(max-width:650px){
  .app-topbar-inner{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}

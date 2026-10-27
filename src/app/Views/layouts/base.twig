@@ -79,7 +79,7 @@
 
     {# Coque (structure) puis design system (habillage) : l'ordre compte. #}
     <link rel="stylesheet" href="{{ ROOT }}/assets/css/app-shell.css">
-    <link rel="stylesheet" href="{{ ROOT }}/assets/css/tablet-production.css?v=2">
+    <link rel="stylesheet" href="{{ ROOT }}/assets/css/tablet-production.css?v=3">
     <link rel="stylesheet" href="{{ ROOT }}/assets/css/atelier-theme.css?v={{ atelier_theme_version }}">
 
     {# ── L'application s'installe ──
@@ -156,7 +156,7 @@
                         </button>
                     {% endif %}
                     </div>
-                    <button type="button" id="productionSectorButton" class="badge rounded-pill app-shift-status border-0" data-bs-toggle="modal" data-bs-target="#productionSectorModal">{{ translations.production_sector_mode }}: {{ production_sector_name|default(translations.production_sector_all, true) }}</button>
+                    <button type="button" id="productionSectorButton" class="badge rounded-pill app-shift-status border-0" data-bs-toggle="modal" data-bs-target="#productionSectorModal">{{ production_sector_name|default(translations.production_sector_all, true) }}</button>
                     {% block topbar_actions %}{% endblock %}
                     <button class="app-hamburger" id="appHamburger"
                             aria-label="{{ translations.menu }}"
@@ -202,8 +202,8 @@
     </div>
 </div>
 
-<div class="modal fade" id="productionSectorModal" data-root="{{ ROOT }}" data-all="{{ translations.production_sector_all }}" data-error="{{ translations.production_sector_error }}" tabindex="-1" aria-labelledby="productionSectorTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 id="productionSectorTitle">{{ translations.production_sector_mode }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ translations.close }}"></button></div><div class="modal-body"><p>{{ translations.production_sector_hint }}</p><label for="productionSectorSelect">{{ translations.production_sector_mode }}</label><select id="productionSectorSelect" class="form-select"></select><p id="productionSectorError" role="alert"></p></div><div class="modal-footer"><button type="button" id="productionSectorSave" class="btn btn-primary">{{ translations.production_sector_save }}</button></div></div></div></div>
-<script src="{{ ROOT }}/assets/js/production-sector.js?v=1" defer></script>
+<div class="modal fade" id="productionSectorModal" data-root="{{ ROOT }}" data-all="{{ translations.production_sector_all }}" data-error="{{ translations.production_sector_error }}" tabindex="-1" aria-labelledby="productionSectorTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 id="productionSectorTitle">{{ translations.production_sector_mode }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ translations.close }}"></button></div><div class="modal-body"><p>{{ translations.production_sector_hint }}</p><div id="productionSectorList" class="tablet-worker-grid" role="group" aria-labelledby="productionSectorTitle"></div><p id="productionSectorError" role="alert"></p></div></div></div></div>
+<script src="{{ ROOT }}/assets/js/production-sector.js?v=2" defer></script>
 <main class="app-content">
     <div class="container py-3">
         {# ── Ce que le back doit encore servir ──────────────────────────────
