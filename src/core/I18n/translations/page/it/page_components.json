@@ -113,5 +113,11 @@
   "nav_material_stocktaking": "Inventario materie prime",
   "inventory_subtitle": "Conta i prodotti e conferma la giacenza fisica.",
   "nav_production_day": "Giornata di produzione",
-  "production_day_subtitle": "Apertura, produzione e chiusura delle scorte residue."
+  "production_day_subtitle": "Apertura, produzione e chiusura delle scorte residue.",
+  "tablet_worker_clear_pin": "Cancella PIN",
+  "production_sector_mode": "Reparto di produzione",
+  "production_sector_hint": "Scegli il reparto del tablet. Ogni reparto ha la propria giornata; i prodotti non assegnati condividono le scorte.",
+  "production_sector_all": "Tutti i reparti",
+  "production_sector_save": "Applica",
+  "production_sector_error": "Impossibile salvare il reparto."
 }

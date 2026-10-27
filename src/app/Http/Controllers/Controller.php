@@ -111,6 +111,7 @@ class Controller
         $mode  = DeviceMode::current();
         $rules = DeviceMode::rules();
         $shopId = (int)(GlobalRegistry::get('user')['shop_id'] ?? 0);
+        $data['production_sector_name']=\App\Kitchen\core\Support\ProductionSector::name($shopId);
         $shift = $shopId > 0 ? ShiftSession::current($shopId, date('Y-m-d')) : null;
 
         // Ces valeurs sont des DÉFAUTS, pas des surcharges : un contrôleur qui

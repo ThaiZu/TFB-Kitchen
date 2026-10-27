@@ -137,35 +137,13 @@
             <div class="dash-action-top"><span class="dash-action-ic ic-ruby">{{ icons.svg('list-checks', 22) }}</span></div>
             <div class="dash-action-body"><p class="dash-action-title">{{ translations.nav_production_day }}</p><p class="dash-action-sub">{{ translations.production_day_subtitle }}</p></div>
         </a>
-        <a href="{{ ROOT }}/inventory" class="dash-action">
-            <div class="dash-action-top"><span class="dash-action-ic ic-ruby">{{ icons.svg('package',22) }}</span></div>
-            <div class="dash-action-body"><p class="dash-action-title">{{ translations.nav_inventory }}</p><p class="dash-action-sub">{{ translations.inventory_subtitle }}</p></div>
-        </a>
 
         {# Production en cours : l'écran existe déjà et reste le point d'entrée
            pour le travail de l'atelier. #}
-        <a href="{{ ROOT }}/production/today" class="dash-action">
-            <div class="dash-action-top">
-                <span class="dash-action-ic ic-ruby">{{ icons.svg('list-checks', 22) }}</span>
-            </div>
-            <div class="dash-action-body">
-                <p class="dash-action-title">{{ translations.todays_production }}</p>
-                <p class="dash-action-sub">{{ translations.todays_production_subtitle }}</p>
-            </div>
-        </a>
 
         {# Le nouvel atelier de planification est distinct de la production en
            cours : il prépare une date choisie et explique encore les données
            nécessaires à son calcul complet. #}
-        <a href="{{ ROOT }}/production-list" class="dash-action">
-            <div class="dash-action-top">
-                <span class="dash-action-ic ic-vert">{{ icons.svg('calendar-check', 22) }}</span>
-            </div>
-            <div class="dash-action-body">
-                <p class="dash-action-title">{{ translations.production_list }}</p>
-                <p class="dash-action-sub">{{ translations.production_list_subtitle }}</p>
-            </div>
-        </a>
 
         {# Fiches de production #}
         <a href="{{ ROOT }}/knowledge/products" class="dash-action">
@@ -292,6 +270,7 @@
                                 <input type="password" class="tablet-pin-box dashboard-pin-box" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="{{ translations.tablet_worker_pin_digit }} {{ i }}">
                             {% endfor %}
                         </div>
+<button type="button" id="dashboardPinClear" class="btn btn-outline-secondary mt-2 pin-clear">{{ translations.tablet_worker_clear_pin }}</button>
                     </div>
                     <div id="dashboardEntryAlert" class="alert mt-3 d-none"></div>
                 </div>
@@ -352,6 +331,7 @@
         syncPin();
         pinBoxes[0]?.focus();
     });
+    document.getElementById('dashboardPinClear')?.addEventListener('click',()=>{pinBoxes.forEach(b=>b.value='');syncPin();alert.classList.add('d-none');pinBoxes[0]?.focus();});
     pinBoxes.forEach((box, index) => {
         box.addEventListener('input', () => {
             box.value = box.value.replace(/\D/g, '').slice(0, 1);

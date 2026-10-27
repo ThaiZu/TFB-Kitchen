@@ -113,5 +113,11 @@
   "nav_material_stocktaking": "Material stocktaking",
   "inventory_subtitle": "Count products and confirm physical stock.",
   "nav_production_day": "Production day",
-  "production_day_subtitle": "Opening, current production and remaining stock settlement."
+  "production_day_subtitle": "Opening, current production and remaining stock settlement.",
+  "tablet_worker_clear_pin": "Clear PIN",
+  "production_sector_mode": "Production department",
+  "production_sector_hint": "Choose the tablet department. Each department has its own day; unassigned products share stock.",
+  "production_sector_all": "All departments",
+  "production_sector_save": "Apply",
+  "production_sector_error": "Could not save the department."
 }

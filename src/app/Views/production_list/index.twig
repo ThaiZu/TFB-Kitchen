@@ -28,10 +28,10 @@
 {% endblock %}
 
 {% block content %}
-<section class="pl-head"><div><h1>{{ translations.title }}</h1><p>{{ translations.subtitle }}</p></div><a class="pl-button pl-print" href="{{ ROOT }}/production?date={{ plan_date }}">{{ translations.view_saved }}</a></section>
+<section class="pl-head"><div><h1>{{ translations.title }}</h1><p>{{ translations.subtitle }}</p></div><a class="pl-button pl-print" href="{{ ROOT }}/production-day">{{ translations.view_saved }}</a></section>
 <div id="plMessage" class="pl-status" role="status" aria-live="polite" hidden></div>
 <section class="pl-card">
-<form class="pl-form" method="get" action="{{ ROOT }}/production-list">
+<form class="pl-form" method="get" action="{{ ROOT }}/production-day">
 <div class="pl-field"><label for="plDate">{{ translations.date }}</label><input id="plDate" type="date" name="date" value="{{ plan_date }}"></div>
 <div class="pl-field"><label for="plMargin">{{ translations.margin }}</label><input id="plMargin" type="number" min="0" max="10000" step="0.0001" name="margin" value="{{ margin }}"></div>
 <button class="pl-button" type="submit">{{ translations.build }}</button>

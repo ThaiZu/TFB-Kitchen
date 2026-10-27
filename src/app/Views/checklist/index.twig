@@ -785,7 +785,8 @@
                                    aria-label="{{ translations.modal_pin_label }} {{ i }}">
                         {% endfor %}
                     </div>
-                    <input type="hidden" id="modalPinInput">
+                    <button type="button" id="checklistPinClear" class="btn btn-outline-secondary mt-2 pin-clear">{{ translations.tablet_worker_clear_pin }}</button>
+<input type="hidden" id="modalPinInput">
                 </div>
 
                 <div class="form-check form-switch mb-3{{ shift ? ' d-none' : '' }}" id="modalStayLoggedBlock">
@@ -933,6 +934,7 @@
             hidden.value = boxes.map(function (b) { return b.value; }).join('');
             boxes.forEach(function (b) { b.classList.toggle('is-filled', b.value !== ''); });
         }
+        document.getElementById('checklistPinClear')?.addEventListener('click',function(){boxes.forEach(function(b){b.value='';});sync();boxes[0]?.focus();});
         boxes.forEach(function (box, i) {
             box.addEventListener('input', function () {
                 box.value = box.value.replace(/\D/g, '').slice(0, 1);

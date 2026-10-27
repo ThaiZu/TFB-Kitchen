@@ -2,12 +2,12 @@
 {% block title %}{{ translations.receive_plan }}{% endblock %}
 {% block head %}{% include 'components/stock_batch_style.twig' %}{% endblock %}
 {% block content %}
-<div class="sb-head"><div><h1>{{ translations.receive_plan }} · {{ plan_date }}</h1><p class="sb-muted">{{ translations.receive_plan_hint }}</p></div><a class="sb-button sb-secondary" href="{{ ROOT }}/production?date={{ plan_date }}">{{ translations.view_saved }}</a></div>
+<div class="sb-head"><div><h1>{{ translations.receive_plan }} · {{ plan_date }}</h1><p class="sb-muted">{{ translations.receive_plan_hint }}</p></div><a class="sb-button sb-secondary" href="{{ ROOT }}/production-day">{{ translations.view_saved }}</a></div>
 {% if not available %}<p class="sb-card sb-warn" role="alert">{{ translations.unavailable }}</p>
 {% elseif not saved_plan.exists %}<p class="sb-card">{{ translations.no_saved_plan }}</p>
 {% else %}
 {% if not is_today %}<p class="sb-card sb-warn">{{ translations.today_only }}</p>{% elseif not has_shift %}<p class="sb-card sb-warn">{{ translations.shift_required }} <a href="{{ ROOT }}/checklist">{{ translations.open_shift }}</a></p>{% endif %}
-<div class="sb-card sb-tools"><input id="sbSearch" class="sb-search" type="search" placeholder="{{ translations.search }}" aria-label="{{ translations.search }}"><a class="sb-button sb-secondary" href="{{ ROOT }}/production/receive?date={{ plan_date }}">{{ translations.reload }}</a></div>
+<div class="sb-card sb-tools"><input id="sbSearch" class="sb-search" type="search" placeholder="{{ translations.search }}" aria-label="{{ translations.search }}"><a class="sb-button sb-secondary" href="{{ ROOT }}/production-day">{{ translations.reload }}</a></div>
 <div id="sbNotice" class="sb-notice" role="status" aria-live="polite" hidden></div>
 <div class="sb-card sb-scroll"><table class="sb-table"><thead><tr><th>{{ translations.select_receipt }}</th><th>{{ translations.product }}</th><th>{{ translations.planned }}</th><th>{{ translations.produced }}</th><th>{{ translations.to_receive }}</th><th>{{ translations.result }}</th></tr></thead><tbody>
 {% for sector in saved_plan.sectors %}{% for category in sector.categories %}<tr class="sb-group"><td colspan="6">{{ sector.name ?: translations.unassigned_sector }} / {{ category.name ?: translations.uncategorized }}</td></tr>

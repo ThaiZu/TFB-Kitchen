@@ -908,7 +908,7 @@
             {% endif %}
         </a>
         <a class="pr-two-t {{ active_view == 'planning' ? 'is-active' : '' }}"
-           href="{{ ROOT }}/production?view=planning{{ sector_qs }}"
+           href="{{ ROOT }}/production-day"
            {{ active_view == 'planning' ? 'aria-current="page"' : '' }}>
             <b>{{ translations.prod_view_workshop }}</b>
             <small>{{ translations.prod_view_execute }}</small>
@@ -939,7 +939,7 @@
         <nav class="pr-periods" aria-label="{{ translations.prod_view_needs }}">
             {% for p in tabs %}
                 <a class="cat-chip {{ active_view == p.key ? 'is-on' : '' }}"
-                   href="{{ ROOT }}/production?view={{ p.key }}{{ sector_qs }}"
+                   href="{{ ROOT }}/production-day"
                    {{ active_view == p.key ? 'aria-current="page"' : '' }}>
                     {{ translations['period_' ~ p.key] ?? (p.label ?? p.key) }}
                     <small>{{ p.start }} – {{ p.end }}</small>
@@ -955,12 +955,12 @@
            Deux tableaux sous le même onglet, parce qu'on les consulte dans la
            même minute. #}
         <div class="mep-sub">
-            <a href="{{ ROOT }}/production?view=stock{{ sector_qs }}"
+            <a href="{{ ROOT }}/production-day"
                class="{{ active_view == 'stock' ? 'is-active' : '' }}">
                 <b>{{ translations.stock_title }}</b>
                 <small>{{ translations.stock_sub_hint }}</small>
             </a>
-            <a href="{{ ROOT }}/production?view=minimums{{ sector_qs }}"
+            <a href="{{ ROOT }}/production-day"
                class="{{ active_view == 'minimums' ? 'is-active' : '' }}">
                 <b>{{ translations.min_title }}</b>
                 <small>{{ translations.min_sub_hint }}</small>

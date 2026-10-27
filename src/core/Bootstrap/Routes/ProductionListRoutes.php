@@ -3,16 +3,9 @@
 use FastRoute\RouteCollector;
 
 return function (RouteCollector $r): void {
-    $r->addRoute('GET','/production/receive',[
-        'controller'=>\App\Kitchen\app\Http\Controllers\ProductionList\ProductionListController::class,'method'=>'receipt',
-    ]);
-    $r->addRoute('GET','/production/pdf',[
-        'controller'=>\App\Kitchen\app\Http\Controllers\ProductionList\ProductionListController::class,'method'=>'pdf',
-    ]);
-    $r->addRoute('GET', '/production-list', [
-        'controller' => \App\Kitchen\app\Http\Controllers\ProductionList\ProductionListController::class,
-        'method' => 'index',
-    ]);
+    $r->addRoute('GET','/production/receive',['controller'=>\App\Kitchen\app\Http\Controllers\Production\ProductionDayController::class,'method'=>'legacy',]);
+    $r->addRoute('GET','/production/pdf',['controller'=>\App\Kitchen\app\Http\Controllers\Production\ProductionDayController::class,'method'=>'legacy',]);
+    $r->addRoute('GET', '/production-list', ['controller'=>\App\Kitchen\app\Http\Controllers\Production\ProductionDayController::class,'method'=>'legacy',]);
     foreach (['save', 'receive'] as $action) {
         $r->addRoute('POST', '/production-list/' . $action, [
             'controller' => \App\Kitchen\app\Http\Controllers\ProductionList\ProductionListController::class,

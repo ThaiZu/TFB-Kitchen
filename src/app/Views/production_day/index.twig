@@ -1,6 +1,6 @@
 {% extends 'layouts/base.twig' %}
 {% block title %}{{ translations.day_title }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ ROOT }}/assets/css/production-day.css?v=1">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ ROOT }}/assets/vendors/choices.js/choices.min.css"><link rel="stylesheet" href="{{ ROOT }}/assets/css/production-day.css?v=2">{% endblock %}
 {% block content %}
 <div id="production-day" data-root="{{ ROOT }}" data-view="{{ view }}" data-shift="{{ has_shift ? '1' : '0' }}">
 <header class="pd-header"><div><h1>{{ translations.day_title }}</h1><p>{{ translations.day_hint }}</p></div>
@@ -8,13 +8,13 @@
 {% if not available %}<p role="alert">{{ translations.day_unavailable }} {% if api_error == 'KITCHEN_DAY_MIGRATION_REQUIRED' %}{{ translations.day_migration }}{% endif %}</p>
 {% else %}
 {% if not has_shift %}<p class="pd-warning">{{ translations.day_shift }} <a href="{{ ROOT }}/checklist">{{ translations.day_shift_open }}</a></p>{% endif %}
-<div class="pd-meta"><strong id="pd-status"></strong><span>{{ sheet.date }} · {{ sheet.timezone }}</span><button type="button" id="pd-refresh">{{ translations.day_refresh }}</button></div>
+<div class="pd-meta"><strong id="pd-status"></strong><span>{{ sheet.date }} · {{ sheet.timezone }}</span><span class="pd-scope">{{ sheet.sector_id ? (sheet.sectors|filter(s => s.id == sheet.sector_id)|first).name : translations.production_sector_all|default(translations.day_all_sectors) }}</span><button type="button" id="pd-refresh">{{ translations.day_refresh }}</button></div>
 <nav class="pd-tabs" aria-label="{{ translations.day_title }}"><button type="button" data-page="opening">{{ translations.day_opening }}</button><button type="button" data-page="stock">{{ translations.day_stock }}</button><button type="button" data-page="closing">{{ translations.day_closing }}</button></nav>
 <p id="pd-notice" role="status" aria-live="polite"></p>
 <section id="pd-body"></section>
 <dialog id="pd-dialog" aria-labelledby="pd-dialog-title"><form id="pd-modal-form"><header><h2 id="pd-dialog-title"></h2><button type="button" id="pd-dialog-cancel" aria-label="{{ translations.day_cancel }}">×</button></header><div id="pd-dialog-body"></div><p id="pd-dialog-error" role="alert"></p><footer><button type="submit" id="pd-dialog-save">{{ translations.day_confirm }}</button></footer></form></dialog>
 <script id="pd-seed" type="application/json">{{ sheet|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}</script>
 <script id="pd-translations" type="application/json">{{ translations|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}</script>
-<script src="{{ ROOT }}/assets/js/production-day.js?v=1" defer></script>
+<script src="{{ ROOT }}/assets/vendors/choices.js/choices.min.js" defer></script><script src="{{ ROOT }}/assets/js/production-day.js?v=2" defer></script>
 {% endif %}</div>
 {% endblock %}

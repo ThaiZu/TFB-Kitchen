@@ -11,25 +11,11 @@
 {% set navigation_items = [
     { key: 'production_day', module_key: 'production', label: translations.nav_production_day, icon: 'list-checks', href: ROOT ~ '/production-day' },
     { key: 'material_stocktaking', label: translations.nav_material_stocktaking, icon: 'clipboard-check', href: ROOT ~ '/material-stocktaking' },
-    { key: 'inventory', label: translations.nav_inventory, icon: 'package', href: ROOT ~ '/inventory' },
     {
         key:   'dashboard',
         label: translations.kitchen_dashboard,
         icon:  'home',
         href:  ROOT ~ '/dashboard'
-    },
-    {
-        key:   'production',
-        label: translations.production,
-        icon:  'list-checks',
-        href:  ROOT ~ '/production/today'
-    },
-    {
-        key:   'production_list',
-        module_key: 'production',
-        label: translations.nav_production_list,
-        icon: 'calendar-check',
-        href: ROOT ~ '/production-list'
     },
     {
         key: 'production_cards',
@@ -72,8 +58,8 @@
 
 {# Dashboard links are part of the application shell, not optional device
    shortcuts. Keep the device configuration for additional modules only. #}
-{% set dashboard_navigation_keys = ['dashboard', 'production_day', 'production', 'production_list', 'inventory', 'material_stocktaking', 'production_cards', 'checklists', 'orders', 'knowledge'] %}
-{% set navigation_items = navigation_items|filter(it => it.key in dashboard_navigation_keys or it.key in (nav_keys|default([]))) %}
+{% set dashboard_navigation_keys = ['dashboard', 'production_day', 'material_stocktaking', 'production_cards', 'checklists', 'orders', 'knowledge'] %}
+{% set navigation_items = navigation_items|filter(it => it.key not in ['production','production_list','inventory'] and (it.key in dashboard_navigation_keys or it.key in (nav_keys|default([])))) %}
 
 <div class="app-nav-backdrop" id="appNavBackdrop" aria-hidden="true"></div>
 

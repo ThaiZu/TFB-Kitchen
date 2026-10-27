@@ -14,7 +14,7 @@
   "day_cancel": "Annuleren",
   "day_confirm": "Opslaan en bevestigen",
   "day_mandatory": "Verplicht",
-  "day_unsupported": "Gebruik de bestaande voorraad voor dit product (gewicht of deelbare eenheden).",
+  "day_unsupported": "Personalisatietoevoegingen worden hier niet beheerd.",
   "day_reason": "Reden voor afval",
   "day_choose": "Kiezen",
   "day_comment": "Opmerking (verplicht bij Overig)",
@@ -40,7 +40,7 @@
   "day_opening_quantity": "Aantal bij opening",
   "day_opening_hint": "Bevestigde positieve voorraad blijft staan en wordt niet opnieuw toegevoegd. Vul bij nulvoorraad de geproduceerde hoeveelheid in; een verhoging registreert extra productie.",
   "day_open": "Dag openen",
-  "day_invalid": "Vul geldige niet-negatieve gehele aantallen in. Afval mag de voorraad niet overschrijden.",
+  "day_invalid": "Voer gehele stuks of kg met maximaal vier decimalen in. Afval mag de voorraad niet overschrijden.",
   "day_differences": "Ontbrekende producten afhandelen",
   "day_differences_hint": "Bevestig voor elk verschil het afval of herstel het aantal dat beschikbaar blijft.",
   "day_missing": "Ontbrekend aantal (afval)",
@@ -72,5 +72,14 @@
   "day_status_open": "Dag geopend",
   "day_status_closed": "Dag afgesloten",
   "day_status_not_open": "Dag niet geopend",
-  "day_refreshed": "Huidige voorraad geladen."
+  "day_refreshed": "Huidige voorraad geladen.",
+  "day_pieces": "st.",
+  "day_increase": "Verhoog met",
+  "day_decrease": "Verlaag met",
+  "day_unassigned": "Niet toegewezen",
+  "day_search_products": "Zoek een product…",
+  "day_no_results": "Geen passende producten",
+  "day_choose_sector": "Deze dag heeft aparte afrekeningen per afdeling. Kies bovenaan een afdeling.",
+  "day_all_sectors": "Alle afdelingen",
+  "day_scope_conflict": "Deze dag is al voor de hele winkel geopend. Rond deze af in Alle afdelingen. Begin de volgende dag met aparte afdelingsdagen."
 }

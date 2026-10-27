@@ -79,6 +79,7 @@
 
     {# Coque (structure) puis design system (habillage) : l'ordre compte. #}
     <link rel="stylesheet" href="{{ ROOT }}/assets/css/app-shell.css">
+    <link rel="stylesheet" href="{{ ROOT }}/assets/css/tablet-production.css?v=1">
     <link rel="stylesheet" href="{{ ROOT }}/assets/css/atelier-theme.css?v={{ atelier_theme_version }}">
 
     {# ── L'application s'installe ──
@@ -155,6 +156,7 @@
                         </button>
                     {% endif %}
                     </div>
+                    <button type="button" id="productionSectorButton" class="badge rounded-pill app-shift-status border-0" data-bs-toggle="modal" data-bs-target="#productionSectorModal">{{ translations.production_sector_mode }}: {{ production_sector_name|default(translations.production_sector_all, true) }}</button>
                     {% block topbar_actions %}{% endblock %}
                     <button class="app-hamburger" id="appHamburger"
                             aria-label="{{ translations.menu }}"
@@ -188,7 +190,8 @@
                                    maxlength="1" autocomplete="off" aria-label="{{ translations.tablet_worker_pin_digit }} {{ i }}">
                         {% endfor %}
                     </div>
-                    <input type="hidden" id="tabletWorkerPin">
+                    <button type="button" id="tabletWorkerPinClear" class="btn btn-outline-secondary mt-2 pin-clear">{{ translations.tablet_worker_clear_pin }}</button>
+<input type="hidden" id="tabletWorkerPin">
                 </div>
             </div>
             <div class="modal-footer">
@@ -199,6 +202,8 @@
     </div>
 </div>
 
+<div class="modal fade" id="productionSectorModal" data-root="{{ ROOT }}" data-all="{{ translations.production_sector_all }}" data-error="{{ translations.production_sector_error }}" tabindex="-1" aria-labelledby="productionSectorTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 id="productionSectorTitle">{{ translations.production_sector_mode }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ translations.close }}"></button></div><div class="modal-body"><p>{{ translations.production_sector_hint }}</p><label for="productionSectorSelect">{{ translations.production_sector_mode }}</label><select id="productionSectorSelect" class="form-select"></select><p id="productionSectorError" role="alert"></p></div><div class="modal-footer"><button type="button" id="productionSectorSave" class="btn btn-primary">{{ translations.production_sector_save }}</button></div></div></div></div>
+<script src="{{ ROOT }}/assets/js/production-sector.js?v=1" defer></script>
 <main class="app-content">
     <div class="container py-3">
         {# ── Ce que le back doit encore servir ──────────────────────────────
@@ -247,9 +252,6 @@
 {% set tabs = {
     'dashboard':  { href: ROOT ~ '/dashboard',  icon: 'home',            label: translations.nav_dashboard },
     'production_day': { href: ROOT ~ '/production-day', icon: 'list-checks', label: translations.nav_production_day },
-    'production': { href: ROOT ~ '/production/today', icon: 'list-checks', label: translations.nav_production },
-    'inventory': { href: ROOT ~ '/inventory', icon: 'package', label: translations.nav_inventory },
-    'production_list': { href: ROOT ~ '/production-list', icon: 'calendar-check', label: translations.nav_production_list },
     'production_cards': { href: ROOT ~ '/knowledge/products', icon: 'package', label: translations.nav_production_cards },
     'checklists': { href: ROOT ~ '/checklists', icon: 'clipboard-check', label: translations.nav_checklists },
     'orders':     { href: ROOT ~ '/orders',     icon: 'receipt',         label: translations.nav_orders },
@@ -262,9 +264,9 @@
 } %}
 {# These destinations are always shown on the dashboard and must remain
    reachable on every page, even when optional device configuration is absent. #}
-{% set visible_tab_keys = ['dashboard', 'production_day', 'production', 'production_list', 'inventory', 'production_cards', 'checklists', 'orders', 'knowledge'] %}
+{% set visible_tab_keys = ['dashboard', 'production_day', 'production_cards', 'checklists', 'orders', 'knowledge'] %}
 {% for key in tab_keys|default([]) %}
-    {% if key not in visible_tab_keys %}{% set visible_tab_keys = visible_tab_keys|merge([key]) %}{% endif %}
+    {% if key not in ['production','production_list','inventory'] and key not in visible_tab_keys %}{% set visible_tab_keys = visible_tab_keys|merge([key]) %}{% endif %}
 {% endfor %}
 <nav class="app-tabbar-bar" aria-label="{{ translations.menu }}">
     {% for key in visible_tab_keys %}
@@ -340,7 +342,7 @@
     var employeeId = document.getElementById('tabletWorkerId');
     var pinGroup = document.getElementById('tabletWorkerPinGroup');
     var pin = document.getElementById('tabletWorkerPin');
-    var pinBoxes = Array.prototype.slice.call(document.querySelectorAll('.tablet-pin-box'));
+    var pinBoxes = Array.prototype.slice.call(document.querySelectorAll('#tabletWorkerPinBoxes .tablet-pin-box'));
     var start = document.getElementById('tabletWorkerStart');
     var workerTranslations = {
         loading: {{ translations.tablet_worker_loading|json_encode|raw }},
@@ -390,6 +392,7 @@
         start.disabled = !employeeId.value || pin.value.length !== 4;
     }
 
+    document.getElementById('tabletWorkerPinClear').addEventListener('click',function(){pinBoxes.forEach(function(b){b.value='';});syncPin();clearWorkerError();pinBoxes[0]?.focus();});
     pinBoxes.forEach(function (box, index) {
         box.addEventListener('input', function () {
             box.value = box.value.replace(/\D/g, '').slice(0, 1);

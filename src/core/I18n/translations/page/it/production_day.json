@@ -14,7 +14,7 @@
   "day_cancel": "Annulla",
   "day_confirm": "Salva e conferma",
   "day_mandatory": "Obbligatorio",
-  "day_unsupported": "Usa il magazzino esistente per questo prodotto (peso o unità divisibili).",
+  "day_unsupported": "I supplementi di personalizzazione non sono gestiti qui.",
   "day_reason": "Motivo dello scarto",
   "day_choose": "Seleziona",
   "day_comment": "Commento (obbligatorio per Altro)",
@@ -40,7 +40,7 @@
   "day_opening_quantity": "Quantità all’apertura",
   "day_opening_hint": "Le scorte positive confermate vengono mantenute senza aggiungerle nuovamente. Per le scorte a zero inserisci la quantità prodotta; ogni aumento registra produzione aggiuntiva.",
   "day_open": "Apri giornata",
-  "day_invalid": "Inserisci quantità intere non negative. Gli scarti non possono superare le scorte.",
+  "day_invalid": "Inserisci pezzi interi o kg con un massimo di quattro decimali. Gli scarti non possono superare le scorte.",
   "day_differences": "Risolvi le differenze nelle scorte",
   "day_differences_hint": "Per ogni differenza conferma lo scarto o ripristina la quantità che rimane disponibile.",
   "day_missing": "Quantità mancante (da scartare)",
@@ -72,5 +72,14 @@
   "day_status_open": "Giornata aperta",
   "day_status_closed": "Giornata chiusa",
   "day_status_not_open": "Giornata non aperta",
-  "day_refreshed": "Scorte attuali caricate."
+  "day_refreshed": "Scorte attuali caricate.",
+  "day_pieces": "pz",
+  "day_increase": "Aumenta di",
+  "day_decrease": "Riduci di",
+  "day_unassigned": "Non assegnati",
+  "day_search_products": "Cerca un prodotto…",
+  "day_no_results": "Nessun prodotto corrispondente",
+  "day_choose_sector": "Questa giornata ha chiusure separate per reparto. Seleziona un reparto in alto.",
+  "day_all_sectors": "Tutti i reparti",
+  "day_scope_conflict": "Questa giornata è già stata aperta per tutto il negozio. Completala in modalità Tutti i reparti. Inizia le giornate separate dal giorno seguente."
 }
