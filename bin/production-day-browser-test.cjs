@@ -31,6 +31,7 @@ for(const width of [1440,390]){
  await page.goto('http://kitchen.test/kitchen/production-day');
  await page.waitForSelector('[data-opening-product="1"]');
  assert.equal(await page.locator('[data-opening-product]').count(),4);checks++;
+ const cell=page.locator('#pd-body td').filter({has:page.locator('.pd-product-name').filter({hasText:'Mandatory cake'})});const nameRect=await cell.locator('.pd-product-name').boundingBox(),badgesRect=await cell.locator('.pd-product-badges').boundingBox();assert.ok(badgesRect.y>=nameRect.y+nameRect.height,'Opening badges appear below product name');
  assert.equal(await page.locator('[data-opening-product="2"]').inputValue(),'0');
  assert.equal(await page.locator('[data-page="stock"]').isDisabled(),true);
  await page.locator('[data-opening-product="1"]').locator('..').getByRole('button',{name:'Zwiększ o 1 szt.',exact:true}).click();assert.equal(await page.locator('[data-opening-product="1"]').inputValue(),'11');await page.locator('[data-opening-product="1"]').locator('..').getByRole('button',{name:'Zmniejsz o 1 szt.',exact:true}).click();
@@ -65,5 +66,15 @@ for(const width of [1440,390]){
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'No page overflow '+width);assert.deepEqual(errors,[]);checks++;
  await page.close();
 }
+// A pending past day offers closing with live stock, never historical production edits.
+const late=structuredClone(initial);late.date='2020-01-01';late.status='OPEN';late.late_closing=true;late.default_view='closing';late.read_only=false;
+const latePage=await browser.newPage({viewport:{width:390,height:1000}});
+await latePage.route('**/*',route=>{const p=new URL(route.request().url()).pathname;if(p.startsWith('/kitchen/assets/')){const f=path.join(kitchen,'public',p.slice('/kitchen/'.length));return route.fulfill({contentType:p.endsWith('.js')?'application/javascript':'text/css',body:fs.readFileSync(f)});}return route.fulfill({contentType:'text/html',body:fixture.replace('data-view="opening"','data-view="closing"').replace(/(<script id="pd-seed"[^>]*>)[\s\S]*?(<\/script>)/,(_,a,b)=>a+JSON.stringify(late).replace(/</g,'\\u003c')+b)});});
+await latePage.goto('http://kitchen.test/kitchen/production-day');
+assert.equal(await latePage.locator('[data-page="closing"]').getAttribute('aria-current'),'page');
+assert.equal(await latePage.locator('[data-closing-product="1"]').inputValue(),'10');
+assert.equal(await latePage.getByRole('button',{name:'Zamknij dzień',exact:true}).isEnabled(),true);
+await latePage.locator('[data-page="stock"]').click();assert.equal(await latePage.locator('.pd-add').count(),0);assert.equal(await latePage.getByRole('button',{name:'Zmodyfikuj stany bieżące',exact:true}).count(),0);
+await latePage.close();checks++;
 console.log(`Kitchen production day browser: ${checks} checks PASS (desktop/mobile, opening decisions, production, waste, closing, persisted retry).`);
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exit(1);});

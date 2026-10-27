@@ -13,7 +13,7 @@ $sheet=['sector_id'=>null,'sectors'=>[['id'=>1,'name'=>'Bakery'],['id'=>2,'name'
 foreach($sheet['products'] as &$p){$p['sector_id']=in_array($p['id_product'],[1,4,6],true)?1:(in_array($p['id_product'],[2,5],true)?2:null);$p['sector_name']=$p['sector_id']===null?null:($p['sector_id']===1?'Bakery':'Kitchen');}unset($p);
 $api=new class($sheet) extends ApiClient {
  public array $calls=[];
- public function __construct(private array $sheet) {}
+ public function __construct(public array $sheet) {}
  public function get($url,$decode=true){$this->calls[]=['GET',$url];if(str_ends_with($url,'/sectors'))return ['success'=>true,'data'=>['items'=>[['id'=>1,'name'=>'Bakery'],['id'=>2,'name'=>'Kitchen']]]];return ['success'=>true,'data'=>$this->sheet];}
  public function post($url,$payload){$this->calls[]=['POST',$url,$payload];return ['success'=>true,'data'=>['status'=>'OPEN','revision'=>1]];}
 };
@@ -31,6 +31,11 @@ $check($service->selectSector(1)['success'],'Valid sector stored');
 $check(\App\Kitchen\core\Support\ProductionSector::current(1)===1 && \App\Kitchen\core\Support\ProductionSector::current(2)===null,'Preference isolated by shop');
 $service->screen();$check(str_contains(end($api->calls)[1],'sector_id=1'),'Selected department passed to API');
 $service->selectSector(null);
+$check(!str_contains(end($api->calls)[1],'date='),'Default entry leaves date selection to API');
+$api->sheet['default_view']='closing';$api->sheet['status']='OPEN';$api->sheet['date']=(new DateTimeImmutable($today))->modify('-1 day')->format('Y-m-d');$api->sheet['late_closing']=true;
+$lateScreen=$service->screen();$check($lateScreen['view']==='closing' && $lateScreen['has_shift'],'Overdue day uses closing view and today employee shift');
+$api->sheet=$sheet;
+
 $loader=new Twig\Loader\ChainLoader([new Twig\Loader\ArrayLoader(['layouts/base.twig'=>'<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font-family:Arial;margin:0;padding:16px;box-sizing:border-box}*{box-sizing:border-box}</style>{% block head %}{% endblock %}</head><body>{% block content %}{% endblock %}</body></html>']),new Twig\Loader\FilesystemLoader(__DIR__.'/../src/app/Views')]);
 $twig=new Twig\Environment($loader,['strict_variables'=>true]);
 foreach(['pl','en','fr','it','nl'] as $lang){$t=json_decode(file_get_contents(__DIR__.'/../src/core/I18n/translations/page/'.$lang.'/production_day.json'),true,512,JSON_THROW_ON_ERROR);$html=$twig->render('production_day/index.twig',['ROOT'=>'/kitchen','translations'=>$t,'available'=>true,'has_shift'=>true,'view'=>'opening','sheet'=>$sheet]);$check(str_contains($html,'production-day.js') && str_contains($html,'pd-dialog'),'Three-view UI renders '.$lang);$check(!str_contains($html,'<SSL>'),'Product names encoded inside JSON seed');if($lang==='pl')file_put_contents($fixtureDir.'/ui.html',$html);}

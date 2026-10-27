@@ -81,5 +81,6 @@
   "day_no_results": "No matching products",
   "day_choose_sector": "This day has separate department settlements. Select a production department at the top.",
   "day_all_sectors": "All departments",
-  "day_scope_conflict": "This day was already opened for the whole shop. Complete it in All departments mode. Start separate department days on the next day."
+  "day_scope_conflict": "This day was already opened for the whole shop. Complete it in All departments mode. Start separate department days on the next day.",
+  "day_late_closing_hint": "Overdue closing: confirm the current physical remainder. Waste is recorded at the actual operation time and linked to the day being closed."
 }
