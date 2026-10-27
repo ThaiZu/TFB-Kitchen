@@ -31,6 +31,15 @@ for(const width of [1440,390]){
  await page.goto('http://kitchen.test/kitchen/production-day');
  await page.waitForSelector('[data-opening-product="1"]');
  assert.equal(await page.locator('[data-opening-product]').count(),4);checks++;
+ const toolbar=await Promise.all(['#pd-status','.pd-date-form','#pd-refresh'].map(selector=>page.locator(selector).boundingBox()));assert.ok(Math.max(...toolbar.map(b=>b.y+b.height/2))-Math.min(...toolbar.map(b=>b.y+b.height/2))<2,'Status/date/refresh share one row');
+ assert.equal(await page.locator('.pd-scope,.pd-meta').count(),0);
+ await page.evaluate(()=>{const rows=document.querySelector('.pd-table tbody');for(let i=0;i<35;i++){const row=document.createElement('tr');row.className='test-scroll-row';row.innerHTML='<td>Scroll fixture</td><td>1</td><td>1</td>';rows.append(row);}window.scrollTo(0,document.body.scrollHeight/2);});
+ await page.waitForTimeout(100);const sticky=await page.locator('#pd-footer').boundingBox();assert.ok(sticky.y>=0&&sticky.y+sticky.height<=1001,'Footer stays in viewport while scrolling');
+ assert.equal(await page.locator('#pd-footer').getByRole('button',{name:'Otwórz dzień',exact:true}).count(),1);
+ await page.locator('.pd-add .choices__inner').click();await page.locator('.pd-add .choices__input--cloned').fill('Late');const menu=await page.locator('.pd-add .choices__list--dropdown').boundingBox();assert.ok(menu.y>=0&&menu.y+menu.height<=sticky.y+sticky.height,'Search opens above the footer');await page.keyboard.press('Escape');
+ await page.evaluate(()=>window.scrollTo(0,document.body.scrollHeight));await page.waitForTimeout(100);const lastRow=await page.locator('.test-scroll-row').last().boundingBox(),bottomPanel=await page.locator('#pd-footer').boundingBox();assert.ok(lastRow.y+lastRow.height<=bottomPanel.y,'Footer does not cover the final table row');
+ await page.evaluate(()=>{document.querySelectorAll('.test-scroll-row').forEach(n=>n.remove());window.scrollTo(0,0);});
+
  const cell=page.locator('#pd-body td').filter({has:page.locator('.pd-product-name').filter({hasText:'Mandatory cake'})});const nameRect=await cell.locator('.pd-product-name').boundingBox(),badgesRect=await cell.locator('.pd-product-badges').boundingBox();assert.ok(badgesRect.y>=nameRect.y+nameRect.height,'Opening badges appear below product name');
  assert.equal(await cell.locator('.pd-badge').allTextContents().then(x=>x.join(',')),'MSL');assert.equal(await cell.locator('.pd-mandatory-lock').getAttribute('aria-label'),'Obowiązkowy');
  assert.equal(await cell.locator('.pd-sector,.pd-unit').count(),0);assert.equal(await cell.locator('.pd-product-name').innerText(),'🔒 Mandatory cake');
