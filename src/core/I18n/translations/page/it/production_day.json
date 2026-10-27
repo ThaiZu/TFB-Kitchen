@@ -82,5 +82,6 @@
   "day_choose_sector": "Questa giornata ha chiusure separate per reparto. Seleziona un reparto in alto.",
   "day_all_sectors": "Tutti i reparti",
   "day_scope_conflict": "Questa giornata è già stata aperta per tutto il negozio. Completala in modalità Tutti i reparti. Inizia le giornate separate dal giorno seguente.",
-  "day_late_closing_hint": "Chiusura in ritardo: conferma le rimanenze fisiche attuali. Gli scarti vengono registrati all’ora effettiva e collegati alla giornata chiusa."
+  "day_late_closing_hint": "Chiusura in ritardo: conferma le rimanenze fisiche attuali. Gli scarti vengono registrati all’ora effettiva e collegati alla giornata chiusa.",
+  "day_add_product_button": "Aggiungi prodotto"
 }

@@ -111,4 +111,14 @@ $dom=new DOMDocument();@$dom->loadHTML($selectedHtml);$xpath=new DOMXPath($dom);
 $expect(trim($xpath->query('//*[@id="productionSectorButton"]')->item(0)->textContent)==='Bakery','Selected department badge contains only the department name');
 $expect($xpath->query('//*[@id="productionSectorList"]')->length===1 && $xpath->query('//*[@id="productionSectorModal"]//select')->length===0,'Department modal uses touch choices instead of a dropdown');
 \App\Kitchen\core\Support\ProductionSector::save(2,null);
+$fixtureDir=getenv('KITCHEN_DAY_FIXTURE_DIR')?:sys_get_temp_dir();
+$dayFixture=$fixtureDir.'/ui.html';
+if(is_file($dayFixture)){
+ preg_match('/<script id="pd-seed"[^>]*>(.*?)<\/script>/s',file_get_contents($dayFixture),$seed);
+ $daySheet=json_decode($seed[1],true,512,JSON_THROW_ON_ERROR);
+ GlobalRegistry::set('lang_code','pl');$_GET['url']='production-day';
+ ob_start();$container->get(Controller::class)->view('production_day/index',['available'=>true,'has_shift'=>true,'view'=>'opening','sheet'=>$daySheet]);$dayHtml=ob_get_clean();
+ $expect(str_contains($dayHtml,'app-tabbar-bar') && str_contains($dayHtml,'pd-footer'),'Production day fixture includes the actual bottom navigation');
+ file_put_contents($fixtureDir.'/kitchen-runtime-day.html',$dayHtml);
+}
 echo "$checks real controller navigation checks passed\n";
