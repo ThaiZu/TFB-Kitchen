@@ -45,7 +45,7 @@
   "day_differences_hint": "Dla każdej różnicy potwierdź wyrzucenie albo przywróć ilość, która pozostaje dostępna.",
   "day_missing": "Brakująca ilość (do wyrzucenia)",
   "day_confirm_waste": "Potwierdź wyrzucenie",
-  "day_decision_confirmed": "Decyzja potwierdzona",
+  "day_decision_confirmed": "Potwierdzona",
   "day_restore": "Pozostaw produkty — przywróć stan",
   "day_confirm_each": "Potwierdź decyzję dla każdego produktu.",
   "day_open_first": "Najpierw określ stany i otwórz dzień.",
