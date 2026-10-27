@@ -87,5 +87,6 @@
   "day_allocation_hint": "Choisissez un ou plusieurs motifs et répartissez toute la quantité manquante.",
   "day_allocation_total": "Réparti",
   "day_allocation_error": "Les quantités doivent correspondre au manque. Complétez les commentaires obligatoires.",
-  "day_no_shortages": "Tous les manques ont été résolus. Les produits restent disponibles. Enregistrez pour ouvrir la journée."
+  "day_no_shortages": "Tous les manques ont été résolus. Les produits restent disponibles. Enregistrez pour ouvrir la journée.",
+  "day_confirm_disposal": "Confirmer la mise au rebut"
 }

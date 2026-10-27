@@ -87,5 +87,6 @@
   "day_allocation_hint": "Scegli uno o più motivi e ripartisci tutta la quantità mancante.",
   "day_allocation_total": "Ripartito",
   "day_allocation_error": "Le quantità devono corrispondere alla mancanza. Compila i commenti obbligatori.",
-  "day_no_shortages": "Tutte le mancanze sono risolte. I prodotti restano disponibili. Salva per aprire la giornata."
+  "day_no_shortages": "Tutte le mancanze sono risolte. I prodotti restano disponibili. Salva per aprire la giornata.",
+  "day_confirm_disposal": "Confermo lo smaltimento"
 }

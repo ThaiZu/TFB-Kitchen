@@ -87,5 +87,6 @@
   "day_allocation_hint": "Kies een of meer redenen en verdeel de volledige ontbrekende hoeveelheid.",
   "day_allocation_total": "Verdeeld",
   "day_allocation_error": "De hoeveelheden moeten het tekort dekken. Vul verplichte opmerkingen in.",
-  "day_no_shortages": "Alle tekorten zijn opgelost. De producten blijven beschikbaar. Sla op om de dag te openen."
+  "day_no_shortages": "Alle tekorten zijn opgelost. De producten blijven beschikbaar. Sla op om de dag te openen.",
+  "day_confirm_disposal": "Weggooien bevestigen"
 }
