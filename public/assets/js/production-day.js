@@ -2,9 +2,11 @@
 'use strict';
 const root=document.getElementById('production-day'),seed=document.getElementById('pd-seed');if(!root||!seed)return;
 let sheet=JSON.parse(seed.textContent);const t=JSON.parse(document.getElementById('pd-translations').textContent),$=id=>document.getElementById(id),tr=k=>t['day_'+k]||k;
-const footer=$('pd-footer'),tabbar=document.querySelector('.app-tabbar-bar');
-function sizeFooter(){const navRect=tabbar?.getBoundingClientRect(),navHeight=navRect?.height?Math.max(0,innerHeight-navRect.top):0;root.style.setProperty('--pd-nav-height',navHeight+'px');root.style.paddingBottom=(footer.getBoundingClientRect().height+navHeight+24)+'px';}
-const footerObserver=new ResizeObserver(sizeFooter);footerObserver.observe(footer);if(tabbar)footerObserver.observe(tabbar);window.addEventListener('resize',sizeFooter);
+const footer=$('pd-footer'),tabbar=document.querySelector('.app-tabbar-bar'),dock=elDock();
+function elDock(){const node=document.createElement('div');node.className='pd-bottom-dock';root.append(node);node.append(footer);if(tabbar)node.append(tabbar);return node;}
+function sizeFooter(){root.style.paddingBottom=(dock.getBoundingClientRect().height+24)+'px';}
+if(typeof ResizeObserver==='function'){const observer=new ResizeObserver(sizeFooter);observer.observe(dock);}window.addEventListener('resize',sizeFooter);window.visualViewport?.addEventListener('resize',sizeFooter);
+
 const body=$('pd-body'),dialog=$('pd-dialog'),notice=$('pd-notice');let choices=null;let page=root.dataset.view,opening=new Map(),closing=new Map(),filter='SSL',sending=false,pending=null,modalSave=null;
 const storageKey=`kitchen-production-day:${sheet.shop_id}:${sheet.date}:${sheet.sector_id??0}`,writable=()=>!sheet.read_only&&root.dataset.shift==='1',stock=p=>Number(p.stock_quantity),product=id=>sheet.products.find(p=>p.id_product===Number(id));
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
