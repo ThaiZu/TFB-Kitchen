@@ -81,5 +81,6 @@
   "day_no_results": "Brak pasujących produktów",
   "day_choose_sector": "Ten dzień ma osobne rozliczenia działów. Wybierz dział produkcyjny u góry ekranu.",
   "day_all_sectors": "Wszystkie działy",
-  "day_scope_conflict": "Ten dzień był już otwarty dla całego sklepu. Zakończ go w trybie „Wszystkie działy”. Oddzielne dni działów można rozpocząć od następnego dnia."
+  "day_scope_conflict": "Ten dzień był już otwarty dla całego sklepu. Zakończ go w trybie „Wszystkie działy”. Oddzielne dni działów można rozpocząć od następnego dnia.",
+  "day_late_closing_hint": "Zaległe zamknięcie: potwierdź bieżące, fizyczne pozostałości. Odpady zostaną zapisane z dzisiejszym czasem operacji i powiązane z zamykanym dniem."
 }

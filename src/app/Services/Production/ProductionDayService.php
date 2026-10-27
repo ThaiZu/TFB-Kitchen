@@ -10,7 +10,7 @@ class ProductionDayService
         $shop=(int)(GlobalRegistry::get('user')['shop_id']??0);
         if ($date!==null && !preg_match('/^\d{4}-\d{2}-\d{2}$/D',$date)) return ['available'=>false];
         $result=$shop>0?$this->repository->sheet($shop,$date,ProductionSector::current($shop)):[];$sheet=$result['data']??[];
-        return ['available'=>(bool)($result['success']??false),'sheet'=>$sheet,
+        return ['available'=>(bool)($result['success']??false),'view'=>$sheet['default_view']??'opening','sheet'=>$sheet,
             'has_shift'=>isset($sheet['today']) && ShiftSession::current($shop,$sheet['today'])!==null,
             'api_error'=>$result['description']??null];
     }
