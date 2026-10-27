@@ -1,14 +1,15 @@
 const {chromium}=require('playwright');
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const fixtureDir=process.env.KITCHEN_DAY_FIXTURE_DIR||path.join(require('node:os').tmpdir(),'kitchen-day-mvp');
-const kitchen=path.resolve(__dirname,'..'),fixture=fs.readFileSync(path.join(fixtureDir,'ui.html'),'utf8');
+const kitchen=path.resolve(__dirname,'..'),fixture=fs.readFileSync(path.join(fixtureDir,process.env.KITCHEN_DAY_REAL_SHELL==='1'?'kitchen-runtime-day.html':'ui.html'),'utf8');
 const initial=JSON.parse(fixture.match(/<script id="pd-seed"[^>]*>([\s\S]*?)<\/script>/)[1]);
 (async()=>{const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});let checks=0;try{
-for(const width of [1440,390]){
+for(const width of [1440,768,390]){
  const page=await browser.newPage({viewport:{width,height:1000}}),errors=[],writes=[],responses=new Map();let sheet=structuredClone(initial),loseClosing=true,applied=0;
  page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/*',async route=>{const url=new URL(route.request().url()),p=url.pathname;
-  if(p.startsWith('/kitchen/assets/')){const f=path.join(kitchen,'public',p.slice('/kitchen/'.length));return route.fulfill({contentType:p.endsWith('.js')?'application/javascript':'text/css',body:fs.readFileSync(f)});}
+  if(p.startsWith('/kitchen/assets/')){const f=path.join(kitchen,'public',p.slice('/kitchen/'.length));return route.fulfill({contentType:p.endsWith('.js')?'application/javascript':'text/css',body:fs.existsSync(f)?fs.readFileSync(f):''});}
+  if(p.startsWith('/kitchen/ajax/'))return route.fulfill({json:{success:true,total:0,count:0}});
   if(p==='/kitchen/production-day/data')return route.fulfill({json:{success:true,data:sheet}});
   if(route.request().method()==='POST'){
    const input=route.request().postDataJSON(),op=p.split('/').pop();writes.push({op,input});
@@ -27,7 +28,7 @@ for(const width of [1440,390]){
   }
   return route.fulfill({contentType:'text/html',body:fixture.replace(/(<script id="pd-seed"[^>]*>)[\s\S]*?(<\/script>)/,(_,a,b)=>a+JSON.stringify(sheet).replace(/</g,'\\u003c')+b)});
  });
- async function chooseProduct(name){await page.locator('.pd-add .choices__inner').click();await page.locator('.pd-add .choices__input--cloned').fill(name);await page.locator('.pd-add .choices__list--dropdown [data-choice-selectable]').filter({hasText:name}).click();}
+ async function chooseProduct(name){if(!await page.locator('.pd-add').isVisible())await page.locator('#pd-add-toggle').click();await page.locator('.pd-add .choices__inner').click();await page.locator('.pd-add .choices__input--cloned').fill(name);await page.locator('.pd-add .choices__list--dropdown [data-choice-selectable]').filter({hasText:name}).click();}
  await page.goto('http://kitchen.test/kitchen/production-day');
  await page.waitForSelector('[data-opening-product="1"]');
  assert.equal(await page.locator('[data-opening-product]').count(),4);checks++;
@@ -35,8 +36,10 @@ for(const width of [1440,390]){
  assert.equal(await page.locator('.pd-scope,.pd-meta').count(),0);
  await page.evaluate(()=>{const rows=document.querySelector('.pd-table tbody');for(let i=0;i<35;i++){const row=document.createElement('tr');row.className='test-scroll-row';row.innerHTML='<td>Scroll fixture</td><td>1</td><td>1</td>';rows.append(row);}window.scrollTo(0,document.body.scrollHeight/2);});
  await page.waitForTimeout(100);const sticky=await page.locator('#pd-footer').boundingBox();assert.ok(sticky.y>=0&&sticky.y+sticky.height<=1001,'Footer stays in viewport while scrolling');
+ if(await page.locator('.app-tabbar-bar').count()){const nav=await page.locator('.app-tabbar-bar').boundingBox();assert.ok(sticky.y+sticky.height<=nav.y+1,'Footer stays above the real bottom navbar');}
+ const buttons=page.locator('.pd-footer-actions button');assert.equal(await buttons.count(),2);for(const b of await buttons.all()){assert.ok(await b.evaluate(n=>{const r=n.getBoundingClientRect();return n.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),'Footer button can be hit without another element covering it');}
  assert.equal(await page.locator('#pd-footer').getByRole('button',{name:'Otwórz dzień',exact:true}).count(),1);
- await page.locator('.pd-add .choices__inner').click();await page.locator('.pd-add .choices__input--cloned').fill('Late');const menu=await page.locator('.pd-add .choices__list--dropdown').boundingBox();assert.ok(menu.y>=0&&menu.y+menu.height<=sticky.y+sticky.height,'Search opens above the footer');await page.keyboard.press('Escape');
+ assert.equal(await page.locator('.pd-add').isVisible(),false);await page.locator('#pd-add-toggle').click();await page.locator('.pd-add .choices__inner').click();await page.locator('.pd-add .choices__input--cloned').fill('Late');const menu=await page.locator('.pd-add .choices__list--dropdown').boundingBox();assert.ok(menu.y>=0&&menu.y+menu.height<=sticky.y+sticky.height,'Search opens above the footer');await page.keyboard.press('Escape');
  await page.evaluate(()=>window.scrollTo(0,document.body.scrollHeight));await page.waitForTimeout(100);const lastRow=await page.locator('.test-scroll-row').last().boundingBox(),bottomPanel=await page.locator('#pd-footer').boundingBox();assert.ok(lastRow.y+lastRow.height<=bottomPanel.y,'Footer does not cover the final table row');
  await page.evaluate(()=>{document.querySelectorAll('.test-scroll-row').forEach(n=>n.remove());window.scrollTo(0,0);});
 
@@ -49,7 +52,7 @@ for(const width of [1440,390]){
  assert.equal(await page.locator('[data-page="stock"]').isDisabled(),true);
  await page.locator('[data-opening-product="1"]').locator('..').getByRole('button',{name:'Zwiększ o 1 szt.',exact:true}).click();assert.equal(await page.locator('[data-opening-product="1"]').inputValue(),'11');await page.locator('[data-opening-product="1"]').locator('..').getByRole('button',{name:'Zmniejsz o 1 szt.',exact:true}).click();
  await page.locator('[data-opening-product="6"]').locator('..').getByRole('button',{name:'Zwiększ o 0,1 kg',exact:true}).click();assert.equal(await page.locator('[data-opening-product="6"]').inputValue(),'1.35');await page.locator('[data-opening-product="6"]').fill('1.5');
- await chooseProduct('Extra bun');await page.locator('.pd-add input[type=number]').fill('6');await page.locator('.pd-add button').click();
+ await chooseProduct('Extra bun');await page.locator('.pd-add input[type=number]').fill('6');await page.locator('.pd-add button').click();assert.equal(await page.locator('.pd-add').isVisible(),false);
  assert.equal(await page.locator('[data-opening-product]').last().getAttribute('data-opening-product'),'4');checks++;
  await page.locator('[data-opening-product="2"]').fill('5');await page.locator('[data-opening-product="1"]').fill('8');await page.locator('[data-opening-product="3"]').fill('3');
  await page.getByRole('button',{name:'Otwórz dzień',exact:true}).click();await page.waitForSelector('dialog[open]');
@@ -82,7 +85,7 @@ for(const width of [1440,390]){
 // A pending past day offers closing with live stock, never historical production edits.
 const late=structuredClone(initial);late.date='2020-01-01';late.status='OPEN';late.late_closing=true;late.default_view='closing';late.read_only=false;
 const latePage=await browser.newPage({viewport:{width:390,height:1000}});
-await latePage.route('**/*',route=>{const p=new URL(route.request().url()).pathname;if(p.startsWith('/kitchen/assets/')){const f=path.join(kitchen,'public',p.slice('/kitchen/'.length));return route.fulfill({contentType:p.endsWith('.js')?'application/javascript':'text/css',body:fs.readFileSync(f)});}return route.fulfill({contentType:'text/html',body:fixture.replace('data-view="opening"','data-view="closing"').replace(/(<script id="pd-seed"[^>]*>)[\s\S]*?(<\/script>)/,(_,a,b)=>a+JSON.stringify(late).replace(/</g,'\\u003c')+b)});});
+await latePage.route('**/*',route=>{const p=new URL(route.request().url()).pathname;if(p.startsWith('/kitchen/assets/')){const f=path.join(kitchen,'public',p.slice('/kitchen/'.length));return route.fulfill({contentType:p.endsWith('.js')?'application/javascript':'text/css',body:fs.existsSync(f)?fs.readFileSync(f):''});}return route.fulfill({contentType:'text/html',body:fixture.replace('data-view="opening"','data-view="closing"').replace(/(<script id="pd-seed"[^>]*>)[\s\S]*?(<\/script>)/,(_,a,b)=>a+JSON.stringify(late).replace(/</g,'\\u003c')+b)});});
 await latePage.goto('http://kitchen.test/kitchen/production-day');
 assert.equal(await latePage.locator('[data-page="closing"]').getAttribute('aria-current'),'page');
 assert.equal(await latePage.locator('[data-closing-product="1"]').inputValue(),'10');
