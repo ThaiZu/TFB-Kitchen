@@ -86,5 +86,6 @@
   "day_add_product_button": "Dodaj produkt",
   "day_allocation_hint": "Wybierz jeden lub kilka powodów i podziel między nie całą brakującą ilość.",
   "day_allocation_total": "Rozliczono",
-  "day_allocation_error": "Suma ilości dla wybranych powodów musi odpowiadać brakowi. Uzupełnij wymagane komentarze."
+  "day_allocation_error": "Suma ilości dla wybranych powodów musi odpowiadać brakowi. Uzupełnij wymagane komentarze.",
+  "day_no_shortages": "Wszystkie braki zostały wyjaśnione. Produkty pozostają dostępne. Zapisz, aby otworzyć dzień."
 }
