@@ -5,7 +5,7 @@ const kitchen=path.resolve(__dirname,'..'),fixture=fs.readFileSync(path.join(fix
 const initial=JSON.parse(fixture.match(/<script id="pd-seed"[^>]*>([\s\S]*?)<\/script>/)[1]);
 (async()=>{const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});let checks=0;try{
 for(const width of [1440,768,390]){
- const page=await browser.newPage({viewport:{width,height:1000}}),errors=[],writes=[],responses=new Map();let sheet=structuredClone(initial),loseClosing=true,applied=0;
+ const page=await browser.newPage({viewport:{width,height:1000},isMobile:width<1000,hasTouch:width<1000,deviceScaleFactor:width<1000?2:1}),errors=[],writes=[],responses=new Map();let sheet=structuredClone(initial),loseClosing=true,applied=0;
  page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/*',async route=>{const url=new URL(route.request().url()),p=url.pathname;
   if(p.startsWith('/kitchen/assets/')){const f=path.join(kitchen,'public',p.slice('/kitchen/'.length));return route.fulfill({contentType:p.endsWith('.js')?'application/javascript':'text/css',body:fs.existsSync(f)?fs.readFileSync(f):''});}
@@ -34,6 +34,9 @@ for(const width of [1440,768,390]){
  assert.equal(await page.locator('[data-opening-product]').count(),4);checks++;
  const toolbar=await Promise.all(['#pd-status','.pd-date-form','#pd-refresh'].map(selector=>page.locator(selector).boundingBox()));assert.ok(Math.max(...toolbar.map(b=>b.y+b.height/2))-Math.min(...toolbar.map(b=>b.y+b.height/2))<2,'Status/date/refresh share one row');
  assert.equal(await page.locator('.pd-scope,.pd-meta').count(),0);
+ if(await page.locator('.app-tabbar-bar').count())assert.equal(await page.locator('.pd-bottom-dock>.app-tabbar-bar').count(),1,'Footer and navigation share a single dock');
+ await page.setViewportSize({width,height:700});await page.waitForTimeout(100);const compact=await page.locator('#pd-footer').boundingBox();assert.ok(compact.y>=0&&compact.y+compact.height<=701,'Footer remains visible when mobile viewport shrinks');await page.setViewportSize({width,height:1000});
+
  await page.evaluate(()=>{const rows=document.querySelector('.pd-table tbody');for(let i=0;i<35;i++){const row=document.createElement('tr');row.className='test-scroll-row';row.innerHTML='<td>Scroll fixture</td><td>1</td><td>1</td>';rows.append(row);}window.scrollTo(0,document.body.scrollHeight/2);});
  await page.waitForTimeout(100);const sticky=await page.locator('#pd-footer').boundingBox();assert.ok(sticky.y>=0&&sticky.y+sticky.height<=1001,'Footer stays in viewport while scrolling');
  if(await page.locator('.app-tabbar-bar').count()){const nav=await page.locator('.app-tabbar-bar').boundingBox();assert.ok(sticky.y+sticky.height<=nav.y+1,'Footer stays above the real bottom navbar');}
