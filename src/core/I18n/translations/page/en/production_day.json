@@ -45,7 +45,7 @@
   "day_differences_hint": "For each difference confirm waste or restore the quantity that remains available.",
   "day_missing": "Missing quantity (waste)",
   "day_confirm_waste": "Confirm waste",
-  "day_decision_confirmed": "Decision confirmed",
+  "day_decision_confirmed": "Confirmed",
   "day_restore": "Keep products — restore stock",
   "day_confirm_each": "Confirm a decision for every product.",
   "day_open_first": "Enter opening quantities and open the day first.",

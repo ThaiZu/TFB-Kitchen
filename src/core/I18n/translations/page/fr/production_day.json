@@ -45,7 +45,7 @@
   "day_differences_hint": "Pour chaque écart, confirmez la perte ou rétablissez la quantité qui reste disponible.",
   "day_missing": "Quantité manquante (à jeter)",
   "day_confirm_waste": "Confirmer la mise au rebut",
-  "day_decision_confirmed": "Décision confirmée",
+  "day_decision_confirmed": "Confirmée",
   "day_restore": "Conserver les produits — rétablir le stock",
   "day_confirm_each": "Confirmez une décision pour chaque produit.",
   "day_open_first": "Saisissez le stock initial et ouvrez d’abord la journée.",
