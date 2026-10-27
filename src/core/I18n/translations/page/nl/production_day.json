@@ -83,5 +83,8 @@
   "day_all_sectors": "Alle afdelingen",
   "day_scope_conflict": "Deze dag is al voor de hele winkel geopend. Rond deze af in Alle afdelingen. Begin de volgende dag met aparte afdelingsdagen.",
   "day_late_closing_hint": "Verlate afsluiting: bevestig de huidige fysieke restvoorraad. Afval wordt op het werkelijke tijdstip geregistreerd en aan de afgesloten dag gekoppeld.",
-  "day_add_product_button": "Product toevoegen"
+  "day_add_product_button": "Product toevoegen",
+  "day_allocation_hint": "Kies een of meer redenen en verdeel de volledige ontbrekende hoeveelheid.",
+  "day_allocation_total": "Verdeeld",
+  "day_allocation_error": "De hoeveelheden moeten het tekort dekken. Vul verplichte opmerkingen in."
 }

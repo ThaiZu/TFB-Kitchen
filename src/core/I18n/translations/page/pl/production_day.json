@@ -83,5 +83,8 @@
   "day_all_sectors": "Wszystkie działy",
   "day_scope_conflict": "Ten dzień był już otwarty dla całego sklepu. Zakończ go w trybie „Wszystkie działy”. Oddzielne dni działów można rozpocząć od następnego dnia.",
   "day_late_closing_hint": "Zaległe zamknięcie: potwierdź bieżące, fizyczne pozostałości. Odpady zostaną zapisane z dzisiejszym czasem operacji i powiązane z zamykanym dniem.",
-  "day_add_product_button": "Dodaj produkt"
+  "day_add_product_button": "Dodaj produkt",
+  "day_allocation_hint": "Wybierz jeden lub kilka powodów i podziel między nie całą brakującą ilość.",
+  "day_allocation_total": "Rozliczono",
+  "day_allocation_error": "Suma ilości dla wybranych powodów musi odpowiadać brakowi. Uzupełnij wymagane komentarze."
 }

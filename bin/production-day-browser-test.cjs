@@ -57,16 +57,23 @@ for(const width of [1440,768,390]){
  await page.locator('[data-opening-product="6"]').locator('..').getByRole('button',{name:'Zwiększ o 0,1 kg',exact:true}).click();assert.equal(await page.locator('[data-opening-product="6"]').inputValue(),'1.35');await page.locator('[data-opening-product="6"]').fill('1.5');
  await chooseProduct('Extra bun');await page.locator('.pd-add input[type=number]').fill('6');await page.locator('.pd-add button').click();assert.equal(await page.locator('.pd-add').isVisible(),false);
  assert.equal(await page.locator('[data-opening-product]').last().getAttribute('data-opening-product'),'4');checks++;
- await page.locator('[data-opening-product="2"]').fill('5');await page.locator('[data-opening-product="1"]').fill('8');await page.locator('[data-opening-product="3"]').fill('3');
+ await page.locator('[data-opening-product="2"]').fill('5');await page.locator('[data-opening-product="1"]').fill('8');await page.locator('[data-opening-product="3"]').fill('2');
  await page.getByRole('button',{name:'Otwórz dzień',exact:true}).click();await page.waitForSelector('dialog[open]');
  assert.equal(await page.locator('.pd-decision').count(),2);assert.equal(await page.locator('.pd-decision input[type="number"]').first().isEditable(),false);
  const first=page.locator('.pd-decision').nth(0),second=page.locator('.pd-decision').nth(1);
  await first.getByRole('button',{name:'Pozostaw produkty — przywróć stan',exact:true}).click();
- await second.locator('select').selectOption('damage');await second.getByRole('button',{name:'Potwierdź wyrzucenie',exact:true}).click();
+ assert.equal(await second.locator('select').count(),0,'Opening reasons are badges, not dropdowns');
+ await second.locator('[data-waste-reason="other_waste"]').click();assert.equal(await second.getByRole('button',{name:'Potwierdź wyrzucenie',exact:true}).isDisabled(),true,'Other reason requires a comment');await second.locator('.pd-allocation-row').filter({has:page.locator('[data-waste-reason="other_waste"]')}).locator('textarea').fill('Test explanation');assert.equal(await second.getByRole('button',{name:'Potwierdź wyrzucenie',exact:true}).isEnabled(),true);await second.locator('[data-waste-reason="other_waste"]').click();
+ await second.locator('[data-waste-reason="expiration"]').click();await second.locator('[data-allocation-quantity="expiration"]').fill('1');
+ const confirmSplit=second.getByRole('button',{name:'Potwierdź wyrzucenie',exact:true});assert.equal(await confirmSplit.isDisabled(),true,'Under-allocation cannot be confirmed');
+ await second.locator('[data-waste-reason="tasting"]').click();assert.equal(await second.locator('[data-allocation-quantity="tasting"]').inputValue(),'1');await confirmSplit.click();
+ await second.locator('[data-allocation-quantity="tasting"]').fill('2');assert.equal(await second.locator('input[type=checkbox]').isChecked(),false,'Editing a confirmed split invalidates confirmation');assert.equal(await confirmSplit.isDisabled(),true,'Over-allocation cannot be confirmed');
+ await second.locator('[data-allocation-quantity="tasting"]').fill('1');await confirmSplit.click();
+ if(width===390)await page.screenshot({path:path.join(fixtureDir,'mobile-opening-allocations.png')});
  await page.locator('#pd-dialog-save').click();await page.waitForFunction(()=>document.getElementById('pd-status').textContent==='Dzień otwarty',{},{timeout:5000}).catch(async e=>{console.error(await page.evaluate(()=>({notice:document.getElementById('pd-notice').textContent,error:document.getElementById('pd-dialog-error').textContent,invalid:[...document.querySelectorAll(':invalid')].map(n=>[n.tagName,n.value,n.validationMessage]),status:document.getElementById('pd-status').textContent})),writes,errors);throw e;});
  const actionBox=await page.locator('#pd-body tbody tr:has(td)').first().getByRole('button').boundingBox();assert.ok(actionBox.x>=0&&actionBox.x+actionBox.width<=width,'Stock action visible without horizontal scrolling');
  if(width===390)await page.screenshot({path:path.join(fixtureDir,'mobile-stock.png'),fullPage:true});
- assert.equal(writes.length,1);assert.equal(writes[0].input.lines.find(l=>l.id_product===1).quantity,'10');assert.equal(writes[0].input.lines.find(l=>l.id_product===3).reason,'damage');checks+=2;
+ assert.equal(writes.length,1);assert.equal(writes[0].input.lines.find(l=>l.id_product===1).quantity,'10');assert.deepEqual(writes[0].input.lines.find(l=>l.id_product===3).waste_allocations,[{reason:'expiration',quantity:'1',comment:null},{reason:'tasting',quantity:'1',comment:null}]);checks+=2;
  await chooseProduct('Late tart');await page.locator('.pd-add input[type=number]').fill('3');await page.locator('.pd-add button').click();await page.waitForSelector('dialog[open]');await page.locator('#pd-dialog-save').click();await page.waitForSelector('dialog[open]',{state:'hidden'});assert.equal(sheet.products.find(p=>p.id_product===5).stock_quantity,'3.0000');checks++;
  const cake=page.locator('#pd-body tbody tr').filter({hasText:'Mandatory cake'});
  await cake.getByRole('button').click();await page.locator('#pd-dialog-body input[type="number"]').fill('2');await page.locator('#pd-dialog-save').click();await page.waitForSelector('dialog[open]',{state:'hidden'});
@@ -81,7 +88,7 @@ for(const width of [1440,768,390]){
  await page.locator('#pd-dialog-save').click();await page.waitForSelector('#pd-notice button');
  const key=writes.at(-1).input.request_id,beforeRetry=applied;
  await page.reload();await page.waitForSelector('#pd-notice button');await page.locator('#pd-notice button').click();await page.waitForFunction(()=>document.getElementById('pd-notice').textContent==='Zapisano.');
- assert.equal(writes.at(-1).input.request_id,key);assert.equal(applied,beforeRetry);assert.equal(sheet.status,'CLOSED');assert.equal(sheet.products.find(p=>p.id_product===6).stock_quantity,'1.3750');assert.equal(sheet.products.find(p=>p.id_product===1).stock_quantity,'0.0000');assert.equal(sheet.products.find(p=>p.id_product===3).stock_quantity,'3.0000');checks+=2;
+ assert.equal(writes.at(-1).input.request_id,key);assert.equal(applied,beforeRetry);assert.equal(sheet.status,'CLOSED');assert.equal(sheet.products.find(p=>p.id_product===6).stock_quantity,'1.3750');assert.equal(sheet.products.find(p=>p.id_product===1).stock_quantity,'0.0000');assert.equal(sheet.products.find(p=>p.id_product===3).stock_quantity,'2.0000');checks+=2;
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'No page overflow '+width);assert.deepEqual(errors,[]);checks++;
  await page.close();
 }

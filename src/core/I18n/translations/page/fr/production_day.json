@@ -83,5 +83,8 @@
   "day_all_sectors": "Tous les ateliers",
   "day_scope_conflict": "Cette journée a déjà été ouverte pour toute la boutique. Terminez-la en mode Tous les ateliers. Commencez les journées séparées le lendemain.",
   "day_late_closing_hint": "Clôture en retard : confirmez les restes physiques actuels. Les pertes sont enregistrées à l’heure réelle et rattachées à la journée clôturée.",
-  "day_add_product_button": "Ajouter un produit"
+  "day_add_product_button": "Ajouter un produit",
+  "day_allocation_hint": "Choisissez un ou plusieurs motifs et répartissez toute la quantité manquante.",
+  "day_allocation_total": "Réparti",
+  "day_allocation_error": "Les quantités doivent correspondre au manque. Complétez les commentaires obligatoires."
 }
