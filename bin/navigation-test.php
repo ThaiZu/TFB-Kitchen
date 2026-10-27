@@ -103,4 +103,12 @@ foreach ([
 ] as [$method,$path]) {
     $expect($dispatcher->dispatch($method,$path)[0] === \FastRoute\Dispatcher::FOUND,'New route resolves '.$method.' '.$path);
 }
+// Render the selected department through the real controller and cookie context.
+GlobalRegistry::set('user',['shop_id'=>2,'device_id'=>7]);
+\App\Kitchen\core\Support\ProductionSector::save(2,1,'Bakery');
+ob_start();$container->get(Controller::class)->view('dashboard/dashboard',['entry_employees'=>[]]);$selectedHtml=ob_get_clean();
+$dom=new DOMDocument();@$dom->loadHTML($selectedHtml);$xpath=new DOMXPath($dom);
+$expect(trim($xpath->query('//*[@id="productionSectorButton"]')->item(0)->textContent)==='Bakery','Selected department badge contains only the department name');
+$expect($xpath->query('//*[@id="productionSectorList"]')->length===1 && $xpath->query('//*[@id="productionSectorModal"]//select')->length===0,'Department modal uses touch choices instead of a dropdown');
+\App\Kitchen\core\Support\ProductionSector::save(2,null);
 echo "$checks real controller navigation checks passed\n";
