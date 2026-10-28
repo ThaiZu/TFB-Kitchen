@@ -28,6 +28,12 @@ final class ProductionDayController extends Controller
         if(!is_array($input)||array_keys($input)!==['sector_id'])return $this->json(['success'=>false],422);
         $result=$this->service->selectSector($input['sector_id']);return $this->json($result,$result['code']??200);
     }
+    public function uploadPhoto(): JsonResponse
+    {
+        if(($_SERVER['HTTP_X_REQUESTED_WITH']??'')!=='XMLHttpRequest'||($_SERVER['HTTP_SEC_FETCH_SITE']??'')==='cross-site'||stripos($_SERVER['CONTENT_TYPE']??'','application/json')!==0)return $this->json(['success'=>false],403);
+        $raw=file_get_contents('php://input',false,null,0,7340033);if(strlen($raw)>7340032)return $this->json(['success'=>false],413);$input=json_decode($raw,true);if(!is_array($input)||array_is_list($input))return $this->json(['success'=>false],422);
+        $result=$this->service->uploadPhoto($input);return $this->json($result,($result['success']??false)?200:max(400,(int)($result['code']??502)));
+    }
     public function command(string $operation): JsonResponse
     {
         if (($_SERVER['HTTP_X_REQUESTED_WITH']??'')!=='XMLHttpRequest' || stripos($_SERVER['CONTENT_TYPE']??'','application/json')!==0

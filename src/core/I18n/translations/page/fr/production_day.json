@@ -86,7 +86,16 @@
   "day_add_product_button": "Ajouter un produit",
   "day_allocation_hint": "Choisissez un ou plusieurs motifs et répartissez toute la quantité manquante.",
   "day_allocation_total": "Réparti",
-  "day_allocation_error": "Les quantités doivent correspondre au manque. Complétez les commentaires obligatoires.",
+  "day_allocation_error": "Les quantités doivent couvrir le manque. Ajoutez une photo.",
   "day_no_shortages": "Tous les manques ont été résolus. Les produits restent disponibles. Enregistrez pour ouvrir la journée.",
-  "day_confirm_disposal": "Confirmer la mise au rebut"
+  "day_confirm_disposal": "Confirmer la mise au rebut",
+  "day_photos_required": "Ajoutez au moins une photo avant de confirmer.",
+  "day_take_photo": "Prendre une photo",
+  "day_choose_photos": "Choisir des photos",
+  "day_photo_preview": "Photo du rebut",
+  "day_photo_uploading": "Envoi de la photo…",
+  "day_photo_ready": "Photo enregistrée",
+  "day_photo_failed": "Photo non ajoutée. Réessayez ou choisissez un autre fichier.",
+  "day_remove_photo": "Supprimer la photo",
+  "day_photo_limit": "Vous pouvez ajouter 10 photos par produit."
 }

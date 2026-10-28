@@ -86,7 +86,16 @@
   "day_add_product_button": "Add product",
   "day_allocation_hint": "Choose one or more reasons and allocate the entire missing quantity.",
   "day_allocation_total": "Allocated",
-  "day_allocation_error": "The quantities must total the shortage. Complete required comments.",
+  "day_allocation_error": "Quantities must match the shortage. Add a waste photo.",
   "day_no_shortages": "All shortages have been resolved. The products remain available. Save to open the day.",
-  "day_confirm_disposal": "Confirm disposal"
+  "day_confirm_disposal": "Confirm disposal",
+  "day_photos_required": "Add at least one waste photo before confirming.",
+  "day_take_photo": "Take photo",
+  "day_choose_photos": "Choose photos",
+  "day_photo_preview": "Waste photo",
+  "day_photo_uploading": "Uploading photo…",
+  "day_photo_ready": "Photo saved",
+  "day_photo_failed": "Could not add photo. Retry or choose another file.",
+  "day_remove_photo": "Remove photo",
+  "day_photo_limit": "You can add up to 10 photos per product."
 }

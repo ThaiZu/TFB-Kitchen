@@ -23,6 +23,7 @@ $check($service->screen()['available']===true,'Screen uses shop API');$check($se
 $check($service->command('open',['date'=>$today])['code']===403,'Write denied before API without shift');
 $_COOKIE[ShiftSession::COOKIE]=ShiftSession::rules()->sign(9,'Employee',time(),time(),JWT_SECRET_KEY,1,$today);
 $check($service->screen()['has_shift']===true,'Signed matching shift permits edits');
+$photoInput=['id_product'=>1,'upload_id'=>str_repeat('a',32),'base64'=>'fixture'];$service->uploadPhoto($photoInput);$check(end($api->calls)===['POST','/shops/1/production-day/photos',$photoInput],'Photo upload uses server-resolved shop and existing shift-authenticated API client');
 $payload=['request_id'=>'opening-test-key','date'=>$today,'expected_revision'=>0,'lines'=>[]];$service->command('open',$payload);
 $check(end($api->calls)===['POST','/shops/1/production-day/open',$payload],'Shop resolved from server context; request preserved for replay');
 GlobalRegistry::set('user',['shop_id'=>2,'device_id'=>8]);$check($service->command('open',$payload)['code']===403,'Other shop cannot reuse current shift');GlobalRegistry::set('user',['shop_id'=>1,'device_id'=>7]);
@@ -40,5 +41,5 @@ $loader=new Twig\Loader\ChainLoader([new Twig\Loader\ArrayLoader(['layouts/base.
 $twig=new Twig\Environment($loader,['strict_variables'=>true]);
 foreach(['pl','en','fr','it','nl'] as $lang){$t=json_decode(file_get_contents(__DIR__.'/../src/core/I18n/translations/page/'.$lang.'/production_day.json'),true,512,JSON_THROW_ON_ERROR);$html=$twig->render('production_day/index.twig',['ROOT'=>'/kitchen','translations'=>$t,'available'=>true,'has_shift'=>true,'view'=>'opening','sheet'=>$sheet]);$check(str_contains($html,'production-day.js') && str_contains($html,'pd-dialog'),'Three-view UI renders '.$lang);$check(!str_contains($html,'<SSL>'),'Product names encoded inside JSON seed');if($lang==='pl')file_put_contents($fixtureDir.'/ui.html',$html);}
 $dispatcher=FastRoute\simpleDispatcher(require __DIR__.'/../src/core/Bootstrap/routes.php');
-foreach([['GET','/production-day'],['GET','/production-day/data'],['POST','/production-day/open'],['POST','/production-day/adjust'],['POST','/production-day/close']] as [$method,$path])$check($dispatcher->dispatch($method,$path)[0]===FastRoute\Dispatcher::FOUND,'Route '.$path);
+foreach([['GET','/production-day'],['GET','/production-day/data'],['POST','/production-day/open'],['POST','/production-day/adjust'],['POST','/production-day/close'],['POST','/production-day/photos']] as [$method,$path])$check($dispatcher->dispatch($method,$path)[0]===FastRoute\Dispatcher::FOUND,'Route '.$path);
 echo "Kitchen production day: $checks checks PASS\n";

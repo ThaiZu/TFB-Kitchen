@@ -29,6 +29,12 @@ class ProductionDayService
         ProductionSector::save((int)GlobalRegistry::get('user')['shop_id'],$sector,$sector===null?null:array_column($catalog['items'],'name','id')[$sector]);
         return ['success'=>true,'selected'=>$sector];
     }
+    public function uploadPhoto(array $input): array
+    {
+        $shop=(int)(GlobalRegistry::get('user')['shop_id']??0);$shift=$shop>0?ShiftSession::current($shop):null;
+        if($shift===null)return ['success'=>false,'code'=>403,'description'=>'KITCHEN_SHIFT_REQUIRED'];
+        $result=$this->repository->command($shop,'photos',$input);if($result['success']??false)ShiftSession::touch($shift);return $result;
+    }
     public function command(string $operation,array $input): array
     {
         $shop=(int)(GlobalRegistry::get('user')['shop_id']??0);
