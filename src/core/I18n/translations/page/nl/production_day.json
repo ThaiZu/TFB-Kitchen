@@ -97,5 +97,22 @@
   "day_photo_ready": "Foto opgeslagen",
   "day_photo_failed": "Foto toevoegen mislukt. Probeer opnieuw of kies een ander bestand.",
   "day_remove_photo": "Foto verwijderen",
-  "day_photo_limit": "Je kunt maximaal 10 foto’s per product toevoegen."
+  "day_photo_limit": "Je kunt maximaal 10 foto’s per product toevoegen.",
+  "day_adjust_eyebrow": "Voorraadcorrectie",
+  "day_adjust_title": "Voorraad wijzigen",
+  "day_adjust_current": "Huidige voorraad",
+  "day_adjust_after": "Na wijziging",
+  "day_adjust_operation": "Kies een bewerking",
+  "day_adjust_produce": "Productie toevoegen",
+  "day_adjust_produce_help": "Verhoog de voorraad met geproduceerde producten",
+  "day_adjust_waste": "Afval registreren",
+  "day_adjust_waste_help": "Verlaag de voorraad met weggegooide producten",
+  "day_adjust_quantity": "Voer hoeveelheid in",
+  "day_adjust_reason": "Kies een reden",
+  "day_adjust_required": "Verplicht",
+  "day_adjust_photo": "Foto toevoegen",
+  "day_adjust_max": "U kunt maximaal %s registreren.",
+  "day_adjust_missing_photo": "Afvalfoto ontbreekt",
+  "day_adjust_save_waste": "Afval opslaan",
+  "day_adjust_save_produce": "Productie opslaan"
 }

@@ -97,5 +97,22 @@
   "day_photo_ready": "Photo saved",
   "day_photo_failed": "Could not add photo. Retry or choose another file.",
   "day_remove_photo": "Remove photo",
-  "day_photo_limit": "You can add up to 10 photos per product."
+  "day_photo_limit": "You can add up to 10 photos per product.",
+  "day_adjust_eyebrow": "Stock adjustment",
+  "day_adjust_title": "Change stock level",
+  "day_adjust_current": "Current stock",
+  "day_adjust_after": "After change",
+  "day_adjust_operation": "Choose operation",
+  "day_adjust_produce": "Add production",
+  "day_adjust_produce_help": "Increase stock with produced products",
+  "day_adjust_waste": "Register waste",
+  "day_adjust_waste_help": "Decrease stock by disposed products",
+  "day_adjust_quantity": "Enter quantity",
+  "day_adjust_reason": "Choose reason",
+  "day_adjust_required": "Required",
+  "day_adjust_photo": "Add photo",
+  "day_adjust_max": "You can report up to %s.",
+  "day_adjust_missing_photo": "Waste photo missing",
+  "day_adjust_save_waste": "Save waste",
+  "day_adjust_save_produce": "Save production"
 }
