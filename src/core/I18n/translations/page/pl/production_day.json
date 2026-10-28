@@ -86,7 +86,16 @@
   "day_add_product_button": "Dodaj produkt",
   "day_allocation_hint": "Wybierz jeden lub kilka powodów i podziel między nie całą brakującą ilość.",
   "day_allocation_total": "Rozliczono",
-  "day_allocation_error": "Suma ilości dla wybranych powodów musi odpowiadać brakowi. Uzupełnij wymagane komentarze.",
+  "day_allocation_error": "Suma ilości musi odpowiadać brakowi. Dodaj zdjęcie odpadu.",
   "day_no_shortages": "Wszystkie braki zostały wyjaśnione. Produkty pozostają dostępne. Zapisz, aby otworzyć dzień.",
-  "day_confirm_disposal": "Potwierdzam wyrzucenie"
+  "day_confirm_disposal": "Potwierdzam wyrzucenie",
+  "day_photos_required": "Dodaj co najmniej jedno zdjęcie odpadu przed potwierdzeniem.",
+  "day_take_photo": "Zrób zdjęcie",
+  "day_choose_photos": "Wybierz zdjęcia",
+  "day_photo_preview": "Zdjęcie odpadu",
+  "day_photo_uploading": "Wysyłanie zdjęcia…",
+  "day_photo_ready": "Zdjęcie zapisane",
+  "day_photo_failed": "Nie udało się dodać zdjęcia. Spróbuj ponownie lub wybierz inny plik.",
+  "day_remove_photo": "Usuń zdjęcie",
+  "day_photo_limit": "Możesz dodać maksymalnie 10 zdjęć produktu."
 }
