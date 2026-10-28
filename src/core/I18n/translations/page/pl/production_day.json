@@ -97,5 +97,22 @@
   "day_photo_ready": "Zdjęcie zapisane",
   "day_photo_failed": "Nie udało się dodać zdjęcia. Spróbuj ponownie lub wybierz inny plik.",
   "day_remove_photo": "Usuń zdjęcie",
-  "day_photo_limit": "Możesz dodać maksymalnie 10 zdjęć produktu."
+  "day_photo_limit": "Możesz dodać maksymalnie 10 zdjęć produktu.",
+  "day_adjust_eyebrow": "Korekta stanu",
+  "day_adjust_title": "Zmień stan magazynowy",
+  "day_adjust_current": "Obecny stan",
+  "day_adjust_after": "Po zmianie",
+  "day_adjust_operation": "Wybierz operację",
+  "day_adjust_produce": "Dodaj produkcję",
+  "day_adjust_produce_help": "Zwiększ stan magazynowy o wyprodukowane produkty",
+  "day_adjust_waste": "Zarejestruj odpad",
+  "day_adjust_waste_help": "Zmniejsz stan magazynowy o zutylizowane produkty",
+  "day_adjust_quantity": "Podaj ilość",
+  "day_adjust_reason": "Wybierz powód",
+  "day_adjust_required": "Wymagane",
+  "day_adjust_photo": "Dodaj zdjęcie",
+  "day_adjust_max": "Możesz zgłosić maksymalnie %s.",
+  "day_adjust_missing_photo": "Brakuje zdjęcia odpadu",
+  "day_adjust_save_waste": "Zapisz odpad",
+  "day_adjust_save_produce": "Zapisz produkcję"
 }

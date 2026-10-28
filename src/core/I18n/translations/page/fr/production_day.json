@@ -97,5 +97,22 @@
   "day_photo_ready": "Photo enregistrée",
   "day_photo_failed": "Photo non ajoutée. Réessayez ou choisissez un autre fichier.",
   "day_remove_photo": "Supprimer la photo",
-  "day_photo_limit": "Vous pouvez ajouter 10 photos par produit."
+  "day_photo_limit": "Vous pouvez ajouter 10 photos par produit.",
+  "day_adjust_eyebrow": "Correction du stock",
+  "day_adjust_title": "Modifier le stock",
+  "day_adjust_current": "Stock actuel",
+  "day_adjust_after": "Après modification",
+  "day_adjust_operation": "Choisir une opération",
+  "day_adjust_produce": "Ajouter la production",
+  "day_adjust_produce_help": "Augmenter le stock avec les produits fabriqués",
+  "day_adjust_waste": "Enregistrer une perte",
+  "day_adjust_waste_help": "Réduire le stock des produits jetés",
+  "day_adjust_quantity": "Saisir la quantité",
+  "day_adjust_reason": "Choisir un motif",
+  "day_adjust_required": "Obligatoire",
+  "day_adjust_photo": "Ajouter une photo",
+  "day_adjust_max": "Vous pouvez déclarer au maximum %s.",
+  "day_adjust_missing_photo": "Photo de la perte manquante",
+  "day_adjust_save_waste": "Enregistrer la perte",
+  "day_adjust_save_produce": "Enregistrer la production"
 }

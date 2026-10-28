@@ -97,5 +97,22 @@
   "day_photo_ready": "Foto salvata",
   "day_photo_failed": "Foto non aggiunta. Riprova o scegli un altro file.",
   "day_remove_photo": "Rimuovi foto",
-  "day_photo_limit": "Puoi aggiungere fino a 10 foto per prodotto."
+  "day_photo_limit": "Puoi aggiungere fino a 10 foto per prodotto.",
+  "day_adjust_eyebrow": "Rettifica scorte",
+  "day_adjust_title": "Modifica le scorte",
+  "day_adjust_current": "Scorte attuali",
+  "day_adjust_after": "Dopo la modifica",
+  "day_adjust_operation": "Scegli operazione",
+  "day_adjust_produce": "Aggiungi produzione",
+  "day_adjust_produce_help": "Aumenta le scorte con i prodotti realizzati",
+  "day_adjust_waste": "Registra scarto",
+  "day_adjust_waste_help": "Riduci le scorte dei prodotti smaltiti",
+  "day_adjust_quantity": "Inserisci quantità",
+  "day_adjust_reason": "Scegli motivo",
+  "day_adjust_required": "Obbligatorio",
+  "day_adjust_photo": "Aggiungi foto",
+  "day_adjust_max": "Puoi dichiarare al massimo %s.",
+  "day_adjust_missing_photo": "Manca la foto dello scarto",
+  "day_adjust_save_waste": "Salva scarto",
+  "day_adjust_save_produce": "Salva produzione"
 }
