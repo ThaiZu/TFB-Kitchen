@@ -33,9 +33,10 @@
 
 /* Actions use the Kitchen burgundy palette; numeric inputs stay white. */
 #production-day .pd-quantity-buttons button,#production-day .pd-stepper button{background:#f5e7e9;color:#8d1d2c;border-color:#8d1d2c;font-weight:700;box-shadow:0 2px 0 #8d1d2c24}
-#production-day .pd-quantity-buttons button:hover:not(:disabled),#production-day .pd-stepper button:hover:not(:disabled){background:#8d1d2c;color:#fff}
 #production-day .pd-photo-picker{background:#8d1d2c;color:#fff;border-color:#8d1d2c;font-weight:700;box-shadow:0 2px 0 #54111b33;transition:background-color .15s}
 #production-day .pd-photo-picker:hover{background:#701725;border-color:#701725}
 #production-day .pd-photo-picker:focus-within,#production-day .pd-quantity-buttons button:focus-visible,#production-day .pd-stepper button:focus-visible{outline:3px solid #b57d35;outline-offset:3px}
 #production-day .pd-quantity-buttons button:active:not(:disabled),#production-day .pd-stepper button:active:not(:disabled),#production-day .pd-photo-picker:active{box-shadow:none}
 #production-day .pd-photo-picker:has(input:disabled){opacity:.5;cursor:not-allowed}
+
+#production-day .pd-quantity-buttons button{min-width:64px;min-height:56px}.pd-quantity-buttons{gap:8px}.pd-modal-quantity>label{margin-bottom:6px}@media(max-width:600px){#production-day .pd-quantity-buttons button{min-width:80px;min-height:56px}}
