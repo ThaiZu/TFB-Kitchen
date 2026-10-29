@@ -21,9 +21,9 @@ namespace App\Kitchen\app\Services\Checklist;
  * à rien de plus — elle ne fait qu'éviter de retaper le même code.
  *
  * ── Deux bornes, et chacune répond à un risque ──
- * Le glissement (30 min) protège de la tablette qu'on pose et qu'on oublie :
- * quelqu'un d'autre ne peut pas signer sous un nom laissé ouvert une heure
- * plus tôt. Le plafond (8 h) protège du cas où la tablette sert en continu :
+ * Le glissement (8 h) protège de la tablette qu'on pose et qu'on oublie :
+ * quelqu'un d'autre ne peut pas signer sous un nom laissé ouvert trop longtemps
+ * plus tôt. Le plafond (12 h) protège du cas où la tablette sert en continu :
  * sans lui, un poste ouvert le matin signerait encore le soir.
  *
  * Cette classe ne connaît ni cookie, ni requête, ni horloge : l'instant lui est
@@ -32,10 +32,10 @@ namespace App\Kitchen\app\Services\Checklist;
 class ShiftService
 {
     /** Sans geste pendant ce délai, le poste se referme. */
-    public const SLIDING_S = 1800;      // 30 min
+    public const SLIDING_S = 8 * 3600;   // 8 h
 
     /** Durée maximale d'un poste, quoi qu'il arrive. */
-    public const MAX_S = 8 * 3600;      // 8 h
+    public const MAX_S = 12 * 3600;     // 12 h
 
     /**
      * Signe la prise de poste.
