@@ -197,5 +197,19 @@
   "day_empty_confirmation_button": "Bevestig geen producten en sluit af",
   "day_empty_stock_changed": "De voorraad is gewijzigd. Controleer de huidige aantallen en probeer opnieuw.",
   "day_late_close": "Afsluiten en terug naar vandaag",
-  "day_closing_issue": "De dag- en voorraadgegevens komen niet overeen. Vernieuw de voorraad. Bij aanhoudende problemen moet een beheerder voorraad en integraties controleren vóór afsluiten."
+  "day_closing_issue": "De dag- en voorraadgegevens komen niet overeen. Vernieuw de voorraad. Bij aanhoudende problemen moet een beheerder voorraad en integraties controleren vóór afsluiten.",
+  "day_count_title": "Controleer de werkelijke productvoorraad",
+  "day_count_start": "Producten tellen",
+  "day_count_intro": "Bevestig eerst hoeveel producten er fysiek in de winkel zijn. Het systeem slaat de telling op zodat je verder kunt.",
+  "day_count_hint": "Voer voor elk product de werkelijke hoeveelheid in. De lijst kan producten uit andere afdelingen bevatten. Dit is een telling, geen productie of afval.",
+  "day_count_system": "Systeemvoorraad",
+  "day_count_actual": "Werkelijke hoeveelheid",
+  "day_count_difference": "Voorraadcorrectie",
+  "day_count_confirmation": "Door te bevestigen verklaar je alle getoonde producten te hebben geteld. Je bevestiging, tijd en aantallen worden opgeslagen.",
+  "day_count_confirm": "Fysieke telling bevestigen",
+  "day_count_changed": "De voorraad is gewijzigd tijdens het tellen. Controleer de aantallen en tel de aangegeven producten opnieuw.",
+  "day_saving": "Opslaan… Wacht op bevestiging.",
+  "day_loading": "Actuele voorraad laden…",
+  "day_date_change_title": "Andere dag kiezen?",
+  "day_discard_changes": "Niet-opgeslagen aantallen en beslissingen worden gewist. Doorgaan?"
 }

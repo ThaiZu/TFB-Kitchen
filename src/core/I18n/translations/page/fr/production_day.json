@@ -197,5 +197,19 @@
   "day_empty_confirmation_button": "Confirmer l’absence de produits et clôturer",
   "day_empty_stock_changed": "Le stock a changé. Vérifiez les quantités actuelles puis réessayez.",
   "day_late_close": "Clôturer et revenir à aujourd’hui",
-  "day_closing_issue": "Le statut du jour et du stock sont incohérents. Actualisez le stock. Si le problème persiste, un administrateur doit vérifier le stock et les intégrations avant clôture."
+  "day_closing_issue": "Le statut du jour et du stock sont incohérents. Actualisez le stock. Si le problème persiste, un administrateur doit vérifier le stock et les intégrations avant clôture.",
+  "day_count_title": "Vérifiez le stock réel des produits",
+  "day_count_start": "Compter les produits",
+  "day_count_intro": "Avant de continuer, confirmez les quantités physiquement présentes en magasin. Le système enregistrera le comptage pour poursuivre.",
+  "day_count_hint": "Saisissez la quantité réelle de chaque produit. La liste peut inclure d’autres ateliers. Il s’agit d’un comptage, pas d’une production ou d’une perte.",
+  "day_count_system": "Stock dans le système",
+  "day_count_actual": "Quantité réelle",
+  "day_count_difference": "Correction du stock",
+  "day_count_confirmation": "En confirmant, vous déclarez avoir compté tous les produits affichés. Votre confirmation, l’heure et les quantités réelles seront enregistrées.",
+  "day_count_confirm": "Confirmer le comptage",
+  "day_count_changed": "Le stock a changé pendant le comptage. Vérifiez les quantités et recomptez les produits indiqués.",
+  "day_saving": "Enregistrement… Attendez la confirmation.",
+  "day_loading": "Chargement du stock actuel…",
+  "day_date_change_title": "Changer de journée ?",
+  "day_discard_changes": "Les quantités et décisions non enregistrées seront effacées. Continuer ?"
 }

@@ -197,5 +197,19 @@
   "day_empty_confirmation_button": "Confirm no products and close day",
   "day_empty_stock_changed": "Stock has changed. Check current quantities and try closing again.",
   "day_late_close": "Close and return to today",
-  "day_closing_issue": "The day and inventory records disagree. Refresh stock. If the issue remains, an administrator must check inventory and integration consistency before closing."
+  "day_closing_issue": "The day and inventory records disagree. Refresh stock. If the issue remains, an administrator must check inventory and integration consistency before closing.",
+  "day_count_title": "Check actual product stock",
+  "day_count_start": "Count products",
+  "day_count_intro": "Before continuing, confirm the product quantities physically in the shop. The system will record the count so you can continue.",
+  "day_count_hint": "Enter the actual quantity of every item. Products outside your selected department may be included. This is a stock count, not production or waste.",
+  "day_count_system": "System stock",
+  "day_count_actual": "Actual quantity",
+  "day_count_difference": "Stock correction",
+  "day_count_confirmation": "By confirming, you declare that you counted all listed products. Your confirmation, time and actual quantities will be recorded.",
+  "day_count_confirm": "Confirm physical count",
+  "day_count_changed": "Inventory changed during counting. Check current quantities and count the indicated products again.",
+  "day_saving": "Saving… Please wait for confirmation.",
+  "day_loading": "Loading current stock…",
+  "day_date_change_title": "Change day?",
+  "day_discard_changes": "Unsaved quantities and decisions will be cleared. Continue?"
 }

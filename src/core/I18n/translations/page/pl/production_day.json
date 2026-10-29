@@ -197,5 +197,19 @@
   "day_empty_confirmation_button": "Potwierdzam brak produktów i zamykam dzień",
   "day_empty_stock_changed": "Stan magazynu zmienił się. Sprawdź aktualne ilości i ponów zamknięcie.",
   "day_late_close": "Zamknij i przejdź do dzisiaj",
-  "day_closing_issue": "Status dnia i rejestru magazynu są niespójne. Odśwież stany. Jeśli problem pozostaje, administrator musi sprawdzić spójność magazynu i integracji przed zamknięciem."
+  "day_closing_issue": "Status dnia i rejestru magazynu są niespójne. Odśwież stany. Jeśli problem pozostaje, administrator musi sprawdzić spójność magazynu i integracji przed zamknięciem.",
+  "day_count_title": "Sprawdź rzeczywisty stan produktów",
+  "day_count_start": "Przelicz produkty",
+  "day_count_intro": "Zanim przejdziesz dalej, potwierdź ilości produktów znajdujących się w sklepie. System zapisze przeliczenie i pozwoli kontynuować pracę.",
+  "day_count_hint": "Wpisz rzeczywiste ilości każdej pozycji. Lista może obejmować produkty spoza wybranego działu. Jest to przeliczenie magazynu, nie zgłoszenie produkcji lub odpadu.",
+  "day_count_system": "Stan w systemie",
+  "day_count_actual": "Rzeczywista ilość",
+  "day_count_difference": "Korekta stanu",
+  "day_count_confirmation": "Potwierdzając, oświadczasz, że przeliczyłeś wszystkie wymienione produkty. Zapiszemy Twoje potwierdzenie, czas i rzeczywiste ilości.",
+  "day_count_confirm": "Potwierdzam przeliczenie",
+  "day_count_changed": "Dane magazynu zmieniły się podczas przeliczania. Sprawdź aktualne ilości i przelicz ponownie wskazane produkty.",
+  "day_saving": "Zapisywanie… Poczekaj na potwierdzenie.",
+  "day_loading": "Pobieranie aktualnych stanów…",
+  "day_date_change_title": "Zmienić dzień?",
+  "day_discard_changes": "Niezapisane ilości i decyzje zostaną wyczyszczone. Czy chcesz kontynuować?"
 }

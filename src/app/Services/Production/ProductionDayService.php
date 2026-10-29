@@ -40,7 +40,7 @@ class ProductionDayService
         $shop=(int)(GlobalRegistry::get('user')['shop_id']??0);
         $shift=$shop>0?ShiftSession::current($shop):null;
         if ($shift===null) return ['success'=>false,'code'=>403,'description'=>'KITCHEN_SHIFT_REQUIRED'];
-        if (!in_array($operation,['open','adjust','close','prepare'],true)) return ['success'=>false,'code'=>422];
+        if (!in_array($operation,['open','adjust','close','prepare','count'],true)) return ['success'=>false,'code'=>422];
         $result=$this->repository->command($shop,$operation,$input);
         if ($result['success']??false) ShiftSession::touch($shift);
         return $result;
