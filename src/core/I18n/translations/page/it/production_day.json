@@ -197,5 +197,19 @@
   "day_empty_confirmation_button": "Confermo nessun prodotto e chiudo",
   "day_empty_stock_changed": "Le scorte sono cambiate. Controlla le quantità e riprova a chiudere.",
   "day_late_close": "Chiudi e torna a oggi",
-  "day_closing_issue": "Lo stato del giorno e del magazzino non coincide. Aggiorna le scorte. Se persiste, un amministratore deve verificare magazzino e integrazioni prima di chiudere."
+  "day_closing_issue": "Lo stato del giorno e del magazzino non coincide. Aggiorna le scorte. Se persiste, un amministratore deve verificare magazzino e integrazioni prima di chiudere.",
+  "day_count_title": "Controlla le scorte reali dei prodotti",
+  "day_count_start": "Conta i prodotti",
+  "day_count_intro": "Prima di continuare, conferma le quantità fisicamente presenti in negozio. Il sistema registrerà il conteggio per proseguire.",
+  "day_count_hint": "Inserisci la quantità reale di ogni prodotto. La lista può includere altri reparti. È un conteggio, non produzione o scarti.",
+  "day_count_system": "Scorte nel sistema",
+  "day_count_actual": "Quantità reale",
+  "day_count_difference": "Rettifica scorte",
+  "day_count_confirmation": "Confermando dichiari di aver contato tutti i prodotti elencati. Conferma, ora e quantità reali saranno registrate.",
+  "day_count_confirm": "Confermo il conteggio",
+  "day_count_changed": "Le scorte sono cambiate durante il conteggio. Controlla le quantità e riconta i prodotti indicati.",
+  "day_saving": "Salvataggio… Attendi la conferma.",
+  "day_loading": "Caricamento scorte attuali…",
+  "day_date_change_title": "Cambiare giorno?",
+  "day_discard_changes": "Le quantità e decisioni non salvate saranno cancellate. Continuare?"
 }

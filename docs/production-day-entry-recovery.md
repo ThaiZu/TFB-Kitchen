@@ -1,5 +1,7 @@
 # No surprise date changes during opening
 
+The employee [physical-count path](production-day-physical-count.md) now extends this initial empty-day recovery to the affected products in a nonempty shop.
+
 Before beginning today's wizard, the API reports an overdue opening blocker even
 when today's date was chosen explicitly. Kitchen preserves that selected date,
 hides the wizard, and offers one clear action to the overdue date. Canonical-day
