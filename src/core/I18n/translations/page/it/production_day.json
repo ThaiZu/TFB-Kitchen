@@ -146,5 +146,6 @@
   "day_filter_shelf_life": "Durata di conservazione",
   "day_filter_groups": "Gruppi di categorie",
   "day_filter_categories": "Categorie",
-  "day_filter_empty": "Nessun prodotto corrisponde ai filtri selezionati."
+  "day_filter_empty": "Nessun prodotto corrisponde ai filtri selezionati.",
+  "day_uncategorized": "Senza categoria"
 }

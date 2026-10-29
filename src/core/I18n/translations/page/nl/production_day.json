@@ -146,5 +146,6 @@
   "day_filter_shelf_life": "Houdbaarheid",
   "day_filter_groups": "Categoriegroepen",
   "day_filter_categories": "Categorieën",
-  "day_filter_empty": "Geen producten komen overeen met de geselecteerde filters."
+  "day_filter_empty": "Geen producten komen overeen met de geselecteerde filters.",
+  "day_uncategorized": "Zonder categorie"
 }

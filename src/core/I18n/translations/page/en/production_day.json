@@ -146,5 +146,6 @@
   "day_filter_shelf_life": "Shelf life",
   "day_filter_groups": "Category groups",
   "day_filter_categories": "Categories",
-  "day_filter_empty": "No products match the selected filters."
+  "day_filter_empty": "No products match the selected filters.",
+  "day_uncategorized": "Uncategorized"
 }

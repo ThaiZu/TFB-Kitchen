@@ -146,5 +146,6 @@
   "day_filter_shelf_life": "Trwałość produktu",
   "day_filter_groups": "Grupy kategorii",
   "day_filter_categories": "Kategorie",
-  "day_filter_empty": "Brak produktów spełniających wybrane filtry."
+  "day_filter_empty": "Brak produktów spełniających wybrane filtry.",
+  "day_uncategorized": "Bez kategorii"
 }
