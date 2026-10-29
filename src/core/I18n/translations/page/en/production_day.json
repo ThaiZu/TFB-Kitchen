@@ -140,5 +140,11 @@
   "day_closing_need_photo": "Waste photo missing",
   "day_closing_can_confirm": "You can confirm disposal.",
   "day_closing_ready": "All waste confirmed. The day is ready to close.",
-  "day_back": "Back"
+  "day_back": "Back",
+  "day_opening_filters": "Product filters",
+  "day_filter_all": "All",
+  "day_filter_shelf_life": "Shelf life",
+  "day_filter_groups": "Category groups",
+  "day_filter_categories": "Categories",
+  "day_filter_empty": "No products match the selected filters."
 }

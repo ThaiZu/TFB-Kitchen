@@ -119,3 +119,11 @@ body.pd-modal-open{overflow:hidden}
 
 .pd-adjust-shortcuts{display:grid;grid-template-columns:repeat(3,minmax(0,108px));gap:10px;justify-content:center}#production-day .pd-adjust-dialog .pd-adjust-shortcuts>button{width:100%;min-height:48px}
 .pd-closing-dialog .pc-stock-preview{position:relative}.pd-closing-dialog .pc-stock-preview::after{content:"→";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#a09082}
+
+/* Opening filters affect table visibility only, never the opening command. */
+.pd-opening-filters{display:grid;gap:14px;margin:16px 0 20px;padding:16px;background:#faf7f3;border:1px solid #e5dacf;border-radius:12px}
+.pd-opening-filter-line{display:grid;grid-template-columns:145px minmax(0,1fr);gap:12px;align-items:start}.pd-filter-label{font-size:.85rem;font-weight:600;padding-top:12px;color:#6a584d}.pd-filter-badges{display:flex;flex-wrap:wrap;gap:8px}
+#production-day .pd-filter-badges button{border-radius:24px;padding:10px 16px;min-height:44px;border:1px solid #cdbeb1;background:#fff;color:#624b3e;font-size:.85rem;font-weight:600;white-space:normal;overflow-wrap:anywhere}
+#production-day .pd-filter-badges button[aria-pressed=true]{background:#94182e;border-color:#94182e;color:#fff}#production-day .pd-filter-badges button:focus-visible{outline:3px solid #b47d36;outline-offset:2px}
+.pd-category-group{background:#eee3d8;color:#674733}.pd-category{background:#e8edf3;color:#3d536b}.pd-filter-empty{text-align:center;padding:24px!important;color:#6a584d}
+@media(max-width:600px){.pd-opening-filters{padding:12px}.pd-opening-filter-line{grid-template-columns:minmax(0,1fr);gap:6px}.pd-filter-label{padding-top:0}#production-day .pd-filter-badges button{padding:9px 12px}}

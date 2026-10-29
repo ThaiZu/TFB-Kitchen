@@ -140,5 +140,11 @@
   "day_closing_need_photo": "Foto van afval ontbreekt",
   "day_closing_can_confirm": "Je kunt het weggooien bevestigen.",
   "day_closing_ready": "Al het afval is bevestigd. De dag kan worden afgesloten.",
-  "day_back": "Terug"
+  "day_back": "Terug",
+  "day_opening_filters": "Productfilters",
+  "day_filter_all": "Alle",
+  "day_filter_shelf_life": "Houdbaarheid",
+  "day_filter_groups": "Categoriegroepen",
+  "day_filter_categories": "Categorieën",
+  "day_filter_empty": "Geen producten komen overeen met de geselecteerde filters."
 }
