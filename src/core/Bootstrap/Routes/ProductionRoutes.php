@@ -15,7 +15,7 @@ return function (RouteCollector $r) {
     $r->addRoute('GET','/production-day',['controller'=>$dayController,'method'=>'index']);
     $r->addRoute('GET','/production-day/data',['controller'=>$dayController,'method'=>'data']);
     $r->addRoute('POST','/production-day/photos',['controller'=>$dayController,'method'=>'uploadPhoto']);
-    $r->addRoute('POST','/production-day/{operation:open|adjust|close}',['controller'=>$dayController,'method'=>'command']);
+    $r->addRoute('POST','/production-day/{operation:open|adjust|close|prepare}',['controller'=>$dayController,'method'=>'command']);
 
     // Compact execution list backed by the canonical Panel production plan.
     $r->addRoute('GET', '/production/today', ['controller'=>\App\Kitchen\app\Http\Controllers\Production\ProductionDayController::class,'method'=>'legacy',]);

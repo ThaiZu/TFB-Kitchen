@@ -11,7 +11,7 @@ final class ProductionDayController extends Controller
     {
         header('Cache-Control: private, no-store');
         $date=isset($_GET['date'])&&is_string($_GET['date'])?$_GET['date']:null;
-        $screen=$this->service->screen($date);$screen['view']=in_array($_GET['view']??'', ['opening','stock','closing'],true)?$_GET['view']:($screen['sheet']['default_view']??'opening');
+        $screen=$this->service->screen($date);$screen['view']=in_array($_GET['view']??'', ['opening','stock','prepare','closing'],true)?$_GET['view']:($screen['sheet']['default_view']??'opening');
         $this->view('production_day/index',$screen);
     }
     public function data(): JsonResponse
