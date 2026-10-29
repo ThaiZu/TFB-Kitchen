@@ -43,7 +43,9 @@ check('le jour suit',               $scoped['work_date'], '2026-08-21');
 // ── Le glissement ───────────────────────────────────────────────────────────
 // Tant qu'on enchaîne les tâches, le poste reste ouvert.
 check('29 min après : ouvert',      $s->verify($tok, $T0 + 1740, $SEC) !== null, true);
-check('31 min après : refermé',     $s->verify($tok, $T0 + 1860, $SEC), null);
+check('31 min après : ouvert',      $s->verify($tok, $T0 + 1860, $SEC) !== null, true);
+check('8 h sans geste : ouvert',    $s->verify($tok, $T0 + 8 * 3600, $SEC) !== null, true);
+check('8 h + 1 s sans geste : fermé', $s->verify($tok, $T0 + 8 * 3600 + 1, $SEC), null);
 
 // Chaque tâche validée repousse l'échéance : c'est ce qui permet d'enchaîner
 // une checklist longue sans jamais retaper le code.
@@ -52,10 +54,12 @@ check('geste à 25 min : repoussé',  $s->verify($tok2, $T0 + 3000, $SEC) !== nu
 
 // ── Le plafond ──────────────────────────────────────────────────────────────
 // Même en gestes continus, un poste ne dure pas plus qu'un service.
-$tard = $s->sign(7, 'Nathan', $T0, $T0 + 8 * 3600 + 60, $SEC);
-check('au-delà de 8 h : refermé',   $s->verify($tard, $T0 + 8 * 3600 + 60, $SEC), null);
+$tard = $s->sign(7, 'Nathan', $T0, $T0 + 12 * 3600 + 60, $SEC);
+check('au-delà de 12 h : refermé',   $s->verify($tard, $T0 + 12 * 3600 + 60, $SEC), null);
 $juste = $s->sign(7, 'Nathan', $T0, $T0 + 7 * 3600, $SEC);
 check('à 7 h : encore ouvert',      $s->verify($juste, $T0 + 7 * 3600, $SEC) !== null, true);
+
+check('plafond exact 12 h : ouvert', $s->verify($s->sign(7, 'N', $T0, $T0 + 12 * 3600, $SEC), $T0 + 12 * 3600, $SEC) !== null, true);
 
 // ── Ce qui doit être refusé ─────────────────────────────────────────────────
 check('absent',                     $s->verify(null, $T0, $SEC), null);
@@ -77,11 +81,11 @@ check('employé 0',                  $s->verify($s->sign(0, 'N', $T0, $T0, $SEC)
 
 // ── Ce que l'écran affiche ──────────────────────────────────────────────────
 // Un poste qui se referme sans prévenir passerait pour une panne.
-check('restant à l ouverture',      $s->remaining($c, $T0), 1800);
-check('restant après 25 min',       $s->remaining($c, $T0 + 1500), 300);
+check('restant à l ouverture',      $s->remaining($c, $T0), 8 * 3600);
+check('restant après 25 min',       $s->remaining($c, $T0 + 1500), 8 * 3600 - 1500);
 check('jamais négatif',             $s->remaining($c, $T0 + 99999), 0);
-$vieux = $s->verify($s->sign(7,'N',$T0, $T0 + 7*3600 + 3300, $SEC), $T0 + 7*3600 + 3300, $SEC);
-check('le plafond peut primer',     $s->remaining($vieux, $T0 + 7 * 3600 + 3300), 300);
+$vieux = $s->verify($s->sign(7,'N',$T0, $T0 + 11*3600 + 3300, $SEC), $T0 + 11*3600 + 3300, $SEC);
+check('le plafond peut primer',     $s->remaining($vieux, $T0 + 11 * 3600 + 3300), 300);
 
 check('initiales',                  $s->initials('Nathan Lambert'), 'NL');
 check('initiales, un seul mot',     $s->initials('Nathan'), 'N');
