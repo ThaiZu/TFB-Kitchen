@@ -211,5 +211,7 @@
   "day_saving": "Opslaan… Wacht op bevestiging.",
   "day_loading": "Actuele voorraad laden…",
   "day_date_change_title": "Andere dag kiezen?",
-  "day_discard_changes": "Niet-opgeslagen aantallen en beslissingen worden gewist. Doorgaan?"
+  "day_discard_changes": "Niet-opgeslagen aantallen en beslissingen worden gewist. Doorgaan?",
+  "day_waste_confirmed": "Afvoer bevestigd",
+  "day_wizard_missing_guide": "Producten hieronder wachten op een beslissing ({count}). Ga naar het eerste ↓"
 }
