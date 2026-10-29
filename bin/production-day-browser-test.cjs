@@ -144,7 +144,7 @@ await latePage.route('**/*',route=>{const p=new URL(route.request().url()).pathn
 await latePage.goto('http://kitchen.test/kitchen/production-day');
 assert.equal(await latePage.locator('[data-page="closing"]').getAttribute('aria-current'),'page');
 assert.equal(await latePage.locator('[data-closing-product="1"]').inputValue(),'10');
-assert.equal(await latePage.getByRole('button',{name:'Zamknij dzień',exact:true}).isEnabled(),true);
+assert.equal(await latePage.getByRole('button',{name:'Zamknij i przejdź do dzisiaj',exact:true}).isEnabled(),true);
 await latePage.locator('[data-page="stock"]').click();assert.equal(await latePage.locator('.pd-add').count(),0);assert.equal(await latePage.getByRole('button',{name:'Zmodyfikuj stany bieżące',exact:true}).count(),0);
 await latePage.close();checks++;
 console.log(`Kitchen production day browser: ${checks} checks PASS (desktop/mobile, opening decisions, production, waste, closing, persisted retry).`);
