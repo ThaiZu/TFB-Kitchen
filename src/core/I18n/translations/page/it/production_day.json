@@ -140,5 +140,11 @@
   "day_closing_need_photo": "Manca una foto dello scarto",
   "day_closing_can_confirm": "Puoi confermare lo smaltimento.",
   "day_closing_ready": "Tutti gli scarti sono confermati. Puoi chiudere la giornata.",
-  "day_back": "Indietro"
+  "day_back": "Indietro",
+  "day_opening_filters": "Filtri dei prodotti",
+  "day_filter_all": "Tutti",
+  "day_filter_shelf_life": "Durata di conservazione",
+  "day_filter_groups": "Gruppi di categorie",
+  "day_filter_categories": "Categorie",
+  "day_filter_empty": "Nessun prodotto corrisponde ai filtri selezionati."
 }

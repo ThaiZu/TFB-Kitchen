@@ -140,5 +140,11 @@
   "day_closing_need_photo": "Brakuje zdjęcia odpadu",
   "day_closing_can_confirm": "Możesz potwierdzić wyrzucenie.",
   "day_closing_ready": "Wszystkie odpady potwierdzone. Dzień jest gotowy do zamknięcia.",
-  "day_back": "Wróć"
+  "day_back": "Wróć",
+  "day_opening_filters": "Filtry produktów",
+  "day_filter_all": "Wszystkie",
+  "day_filter_shelf_life": "Trwałość produktu",
+  "day_filter_groups": "Grupy kategorii",
+  "day_filter_categories": "Kategorie",
+  "day_filter_empty": "Brak produktów spełniających wybrane filtry."
 }
