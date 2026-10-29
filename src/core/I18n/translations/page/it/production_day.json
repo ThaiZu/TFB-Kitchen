@@ -211,5 +211,7 @@
   "day_saving": "Salvataggio… Attendi la conferma.",
   "day_loading": "Caricamento scorte attuali…",
   "day_date_change_title": "Cambiare giorno?",
-  "day_discard_changes": "Le quantità e decisioni non salvate saranno cancellate. Continuare?"
+  "day_discard_changes": "Le quantità e decisioni non salvate saranno cancellate. Continuare?",
+  "day_waste_confirmed": "Smaltimento confermato",
+  "day_wizard_missing_guide": "Prodotti in attesa di una decisione qui sotto ({count}). Vai al primo ↓"
 }

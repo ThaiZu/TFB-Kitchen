@@ -211,5 +211,7 @@
   "day_saving": "Zapisywanie… Poczekaj na potwierdzenie.",
   "day_loading": "Pobieranie aktualnych stanów…",
   "day_date_change_title": "Zmienić dzień?",
-  "day_discard_changes": "Niezapisane ilości i decyzje zostaną wyczyszczone. Czy chcesz kontynuować?"
+  "day_discard_changes": "Niezapisane ilości i decyzje zostaną wyczyszczone. Czy chcesz kontynuować?",
+  "day_waste_confirmed": "Wyrzucenie potwierdzone",
+  "day_wizard_missing_guide": "Poniżej czekają produkty wymagające decyzji ({count}). Przejdź do pierwszego ↓"
 }

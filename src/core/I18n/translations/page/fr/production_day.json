@@ -211,5 +211,7 @@
   "day_saving": "Enregistrement… Attendez la confirmation.",
   "day_loading": "Chargement du stock actuel…",
   "day_date_change_title": "Changer de journée ?",
-  "day_discard_changes": "Les quantités et décisions non enregistrées seront effacées. Continuer ?"
+  "day_discard_changes": "Les quantités et décisions non enregistrées seront effacées. Continuer ?",
+  "day_waste_confirmed": "Mise au rebut confirmée",
+  "day_wizard_missing_guide": "Des produits attendent une décision ci-dessous ({count}). Aller au premier ↓"
 }

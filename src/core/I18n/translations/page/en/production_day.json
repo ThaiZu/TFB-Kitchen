@@ -211,5 +211,7 @@
   "day_saving": "Saving… Please wait for confirmation.",
   "day_loading": "Loading current stock…",
   "day_date_change_title": "Change day?",
-  "day_discard_changes": "Unsaved quantities and decisions will be cleared. Continue?"
+  "day_discard_changes": "Unsaved quantities and decisions will be cleared. Continue?",
+  "day_waste_confirmed": "Disposal confirmed",
+  "day_wizard_missing_guide": "Products below need a decision ({count}). Go to the first ↓"
 }
