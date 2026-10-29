@@ -1,6 +1,6 @@
 {% extends 'layouts/base.twig' %}
 {% block title %}{{ translations.day_title }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ ROOT }}/assets/vendors/choices.js/choices.min.css"><link rel="stylesheet" href="{{ ROOT }}/assets/css/production-day.css?v=22">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ ROOT }}/assets/vendors/choices.js/choices.min.css"><link rel="stylesheet" href="{{ ROOT }}/assets/css/production-day.css?v=23">{% endblock %}
 {% block content %}
 <div id="production-day" data-root="{{ ROOT }}" data-view="{{ view }}" data-shift="{{ has_shift ? '1' : '0' }}">
 <header class="pd-header"><div><h1>{{ translations.day_title }}</h1><p>{{ translations.day_hint }}</p></div></header>
@@ -19,6 +19,6 @@
 <dialog id="pd-dialog" aria-labelledby="pd-dialog-title"><form id="pd-modal-form"><header><div><p id="pd-dialog-kicker" hidden></p><h2 id="pd-dialog-title"></h2><p id="pd-dialog-description" hidden></p></div><button type="button" id="pd-dialog-cancel" aria-label="{{ translations.day_cancel }}">×</button></header><div id="pd-dialog-body"></div><p id="pd-dialog-error" role="alert"></p><footer><p id="pd-dialog-progress" role="status" aria-live="polite" hidden></p><button type="button" id="pd-dialog-back" hidden>{{ translations.day_back }}</button><button type="submit" id="pd-dialog-save">{{ translations.day_confirm }}</button></footer></form></dialog>
 <script id="pd-seed" type="application/json">{{ sheet|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}</script>
 <script id="pd-translations" type="application/json">{{ translations|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}</script>
-<script src="{{ ROOT }}/assets/vendors/choices.js/choices.min.js" defer></script><script src="{{ ROOT }}/assets/js/production-day.js?v=22" defer></script>
+<script src="{{ ROOT }}/assets/vendors/choices.js/choices.min.js" defer></script><script src="{{ ROOT }}/assets/js/production-day.js?v=23" defer></script>
 {% endif %}</div>
 {% endblock %}
