@@ -20,6 +20,7 @@ final class ProductionDayController extends Controller
         $screen=$this->service->screen(isset($_GET['date'])&&is_string($_GET['date'])?$_GET['date']:null);
         return $this->json(['success'=>$screen['available'],'data'=>$screen['sheet']??null],$screen['available']?200:503);
     }
+    public function windows(): JsonResponse {if(($_SERVER['HTTP_X_REQUESTED_WITH']??'')!=='XMLHttpRequest'||($_SERVER['HTTP_SEC_FETCH_SITE']??'')==='cross-site')return $this->json(['success'=>false],403);$result=$this->service->windows(is_string($_GET['date']??null)?$_GET['date']:'');return $this->json($result,($result['success']??false)?200:503);}
     public function sectors(): JsonResponse {return $this->json($this->service->sectors());}
     public function sector(): JsonResponse
     {

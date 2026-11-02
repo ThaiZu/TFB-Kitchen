@@ -42,7 +42,8 @@ foreach (['pl', 'en', 'fr', 'nl', 'it'] as $language) {
             $themeHash = substr(hash_file('sha256', __DIR__ . '/../public/assets/css/atelier-theme.css'), 0, 16);
             $expect($xpath->query('//link[@href="' . ROOT . '/assets/css/atelier-theme.css?v=' . $themeHash . '"]')->length === 1, 'Stylesheet URL tracks its content');
             foreach (["//*[@id='appNavSheet']", "//nav[contains(@class,'app-tabbar-bar')]"] as $scope) {
-                $destinations = ['dashboard', 'production-day', 'knowledge/products', 'checklists', 'orders', 'knowledge'];
+                $destinations = ['dashboard', 'production-day', 'knowledge/products', 'checklists', 'orders'];
+                if(str_contains($scope,'appNavSheet'))$destinations[]='knowledge';else $expect($xpath->query($scope.'//a[@href="'.ROOT.'/knowledge"]')->length===0,'Knowledge link removed from footer');
                 if (str_contains($scope, 'appNavSheet')) $destinations[] = 'material-stocktaking';
                 foreach ($destinations as $destination) {
                     $links = $xpath->query($scope . '//a[@href="' . ROOT . '/' . $destination . '"]');

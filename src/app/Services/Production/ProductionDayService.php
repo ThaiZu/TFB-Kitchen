@@ -14,6 +14,7 @@ class ProductionDayService
             'has_shift'=>isset($sheet['today']) && ShiftSession::current($shop,$sheet['today'])!==null,
             'api_error'=>$result['description']??null];
     }
+    public function windows(string $date): array {if(!preg_match('/^\d{4}-\d{2}-\d{2}$/D',$date))return ['success'=>false,'code'=>422];return $this->repository->windows((int)(GlobalRegistry::get('user')['shop_id']??0),$date);}
     public function sectors(): array
     {
         $shop=(int)(GlobalRegistry::get('user')['shop_id']??0);
@@ -40,7 +41,7 @@ class ProductionDayService
         $shop=(int)(GlobalRegistry::get('user')['shop_id']??0);
         $shift=$shop>0?ShiftSession::current($shop):null;
         if ($shift===null) return ['success'=>false,'code'=>403,'description'=>'KITCHEN_SHIFT_REQUIRED'];
-        if (!in_array($operation,['open','adjust','close','prepare','count'],true)) return ['success'=>false,'code'=>422];
+        if (!in_array($operation,['open','adjust','close','prepare','prepare_add','close_draft','count'],true)) return ['success'=>false,'code'=>422];
         $result=$this->repository->command($shop,$operation,$input);
         if ($result['success']??false) ShiftSession::touch($shift);
         return $result;
