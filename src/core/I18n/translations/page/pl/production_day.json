@@ -215,5 +215,13 @@
   "day_waste_confirmed": "Wyrzucenie potwierdzone",
   "day_wizard_missing_guide": "Poniżej czekają produkty wymagające decyzji ({count}). Przejdź do pierwszego ↓",
   "day_wizard_prepare_catalog_hint": "Lista obejmuje produkty oznaczone jako wymagające wcześniejszego przygotowania — niezależnie od dzisiejszej produkcji.",
-  "day_wizard_prepare_result_hint": "Zapis nie zwiększa magazynu. Jutro deklaracja będzie podpowiedzią przy otwarciu dnia; pracownik wpisze faktycznie gotową ilość. Jeśli nic nie przygotowujesz, pomiń ten krok."
+  "day_wizard_prepare_result_hint": "Zapis nie zwiększa magazynu. Jutro deklaracja będzie podpowiedzią przy otwarciu dnia; pracownik wpisze faktycznie gotową ilość. Jeśli nic nie przygotowujesz, pomiń ten krok.",
+  "day_stock_filters": "Filtry stanów bieżących",
+  "day_sort_by": "Sortuj według",
+  "day_sort_group": "Grupy kategorii",
+  "day_sort_category": "Kategorii",
+  "day_sort_life": "Trwałości SSL/MSL/LSL",
+  "day_sort_name": "Nazwy",
+  "day_sort_ascending": "Rosnąco ↑",
+  "day_sort_descending": "Malejąco ↓"
 }

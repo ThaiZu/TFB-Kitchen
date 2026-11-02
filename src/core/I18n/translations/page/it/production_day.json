@@ -215,5 +215,13 @@
   "day_waste_confirmed": "Smaltimento confermato",
   "day_wizard_missing_guide": "Prodotti in attesa di una decisione qui sotto ({count}). Vai al primo ↓",
   "day_wizard_prepare_catalog_hint": "L’elenco include i prodotti che richiedono preparazione anticipata, indipendentemente dalla produzione di oggi.",
-  "day_wizard_prepare_result_hint": "Il salvataggio non aumenta le scorte. Domani la dichiarazione sarà un riferimento all’apertura; il dipendente inserirà la quantità effettivamente pronta. Salta questo passo se non prepari nulla."
+  "day_wizard_prepare_result_hint": "Il salvataggio non aumenta le scorte. Domani la dichiarazione sarà un riferimento all’apertura; il dipendente inserirà la quantità effettivamente pronta. Salta questo passo se non prepari nulla.",
+  "day_stock_filters": "Filtri scorte attuali",
+  "day_sort_by": "Ordina per",
+  "day_sort_group": "Gruppo di categorie",
+  "day_sort_category": "Categoria",
+  "day_sort_life": "Conservazione SSL/MSL/LSL",
+  "day_sort_name": "Nome",
+  "day_sort_ascending": "Crescente ↑",
+  "day_sort_descending": "Decrescente ↓"
 }

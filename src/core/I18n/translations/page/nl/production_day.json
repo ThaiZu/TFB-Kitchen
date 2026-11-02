@@ -215,5 +215,13 @@
   "day_waste_confirmed": "Afvoer bevestigd",
   "day_wizard_missing_guide": "Producten hieronder wachten op een beslissing ({count}). Ga naar het eerste ↓",
   "day_wizard_prepare_catalog_hint": "Deze lijst bevat producten die voorafgaande voorbereiding vereisen, los van de productie van vandaag.",
-  "day_wizard_prepare_result_hint": "Opslaan verhoogt de voorraad niet. Morgen dient deze opgave als referentie bij de opening; de medewerker vult de werkelijk gereedstaande hoeveelheid in. Sla deze stap over als je niets voorbereidt."
+  "day_wizard_prepare_result_hint": "Opslaan verhoogt de voorraad niet. Morgen dient deze opgave als referentie bij de opening; de medewerker vult de werkelijk gereedstaande hoeveelheid in. Sla deze stap over als je niets voorbereidt.",
+  "day_stock_filters": "Filters huidige voorraad",
+  "day_sort_by": "Sorteren op",
+  "day_sort_group": "Categoriegroep",
+  "day_sort_category": "Categorie",
+  "day_sort_life": "Houdbaarheid SSL/MSL/LSL",
+  "day_sort_name": "Naam",
+  "day_sort_ascending": "Oplopend ↑",
+  "day_sort_descending": "Aflopend ↓"
 }

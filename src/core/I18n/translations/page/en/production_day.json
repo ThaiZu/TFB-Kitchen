@@ -215,5 +215,13 @@
   "day_waste_confirmed": "Disposal confirmed",
   "day_wizard_missing_guide": "Products below need a decision ({count}). Go to the first ↓",
   "day_wizard_prepare_catalog_hint": "This list includes products marked as requiring advance preparation, independently of today’s production.",
-  "day_wizard_prepare_result_hint": "Saving does not increase stock. Tomorrow this declaration will be a reference during opening; the worker will enter the quantity actually ready. Skip this step if you are not preparing anything."
+  "day_wizard_prepare_result_hint": "Saving does not increase stock. Tomorrow this declaration will be a reference during opening; the worker will enter the quantity actually ready. Skip this step if you are not preparing anything.",
+  "day_stock_filters": "Current stock filters",
+  "day_sort_by": "Sort by",
+  "day_sort_group": "Category group",
+  "day_sort_category": "Category",
+  "day_sort_life": "Shelf life SSL/MSL/LSL",
+  "day_sort_name": "Name",
+  "day_sort_ascending": "Ascending ↑",
+  "day_sort_descending": "Descending ↓"
 }
