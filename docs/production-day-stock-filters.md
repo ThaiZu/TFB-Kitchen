@@ -16,10 +16,10 @@ associated opening and overnight-production changes.
 
 On Production Day the worker and sector selectors, including modal choice cards,
 use the production controls' 10px corner radius. Existing sizes and behaviours
-remain. Tomorrow preparation uses a pale blue background, blue table headings,
-notice and footer. Its geometry and inventory semantics are unchanged. The colour
+remain. Tomorrow preparation uses cream surfaces with a restrained warm heading/date/
+footer accent. Descriptions are available under the title info control. Its geometry and inventory semantics are unchanged. The colour
 scope is cleared when returning to current stock. Labels support PL/EN/FR/IT/NL;
-asset version 30. No API or database changes.
+asset version 31. No API or database changes.
 
 Validation: production-day PHP (39), controller navigation (864), dedicated stock
 filter browser suite (51, across 1024/768/390px), plus legacy/wizard regression
