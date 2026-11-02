@@ -253,5 +253,7 @@
   "day_close_walk_last": "Zapisz i pokaż podsumowanie",
   "day_shortage_next": "Przejdź do następnego produktu",
   "day_shortage_summary": "Wszystkie różnice zostały wyjaśnione. Zapisz i przejdź dalej.",
-  "day_night_pdm_empty": "Brak produktów oznaczonych PDM do zgłoszenia produkcji nocnej."
+  "day_night_pdm_empty": "Brak produktów oznaczonych PDM do zgłoszenia produkcji nocnej.",
+  "day_help_title": "Wskazówki do tego widoku",
+  "day_close_walk_help": "Przelicz produkty kolejno. SSL trafia w całości do odpadu; dla MSL i LSL wpisz ilość do przeniesienia. Każdy produkt zapisujesz osobno, a magazyn zmienia dopiero końcowe potwierdzenie zamknięcia."
 }

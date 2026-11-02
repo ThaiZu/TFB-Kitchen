@@ -253,5 +253,7 @@
   "day_close_walk_last": "Opslaan en samenvatting tonen",
   "day_shortage_next": "Volgend product",
   "day_shortage_summary": "Alle verschillen zijn verklaard. Sla op en ga verder.",
-  "day_night_pdm_empty": "Geen producten met PDM beschikbaar voor nachtproductie."
+  "day_night_pdm_empty": "Geen producten met PDM beschikbaar voor nachtproductie.",
+  "day_help_title": "Hulp bij deze weergave",
+  "day_close_walk_help": "Tel producten één voor één. Alle SSL-voorraad wordt afgevoerd; vul voor MSL en LSL de over te dragen hoeveelheid in. Elk product wordt apart opgeslagen; de voorraad verandert pas bij de definitieve afsluiting."
 }

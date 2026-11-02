@@ -1,3 +1,5 @@
+For current contextual help and preparation styling, see [context help](production-day-context-help.md).
+
 # Production day workflow batch
 
 Steps are: yesterday stock, overnight production, today's production, current
@@ -38,7 +40,7 @@ The global bottom bar no longer has the generic knowledge-base link; product
 cards and navigation-sheet knowledge access remain.
 
 Paired API migration: ../database/2026_11_02_kitchen_closing_draft.sql in TFB-Api.
-Apply manually before rollout. Assets v29, PL/EN/FR/IT/NL. No production migrations
+Apply manually before rollout. Assets v31, PL/EN/FR/IT/NL. No production migrations
 or deployment performed. Release with the paired API workflow changes.
 
 Validation: PHP proxy/routes, controller navigation; dedicated new workflow

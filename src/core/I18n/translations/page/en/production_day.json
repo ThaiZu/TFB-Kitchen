@@ -253,5 +253,7 @@
   "day_close_walk_last": "Save and show summary",
   "day_shortage_next": "Next product",
   "day_shortage_summary": "All differences have been explained. Save and continue.",
-  "day_night_pdm_empty": "No products marked PDM are available for overnight production."
+  "day_night_pdm_empty": "No products marked PDM are available for overnight production.",
+  "day_help_title": "Help for this view",
+  "day_close_walk_help": "Count products one by one. All SSL stock is discarded; for MSL and LSL enter the quantity to carry over. Each product is saved separately; stock changes only when you confirm final closing."
 }

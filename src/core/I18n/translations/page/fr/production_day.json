@@ -253,5 +253,7 @@
   "day_close_walk_last": "Enregistrer et voir le résumé",
   "day_shortage_next": "Produit suivant",
   "day_shortage_summary": "Toutes les différences sont expliquées. Enregistrez et continuez.",
-  "day_night_pdm_empty": "Aucun produit marqué PDM pour la production de nuit."
+  "day_night_pdm_empty": "Aucun produit marqué PDM pour la production de nuit.",
+  "day_help_title": "Aide pour cette vue",
+  "day_close_walk_help": "Comptez les produits un par un. Tout le stock SSL est jeté ; pour MSL et LSL, indiquez la quantité à reporter. Chaque produit est enregistré séparément ; le stock ne change qu’à la confirmation finale."
 }
