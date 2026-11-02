@@ -155,7 +155,7 @@
   "day_wizard_carry_title": "Vérifiez le stock de la veille",
   "day_wizard_carry_hint": "Confirmez la quantité vendable. Toute baisse exige un motif de perte et une photo.",
   "day_wizard_night_title": "Une production a terminé après la clôture ?",
-  "day_wizard_night_hint": "Saisissez la production terminée non enregistrée avant la clôture. Ne recomptez pas le stock de la veille. Sinon, laissez zéro.",
+  "day_wizard_night_hint": "Indiquez les quantités prêtes après la cuisson de nuit. Cette étape concerne uniquement les produits PDM.",
   "day_wizard_production_title": "Ajoutez la production du jour",
   "day_wizard_production_hint": "Stock initial = stock vérifié + production de nuit + du jour. Justifiez séparément chaque produit obligatoire indisponible.",
   "day_wizard_night_quantity": "Terminé après la clôture",
@@ -217,13 +217,6 @@
   "day_wizard_prepare_catalog_hint": "Cette liste contient les produits nécessitant une préparation à l’avance, indépendamment de la production du jour.",
   "day_wizard_prepare_result_hint": "L’enregistrement n’augmente pas le stock. Demain, cette déclaration servira de repère à l’ouverture ; l’employé saisira la quantité réellement prête. Passez cette étape si vous ne préparez rien.",
   "day_stock_filters": "Filtres du stock actuel",
-  "day_sort_by": "Trier par",
-  "day_sort_group": "Groupe de catégories",
-  "day_sort_category": "Catégorie",
-  "day_sort_life": "Conservation SSL/MSL/LSL",
-  "day_sort_name": "Nom",
-  "day_sort_ascending": "Croissant ↑",
-  "day_sort_descending": "Décroissant ↓",
   "day_batch_start": "Ajouter une préparation pour demain",
   "day_batch_title": "Préparation en cours",
   "day_batch_hint": "Indiquez les quantités mises en préparation pour demain. Elles s’ajoutent aux déclarations précédentes sans augmenter le stock vendable.",
@@ -257,5 +250,8 @@
   "day_windows_projected": "Stock prévu à la fin",
   "day_windows_remaining": "Dès maintenant",
   "day_draft_changed": "Ce comptage a changé. Actualisez et vérifiez les quantités.",
-  "day_close_walk_last": "Enregistrer et voir le résumé"
+  "day_close_walk_last": "Enregistrer et voir le résumé",
+  "day_shortage_next": "Produit suivant",
+  "day_shortage_summary": "Toutes les différences sont expliquées. Enregistrez et continuez.",
+  "day_night_pdm_empty": "Aucun produit marqué PDM pour la production de nuit."
 }

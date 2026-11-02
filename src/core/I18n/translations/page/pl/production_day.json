@@ -155,7 +155,7 @@
   "day_wizard_carry_title": "Sprawdź zapas z wczoraj",
   "day_wizard_carry_hint": "Potwierdź ilość zdatną do sprzedaży. Mniejszy stan wymaga wyjaśnienia odpadu i zdjęcia.",
   "day_wizard_night_title": "Czy coś skończyło się po zamknięciu?",
-  "day_wizard_night_hint": "Wpisz gotową produkcję, której nie zapisano przed zamknięciem. Nie dodawaj ponownie zapasu z wczoraj. Jeśli jej nie było, zostaw zera.",
+  "day_wizard_night_hint": "Wpisz ilości gotowe po nocnym wypieku. Ten krok obejmuje wyłącznie produkty PDM.",
   "day_wizard_production_title": "Dodaj dzisiejszą produkcję",
   "day_wizard_production_hint": "Stan na otwarciu = sprawdzony zapas + produkcja nocna + dzisiejsza. Wyjaśnij osobno brak każdego obowiązkowego produktu.",
   "day_wizard_night_quantity": "Gotowe po zamknięciu",
@@ -217,13 +217,6 @@
   "day_wizard_prepare_catalog_hint": "Lista obejmuje produkty oznaczone jako wymagające wcześniejszego przygotowania — niezależnie od dzisiejszej produkcji.",
   "day_wizard_prepare_result_hint": "Zapis nie zwiększa magazynu. Jutro deklaracja będzie podpowiedzią przy otwarciu dnia; pracownik wpisze faktycznie gotową ilość. Jeśli nic nie przygotowujesz, pomiń ten krok.",
   "day_stock_filters": "Filtry stanów bieżących",
-  "day_sort_by": "Sortuj według",
-  "day_sort_group": "Grupy kategorii",
-  "day_sort_category": "Kategorii",
-  "day_sort_life": "Trwałości SSL/MSL/LSL",
-  "day_sort_name": "Nazwy",
-  "day_sort_ascending": "Rosnąco ↑",
-  "day_sort_descending": "Malejąco ↓",
   "day_batch_start": "Dodaj przygotowanie na jutro",
   "day_batch_title": "Przygotowanie w toku",
   "day_batch_hint": "Zgłoś ilości właśnie wstawione do przygotowania na jutro. Dodajemy je do wcześniejszych zgłoszeń, bez zwiększania magazynu sprzedaży.",
@@ -257,5 +250,8 @@
   "day_windows_projected": "Prognoza na koniec",
   "day_windows_remaining": "Od teraz",
   "day_draft_changed": "Rozliczenie produktu zmieniło się. Odśwież dane i sprawdź ilości.",
-  "day_close_walk_last": "Zapisz i pokaż podsumowanie"
+  "day_close_walk_last": "Zapisz i pokaż podsumowanie",
+  "day_shortage_next": "Przejdź do następnego produktu",
+  "day_shortage_summary": "Wszystkie różnice zostały wyjaśnione. Zapisz i przejdź dalej.",
+  "day_night_pdm_empty": "Brak produktów oznaczonych PDM do zgłoszenia produkcji nocnej."
 }
