@@ -264,7 +264,7 @@
 } %}
 {# These destinations are always shown on the dashboard and must remain
    reachable on every page, even when optional device configuration is absent. #}
-{% set visible_tab_keys = ['dashboard', 'production_day', 'production_cards', 'checklists', 'orders', 'knowledge'] %}
+{% set visible_tab_keys = ['dashboard', 'production_day', 'production_cards', 'checklists', 'orders'] %}
 {% for key in tab_keys|default([]) %}
     {% if key not in ['production','production_list','inventory'] and key not in visible_tab_keys %}{% set visible_tab_keys = visible_tab_keys|merge([key]) %}{% endif %}
 {% endfor %}
