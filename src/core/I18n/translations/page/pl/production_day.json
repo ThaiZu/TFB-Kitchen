@@ -29,7 +29,7 @@
   "day_failed": "Nie udało się zapisać. Sprawdź dane i ponów.",
   "day_network": "Brak potwierdzenia zapisu. Ponów bez zmiany danych.",
   "day_saved": "Zapisano.",
-  "day_saved_refresh": "Zapis potwierdzony. Nie udało się odświeżyć stanów — użyj „Odśwież stany”.",
+  "day_saved_refresh": "Zapis potwierdzony. Nie udało się pobrać aktualnych stanów. Spróbuj ponownie.",
   "day_add_product": "Dodaj kolejny produkt",
   "day_quantity": "Ilość",
   "day_add": "Dodaj",

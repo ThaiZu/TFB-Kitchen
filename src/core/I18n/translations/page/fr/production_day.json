@@ -29,7 +29,7 @@
   "day_failed": "Enregistrement impossible. Vérifiez les données et réessayez.",
   "day_network": "Enregistrement non confirmé. Réessayez sans modifier les données.",
   "day_saved": "Enregistré.",
-  "day_saved_refresh": "Enregistrement confirmé, mais le stock n’a pas pu être actualisé. Utilisez Actualiser le stock.",
+  "day_saved_refresh": "Enregistrement confirmé. Impossible de charger les stocks actuels. Réessayez.",
   "day_add_product": "Ajouter un autre produit",
   "day_quantity": "Quantité",
   "day_add": "Ajouter",

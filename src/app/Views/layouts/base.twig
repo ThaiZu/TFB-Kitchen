@@ -206,21 +206,6 @@
 <script src="{{ ROOT }}/assets/js/production-sector.js?v=2" defer></script>
 <main class="app-content">
     <div class="container py-3">
-        {# ── Ce que le back doit encore servir ──────────────────────────────
-           Pas de repli, pas de valeur inventée : quand une donnée vient d'un
-           endpoint qui n'existe pas, l'écran nomme l'endpoint. Un menu codé en
-           dur qui prend la place ferait croire que tout va bien, et le manque
-           ne se verrait qu'au moment de s'en servir.
-
-           Le bandeau reste tant que la route ne répond pas — c'est voulu : il
-           doit gêner. #}
-        {% if missing_api is not empty %}
-            <div class="api-todo" role="status">
-                <span class="api-todo-tag">{{ translations.api_missing }}</span>
-                {% for route in missing_api %}<code>{{ route }}</code>{% endfor %}
-            </div>
-        {% endif %}
-
         {% block page_heading %}{% endblock %}
 
         {% include "page_components/alerts.twig" %}

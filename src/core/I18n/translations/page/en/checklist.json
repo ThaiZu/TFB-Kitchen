@@ -62,5 +62,5 @@
     "modal_photo_close": "Close",
     "modal_btn_fail": "Report as not done",
     "col_reported_at": "Reported at",
-    "roster_api_missing": "The list comes from the API, which does not answer yet — see the banner at the top."
+    "roster_api_missing": "Could not load the employee list. Try again."
 }

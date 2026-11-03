@@ -4,6 +4,10 @@ use FastRoute\RouteCollector;
 
 return function (RouteCollector $r) {
 
+    $r->addRoute('GET', '/checklist', [
+        'controller' => \App\Kitchen\app\Http\Controllers\Checklist\ChecklistController::class,
+        'method' => 'index',
+    ]);
     $r->addRoute('GET', '/checklists', [
         'controller' => \App\Kitchen\app\Http\Controllers\Checklist\ChecklistController::class,
         'method'     => 'index',

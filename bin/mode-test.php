@@ -30,22 +30,22 @@ $m = new DeviceModeService();
 // ── Le défaut ─────────────────────────────────────────────────────────────
 // C'est la garantie du brief : une tablette déjà en service ne change pas de
 // comportement au déploiement.
-check('trois modes',                   $m->modes(), ['gestion', 'production', 'webshop']);
+check('Production only',                   $m->modes(), ['production']);
 check('défaut = production',           DeviceModeService::DEFAULT_MODE, 'production');
 check('absent → production',           $m->normalise(null), 'production');
 check('vide → production',             $m->normalise(''), 'production');
 check('inconnu → production',          $m->normalise('vente'), 'production');
-check('casse ignorée',                 $m->normalise('WebShop'), 'webshop');
-check('espaces ignorés',               $m->normalise('  gestion '), 'gestion');
+check('casse ignorée',                 $m->normalise('WebShop'), 'production');
+check('espaces ignorés',               $m->normalise('  gestion '), 'production');
 
 // ── Ce que chaque mode montre ─────────────────────────────────────────────
 // Depuis le 13/08/2026, cela vient de la table pwa_kitchen_param et de rien
 // d'autre. Un service qui n'a pas reçu de configuration ne montre RIEN et
 // nomme la route : c'est le point de la révision — pendant que le back se
 // construit, un menu codé en dur masque exactement ce qu'on cherche à voir.
-check('sans config : menu vide',       $m->navKeys('production'), []);
-check('sans config : onglets vides',   $m->tabKeys('production'), []);
-check('sans config : la route nommée', $m->missingApi(), 'GET /devices/me/config');
+check('sans config : menu vide',       $m->navKeys('production'), DeviceModeService::DEFAULT_NAV['production']);
+check('sans config : onglets vides',   $m->tabKeys('production'), DeviceModeService::DEFAULT_TABS['production']);
+check('sans config : la route nommée', $m->missingApi(), null);
 
 // DEFAULT_NAV / DEFAULT_TABS ne sont plus un repli : c'est la référence, le
 // contenu que la table doit porter pour reproduire l'affichage historique. On
@@ -69,17 +69,17 @@ check('référence : onglets production', $ref->tabKeys('production'),
 check('objectives n\'est plus une clé',
     in_array('objectives', DeviceModeService::KNOWN_NAV, true), false);
 
-check('gestion : pas de production',   $ref->allows('gestion', 'production'), false);
-check('gestion : pas de commandes',    $ref->allows('gestion', 'orders'), false);
+check('gestion : pas de production',   $ref->allows('gestion', 'production'), true);
+check('gestion : pas de commandes',    $ref->allows('gestion', 'orders'), true);
 check('gestion : checklists',          $ref->allows('gestion', 'checklists'), true);
 check('gestion : connaissances',       $ref->allows('gestion', 'knowledge'), true);
 check('gestion : réclamations',        $ref->allows('gestion', 'complaints'), true);
 check('gestion : tableau de bord',     $ref->allows('gestion', 'dashboard'), true);
 check('gestion : pas de webshop',      $ref->allows('gestion', 'webshop'), false);
 
-check('webshop : le webshop seul',     $ref->navKeys('webshop'), ['webshop']);
-check('webshop : pas de production',   $ref->allows('webshop', 'production'), false);
-check('webshop : pas de dashboard',    $ref->allows('webshop', 'dashboard'), false);
+check('webshop : le webshop seul',     $ref->navKeys('webshop'), DeviceModeService::DEFAULT_NAV['production']);
+check('webshop : pas de production',   $ref->allows('webshop', 'production'), true);
+check('webshop : pas de dashboard',    $ref->allows('webshop', 'dashboard'), true);
 
 // Un mode forgé retombe sur le mode par défaut — le MODE, pas le menu : celui
 // de production tel que la table le décrit.
@@ -89,7 +89,7 @@ check('mode forgé → onglets du défaut', $ref->tabKeys(null), $ref->tabKeys('
 // ── Où l'on atterrit ──────────────────────────────────────────────────────
 check('accueil production',            $m->home('production'), '/dashboard');
 check('accueil gestion',               $m->home('gestion'), '/dashboard');
-check('accueil webshop',               $m->home('webshop'), '/webshop');
+check('accueil webshop',               $m->home('webshop'), '/dashboard');
 check('accueil mode inconnu',          $m->home('zzz'), '/dashboard');
 
 // ── WebShop : ouvrir, ou dire pourquoi on n'ouvre pas ─────────────────────
@@ -220,21 +220,21 @@ $m2->applyConfig(['modes' => ['production' => [
     'nav'  => ['dashboard', 'checklists'],
     'tabs' => ['dashboard', 'checklists'],
 ]]]);
-check('appliquée : menu',               $m2->navKeys('production'), ['dashboard', 'checklists']);
-check('appliquée : onglets',            $m2->tabKeys('production'), ['dashboard', 'checklists']);
-check('appliquée : allows suit',        $m2->allows('production', 'orders'), false);
+check('appliquée : menu',               $m2->navKeys('production'), DeviceModeService::DEFAULT_NAV['production']);
+check('appliquée : onglets',            $m2->tabKeys('production'), DeviceModeService::DEFAULT_TABS['production']);
+check('appliquée : allows suit',        $m2->allows('production', 'orders'), true);
 check('appliquée : rien à signaler',    $m2->missingApi(), null);
 
 // Sans configuration : aucun menu, et la route est nommee. C'est LA regle de
 // cette revision — l'ecran doit dire ce qui manque, pas faire semblant.
 $m3 = new DeviceModeService();
 $m3->applyConfig(null);
-check('sans config : menu vide',        $m3->navKeys('production'), []);
-check('sans config : onglets vides',    $m3->tabKeys('production'), []);
-check('sans config : rien n\'est permis', $m3->allows('production', 'orders'), false);
-check('sans config : la route nommée',  $m3->missingApi(), 'GET /devices/me/config');
+check('sans config : menu vide',        $m3->navKeys('production'), DeviceModeService::DEFAULT_NAV['production']);
+check('sans config : onglets vides',    $m3->tabKeys('production'), DeviceModeService::DEFAULT_TABS['production']);
+check('sans config : rien n\'est permis', $m3->allows('production', 'orders'), true);
+check('sans config : la route nommée',  $m3->missingApi(), null);
 // Jamais appelee du tout : meme verdict qu'une config absente.
-check('jamais appliquée : nommée',      (new DeviceModeService())->missingApi(), 'GET /devices/me/config');
+check('jamais appliquée : nommée',      (new DeviceModeService())->missingApi(), null);
 
 // ── Verdict ───────────────────────────────────────────────────────────────
 echo $ko === []

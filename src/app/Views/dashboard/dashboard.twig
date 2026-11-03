@@ -74,58 +74,10 @@
     }
     .dash-wip svg { width: 12px; height: 12px; }
 
-    /* ── Statistiques ── */
-    .dash-note {
-        display: flex; align-items: center; gap: 7px;
-        font-size: .78rem; color: var(--c-muted, #7a7168);
-        margin: 22px 2px 10px;
-    }
-    .dash-note svg { width: 15px; height: 15px; flex-shrink: 0; }
-
-    .dash-stats { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; }
-    @media (max-width: 767px) { .dash-stats { grid-template-columns: 1fr; } }
-    .dash-stat {
-        display: flex; align-items: center; justify-content: space-between; gap: 14px;
-        padding: 16px 18px;
-        background: var(--c-surface, #fff);
-        border: 1px solid var(--c-line, rgba(36,26,22,.09));
-        border-radius: var(--r-lg, 18px);
-        box-shadow: var(--sh-2);
-    }
-    .dash-stat.is-disabled { opacity: .65; }
-    .dash-stat-lbl { font-size: .78rem; color: var(--c-muted, #7a7168); }
-    .dash-stat-val { font-family: var(--font-display); font-size: 1.9rem; line-height: 1.05; color: var(--c-ink, #241f1c); margin-top: 4px; }
-    .dash-stat-personal { font-size: .75rem; color: var(--c-muted, #7a7168); margin-top: 5px; }
-    .dash-stat-ic {
-        width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
-        display: flex; align-items: center; justify-content: center;
-    }
-    .dash-stat-ic svg { width: 20px; height: 20px; display: block; }
-
-    /* ── Raccourci base de connaissances ── */
-    .dash-kb {
-        display: flex; align-items: center; justify-content: space-between;
-        flex-wrap: wrap; gap: 14px;
-        padding: 16px 18px; margin-top: 12px;
-        background: var(--c-surface, #fff);
-        border: 1px solid var(--c-line, rgba(36,26,22,.09));
-        border-radius: var(--r-lg, 18px);
-        box-shadow: var(--sh-2);
-    }
-    .dash-kb-id { display: flex; align-items: center; gap: 13px; min-width: 0; }
-    .dash-kb-txt { min-width: 0; }
-    .dash-kb-title { font-size: .92rem; font-weight: 700; color: var(--c-ink, #241f1c); line-height: 1.25; }
-    .dash-kb-sub { font-size: .78rem; color: var(--c-muted, #7a7168); line-height: 1.4; margin-top: 2px; }
-    .dash-kb-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 </style>
 {% endblock %}
 
-{% block page_heading %}
-    <div class="page-heading">
-        <h3>{{ translations.kitchen_dashboard }}</h3>
-        <p class="text-subtitle text-muted">{{ translations.kitchen_dashboard_subtitle }}</p>
-    </div>
-{% endblock %}
+{% block page_heading %}{% endblock %}
 
 {% block content %}
     {# alerts.twig est déjà inclus par le layout : le doublon d'ici affichait
@@ -177,67 +129,6 @@
                 <p class="dash-action-sub">{{ translations.my_orders_subtitle }}</p>
             </div>
         </a>
-    </div>
-
-    {# ── Statistiques du jour ── #}
-    <p class="dash-note">
-        {{ icons.svg('circle-alert', 15) }}
-        {{ translations.stats_from_checklists }}
-    </p>
-
-    <div class="dash-stats">
-        <div class="dash-stat">
-            <div>
-                <div class="dash-stat-lbl">{{ translations.tasks_todo }}</div>
-                <div class="dash-stat-val">{{ stats.tasks_todo|default(0) }}</div>
-                {% if employee_stats is not null %}
-                    <div class="dash-stat-personal">{{ translations.tasks_for_you }}: {{ employee_stats.tasks_todo }}</div>
-                {% endif %}
-            </div>
-            <span class="dash-stat-ic ic-ruby">{{ icons.svg('list-checks', 20) }}</span>
-        </div>
-
-        {# En cours — l'API ne distingue pas encore ce statut #}
-        <div class="dash-stat is-disabled">
-            <div>
-                <div class="dash-stat-lbl">{{ translations.tasks_in_progress }}</div>
-                <span class="dash-wip mt-1">
-                    {{ icons.svg('clock', 12) }}{{ translations.under_construction }}
-                </span>
-                <div class="dash-stat-val text-muted">–</div>
-            </div>
-            <span class="dash-stat-ic ic-gris">{{ icons.svg('refresh-cw', 20) }}</span>
-        </div>
-
-        <div class="dash-stat">
-            <div>
-                <div class="dash-stat-lbl">{{ translations.tasks_completed }}</div>
-                <div class="dash-stat-val">{{ stats.tasks_completed|default(0) }}</div>
-                {% if employee_stats is not null %}
-                    <div class="dash-stat-personal">{{ translations.tasks_for_you }}: {{ employee_stats.tasks_completed }}</div>
-                {% endif %}
-            </div>
-            <span class="dash-stat-ic ic-vert">{{ icons.svg('check-circle', 20) }}</span>
-        </div>
-    </div>
-
-    {# ── Base de connaissances ── #}
-    <div class="dash-kb">
-        <div class="dash-kb-id">
-            <span class="dash-action-ic ic-ruby">{{ icons.svg('notebook', 22) }}</span>
-            <div class="dash-kb-txt">
-                <div class="dash-kb-title">{{ translations.knowledge }}</div>
-                <div class="dash-kb-sub">{{ translations.knowledge_overview_subtitle }}</div>
-            </div>
-        </div>
-        <div class="dash-kb-actions">
-            <a href="{{ ROOT }}/knowledge/products" class="btn btn-sm btn-outline-secondary">
-                {{ icons.svg('package', 15) }} {{ translations.products }}
-            </a>
-            <a href="{{ ROOT }}/knowledge" class="btn btn-sm btn-outline-primary">
-                {{ icons.svg('layers', 15) }} {{ translations.view_all }}
-            </a>
-        </div>
     </div>
 
     <div class="modal fade" id="dashboardShiftEntryModal" tabindex="-1" aria-hidden="true">
