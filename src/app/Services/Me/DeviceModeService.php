@@ -2,25 +2,7 @@
 
 namespace App\Kitchen\app\Services\Me;
 
-/**
- * Le mode de la tablette : ce qu'elle sert, et donc ce qu'elle montre.
- *
- * Une même application tourne sur trois postes qui n'ont pas le même métier :
- * le fournil produit, le bureau contrôle, le comptoir vend. Leur donner à
- * tous les sept menus, c'est demander à chacun d'ignorer les cinq qui ne le
- * concernent pas, à chaque écran, toute la journée.
- *
- * Le mode est un réglage de l'APPAREIL, pas du compte : la tablette du fournil
- * reste en Production même quand le responsable s'y connecte. Deux comptes qui
- * partagent une tablette partagent son mode ; un compte qui passe d'une
- * tablette à l'autre change de mode. C'est voulu.
- *
- * Cette classe ne connaît ni cookie, ni requête, ni horloge : elle dit
- * seulement quelles règles s'appliquent, ce qui la rend vérifiable par
- * bin/mode-test.php. La persistance vit dans core/Support/DeviceMode.
- *
- * Contrat d'intégration : docs/MODE_TABLETTE.md
- */
+/** Production-only navigation. Legacy parsing helpers remain for existing integrations. */
 class DeviceModeService
 {
     public const MODE_GESTION    = 'gestion';
@@ -35,19 +17,7 @@ class DeviceModeService
      */
     public const DEFAULT_MODE = self::MODE_PRODUCTION;
 
-    /**
-     * Ce que chaque mode affichait avant que la table `pwa_kitchen_param`
-     * n'existe.
-     *
-     * **Ce n'est plus un repli.** Depuis le 13/08/2026, la configuration vient
-     * de l'API et d'elle seule : si elle ne répond pas, l'écran le DIT et nomme
-     * l'endpoint à créer, au lieu de servir ces valeurs en faisant croire que
-     * tout va bien. Un repli silencieux masquait exactement ce qu'on cherche à
-     * voir pendant que le back se construit.
-     *
-     * Elles restent ici comme référence : c'est le contenu que la table doit
-     * porter pour reproduire l'affichage historique.
-     */
+    /** Local navigation; remote device configuration is no longer used. */
     public const DEFAULT_NAV = [
         self::MODE_PRODUCTION => ['dashboard', 'production', 'checklists', 'orders', 'knowledge', 'complaints'],
         self::MODE_GESTION    => ['dashboard', 'checklists', 'knowledge', 'complaints'],
@@ -99,28 +69,16 @@ class DeviceModeService
      */
     private ?array $maps = null;
 
-    /**
-     * Brancher la configuration distante.
-     *
-     * Appelée une fois par requête, depuis core/Support/DeviceMode. Sans
-     * configuration exploitable, les menus restent VIDES et `missingApi()`
-     * nomme l'endpoint : l'écran affiche alors ce qui manque, plutôt que de
-     * servir un menu codé en dur qui ferait croire que tout va bien.
-     */
+    /** Accept legacy configuration without letting it change Production navigation. */
     public function applyConfig(?array $config): void
     {
         $this->maps = self::sanitise($config);
     }
 
-    /**
-     * L'endpoint à créer, ou null si la configuration est arrivée.
-     *
-     * L'écran l'affiche tel quel. Nommer la route évite l'aller-retour
-     * « ça ne marche pas » → « qu'est-ce qui ne marche pas ».
-     */
+    /** No device configuration endpoint is required. */
     public function missingApi(): ?string
     {
-        return ($this->maps['ok'] ?? false) ? null : 'GET /devices/me/config';
+        return null;
     }
 
     /**
@@ -210,7 +168,7 @@ class DeviceModeService
     /** @return string[] */
     public function modes(): array
     {
-        return [self::MODE_GESTION, self::MODE_PRODUCTION, self::MODE_WEBSHOP];
+        return [self::MODE_PRODUCTION];
     }
 
     /**
@@ -221,21 +179,19 @@ class DeviceModeService
      */
     public function normalise(?string $raw): string
     {
-        $raw = strtolower(trim((string)$raw));
-
-        return in_array($raw, $this->modes(), true) ? $raw : self::DEFAULT_MODE;
+        return self::MODE_PRODUCTION;
     }
 
     /** @return string[] clés des sections visibles dans le menu */
     public function navKeys(?string $mode): array
     {
-        return ($this->maps['nav'] ?? array_fill_keys(array_keys(self::DEFAULT_NAV), []))[$this->normalise($mode)];
+        return self::DEFAULT_NAV[self::MODE_PRODUCTION];
     }
 
     /** @return string[] clés des onglets du bas, profil non compris */
     public function tabKeys(?string $mode): array
     {
-        return ($this->maps['tabs'] ?? array_fill_keys(array_keys(self::DEFAULT_TABS), []))[$this->normalise($mode)];
+        return self::DEFAULT_TABS[self::MODE_PRODUCTION];
     }
 
     public function allows(?string $mode, string $navKey): bool

@@ -29,7 +29,7 @@
   "day_failed": "Opslaan mislukt. Controleer de gegevens en probeer opnieuw.",
   "day_network": "Opslaan is niet bevestigd. Probeer opnieuw zonder de gegevens te wijzigen.",
   "day_saved": "Opgeslagen.",
-  "day_saved_refresh": "Opslaan bevestigd, maar de voorraad kon niet worden vernieuwd. Gebruik Voorraad vernieuwen.",
+  "day_saved_refresh": "Opgeslagen. De actuele voorraad kon niet worden geladen. Probeer opnieuw.",
   "day_add_product": "Nog een product toevoegen",
   "day_quantity": "Aantal",
   "day_add": "Toevoegen",

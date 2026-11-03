@@ -62,5 +62,5 @@
     "modal_photo_close": "Sluiten",
     "modal_btn_fail": "Melden als niet gedaan",
     "col_reported_at": "Gemeld om",
-    "roster_api_missing": "De lijst komt van de API, die nog niet antwoordt — zie de banner bovenaan."
+    "roster_api_missing": "De medewerkerslijst kon niet worden geladen. Probeer opnieuw."
 }

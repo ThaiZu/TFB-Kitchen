@@ -22,8 +22,8 @@ $expect = static function (bool $condition, string $message) use (&$checks): voi
 };
 GlobalRegistry::set('user', ['shop_id' => 2, 'device_id' => 7]);
 DeviceMode::rules()->applyConfig(null);
-$expect(DeviceMode::rules()->navKeys('production') === [], 'Reproduce missing runtime device configuration');
-$expect(DeviceMode::rules()->tabKeys('production') === [], 'Reproduce empty runtime tabs');
+$expect(DeviceMode::rules()->navKeys('production') === \App\Kitchen\app\Services\Me\DeviceModeService::DEFAULT_NAV['production'], 'Reproduce missing runtime device configuration');
+$expect(DeviceMode::rules()->tabKeys('production') === \App\Kitchen\app\Services\Me\DeviceModeService::DEFAULT_TABS['production'], 'Reproduce empty runtime tabs');
 
 foreach (['pl', 'en', 'fr', 'nl', 'it'] as $language) {
     GlobalRegistry::set('lang_code', $language);
@@ -43,7 +43,7 @@ foreach (['pl', 'en', 'fr', 'nl', 'it'] as $language) {
             $expect($xpath->query('//link[@href="' . ROOT . '/assets/css/atelier-theme.css?v=' . $themeHash . '"]')->length === 1, 'Stylesheet URL tracks its content');
             foreach (["//*[@id='appNavSheet']", "//nav[contains(@class,'app-tabbar-bar')]"] as $scope) {
                 $destinations = ['dashboard', 'production-day', 'knowledge/products', 'checklists', 'orders'];
-                if(str_contains($scope,'appNavSheet'))$destinations[]='knowledge';else $expect($xpath->query($scope.'//a[@href="'.ROOT.'/knowledge"]')->length===0,'Knowledge link removed from footer');
+                $expect($xpath->query($scope.'//a[@href="'.ROOT.'/knowledge"]')->length===0,'Knowledge link removed from footer');
                 if (str_contains($scope, 'appNavSheet')) $destinations[] = 'material-stocktaking';
                 foreach ($destinations as $destination) {
                     $links = $xpath->query($scope . '//a[@href="' . ROOT . '/' . $destination . '"]');
@@ -121,5 +121,24 @@ if(is_file($dayFixture)){
  ob_start();$container->get(Controller::class)->view('production_day/index',['available'=>true,'has_shift'=>true,'view'=>'opening','sheet'=>$daySheet]);$dayHtml=ob_get_clean();
  $expect(str_contains($dayHtml,'app-tabbar-bar') && str_contains($dayHtml,'pd-footer'),'Production day fixture includes the actual bottom navigation');
  file_put_contents($fixtureDir.'/kitchen-runtime-day.html',$dayHtml);
+}
+// Simplified shell preserves real controls while removing retired panels.
+GlobalRegistry::set('lang_code','pl');
+$called=false;DeviceMode::refreshConfig(function()use(&$called){$called=true;return [];});
+$expect(!$called,'Retired config endpoint is never requested');
+foreach(['dashboard/dashboard'=>['items'=>[],'entry_employees'=>[]], 'me/about'=>['supplier'=>null], 'checklist/index'=>['progress'=>['checklist'=>['name'=>'Summary sentinel'],'tasks'=>[]]]] as $view=>$data){
+ $_GET['url']=explode('/',$view)[0];ob_start();$container->get(Controller::class)->view($view,$data+['missing_api'=>['GET /devices/me/config']]);$html=ob_get_clean();
+ $dom=new DOMDocument();@$dom->loadHTML($html);$xp=new DOMXPath($dom);
+ $expect($xp->query('//*[contains(concat(" ",normalize-space(@class)," ")," api-todo ")]')->length===0,'No global missing API banner');
+ if($view==='dashboard/dashboard'){
+  $expect($xp->query('//div[@class="dash-grid"]/a')->length===4,'Exactly four dashboard launchers');
+  $expect($xp->query('//div[contains(@class,"page-heading")] | //div[contains(@class,"dash-stats")] | //div[contains(@class,"dash-kb")]')->length===0,'Dashboard has no heading, stats or knowledge panel');
+ }elseif($view==='me/about'){
+  $expect($xp->query('//input[@name="mode" or @name="webshop_url" or @name="webshop_token"]')->length===0,'Retired device inputs removed');
+  $expect($xp->query('//*[@id="soundOrderToggle"]')->length===1,'Audio settings remain available');
+ }else{
+  $expect($xp->query('//div[contains(@class,"page-heading")]')->length===0,'Checklist has no heading');
+  $expect(!str_contains($html,'Summary sentinel'),'Selected checklist summary removed');
+ }
 }
 echo "$checks real controller navigation checks passed\n";

@@ -1,3 +1,5 @@
+> Aktualizacja interfejsu: [uproszczony Kitchen](kitchen-simplified-shell.md). Przyciski „Pokaż” i „Odśwież stany” zostały usunięte; po błędzie odczytu dostępne jest kontekstowe ponowienie.
+
 # Physical count, automatic date changes and visible request state
 
 When the API advertises stock_check.required and can_count, Kitchen asks the

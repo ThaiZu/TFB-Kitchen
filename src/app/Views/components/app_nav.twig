@@ -37,12 +37,6 @@
         href:  ROOT ~ '/orders'
     },
     {
-        key:   'knowledge',
-        label: translations.knowledge,
-        icon:  'notebook',
-        href:  ROOT ~ '/knowledge'
-    },
-    {
         key:   'complaints',
         label: translations.complaints,
         icon:  'circle-alert',
@@ -58,7 +52,7 @@
 
 {# Dashboard links are part of the application shell, not optional device
    shortcuts. Keep the device configuration for additional modules only. #}
-{% set dashboard_navigation_keys = ['dashboard', 'production_day', 'material_stocktaking', 'production_cards', 'checklists', 'orders', 'knowledge'] %}
+{% set dashboard_navigation_keys = ['dashboard', 'production_day', 'material_stocktaking', 'production_cards', 'checklists', 'orders'] %}
 {% set navigation_items = navigation_items|filter(it => it.key not in ['production','production_list','inventory'] and (it.key in dashboard_navigation_keys or it.key in (nav_keys|default([])))) %}
 
 <div class="app-nav-backdrop" id="appNavBackdrop" aria-hidden="true"></div>

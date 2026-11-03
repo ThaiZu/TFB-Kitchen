@@ -29,7 +29,7 @@
   "day_failed": "Could not save. Check the data and retry.",
   "day_network": "Save not confirmed. Retry without changing the data.",
   "day_saved": "Saved.",
-  "day_saved_refresh": "Save confirmed, but stock refresh failed. Use Refresh stock.",
+  "day_saved_refresh": "Saved successfully. Current stock could not be loaded. Try again.",
   "day_add_product": "Add another product",
   "day_quantity": "Quantity",
   "day_add": "Add",

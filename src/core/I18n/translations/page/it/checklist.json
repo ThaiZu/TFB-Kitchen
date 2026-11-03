@@ -62,5 +62,5 @@
     "modal_photo_close": "Chiudi",
     "modal_btn_fail": "Segnala non eseguita",
     "col_reported_at": "Segnalata alle",
-    "roster_api_missing": "L'elenco viene dall'API, che non risponde ancora — vedi il banner in alto."
+    "roster_api_missing": "Impossibile caricare l’elenco dei dipendenti. Riprova."
 }

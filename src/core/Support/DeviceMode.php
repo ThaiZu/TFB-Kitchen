@@ -4,32 +4,7 @@ namespace App\Kitchen\core\Support;
 
 use App\Kitchen\app\Services\Me\DeviceModeService;
 
-/**
- * Persistance du mode de la tablette.
- *
- * Les règles vivent dans DeviceModeService (pures, testées) ; ici on ne fait
- * que les brancher sur le stockage. La séparation compte : c'est ce qui permet
- * de vérifier les règles sans navigateur, et de remplacer le stockage sans
- * toucher aux règles.
- *
- * ── Pourquoi un cookie et pas l'ERP ──
- * Le brief demande, par ordre de préférence, de porter le mode sur l'appareil
- * côté ERP (`GET /devices/me`). Cet endpoint existe et est déjà consommé
- * (DeviceRepository), mais sa réponse ne porte aucun champ `mode` et Kitchen
- * n'a pas d'écriture sur l'appareil : on prend donc explicitement l'option 2
- * du brief — un cookie persistant côté Kitchen — et on documente le champ à
- * ajouter côté ERP dans docs/MODE_TABLETTE.md. Dès que l'API le portera,
- * seules les deux méthodes de lecture ci-dessous changeront.
- *
- * Le cookie de mode est un réglage d'appareil, pas une identité : il n'entre
- * dans aucune décision d'autorisation. Le forger ne donne accès à rien — chaque
- * module reste protégé par le jeton de session, et le back-office WebShop par
- * son jeton d'appareil, que le serveur du webshop vérifie lui-même. Il ne fait
- * que choisir des entrées de menu.
- *
- * Le cookie de jeton, lui, EST un secret. Il est HttpOnly, ne part que vers
- * l'origine Kitchen, et n'est jamais rendu dans une page ni écrit dans un log.
- */
+/** Legacy device settings storage. Kitchen always uses local Production navigation. */
 final class DeviceMode
 {
     public const COOKIE_MODE   = 'kitchen_device_mode';
@@ -57,50 +32,15 @@ final class DeviceMode
     {
         if (self::$rules === null) {
             self::$rules = new DeviceModeService();
-            self::$rules->applyConfig(self::cachedConfig());
         }
 
         return self::$rules;
     }
 
-    /**
-     * Rafraîchit la configuration des modes si elle a vieilli.
-     *
-     * Appelée une fois par requête depuis core/Bootstrap/App, APRÈS le
-     * middleware d'authentification : l'appel a besoin du jeton de session, et
-     * une page publique n'a pas de configuration à charger.
-     *
-     * Une panne de l'ERP ne change rien à l'écran : on garde le dernier cache,
-     * et s'il n'y en a pas, les valeurs par défaut de l'application. Une
-     * tablette sans menu ne se répare pas au doigt — c'est la seule chose qui
-     * ne doit jamais arriver ici.
-     */
+    /** Compatibility hook: the retired device configuration is never fetched. */
     public static function refreshConfig(callable $fetch): void
     {
-        if (self::cachedConfig() !== null) {
-            return;   // encore frais
-        }
-
-        $config = null;
-        try {
-            $config = $fetch();
-        } catch (\Throwable $e) {
-            error_log('config des modes injoignable : ' . $e->getMessage());
-        }
-
-        if (!is_array($config)) {
-            return;   // on garde ce qu'on a
-        }
-
-        self::write(self::COOKIE_CONFIG, json_encode(
-            ['t' => time(), 'c' => $config],
-            JSON_UNESCAPED_UNICODE
-        ), self::TTL_CONFIG * 3);
-
-        // La page en cours doit déjà en profiter : sans cela, le premier écran
-        // après connexion afficherait l'ancien menu et le réglage aurait l'air
-        // de n'avoir pas pris.
-        self::$rules?->applyConfig($config);
+        // Production is configured locally; do not call the retired config endpoint.
     }
 
     /**

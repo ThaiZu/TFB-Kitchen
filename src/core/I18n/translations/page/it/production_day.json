@@ -29,7 +29,7 @@
   "day_failed": "Impossibile salvare. Controlla i dati e riprova.",
   "day_network": "Salvataggio non confermato. Riprova senza modificare i dati.",
   "day_saved": "Salvato.",
-  "day_saved_refresh": "Salvataggio confermato, ma aggiornamento delle scorte non riuscito. Usa Aggiorna scorte.",
+  "day_saved_refresh": "Salvataggio confermato. Impossibile caricare le scorte attuali. Riprova.",
   "day_add_product": "Aggiungi un altro prodotto",
   "day_quantity": "Quantità",
   "day_add": "Aggiungi",
