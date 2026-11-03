@@ -1,17 +1,13 @@
 {% extends 'layouts/base.twig' %}
 {% block title %}{{ translations.day_title }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ ROOT }}/assets/vendors/choices.js/choices.min.css"><link rel="stylesheet" href="{{ ROOT }}/assets/css/production-day.css?v=32">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ ROOT }}/assets/vendors/choices.js/choices.min.css"><link rel="stylesheet" href="{{ ROOT }}/assets/css/production-day.css?v=33">{% endblock %}
 {% block content %}
 <div id="production-day" data-root="{{ ROOT }}" data-view="{{ view }}" data-shift="{{ has_shift ? '1' : '0' }}">
 <header class="pd-header"><div class="pd-title-line"><h1>{{ translations.day_title }}</h1><details id="pd-help" class="pd-help"><summary aria-label="{{ translations.day_help_title }}" aria-controls="pd-help-content">i</summary><div id="pd-help-content" class="pd-help-content" role="note"><p>{{ translations.day_hint }}</p></div></details><form method="get" class="pd-date-form"><label><span class="pd-sr-only">{{ translations.day_date }}</span><input name="date" type="date" value="{{ sheet.date|default('') }}" required></label></form></div></header>
-<div class="pd-toolbar">
-{% if available %}<strong id="pd-status" role="status" aria-live="polite"></strong>{% endif %}
-
-
-</div>
+{% if available %}<span id="pd-status" class="pd-sr-only" role="status" aria-live="polite"></span>{% endif %}
 {% if not available %}<p role="alert">{{ translations.day_unavailable }} {% if api_error == 'KITCHEN_DAY_MIGRATION_REQUIRED' %}{{ translations.day_migration }}{% endif %}</p>
 {% else %}
-{% if not has_shift %}<p class="pd-warning">{{ translations.day_shift }} <a href="{{ ROOT }}/checklist">{{ translations.day_shift_open }}</a></p>{% endif %}
+
 <nav class="pd-tabs" aria-label="{{ translations.day_title }}"><button type="button" data-page="opening">{{ translations.day_opening }}</button><button type="button" data-page="stock">{{ translations.day_stock }}</button><button type="button" data-page="closing">{{ translations.day_closing }}</button></nav>
 <div id="pd-feedback" role="alert" hidden></div>
 <section id="pd-body"></section>
@@ -20,5 +16,5 @@
 <script id="pd-seed" type="application/json">{{ sheet|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}</script>
 <script id="pd-translations" type="application/json">{{ translations|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}</script>
 <script src="{{ ROOT }}/assets/vendors/choices.js/choices.min.js" defer></script>
-{% endif %}<script src="{{ ROOT }}/assets/js/production-day.js?v=32" defer></script></div>
+{% endif %}<script src="{{ ROOT }}/assets/js/production-day.js?v=33" defer></script></div>
 {% endblock %}
