@@ -120,5 +120,6 @@
   "production_sector_all": "Wszystkie działy",
   "production_sector_save": "Zastosuj",
   "production_sector_error": "Nie udało się zapisać działu.",
-  "nav_production_plan": "Plan produkcji"
+  "nav_production_plan": "Plan produkcji",
+  "nav_deliveries": "Dostawy"
 }
