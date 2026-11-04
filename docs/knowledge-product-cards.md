@@ -11,3 +11,11 @@ Miniatury korzystają z istniejącej obsługi `r2://`, mają lazy loading i zach
 Zmiany w Kitchen i API, bez migracji. API należy wdrożyć przed Kitchen, aby zdjęcia pojawiły się również na liście. Nie wykonywano deploymentu.
 
 Testy: PHP renderowania w pięciu językach, PHPUnit opcjonalnego pobierania zdjęć i zgodności dotychczasowych odczytów, Chromium w układach 1024/768/390 px (połączone filtry, domyślny SSL, różne ID przy takich samych nazwach kategorii, zdjęcia/poprawny fallback, proporcje i globalne narożniki). Testy korzystają z atrap transportu i danych. Nie uruchamiano rzeczywistej bazy, zdalnego API, R2 ani fizycznych tabletów; nie uruchamiano całego niezwiązanego zestawu testów.
+
+## Układ mobilny
+
+Poniżej 768 px nad listą pozostają tylko wyszukiwarka, wybór trwałości i przycisk „Filtry” z liczbą aktywnych ustawień sekcji/kategorii. Podtytuł strony jest ukryty. Pasek jest sticky pod rzeczywistą wysokością górnego navbara, aktualizowaną również przy obrocie urządzenia.
+
+Sekcja, kategoria i podkategoria przenoszą się do natywnego dialogu wysuwanego od dołu. Wybory działają na bieżąco; „Pokaż produkty” zamyka panel. „Wyczyść” usuwa wyszukiwanie i wszystkie ograniczenia (również trwałość). Początkowo nadal wybrany jest SSL. Panel można zamknąć przyciskiem, Escape albo kliknięciem tła; fokus wraca do przycisku filtrów. Zmiana na widok komputerowy zamyka dialog i przywraca te same kontrolki nad listę, zachowując ustawienia.
+
+Od 360 do 767 px lista zawiera dwie karty w wierszu; poniżej 360 px jedną. Obraz nadal zajmuje jedną trzecią karty. Widok desktop/tablet od 768 px zachowuje filtry nad listą. Zmiana mobilna dotyczy wyłącznie Kitchen, bez API i migracji. Testy Chromium obejmują także panel modalny, czyszczenie, zachowanie wyboru po zmianie szerokości oraz sticky pasek na długiej liście.

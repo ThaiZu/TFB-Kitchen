@@ -69,5 +69,10 @@
   "cards_life": "Houdbaarheid",
   "cards_sector": "Afdeling",
   "cards_group": "Categorie",
-  "cards_category": "Subcategorie"
+  "cards_category": "Subcategorie",
+  "cards_filters": "Filters",
+  "cards_active_filters": "Filters · {count}",
+  "cards_close": "Filters sluiten",
+  "cards_clear": "Wissen",
+  "cards_show_products": "Producten tonen"
 }

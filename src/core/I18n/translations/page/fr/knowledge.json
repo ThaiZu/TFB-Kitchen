@@ -69,5 +69,10 @@
   "cards_life": "Conservation",
   "cards_sector": "Atelier",
   "cards_group": "Catégorie",
-  "cards_category": "Sous-catégorie"
+  "cards_category": "Sous-catégorie",
+  "cards_filters": "Filtres",
+  "cards_active_filters": "Filtres · {count}",
+  "cards_close": "Fermer les filtres",
+  "cards_clear": "Effacer",
+  "cards_show_products": "Afficher les produits"
 }

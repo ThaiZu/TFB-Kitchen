@@ -69,5 +69,10 @@
   "cards_life": "Conservazione",
   "cards_sector": "Reparto",
   "cards_group": "Categoria",
-  "cards_category": "Sottocategoria"
+  "cards_category": "Sottocategoria",
+  "cards_filters": "Filtri",
+  "cards_active_filters": "Filtri · {count}",
+  "cards_close": "Chiudi filtri",
+  "cards_clear": "Cancella",
+  "cards_show_products": "Mostra prodotti"
 }

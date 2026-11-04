@@ -69,5 +69,10 @@
   "cards_life": "Shelf life",
   "cards_sector": "Section",
   "cards_group": "Category",
-  "cards_category": "Subcategory"
+  "cards_category": "Subcategory",
+  "cards_filters": "Filters",
+  "cards_active_filters": "Filters · {count}",
+  "cards_close": "Close filters",
+  "cards_clear": "Clear",
+  "cards_show_products": "Show products"
 }
