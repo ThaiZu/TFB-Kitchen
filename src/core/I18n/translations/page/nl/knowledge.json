@@ -63,5 +63,11 @@
   "photo_presentation": "Presentatie",
   "photo_display": "Expositie",
   "no_photo": "Geen foto",
-  "no_media": "Geen foto's of verpakkingsmateriaal beschikbaar"
+  "no_media": "Geen foto's of verpakkingsmateriaal beschikbaar",
+  "cards_all": "Alle",
+  "cards_unassigned": "Niet toegewezen",
+  "cards_life": "Houdbaarheid",
+  "cards_sector": "Afdeling",
+  "cards_group": "Categorie",
+  "cards_category": "Subcategorie"
 }

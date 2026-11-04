@@ -154,4 +154,28 @@ foreach(['pl','en','fr','it','nl'] as $language){
   if($language==='pl')file_put_contents($fixtureDir.'/kitchen-plan-'.$state.'.html',$html);
  }
 }
+$cardProducts=[];
+foreach([
+ [101,'Bread SSL','SSL',1,'Bakery',10,'Bread',[[1,'Bakery group'],[2,'Breakfast']],true],
+ [102,'Baguette SSL','SSL',1,'Bakery',11,'Baguettes',[[1,'Bakery group']],false],
+ [103,'Cake MSL','MSL',2,'Kitchen',20,'Cakes',[[3,'Desserts']],false],
+ [104,'Juice LSL','LSL',null,null,30,'Drinks',[],true],
+ [105,'No category SSL','SSL',null,null,null,null,[],false],
+ [106,'Other bread SSL','SSL',2,'Kitchen',40,'Bread',[[3,'Desserts']],false],
+] as [$id,$name,$life,$sector,$sectorName,$category,$categoryName,$groups,$photo]){
+ $row=['id'=>$id,'name'=>$name,'shelf_life_category'=>$life,'sector_id'=>$sector,'sector_name'=>$sectorName,'id_category'=>$category,'category_name'=>$categoryName,'category'=>['groups'=>array_map(fn($g)=>['id'=>$g[0],'name'=>$g[1]],$groups)],'shelf_life_minutes'=>300,'storage_name'=>'Cold'];
+ if($photo)$row['main_photo_path']='r2://recipes/'.$id.'/main.jpg';
+ $cardProducts[]=new \App\Kitchen\app\Models\Knowledge\Product\ProductModel($row);
+}
+foreach(['pl','en','fr','it','nl'] as $language){
+ GlobalRegistry::set('lang_code',$language);$_GET['url']='knowledge/products';
+ ob_start();$container->get(Controller::class)->view('knowledge/product/overview',['products'=>$cardProducts]);$html=ob_get_clean();
+ $dom=new DOMDocument();@$dom->loadHTML($html);$xp=new DOMXPath($dom);
+ $expect($xp->query('//*[@data-product-id]')->length===6,'Product models and filters render in every language');
+ $expect($xp->query('//*[@id="knowledgeProducts" and string-length(@data-all)>0]')->length===1&&$xp->query('//*[@data-card-options and string-length(@aria-label)>0]')->length===3,'Filter controls have translated labels');
+ $expect($xp->query('//a[contains(@class,"kp-card")]//img')->length===2,'Product list uses real image URLs only where present');
+ $expect($xp->query('//*[contains(@class,"kp-chip")]')->length===0,'Time and storage badges removed from list');
+ $expect($xp->query('//*[@data-product-id and not(@hidden)]')->length===4,'Only SSL visible before JavaScript starts');
+ if($language==='pl')file_put_contents($fixtureDir.'/kitchen-product-cards.html',$html);
+}
 echo "$checks real controller navigation checks passed\n";

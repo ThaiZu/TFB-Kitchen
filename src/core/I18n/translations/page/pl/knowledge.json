@@ -63,5 +63,11 @@
   "no_photo": "Brak zdjęcia",
   "no_media": "Brak zdjęć i materiałów opakowaniowych",
   "go_to_subrecipes": "Przejdź do podreceptur",
-  "go_to_products": "Przejdź do produktów"
+  "go_to_products": "Przejdź do produktów",
+  "cards_all": "Wszystkie",
+  "cards_unassigned": "Nieprzypisane",
+  "cards_life": "Trwałość",
+  "cards_sector": "Sekcja",
+  "cards_group": "Kategoria",
+  "cards_category": "Podkategoria"
 }
