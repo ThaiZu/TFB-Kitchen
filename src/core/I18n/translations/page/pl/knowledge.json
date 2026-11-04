@@ -69,5 +69,10 @@
   "cards_life": "Trwałość",
   "cards_sector": "Sekcja",
   "cards_group": "Kategoria",
-  "cards_category": "Podkategoria"
+  "cards_category": "Podkategoria",
+  "cards_filters": "Filtry",
+  "cards_active_filters": "Filtry · {count}",
+  "cards_close": "Zamknij filtry",
+  "cards_clear": "Wyczyść",
+  "cards_show_products": "Pokaż produkty"
 }
