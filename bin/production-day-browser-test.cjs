@@ -52,7 +52,7 @@ for(const width of [1440,768,390]){
  await chooseFilter('category','');assert.equal(await page.locator('[data-opening-product]').count(),4,'Clearing filters restores uncategorized products');assert.equal(await page.locator('[data-opening-product="2"]').inputValue(),'3');await page.locator('[data-opening-product="2"]').fill('0');
  assert.equal(writes.length,0,'Filtering never writes inventory');assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await page.screenshot({path:path.join(fixtureDir,'opening-filters-'+width+'.png')});checks+=7;
 
- assert.equal(await page.locator('#pd-refresh, .pd-date-form button, #pd-notice').count(),0);const heading=await page.locator('.pd-title-line h1').boundingBox(),date=await page.locator('.pd-date-form').boundingBox();assert.ok(Math.abs(heading.y+heading.height/2-date.y-date.height/2)<2,'Date shares title row');
+ assert.equal(await page.locator('#pd-refresh, .pd-date-form button, #pd-notice').count(),0);const heading=await page.locator('.pd-title-line h1').boundingBox(),date=await page.locator('#pd-business-date').boundingBox();assert.ok(Math.abs(heading.y+heading.height/2-date.y-date.height/2)<2,'Date shares title row');
  assert.equal(await page.locator('.pd-scope,.pd-meta').count(),0);
  if(await page.locator('.app-tabbar-bar').count())assert.equal(await page.locator('.pd-bottom-dock>.app-tabbar-bar').count(),1,'Footer and navigation share a single dock');
  await page.setViewportSize({width,height:700});await page.waitForTimeout(100);const compact=await page.locator('#pd-footer').boundingBox();assert.ok(compact.y>=0&&compact.y+compact.height<=701,'Footer remains visible when mobile viewport shrinks');await page.setViewportSize({width,height:1000});
@@ -145,7 +145,7 @@ await latePage.goto('http://kitchen.test/kitchen/production-day');
 assert.equal(await latePage.locator('[data-page="closing"]').getAttribute('aria-current'),'page');
 assert.equal(await latePage.locator('[data-closing-product="1"]').inputValue(),'10');
 assert.equal(await latePage.getByRole('button',{name:'Zamknij i przejdź do dzisiaj',exact:true}).isEnabled(),true);
-await latePage.locator('[data-page="stock"]').click();assert.equal(await latePage.locator('.pd-add').count(),0);assert.equal(await latePage.getByRole('button',{name:'Zmodyfikuj stany bieżące',exact:true}).count(),0);
+assert.equal(await latePage.locator('[data-page="stock"]').isDisabled(),true);assert.equal(await latePage.locator('.pd-add').count(),0);assert.equal(await latePage.getByRole('button',{name:'Zmodyfikuj stany bieżące',exact:true}).count(),0);
 await latePage.close();checks++;
 console.log(`Kitchen production day browser: ${checks} checks PASS (desktop/mobile, opening decisions, production, waste, closing, persisted retry).`);
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exit(1);});

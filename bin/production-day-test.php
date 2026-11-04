@@ -41,7 +41,18 @@ $service->selectSector(null);
 $check(!str_contains(end($api->calls)[1],'date='),'Default entry leaves date selection to API');
 $api->sheet['default_view']='closing';$api->sheet['status']='OPEN';$api->sheet['date']=(new DateTimeImmutable($today))->modify('-1 day')->format('Y-m-d');$api->sheet['late_closing']=true;
 $lateScreen=$service->screen();$check($lateScreen['view']==='closing' && $lateScreen['has_shift'],'Overdue day uses closing view and today employee shift');
+$check($lateScreen['sheet']['can_prepare']===false,'Overdue day cannot prepare today or tomorrow');
+foreach(['2020-01-01','2099-12-31','invalid'] as $requested){$service->screen($requested);$check(!str_contains(end($api->calls)[1],'date='),'Caller cannot select historical, future or invalid date');}
+$before=count($api->calls);$check($service->command('prepare',$prepPayload)['description']==='KITCHEN_DAY_PREVIOUS_OPEN','Preparation waits for overdue closing');$check(count(array_filter(array_slice($api->calls,$before),fn($call)=>$call[0]==='POST'))===0,'Blocked preparation never reaches write API');
+$check($service->command('prepare_add',$prepPayload)['description']==='KITCHEN_DAY_PREVIOUS_OPEN','Batch preparation also waits for overdue closing');
 $api->sheet=$sheet;
+if(!defined('ROOT'))define('ROOT','/kitchen');
+$controller=new \App\Kitchen\app\Http\Controllers\Production\ProductionDayController($service);
+foreach(['2020-01-01','2099-12-31',['invalid']] as $requested){
+    $_GET=['date'=>$requested];$before=count($api->calls);ob_start();$controller->index();$output=ob_get_clean();
+    $check($output===''&&count($api->calls)===$before,'Dated page redirects without querying a chosen date');
+}
+$_GET=[];
 
 $loader=new Twig\Loader\ChainLoader([new Twig\Loader\ArrayLoader(['layouts/base.twig'=>'<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font-family:Arial;margin:0;padding:16px;box-sizing:border-box}*{box-sizing:border-box}</style>{% block head %}{% endblock %}</head><body>{% block content %}{% endblock %}</body></html>']),new Twig\Loader\FilesystemLoader(__DIR__.'/../src/app/Views')]);
 $twig=new Twig\Environment($loader,['strict_variables'=>true]);
