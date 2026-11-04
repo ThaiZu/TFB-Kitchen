@@ -1,3 +1,5 @@
+> Aktualizacja: [jeden aktywny dzień produkcyjny](production-day-active-date.md) zastępuje opisany niżej picker nieedytowalną datą.
+
 # Uproszczony interfejs Kitchen
 
 - Pulpit zawiera cztery odnośniki: dzień produkcyjny, karty produktów, checklisty i zamówienia. Nie pokazuje nagłówka ani podsumowań zadań.

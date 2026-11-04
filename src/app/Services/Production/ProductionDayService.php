@@ -8,8 +8,16 @@ class ProductionDayService
     public function screen(?string $date=null): array
     {
         $shop=(int)(GlobalRegistry::get('user')['shop_id']??0);
-        if ($date!==null && !preg_match('/^\d{4}-\d{2}-\d{2}$/D',$date)) return ['available'=>false];
-        $result=$shop>0?$this->repository->sheet($shop,$date,ProductionSector::current($shop)):[];$sheet=$result['data']??[];
+        // The API chooses the active day in the shop timezone and selected sector.
+        // Ignore dates supplied by old pages or bookmarks.
+        $result=$shop>0?$this->repository->sheet($shop,null,ProductionSector::current($shop)):[];$sheet=$result['data']??[];
+        if(($sheet['opening_blocker']['reason']??null)==='previous_open'&&!empty($sheet['opening_blocker']['date'])){
+            $result=$this->repository->sheet($shop,$sheet['opening_blocker']['date'],ProductionSector::current($shop));$sheet=$result['data']??[];
+        }
+        if(!empty($sheet['late_closing'])||($sheet['opening_blocker']['reason']??null)==='previous_open'){
+            $sheet['can_prepare']=false;
+            $sheet['default_view']='closing';
+        }
         return ['available'=>(bool)($result['success']??false),'view'=>$sheet['default_view']??'opening','sheet'=>$sheet,
             'has_shift'=>isset($sheet['today']) && ShiftSession::current($shop,$sheet['today'])!==null,
             'api_error'=>$result['description']??null];
@@ -42,6 +50,11 @@ class ProductionDayService
         $shift=$shop>0?ShiftSession::current($shop):null;
         if ($shift===null) return ['success'=>false,'code'=>403,'description'=>'KITCHEN_SHIFT_REQUIRED'];
         if (!in_array($operation,['open','adjust','close','prepare','prepare_add','close_draft','count'],true)) return ['success'=>false,'code'=>422];
+        if(in_array($operation,['prepare','prepare_add'],true)){
+            $screen=$this->screen();
+            if(!$screen['available'])return ['success'=>false,'code'=>503,'description'=>'KITCHEN_DAY_UNAVAILABLE'];
+            if(!empty($screen['sheet']['late_closing'])||($screen['sheet']['opening_blocker']['reason']??null)==='previous_open')return ['success'=>false,'code'=>409,'description'=>'KITCHEN_DAY_PREVIOUS_OPEN'];
+        }
         $result=$this->repository->command($shop,$operation,$input);
         if ($result['success']??false) ShiftSession::touch($shift);
         return $result;

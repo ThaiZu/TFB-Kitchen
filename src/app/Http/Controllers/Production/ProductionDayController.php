@@ -10,14 +10,16 @@ final class ProductionDayController extends Controller
     public function index(): void
     {
         header('Cache-Control: private, no-store');
-        $date=isset($_GET['date'])&&is_string($_GET['date'])?$_GET['date']:null;
-        $screen=$this->service->screen($date);$screen['view']=in_array($_GET['view']??'', ['opening','stock','prepare','closing'],true)?$_GET['view']:($screen['sheet']['default_view']??'opening');
+        // Old bookmarks must not select historical or future days.
+        if(array_key_exists('date',$_GET)){header('Location: '.ROOT.'/production-day',true,302);return;}
+        $screen=$this->service->screen();
+        $screen['view']=!empty($screen['sheet']['late_closing'])?'closing':(in_array($_GET['view']??'', ['opening','stock','prepare','closing'],true)?$_GET['view']:($screen['sheet']['default_view']??'opening'));
         $this->view('production_day/index',$screen);
     }
     public function data(): JsonResponse
     {
         if (($_SERVER['HTTP_X_REQUESTED_WITH']??'')!=='XMLHttpRequest' || ($_SERVER['HTTP_SEC_FETCH_SITE']??'')==='cross-site') return $this->json(['success'=>false],403);
-        $screen=$this->service->screen(isset($_GET['date'])&&is_string($_GET['date'])?$_GET['date']:null);
+        $screen=$this->service->screen();
         return $this->json(['success'=>$screen['available'],'data'=>$screen['sheet']??null],$screen['available']?200:503);
     }
     public function windows(): JsonResponse {if(($_SERVER['HTTP_X_REQUESTED_WITH']??'')!=='XMLHttpRequest'||($_SERVER['HTTP_SEC_FETCH_SITE']??'')==='cross-site')return $this->json(['success'=>false],403);$result=$this->service->windows(is_string($_GET['date']??null)?$_GET['date']:'');return $this->json($result,($result['success']??false)?200:503);}
