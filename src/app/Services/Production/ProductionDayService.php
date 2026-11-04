@@ -18,9 +18,27 @@ class ProductionDayService
             $sheet['can_prepare']=false;
             $sheet['default_view']='closing';
         }
+        if(($result['success']??false)&&($sheet['status']??null)==='NOT_OPEN'&&($sheet['date']??null)===($sheet['today']??null)&&empty($sheet['opening_blocker'])){
+            $plan=$this->plan();$model=$plan['data']??[];
+            $ready=($plan['success']??false)&&($model['date']??null)===$sheet['date'];
+            $sheet['production_plan_available']=$ready;
+            $quantities=$ready?array_column($model['products'], 'quantity', 'id_product'):[];
+            foreach($sheet['products'] as &$product)$product['planned_production_quantity']=$quantities[$product['id_product']]??0;
+            unset($product);
+        }
         return ['available'=>(bool)($result['success']??false),'view'=>$sheet['default_view']??'opening','sheet'=>$sheet,
             'has_shift'=>isset($sheet['today']) && ShiftSession::current($shop,$sheet['today'])!==null,
             'api_error'=>$result['description']??null];
+    }
+    public function plan(int $offset=0): array
+    {
+        $shop=(int)(GlobalRegistry::get('user')['shop_id']??0);
+        if($shop<1||$offset<0||$offset>2)return ['success'=>false,'code'=>422];
+        try{
+            $result=$this->repository->plan($shop,$offset,ProductionSector::current($shop));$data=$result['data']??null;
+            if(($result['success']??false)&&is_array($data)&&($data['shop_id']??null)===$shop&&is_string($data['date']??null)&&is_array($data['products']??null))return $result;
+            return ['success'=>false,'code'=>503];
+        }catch(\Throwable){return ['success'=>false,'code'=>503];}
     }
     public function windows(string $date): array {if(!preg_match('/^\d{4}-\d{2}-\d{2}$/D',$date))return ['success'=>false,'code'=>422];return $this->repository->windows((int)(GlobalRegistry::get('user')['shop_id']??0),$date);}
     public function sectors(): array

@@ -119,5 +119,6 @@
   "production_sector_hint": "Choisissez l’atelier de la tablette. Chaque atelier a sa journée ; les produits non attribués partagent leur stock.",
   "production_sector_all": "Tous les ateliers",
   "production_sector_save": "Appliquer",
-  "production_sector_error": "Impossible d’enregistrer l’atelier."
+  "production_sector_error": "Impossible d’enregistrer l’atelier.",
+  "nav_production_plan": "Plan de production"
 }

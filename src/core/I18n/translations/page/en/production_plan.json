@@ -1,0 +1,13 @@
+{
+  "plan_title": "Production plan",
+  "plan_today": "Show today",
+  "plan_tomorrow": "Show tomorrow",
+  "plan_after_tomorrow": "Show day after tomorrow",
+  "plan_days": "Plan day",
+  "plan_product": "Product",
+  "plan_quantity": "To produce",
+  "plan_pieces": "pcs",
+  "plan_empty": "No available products have a positive planned quantity for this day.",
+  "plan_unavailable": "Could not load the production plan. Try again.",
+  "plan_retry": "Try again"
+}

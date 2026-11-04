@@ -119,5 +119,6 @@
   "production_sector_hint": "Kies de tabletafdeling. Elke afdeling heeft een eigen dag; niet-toegewezen producten delen hun voorraad.",
   "production_sector_all": "Alle afdelingen",
   "production_sector_save": "Toepassen",
-  "production_sector_error": "Afdeling opslaan mislukt."
+  "production_sector_error": "Afdeling opslaan mislukt.",
+  "nav_production_plan": "Productieplan"
 }

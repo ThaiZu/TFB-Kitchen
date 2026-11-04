@@ -141,4 +141,17 @@ foreach(['dashboard/dashboard'=>['items'=>[],'entry_employees'=>[]], 'me/about'=
   $expect(!str_contains($html,'Summary sentinel'),'Selected checklist summary removed');
  }
 }
+$expect($container->get(\App\Kitchen\app\Http\Controllers\Production\ProductionPlanController::class) instanceof \App\Kitchen\app\Http\Controllers\Production\ProductionPlanController,'Plan controller resolves in the real container');
+foreach(['pl','en','fr','it','nl'] as $language){
+ GlobalRegistry::set('lang_code',$language);$_GET['url']='production-plan';
+ foreach(['ready','empty','error'] as $state){
+  $model=['date'=>'2026-11-04','products'=>$state==='ready'?[['id_product'=>101,'name'=>'Bread <script>','quantity'=>12,'shelf_life_category'=>'SSL','category_name'=>'Bread','sector_name'=>'Bakery']]:[]];
+  ob_start();$container->get(Controller::class)->view('production_plan/index',['available'=>$state!=='error','offset'=>0,'model'=>$model]);$html=ob_get_clean();
+  $dom=new DOMDocument();@$dom->loadHTML($html);$xp=new DOMXPath($dom);
+  $expect($xp->query('//*[@data-plan-offset]')->length===3,'Exactly today, tomorrow and day after tomorrow');
+  $expect(!str_contains($html,'Bread <script>'),'Plan product names are escaped');
+  $expect($xp->query('//*[@data-plan-product]')->length===($state==='ready'?1:0),'Plan handles ready, empty and unavailable states');
+  if($language==='pl')file_put_contents($fixtureDir.'/kitchen-plan-'.$state.'.html',$html);
+ }
+}
 echo "$checks real controller navigation checks passed\n";

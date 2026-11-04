@@ -119,5 +119,6 @@
   "production_sector_hint": "Choose the tablet department. Each department has its own day; unassigned products share stock.",
   "production_sector_all": "All departments",
   "production_sector_save": "Apply",
-  "production_sector_error": "Could not save the department."
+  "production_sector_error": "Could not save the department.",
+  "nav_production_plan": "Production plan"
 }

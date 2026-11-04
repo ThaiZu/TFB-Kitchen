@@ -1,0 +1,13 @@
+{
+  "plan_title": "Piano di produzione",
+  "plan_today": "Mostra oggi",
+  "plan_tomorrow": "Mostra domani",
+  "plan_after_tomorrow": "Mostra dopodomani",
+  "plan_days": "Giorno del piano",
+  "plan_product": "Prodotto",
+  "plan_quantity": "Da produrre",
+  "plan_pieces": "pezzi",
+  "plan_empty": "Nessun prodotto disponibile con quantità pianificata positiva per questo giorno.",
+  "plan_unavailable": "Impossibile caricare il piano di produzione. Riprova.",
+  "plan_retry": "Riprova"
+}

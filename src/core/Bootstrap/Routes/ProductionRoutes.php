@@ -12,6 +12,7 @@ return function (RouteCollector $r) {
     $dayController = \App\Kitchen\app\Http\Controllers\Production\ProductionDayController::class;
     $r->addRoute('GET','/ajax/production-sector',['controller'=>$dayController,'method'=>'sectors']);
     $r->addRoute('POST','/ajax/production-sector',['controller'=>$dayController,'method'=>'sector']);
+    $r->addRoute('GET','/production-plan',['controller'=>\App\Kitchen\app\Http\Controllers\Production\ProductionPlanController::class,'method'=>'index']);
     $r->addRoute('GET','/production-day',['controller'=>$dayController,'method'=>'index']);
     $r->addRoute('GET','/production-day/windows',['controller'=>$dayController,'method'=>'windows']);
     $r->addRoute('GET','/production-day/data',['controller'=>$dayController,'method'=>'data']);
