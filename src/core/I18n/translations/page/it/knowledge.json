@@ -74,5 +74,8 @@
   "cards_active_filters": "Filtri · {count}",
   "cards_close": "Chiudi filtri",
   "cards_clear": "Cancella",
-  "cards_show_products": "Mostra prodotti"
+  "cards_show_products": "Mostra prodotti",
+  "cards_catalog_unavailable": "Impossibile caricare i prodotti. Riprova.",
+  "cards_retry": "Riprova",
+  "cards_show_all": "Mostra tutti i prodotti"
 }

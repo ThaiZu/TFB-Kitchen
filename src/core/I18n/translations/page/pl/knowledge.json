@@ -74,5 +74,8 @@
   "cards_active_filters": "Filtry · {count}",
   "cards_close": "Zamknij filtry",
   "cards_clear": "Wyczyść",
-  "cards_show_products": "Pokaż produkty"
+  "cards_show_products": "Pokaż produkty",
+  "cards_catalog_unavailable": "Nie udało się pobrać produktów. Spróbuj ponownie.",
+  "cards_retry": "Spróbuj ponownie",
+  "cards_show_all": "Pokaż wszystkie produkty"
 }

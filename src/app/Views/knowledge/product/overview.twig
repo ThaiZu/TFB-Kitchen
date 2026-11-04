@@ -1,9 +1,10 @@
 {% extends 'layouts/base.twig' %}
 {% import 'components/_icons.twig' as icons %}
 {% block title %}{{ translations.products }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ ROOT }}/assets/css/knowledge-products.css?v=2">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ ROOT }}/assets/css/knowledge-products.css?v={{ knowledge_css_version }}">{% endblock %}
 {% block page_heading %}<div class="page-heading kp-page-heading"><h3>{{ translations.products }}</h3><p class="text-subtitle text-muted">{{ translations.products_overview_subtitle }}</p></div>{% endblock %}
 {% block content %}
+{% if catalog_unavailable|default(false) %}<p role="alert">{{ translations.cards_catalog_unavailable }}</p><a href="{{ ROOT }}/knowledge/products">{{ translations.cards_retry }}</a>{% else %}
 <section id="knowledgeProducts" data-all="{{ translations.cards_all }}" data-unassigned="{{ translations.cards_unassigned }}" data-no-category="{{ translations.no_category }}" data-total="{{ translations.products_total }}" data-filter-title="{{ translations.cards_filters }}" data-filter-active="{{ translations.cards_active_filters }}">
 <div class="kp-filters">
 <label class="kp-search-label" for="productSearch">{{ translations.search }}</label><input type="search" id="productSearch" placeholder="{{ translations.search_products }}" autocomplete="off">
@@ -16,6 +17,7 @@
 <dialog id="kpFilterDialog" class="kp-filter-dialog" aria-labelledby="kpFilterTitle"><header><h2 id="kpFilterTitle">{{ translations.cards_filters }}</h2><button type="button" id="kpFilterClose" aria-label="{{ translations.cards_close }}">×</button></header><div id="kpFilterBody" class="kp-filter-body"></div><footer><button type="button" id="kpFilterClear">{{ translations.cards_clear }}</button><button type="button" id="kpFilterDone">{{ translations.cards_show_products }}</button></footer></dialog>
 <div class="kp-list-heading"><h4>{{ translations.products_list }}</h4><span id="productCount" role="status" aria-live="polite"></span></div>
 <p id="noResults" role="status" hidden>{{ translations.no_products_found }}</p>
+<button type="button" id="kpShowAll" hidden>{{ translations.cards_show_all }}</button>
 <div class="kp-grid" id="productsGrid">
 {% for product in products %}
 <div class="product-item" data-product-id="{{ product.getId() }}" data-product-name="{{ product.getName()|lower }}" data-life="{{ product.getShelfLifeCategory() }}" data-sector-id="{{ product.getSectorId() ?? 'none' }}" data-sector-name="{{ product.getSectorName() }}" data-category-id="{{ product.getIdCategory() ?? 'none' }}" data-category-name="{{ product.getCategoryName() }}" data-groups="{{ product.getCategoryGroups()|json_encode|e('html_attr') }}" {% if product.getShelfLifeCategory() != 'SSL' %}hidden{% endif %}>
@@ -25,5 +27,6 @@
 </a></div>
 {% endfor %}
 </div></section>
-<script src="{{ ROOT }}/assets/js/knowledge-products.js?v=2" defer></script>
+<script src="{{ ROOT }}/assets/js/knowledge-products.js?v={{ knowledge_js_version }}" defer></script>
+{% endif %}
 {% endblock %}

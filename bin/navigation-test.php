@@ -172,10 +172,16 @@ foreach(['pl','en','fr','it','nl'] as $language){
  ob_start();$container->get(Controller::class)->view('knowledge/product/overview',['products'=>$cardProducts]);$html=ob_get_clean();
  $dom=new DOMDocument();@$dom->loadHTML($html);$xp=new DOMXPath($dom);
  $expect($xp->query('//*[@data-product-id]')->length===6,'Product models and filters render in every language');
+ $cardCss=substr(hash_file('sha256',__DIR__.'/../public/assets/css/knowledge-products.css'),0,16);$cardJs=substr(hash_file('sha256',__DIR__.'/../public/assets/js/knowledge-products.js'),0,16);
+ $expect(str_contains($html,'knowledge-products.css?v='.$cardCss)&&str_contains($html,'knowledge-products.js?v='.$cardJs),'Catalogue assets use content hashes to invalidate cache');
  $expect($xp->query('//*[@id="knowledgeProducts" and string-length(@data-all)>0]')->length===1&&$xp->query('//*[@data-card-options and string-length(@aria-label)>0]')->length===3,'Filter controls have translated labels');
  $expect($xp->query('//a[contains(@class,"kp-card")]//img')->length===2,'Product list uses real image URLs only where present');
  $expect($xp->query('//*[contains(@class,"kp-chip")]')->length===0,'Time and storage badges removed from list');
  $expect($xp->query('//*[@data-product-id and not(@hidden)]')->length===4,'Only SSL visible before JavaScript starts');
  if($language==='pl')file_put_contents($fixtureDir.'/kitchen-product-cards.html',$html);
 }
+GlobalRegistry::set('lang_code','pl');$_GET['url']='knowledge/products';
+ob_start();$container->get(Controller::class)->view('knowledge/product/overview',['products'=>[],'catalog_unavailable'=>true]);$unavailable=ob_get_clean();
+$expect(str_contains($unavailable,'role="alert"')&&!str_contains($unavailable,'id="productsGrid"'),'Catalogue API failure is shown explicitly, not as an empty product grid');
+file_put_contents($fixtureDir.'/kitchen-product-cards-unavailable.html',$unavailable);
 echo "$checks real controller navigation checks passed\n";

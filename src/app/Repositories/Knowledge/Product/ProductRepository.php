@@ -34,6 +34,8 @@ class ProductRepository
 
         $response = $this->apiClient->get("/shops/$shopId/products/available$queryStr");
 
+        if(($response['success']??false)!==true||!is_array($response['data']??null))throw new \RuntimeException('PRODUCT_CATALOG_UNAVAILABLE',(int)($response['code']??503));
+
         $objects = [];
 
         if(isset($response['data'])){

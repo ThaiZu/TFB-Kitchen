@@ -79,7 +79,7 @@ class ProductModel implements JsonSerializable{
         $this->storage_description = $data['storage_description'] ?? null;
 
         // Accepté à plat ou sous une clé « photos », selon ce que l'API sert.
-        $this->main_photo_path = $data['main_photo_path']
+        $this->main_photo_path = $data['webshop_image']['url'] ?? $data['main_photo_path']
             ?? ($data['photos']['main_photo_path'] ?? null);
     }
 
@@ -123,7 +123,7 @@ class ProductModel implements JsonSerializable{
         ];
     }
 
-    public function hasMainPhoto(): bool { return !empty($this->main_photo_path); }
+    public function hasMainPhoto(): bool { return $this->getMainPhotoUrl()!==null; }
 
     /**
      * URL absolue de la photo principale.
@@ -134,7 +134,10 @@ class ProductModel implements JsonSerializable{
     public function getMainPhotoUrl(): ?string
     {
         if (empty($this->main_photo_path)) {
-            return null;
+            static $fallbacks=null;
+            if($fallbacks===null){$file=__DIR__.'/../../../../../public/assets/webshop-product-images/index.json';$fallbacks=is_file($file)?json_decode(file_get_contents($file),true):[];}
+            $name=$fallbacks[(string)$this->id]??null;
+            return $name===null?null:rtrim(ROOT,'/').'/assets/webshop-product-images/'.rawurlencode($name);
         }
         if (str_starts_with($this->main_photo_path, 'r2://')) {
             return rtrim(SHARED_FILES_URL, '/') . '/' . ltrim(substr($this->main_photo_path, 5), '/');

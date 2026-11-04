@@ -18,7 +18,10 @@ class ProductController extends Controller
     #[Route('GET', '/knowledge/products')]
     public function index()
     {
-        $data['products'] = $this->productService->getAvailableToSale(['include'=>['kitchen_cards']]);
+        header('Cache-Control: private, no-store');
+        $data=['products'=>[],'catalog_unavailable'=>false];
+        try{$data['products']=$this->productService->getAvailableToSale(['include'=>['kitchen_cards']]);}
+        catch(\Throwable $error){error_log('Kitchen product catalogue unavailable: '.get_class($error).' ('.$error->getCode().')');$data['catalog_unavailable']=true;}
 
         $this->view("knowledge/product/overview", $data);
     }
