@@ -102,6 +102,9 @@ class Controller
         // Content-based URL invalidates the service worker's cached stylesheet.
         $themeFile = __DIR__ . '/../../../../public/assets/css/atelier-theme.css';
         $data['atelier_theme_version'] = substr(hash_file('sha256', $themeFile), 0, 16);
+        if($name==='knowledge/product/overview'){
+            foreach(['css','js'] as $extension)$data['knowledge_'.$extension.'_version']=substr(hash_file('sha256',__DIR__.'/../../../../public/assets/'.$extension.'/knowledge-products.'.$extension),0,16);
+        }
         $data['current_path'] = '/' . trim($_GET['url'] ?? '', '/');
 
         // Le mode de la tablette décide de la navigation, donc de toutes les

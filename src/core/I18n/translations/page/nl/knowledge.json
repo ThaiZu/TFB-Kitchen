@@ -74,5 +74,8 @@
   "cards_active_filters": "Filters · {count}",
   "cards_close": "Filters sluiten",
   "cards_clear": "Wissen",
-  "cards_show_products": "Producten tonen"
+  "cards_show_products": "Producten tonen",
+  "cards_catalog_unavailable": "De producten konden niet worden geladen. Probeer opnieuw.",
+  "cards_retry": "Opnieuw proberen",
+  "cards_show_all": "Alle producten tonen"
 }
