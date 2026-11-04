@@ -12,6 +12,7 @@
 {% set p = current_path|default('') %}
 {% set active_nav =
     p starts with '/material-stocktaking' ? 'material_stocktaking' :
+    p starts with '/production-plan' ? 'production_plan' :
     p starts with '/production-day' ? 'production_day' :
     p starts with '/inventory' ? 'inventory' :
     p starts with '/dashboard'  ? 'dashboard'  :

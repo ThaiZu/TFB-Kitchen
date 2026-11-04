@@ -255,5 +255,6 @@
   "day_shortage_summary": "Tutte le differenze sono state chiarite. Salva e continua.",
   "day_night_pdm_empty": "Nessun prodotto PDM disponibile per la produzione notturna.",
   "day_help_title": "Guida per questa vista",
-  "day_close_walk_help": "Conta i prodotti uno alla volta. Tutte le scorte SSL vanno scartate; per MSL e LSL indica la quantità da riportare. Ogni prodotto viene salvato separatamente; le scorte cambiano solo alla conferma finale."
+  "day_close_walk_help": "Conta i prodotti uno alla volta. Tutte le scorte SSL vanno scartate; per MSL e LSL indica la quantità da riportare. Ogni prodotto viene salvato separatamente; le scorte cambiano solo alla conferma finale.",
+  "day_plan_unavailable": "Impossibile caricare il piano. Inserisci manualmente la produzione odierna o ricarica la pagina."
 }

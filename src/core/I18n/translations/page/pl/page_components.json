@@ -119,5 +119,6 @@
   "production_sector_hint": "Wybierz dział obsługiwany przez tablet. Każdy dział ma własny dzień; produkty nieprzypisane mają wspólny stan.",
   "production_sector_all": "Wszystkie działy",
   "production_sector_save": "Zastosuj",
-  "production_sector_error": "Nie udało się zapisać działu."
+  "production_sector_error": "Nie udało się zapisać działu.",
+  "nav_production_plan": "Plan produkcji"
 }

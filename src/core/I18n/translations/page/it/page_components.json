@@ -119,5 +119,6 @@
   "production_sector_hint": "Scegli il reparto del tablet. Ogni reparto ha la propria giornata; i prodotti non assegnati condividono le scorte.",
   "production_sector_all": "Tutti i reparti",
   "production_sector_save": "Applica",
-  "production_sector_error": "Impossibile salvare il reparto."
+  "production_sector_error": "Impossibile salvare il reparto.",
+  "nav_production_plan": "Piano di produzione"
 }

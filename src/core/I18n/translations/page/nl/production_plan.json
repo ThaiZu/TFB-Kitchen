@@ -1,0 +1,13 @@
+{
+  "plan_title": "Productieplan",
+  "plan_today": "Toon vandaag",
+  "plan_tomorrow": "Toon morgen",
+  "plan_after_tomorrow": "Toon overmorgen",
+  "plan_days": "Plandag",
+  "plan_product": "Product",
+  "plan_quantity": "Te produceren",
+  "plan_pieces": "stuks",
+  "plan_empty": "Geen beschikbare producten met een positieve geplande hoeveelheid voor deze dag.",
+  "plan_unavailable": "Het productieplan kon niet worden geladen. Probeer opnieuw.",
+  "plan_retry": "Opnieuw proberen"
+}
