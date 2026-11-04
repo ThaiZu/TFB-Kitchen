@@ -120,5 +120,6 @@
   "production_sector_all": "Alle afdelingen",
   "production_sector_save": "Toepassen",
   "production_sector_error": "Afdeling opslaan mislukt.",
-  "nav_production_plan": "Productieplan"
+  "nav_production_plan": "Productieplan",
+  "nav_deliveries": "Leveringen"
 }

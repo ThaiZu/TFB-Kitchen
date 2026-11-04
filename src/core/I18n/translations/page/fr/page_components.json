@@ -120,5 +120,6 @@
   "production_sector_all": "Tous les ateliers",
   "production_sector_save": "Appliquer",
   "production_sector_error": "Impossible d’enregistrer l’atelier.",
-  "nav_production_plan": "Plan de production"
+  "nav_production_plan": "Plan de production",
+  "nav_deliveries": "Livraisons"
 }

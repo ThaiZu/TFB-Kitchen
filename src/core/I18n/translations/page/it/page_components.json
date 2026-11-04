@@ -120,5 +120,6 @@
   "production_sector_all": "Tutti i reparti",
   "production_sector_save": "Applica",
   "production_sector_error": "Impossibile salvare il reparto.",
-  "nav_production_plan": "Piano di produzione"
+  "nav_production_plan": "Piano di produzione",
+  "nav_deliveries": "Consegne"
 }
