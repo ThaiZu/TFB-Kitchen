@@ -1,7 +1,6 @@
 {
   "deliveries_title": "Livraisons",
   "receive_title": "Réceptionner la livraison",
-  "recent_hint": "Les 10 dernières commandes, tous fournisseurs confondus, de la plus récente à la plus ancienne.",
   "refresh_list": "Actualiser",
   "unavailable": "Impossible de charger la livraison. Réessayez.",
   "no_orders": "Aucune commande.",
@@ -17,7 +16,6 @@
   "closed_delivery": "Cette commande ne peut pas être réceptionnée.",
   "shift_required": "Sélectionnez un employé et commencez votre poste, puis actualisez cet écran.",
   "actual_delivery_date": "Date et heure réelles de livraison",
-  "quantity_hint": "Vérifiez les quantités de colis. Les valeurs initiales viennent de l’expédition ou de la commande pour les nouvelles commandes.",
   "ordered": "Commandé",
   "received": "Reçu",
   "unmapped_line": "Aucune correspondance au catalogue : ce produit devra peut-être être exclu.",
@@ -45,5 +43,8 @@
   "status_IN_TRANSIT": "En transit",
   "status_DELIVERED": "Réceptionnée",
   "status_CANCELLED": "Annulée",
-  "status_ARCHIVED": "Archivée"
+  "status_ARCHIVED": "Archivée",
+  "date_label": "Date",
+  "time_label": "Heure",
+  "declared": "Déclaré"
 }

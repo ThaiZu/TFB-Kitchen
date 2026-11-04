@@ -1,8 +1,8 @@
 {% extends 'layouts/base.twig' %}
 {% block title %}{{ translations.deliveries_title }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ ROOT }}/assets/css/deliveries.css?v=1">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ ROOT }}/assets/css/deliveries.css?v=2">{% endblock %}
 {% block content %}
-<section class="dl-heading"><div><h1>{{ translations.deliveries_title }}</h1><p>{{ translations.recent_hint }}</p></div><a class="dl-button" href="{{ ROOT }}/deliveries">{{ translations.refresh_list }}</a></section>
+<section class="dl-heading"><div><h1>{{ translations.deliveries_title }}</h1></div><a class="dl-button" href="{{ ROOT }}/deliveries">{{ translations.refresh_list }}</a></section>
 {% if not available %}<p class="dl-notice" role="alert">{{ translations.unavailable }}</p>
 {% elseif orders is empty %}<p class="dl-notice">{{ translations.no_orders }}</p>
 {% else %}

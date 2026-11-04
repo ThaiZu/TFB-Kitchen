@@ -1,7 +1,6 @@
 {
   "deliveries_title": "Deliveries",
   "receive_title": "Receive delivery",
-  "recent_hint": "The latest 10 orders across all suppliers, newest first.",
   "refresh_list": "Refresh",
   "unavailable": "Could not load the delivery. Please try again.",
   "no_orders": "No orders.",
@@ -17,7 +16,6 @@
   "closed_delivery": "This order cannot be received.",
   "shift_required": "Select a worker and start a shift to receive a delivery. Then refresh this screen.",
   "actual_delivery_date": "Actual delivery date and time",
-  "quantity_hint": "Check pack quantities. Initial values come from the shipment, or the order for new orders.",
   "ordered": "Ordered",
   "received": "Received",
   "unmapped_line": "No catalogue mapping — this product may need to be excluded.",
@@ -45,5 +43,8 @@
   "status_IN_TRANSIT": "In transit",
   "status_DELIVERED": "Received",
   "status_CANCELLED": "Cancelled",
-  "status_ARCHIVED": "Archived"
+  "status_ARCHIVED": "Archived",
+  "date_label": "Date",
+  "time_label": "Time",
+  "declared": "Declared"
 }

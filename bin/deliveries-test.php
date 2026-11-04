@@ -44,14 +44,23 @@ foreach(['pl','en','fr','nl','it'] as $lang){
         $expect($xpath->query('//a[@href="'.ROOT.'/deliveries"]')->length>=2,'Delivery navigation in '.$lang);
         $expect(!str_contains($html,'<script>alert(1)</script>'),'Escaped supplier and product names');
         $expect(!preg_match('/<h1>\s*<\/h1>/',$html),'Localized title');
+        $expect(!str_contains($html,'quantity_hint')&&!str_contains($html,'recent_hint'),'Removed introductory descriptions');
+        if($view==='receive')$expect($xpath->query('//input[@id="dlDate" and @type="date"] | //input[@id="dlTime" and @type="time"]')->length===2,'Separate editable date and time controls');
         if($lang==='pl')file_put_contents($dir.'/'.$view.'.html',$html);
     }
 }
 GlobalRegistry::set('lang_code','pl');
-foreach(['empty'=>['available'=>true,'orders'=>[],'has_shift'=>true], 'unavailable'=>['available'=>false,'orders'=>[],'has_shift'=>true], 'closed'=>['available'=>true,'order'=>array_replace($order,['can_receive'=>false,'status'=>'DELIVERED','delivered_on'=>'2026-11-04 11:00:00']),'has_shift'=>true], 'anonymous'=>['available'=>true,'order'=>$order,'has_shift'=>false]] as $name=>$data){
+foreach(['empty'=>['available'=>true,'orders'=>[],'has_shift'=>true], 'unavailable'=>['available'=>false,'orders'=>[],'has_shift'=>true], 'closed'=>['available'=>true,'order'=>array_replace($order,['can_receive'=>false,'status'=>'DELIVERED','delivered_on'=>'2026-11-03 09:45:00']),'has_shift'=>true], 'archived'=>['available'=>true,'order'=>array_replace($order,['can_receive'=>false,'status'=>'ARCHIVED','delivered_on'=>null]),'has_shift'=>true], 'anonymous'=>['available'=>true,'order'=>$order,'has_shift'=>false]] as $name=>$data){
     ob_start();$container->get(Controller::class)->view('deliveries/'.(isset($data['order'])?'receive':'index'),$base+$data);$html=ob_get_clean();
     file_put_contents($dir.'/'.$name.'.html',$html);
     if(isset($data['order']))$expect(!str_contains($html,'id="dlSave"'),'Read-only delivery has no save button');
+    if(in_array($name,['closed','archived'],true)){
+        $dom=new DOMDocument();@$dom->loadHTML($html);$xpath=new DOMXPath($dom);
+        $expect($xpath->query('//*[@id="dlForm"]//input | //*[@id="dlForm"]//button')->length===0,'Closed delivery uses text, never disabled controls');
+        $expect(!str_contains($html,'Ta dostawa została już przyjęta.')&&!str_contains($html,'To zamówienie nie jest dostępne do przyjęcia.'),'No redundant closed-delivery notice');
+        $expect($xpath->query('//*[@id="dlConfirm"]')->length===0,'Closed delivery has no save confirmation dialog');
+        if($name==='closed')$expect(str_contains($html,'03.11.2026 09:45'),'Stored receipt date displayed instead of current time');
+    }
 }
 $dispatcher=FastRoute\simpleDispatcher(require __DIR__.'/../src/core/Bootstrap/routes.php');
 foreach([['GET','/deliveries'],['GET','/deliveries/40'],['POST','/ajax/deliveries/40/receive']] as [$method,$path])$expect($dispatcher->dispatch($method,$path)[0]===FastRoute\Dispatcher::FOUND,'Registered route '.$path);

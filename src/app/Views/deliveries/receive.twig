@@ -1,32 +1,39 @@
 {% extends 'layouts/base.twig' %}
 {% block title %}{{ translations.receive_title }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ ROOT }}/assets/css/deliveries.css?v=1">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ ROOT }}/assets/css/deliveries.css?v=2">{% endblock %}
 {% block content %}
 <a class="dl-back" href="{{ ROOT }}/deliveries">← {{ translations.back_to_deliveries }}</a>
 {% if not available or not order %}<p class="dl-notice" role="alert">{{ translations.unavailable }}</p><a class="dl-button" href="">{{ translations.check_status }}</a>
 {% else %}
 <section class="dl-heading"><div><h1>{{ order.supplier_name }}</h1><p>#{{ order.id }} · {{ translations.delivery_date }}: {{ order.delivery_date ? order.delivery_date|date('d.m.Y') : '—' }}</p></div><span class="dl-status">{{ attribute(translations, 'status_' ~ order.status)|default(order.status) }}</span></section>
-{% if not order.can_receive %}<p class="dl-notice">{{ order.delivered_on ? translations.already_received : translations.closed_delivery }}</p>
-{% elseif not has_shift %}<p class="dl-notice" role="alert">{{ translations.shift_required }}</p>{% endif %}
+{% if order.can_receive and not has_shift %}<p class="dl-notice" role="alert">{{ translations.shift_required }}</p>{% endif %}
 <p id="dlNotice" class="dl-notice" role="status" aria-live="polite" hidden></p>
 <a id="dlCheck" class="dl-button" href="" hidden>{{ translations.check_status }}</a>
 <form id="dlForm">
-<fieldset {% if not order.can_receive or not has_shift %}disabled{% endif %}>
-<label class="dl-date">{{ translations.actual_delivery_date }}<input id="dlDate" required type="datetime-local" value="{{ order.now }}" max="{{ order.now }}"></label>
-<p class="dl-help">{{ translations.quantity_hint }}</p>
+<fieldset {% if order.can_receive and not has_shift %}disabled{% endif %}>
+{% if order.can_receive %}
+<div class="dl-datetime" id="dlDateFields"><span class="dl-date-title">{{ translations.actual_delivery_date }}</span><div class="dl-datetime-fields"><label>{{ translations.date_label }}<input id="dlDate" required type="date" value="{{ order.now|slice(0, 10) }}" max="{{ order.now|slice(0, 10) }}"></label><label>{{ translations.time_label }}<input id="dlTime" required type="time" step="60" value="{{ order.now|slice(11, 5) }}"></label></div></div>
+{% else %}
+<div class="dl-date"><span>{{ translations.actual_delivery_date }}</span><strong>{{ order.delivered_on ? order.delivered_on|date('d.m.Y H:i') : '—' }}</strong></div>
+{% endif %}
 <div class="dl-lines">
 {% for line in order.lines %}
 <section class="dl-line" data-key="{{ line.key }}" data-ordered="{{ line.ordered }}">
-    <div><strong>{{ line.name }}</strong><small>{{ line.sku }} · {{ translations.ordered }}: {{ line.ordered }} {{ translations.packs }}</small><small>1 {{ translations.pack }} = {{ line.pack_size }} {{ line.unit }}</small>{% if not line.mapped %}<small class="dl-warning">{{ translations.unmapped_line }}</small>{% endif %}</div>
-    <div class="dl-count"><label class="dl-quantity-label" for="qty-{{ loop.index }}">{{ translations.received }}<span class="visually-hidden"> {{ line.name }}</span></label><div class="dl-stepper"><button type="button" data-step="-1" aria-label="{{ translations.decrease }} {{ line.name }}">−</button><input id="qty-{{ loop.index }}" name="{{ line.key }}" aria-label="{{ translations.received }} {{ line.name }}" type="number" inputmode="decimal" min="0" max="99999999" step="0.0001" value="{{ line.quantity }}" required><button type="button" data-step="1" aria-label="{{ translations.increase }} {{ line.name }}">+</button></div><output class="dl-difference" for="qty-{{ loop.index }}"></output></div>
+    <div><strong>{{ line.name }}</strong><small>{{ line.sku }} · {{ translations.ordered }}: {{ line.ordered }} {{ translations.packs }}</small><small>1 {{ translations.pack }} = {{ line.pack_size }} {{ line.unit }}</small>{% if order.can_receive and not line.mapped %}<small class="dl-warning">{{ translations.unmapped_line }}</small>{% endif %}</div>
+    <div class="dl-count">
+    {% if order.can_receive %}<label class="dl-quantity-label" for="qty-{{ loop.index }}">{{ translations.received }}<span class="visually-hidden"> {{ line.name }}</span></label><div class="dl-stepper"><button type="button" data-step="-1" aria-label="{{ translations.decrease }} {{ line.name }}">−</button><input id="qty-{{ loop.index }}" name="{{ line.key }}" aria-label="{{ translations.received }} {{ line.name }}" type="number" inputmode="decimal" min="0" max="99999999" step="0.0001" value="{{ line.quantity }}" required><button type="button" data-step="1" aria-label="{{ translations.increase }} {{ line.name }}">+</button></div><output class="dl-difference" for="qty-{{ loop.index }}"></output>
+    {% else %}<span class="dl-quantity-label">{{ order.delivered_on or order.status == 'DELIVERED' ? translations.received : translations.declared }}</span><strong class="dl-received">{{ line.quantity }} {{ translations.packs }}</strong><span class="dl-difference">{{ translations.difference }}: {{ line.quantity - line.ordered }}</span>{% endif %}
+    </div>
 </section>
 {% endfor %}
 </div>
 {% if order.can_receive and has_shift %}<div class="dl-actions"><span id="dlSummary" aria-live="polite"></span><button class="dl-button dl-primary" id="dlSave" type="submit">{{ translations.review_delivery }}</button></div>{% endif %}
 </fieldset>
 </form>
+{% if order.can_receive and has_shift %}
 <dialog id="dlConfirm" aria-labelledby="dlConfirmTitle"><h2 id="dlConfirmTitle">{{ translations.confirm_title }}</h2><p id="dlConfirmText"></p><ul id="dlIssues"></ul><div class="dl-dialog-actions"><button id="dlCancel" class="dl-button" type="button">{{ translations.cancel_receipt }}</button><button id="dlConfirmSave" class="dl-button dl-primary" type="button">{{ translations.confirm_receipt }}</button></div></dialog>
 <script type="application/json" id="dlData">{{ {root: ROOT, order: order, messages: translations}|json_encode(constant('JSON_HEX_TAG'))|raw }}</script>
 {% endif %}
+{% endif %}
 {% endblock %}
-{% block scripts %}{% if available and order %}<script src="{{ ROOT }}/assets/js/deliveries.js?v=1"></script>{% endif %}{% endblock %}
+{% block scripts %}{% if available and order and order.can_receive and has_shift %}<script src="{{ ROOT }}/assets/js/deliveries.js?v=2"></script>{% endif %}{% endblock %}

@@ -1,7 +1,6 @@
 {
   "deliveries_title": "Leveringen",
   "receive_title": "Levering ontvangen",
-  "recent_hint": "De laatste 10 bestellingen van alle leveranciers, nieuwste eerst.",
   "refresh_list": "Vernieuwen",
   "unavailable": "De levering kon niet worden geladen. Probeer opnieuw.",
   "no_orders": "Geen bestellingen.",
@@ -17,7 +16,6 @@
   "closed_delivery": "Deze bestelling kan niet worden ontvangen.",
   "shift_required": "Selecteer een medewerker en start een dienst. Vernieuw daarna dit scherm.",
   "actual_delivery_date": "Werkelijke leverdatum en tijd",
-  "quantity_hint": "Controleer de aantallen verpakkingen. Beginwaarden komen uit de zending, of uit de bestelling voor nieuwe bestellingen.",
   "ordered": "Besteld",
   "received": "Ontvangen",
   "unmapped_line": "Geen cataloguskoppeling: dit product moet mogelijk worden uitgesloten.",
@@ -45,5 +43,8 @@
   "status_IN_TRANSIT": "Onderweg",
   "status_DELIVERED": "Ontvangen",
   "status_CANCELLED": "Geannuleerd",
-  "status_ARCHIVED": "Gearchiveerd"
+  "status_ARCHIVED": "Gearchiveerd",
+  "date_label": "Datum",
+  "time_label": "Tijd",
+  "declared": "Aangegeven"
 }

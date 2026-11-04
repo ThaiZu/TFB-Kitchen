@@ -1,7 +1,6 @@
 {
   "deliveries_title": "Dostawy",
   "receive_title": "Przyjęcie dostawy",
-  "recent_hint": "Ostatnie 10 zamówień od wszystkich dostawców, od najnowszego.",
   "refresh_list": "Odśwież",
   "unavailable": "Nie udało się pobrać dostawy. Spróbuj ponownie.",
   "no_orders": "Brak zamówień.",
@@ -17,7 +16,6 @@
   "closed_delivery": "To zamówienie nie jest dostępne do przyjęcia.",
   "shift_required": "Wybierz pracownika i rozpocznij zmianę, aby przyjąć dostawę. Następnie odśwież ekran.",
   "actual_delivery_date": "Rzeczywista data i godzina dostawy",
-  "quantity_hint": "Sprawdź ilości opakowań. Wartości początkowe pochodzą z wysyłki, a dla nowych zamówień — z zamówienia.",
   "ordered": "Zamówiono",
   "received": "Przyjęto",
   "unmapped_line": "Brak powiązania z kartoteką — produkt może wymagać wykluczenia.",
@@ -45,5 +43,8 @@
   "status_IN_TRANSIT": "W drodze",
   "status_DELIVERED": "Przyjęte",
   "status_CANCELLED": "Anulowane",
-  "status_ARCHIVED": "Archiwalne"
+  "status_ARCHIVED": "Archiwalne",
+  "date_label": "Data",
+  "time_label": "Godzina",
+  "declared": "Zadeklarowano"
 }
