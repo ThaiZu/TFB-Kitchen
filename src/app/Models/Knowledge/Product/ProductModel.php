@@ -37,20 +37,16 @@ class ProductModel implements JsonSerializable{
     private $storage_name;
     private $storage_description;
 
-    /**
-     * Chemin de la photo principale.
-     *
-     * Le modèle de liste n'en portait aucune : seul ProductDetailModel avait
-     * des photos. Une liste de 573 produits tous coiffés de la même icône ne
-     * se parcourt pas — c'est l'image qui distingue une assiette d'une autre.
-     *
-     * L'endpoint de liste ne renvoie peut-être pas encore le champ ; dans ce
-     * cas il reste à null et les cartes retombent sur l'icône, sans casser.
-     * Voir docs/ENDPOINTS_PHOTOS_PRODUITS.md.
-     */
+    /** Filter metadata and main recipe photo from the Kitchen catalogue include. */
+    private ?int $sector_id;
+    private ?string $sector_name;
+    private array $category_groups;
     private $main_photo_path;
 
     public function __construct($data) {
+        $this->sector_id=isset($data['sector_id'])?(int)$data['sector_id']:null;
+        $this->sector_name=$data['sector_name']??null;
+        $this->category_groups=$data['category']['groups']??$data['category_groups']??[];
         $this->id = $data['id'] ?? null;
         $this->name = $data['name'] ?? null;
         $this->id_category = $data['id_category'] ?? null;
@@ -90,6 +86,9 @@ class ProductModel implements JsonSerializable{
     public function jsonSerialize(): mixed
     {
         return [
+            'sector_id'=>$this->sector_id,
+            'sector_name'=>$this->sector_name,
+            'category_groups'=>$this->category_groups,
             'id' => $this->id,
             'name' => $this->name,
             'id_category' => $this->id_category,
@@ -143,6 +142,10 @@ class ProductModel implements JsonSerializable{
         return $this->main_photo_path;
     }
 
+    public function getSectorId(): ?int {return $this->sector_id;}
+    public function getSectorName(): ?string {return $this->sector_name;}
+    public function getCategoryGroups(): array {return $this->category_groups;}
+    public function getIdCategory() {return $this->id_category;}
     public function getId() { return $this->id; }
     public function getName() { return $this->name; }
     public function getCategoryName() { return $this->category_name; }

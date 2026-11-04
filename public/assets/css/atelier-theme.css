@@ -427,3 +427,6 @@ a .card:active,.card.is-tappable:active { transform:scale(.985); }
   font-size: .84rem; font-weight: 700; color: var(--c-ink);
   background: rgba(193,122,42,.12); padding: 2px 8px; border-radius: 6px;
 }
+
+/* Shared tablet controls use the same compact corners on every Kitchen page. */
+.app-topbar #tabletWorkerStatus .app-shift-status,#productionSectorButton.app-shift-status,#tabletWorkerModal .tablet-worker-badge,#productionSectorModal .tablet-worker-badge{border-radius:10px!important}

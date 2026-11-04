@@ -149,7 +149,6 @@ body.pd-modal-open{overflow:hidden}
 #production-day button.pd-disposal-confirm{background:#fff0bd;color:#654600;border:2px solid #b38000;min-height:48px}#production-day button.pd-disposal-confirm.pd-success{background:#2e7d32;color:#fff;border-color:#2e7d32}#production-day #pd-dialog-save:disabled{background:#aaa;border-color:#aaa;color:#fff;opacity:1;cursor:not-allowed}#production-day .pd-missing-guide{display:block;width:100%;min-height:48px;margin:0 0 12px;padding:12px;border:2px solid #b38000;background:#fff0bd;color:#654600;text-align:center;font-weight:700}#production-day .pd-missing-guide[hidden]{display:none}
 
 /* Tablet controls share the production page's rectangular shape. */
-.app-topbar #tabletWorkerStatus .app-shift-status,#productionSectorButton.app-shift-status,#tabletWorkerModal .tablet-worker-badge,#productionSectorModal .tablet-worker-badge{border-radius:10px!important}
 
 /* Preparation is a supporting task, marked with a warm accent rather than a full-page tint. */
 #production-day[data-wizard-view="prepare"] .pd-wizard-heading{border-left:4px solid #b1844a;background:#fbf5eb;padding:10px 14px;border-radius:8px}#production-day[data-wizard-view="prepare"] .pd-wizard-heading h2{margin:0}#production-day[data-wizard-view="prepare"] .pd-wizard-target{display:inline-block;padding:6px 10px;border:1px solid #dcc7aa;border-radius:6px;color:#75532d;background:#fffaf2}#production-day[data-wizard-view="prepare"] #pd-footer{border-top:2px solid #b1844a}

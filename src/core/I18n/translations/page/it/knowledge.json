@@ -63,5 +63,11 @@
   "photo_presentation": "Presentazione",
   "photo_display": "Esposizione",
   "no_photo": "Nessuna foto",
-  "no_media": "Nessuna foto o materiale di imballaggio disponibile"
+  "no_media": "Nessuna foto o materiale di imballaggio disponibile",
+  "cards_all": "Tutti",
+  "cards_unassigned": "Non assegnati",
+  "cards_life": "Conservazione",
+  "cards_sector": "Reparto",
+  "cards_group": "Categoria",
+  "cards_category": "Sottocategoria"
 }

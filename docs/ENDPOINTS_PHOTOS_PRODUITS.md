@@ -1,3 +1,5 @@
+> Aktualizacja: [karty produktów Kitchen](knowledge-product-cards.md). Lista pobiera główne zdjęcie przez `include=kitchen_cards`; układ jest poziomy, z obrazem po lewej. Poniższy opis przedstawia wcześniejszy stan.
+
 # Photos produits — ce que l'API doit fournir
 
 État au 31/07/2026.

@@ -63,5 +63,11 @@
   "photo_presentation": "Présentation",
   "photo_display": "Exposition",
   "no_photo": "Pas de photo",
-  "no_media": "Pas de photos ni de matériaux d'emballage disponibles"
+  "no_media": "Pas de photos ni de matériaux d'emballage disponibles",
+  "cards_all": "Tous",
+  "cards_unassigned": "Non attribués",
+  "cards_life": "Conservation",
+  "cards_sector": "Atelier",
+  "cards_group": "Catégorie",
+  "cards_category": "Sous-catégorie"
 }
