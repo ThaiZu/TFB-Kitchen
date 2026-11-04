@@ -1,15 +1,17 @@
 {% extends 'layouts/base.twig' %}
 {% block title %}{{ translations.plan_title }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ ROOT }}/assets/css/production-day.css?v=35">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ ROOT }}/assets/css/production-day.css?v=36">{% endblock %}
 {% block content %}
 <div id="production-day">
 <header class="pp-heading"><h1>{{ translations.plan_title }}</h1>{% if available %}<time class="pd-business-date" datetime="{{ model.date }}">{{ model.date }}</time>{% endif %}</header>
 <nav class="pd-module-nav" aria-label="{{ translations.plan_title }}"><a href="{{ ROOT }}/production-day">{{ translations.nav_production_day }}</a><a href="{{ ROOT }}/production-plan" aria-current="page">{{ translations.plan_title }}</a></nav>
 <nav class="pp-days" aria-label="{{ translations.plan_days }}">{% for value in 0..2 %}<a href="{{ ROOT }}/production-plan?offset={{ value }}" data-plan-offset="{{ value }}" {% if offset == value %}aria-current="date"{% endif %}>{{ [translations.plan_today,translations.plan_tomorrow,translations.plan_after_tomorrow][value] }}</a>{% endfor %}</nav>
 {% if not available %}<p class="pd-warning" role="alert">{{ translations.plan_unavailable }}</p><a class="pp-retry" data-plan-retry href="{{ ROOT }}/production-plan?offset={{ offset }}">{{ translations.plan_retry }}</a>
-{% else %}<div class="pd-scroll"><table class="pd-table pp-plan-table"><thead><tr><th>{{ translations.plan_product }}</th><th>{{ translations.plan_quantity }}</th></tr></thead><tbody>
-{% for product in model.products %}<tr data-plan-product="{{ product.id_product }}"><td><strong>{{ product.name }}</strong><div>{% if product.shelf_life_category %}<span class="pd-badge">{{ product.shelf_life_category }}</span>{% endif %}{% if product.category_name %}<span class="pd-badge">{{ product.category_name }}</span>{% endif %}{% if product.sector_name %}<span class="pd-badge">{{ product.sector_name }}</span>{% endif %}</div></td><td class="pp-plan-quantity">{{ product.quantity }} {{ translations.plan_pieces }}</td></tr>
-{% else %}<tr><td colspan="2">{{ translations.plan_empty }}</td></tr>{% endfor %}
+{% else %}
+{% if not model.cycle_distribution_available|default(false) %}<p class="pp-cycle-note" role="status">{{ translations.plan_cycles_unavailable }}</p>{% endif %}
+<div class="pd-scroll"><table class="pd-table pp-plan-table"><thead><tr><th>{{ translations.plan_product }}</th><th>{{ translations.plan_quantity }}</th>{% for cycle in model.cycles|default([]) %}<th class="pp-cycle-heading">{{ translations.plan_cycle|replace({'{number}':loop.index}) }}{% if cycle.name|default('') %}<small>{{ cycle.name }}</small>{% endif %}{% if cycle.start|default('') %}<small>{{ cycle.start }}–{{ cycle.end }}</small>{% endif %}</th>{% endfor %}</tr></thead><tbody>
+{% for product in model.products %}<tr data-plan-product="{{ product.id_product }}"><td><strong>{{ product.name }}</strong><div>{% if product.shelf_life_category %}<span class="pd-badge">{{ product.shelf_life_category }}</span>{% endif %}{% if product.category_name %}<span class="pd-badge">{{ product.category_name }}</span>{% endif %}{% if product.sector_name %}<span class="pd-badge">{{ product.sector_name }}</span>{% endif %}</div></td><td class="pp-plan-quantity">{{ product.quantity }} {{ translations.plan_pieces }}</td>{% for cycle in model.cycles|default([]) %}<td class="pp-cycle-quantity" data-plan-cycle="{{ cycle.key }}">{% if product.cycle_quantities is defined and product.cycle_quantities is not null and attribute(product.cycle_quantities,cycle.key) is defined %}{{ attribute(product.cycle_quantities,cycle.key) }} {{ translations.plan_pieces }}{% else %}<span title="{{ translations.plan_cycles_unavailable }}" aria-label="{{ translations.plan_cycles_unavailable }}">—</span>{% endif %}</td>{% endfor %}</tr>
+{% else %}<tr><td colspan="{{ 2 + model.cycles|default([])|length }}">{{ translations.plan_empty }}</td></tr>{% endfor %}
 </tbody></table></div>{% endif %}
 </div><script src="{{ ROOT }}/assets/js/production-plan.js?v=1" defer></script>
 {% endblock %}

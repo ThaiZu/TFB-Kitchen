@@ -9,5 +9,7 @@
   "plan_pieces": "stuks",
   "plan_empty": "Geen beschikbare producten met een positieve geplande hoeveelheid voor deze dag.",
   "plan_unavailable": "Het productieplan kon niet worden geladen. Probeer opnieuw.",
-  "plan_retry": "Opnieuw proberen"
+  "plan_retry": "Opnieuw proberen",
+  "plan_cycle": "Cyclus {number}",
+  "plan_cycles_unavailable": "De cyclusverdeling is niet beschikbaar. Controleer de cyclus- en categorieparameters in het paneel."
 }

@@ -145,13 +145,29 @@ $expect($container->get(\App\Kitchen\app\Http\Controllers\Production\ProductionP
 foreach(['pl','en','fr','it','nl'] as $language){
  GlobalRegistry::set('lang_code',$language);$_GET['url']='production-plan';
  foreach(['ready','empty','error'] as $state){
-  $model=['date'=>'2026-11-04','products'=>$state==='ready'?[['id_product'=>101,'name'=>'Bread <script>','quantity'=>12,'shelf_life_category'=>'SSL','category_name'=>'Bread','sector_name'=>'Bakery']]:[]];
+  $model=['date'=>'2026-11-04','cycle_distribution_available'=>true,'cycles'=>[
+   ['key'=>'c1','name'=>'Morning','start'=>'06:00','end'=>'10:00'],['key'=>'c2','name'=>'Midday','start'=>'11:00','end'=>'15:00'],['key'=>'c3','name'=>'Evening','start'=>'16:00','end'=>'20:00']],
+   'products'=>$state==='ready'?[['id_product'=>101,'name'=>'Bread <script>','quantity'=>12,'cycle_quantities'=>['c1'=>7,'c2'=>3,'c3'=>2],'shelf_life_category'=>'SSL','category_name'=>'Bread','sector_name'=>'Bakery']]:[]];
   ob_start();$container->get(Controller::class)->view('production_plan/index',['available'=>$state!=='error','offset'=>0,'model'=>$model]);$html=ob_get_clean();
   $dom=new DOMDocument();@$dom->loadHTML($html);$xp=new DOMXPath($dom);
   $expect($xp->query('//*[@data-plan-offset]')->length===3,'Exactly today, tomorrow and day after tomorrow');
   $expect(!str_contains($html,'Bread <script>'),'Plan product names are escaped');
   $expect($xp->query('//*[@data-plan-product]')->length===($state==='ready'?1:0),'Plan handles ready, empty and unavailable states');
+  if($state!=='error')$expect($xp->query('//*[contains(@class,"pp-cycle-heading")]')->length===3,'Three configured cycle headings render');
+  if($state==='ready')$expect($xp->query('//*[@data-plan-cycle]')->length===3,'Per-product quantities render for every cycle');
   if($language==='pl')file_put_contents($fixtureDir.'/kitchen-plan-'.$state.'.html',$html);
+  if($state==='ready')foreach(['one-cycle','no-cycles','missing-category'] as $variant){
+   $alternate=$model;
+   if($variant==='one-cycle'){$alternate['cycles']=array_slice($model['cycles'],0,1);$alternate['products'][0]['cycle_quantities']=['c1'=>12];}
+   if($variant==='no-cycles'){unset($alternate['cycles'],$alternate['cycle_distribution_available'],$alternate['products'][0]['cycle_quantities']);}
+   if($variant==='missing-category')$alternate['products'][0]['cycle_quantities']=null;
+   ob_start();$container->get(Controller::class)->view('production_plan/index',['available'=>true,'offset'=>0,'model'=>$alternate]);$alternateHtml=ob_get_clean();
+   $alternateDom=new DOMDocument();@$alternateDom->loadHTML($alternateHtml);$alternateXp=new DOMXPath($alternateDom);
+   $expect($alternateXp->query('//*[@data-plan-cycle]')->length===($variant==='no-cycles'?0:($variant==='one-cycle'?1:3)),'Cycle fallback and one-cycle day render '.$variant);
+   $expect($alternateXp->query('//*[@data-plan-product]')->length===1,'Daily quantity remains visible '.$variant);
+   if($language==='pl')file_put_contents($fixtureDir.'/kitchen-plan-'.$variant.'.html',$alternateHtml);
+  }
+
  }
 }
 $cardProducts=[];

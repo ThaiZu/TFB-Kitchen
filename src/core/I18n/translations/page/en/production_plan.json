@@ -9,5 +9,7 @@
   "plan_pieces": "pcs",
   "plan_empty": "No available products have a positive planned quantity for this day.",
   "plan_unavailable": "Could not load the production plan. Try again.",
-  "plan_retry": "Try again"
+  "plan_retry": "Try again",
+  "plan_cycle": "Cycle {number}",
+  "plan_cycles_unavailable": "Cycle breakdown is unavailable. Check cycle and category parameters in the panel."
 }
