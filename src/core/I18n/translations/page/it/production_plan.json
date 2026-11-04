@@ -9,5 +9,7 @@
   "plan_pieces": "pezzi",
   "plan_empty": "Nessun prodotto disponibile con quantità pianificata positiva per questo giorno.",
   "plan_unavailable": "Impossibile caricare il piano di produzione. Riprova.",
-  "plan_retry": "Riprova"
+  "plan_retry": "Riprova",
+  "plan_cycle": "Ciclo {number}",
+  "plan_cycles_unavailable": "La ripartizione per ciclo non è disponibile. Controlla i parametri dei cicli e delle categorie nel pannello."
 }

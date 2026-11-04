@@ -9,5 +9,7 @@
   "plan_pieces": "szt.",
   "plan_empty": "Brak dostępnych produktów z dodatnią ilością w planie na ten dzień.",
   "plan_unavailable": "Nie udało się pobrać planu produkcji. Spróbuj ponownie.",
-  "plan_retry": "Spróbuj ponownie"
+  "plan_retry": "Spróbuj ponownie",
+  "plan_cycle": "Cykl {number}",
+  "plan_cycles_unavailable": "Podział na cykle jest niedostępny. Sprawdź parametry cykli i kategorii w panelu."
 }
