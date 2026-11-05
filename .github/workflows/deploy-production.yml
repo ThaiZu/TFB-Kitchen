@@ -1,0 +1,152 @@
+
+name: Deploy Kitchen PRODUCTION
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-kitchen-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/master'
+    name: Kitchen PRODUCTION - Deploy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: curl, mbstring, pdo_mysql, zip, gd, bcmath
+          tools: composer:v2
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: |
+          composer install \
+            --no-dev \
+            --prefer-dist \
+            --no-interaction \
+            --no-progress \
+            --optimize-autoloader \
+            --no-scripts
+
+      - name: Verify Composer dependencies
+        run: |
+          composer check-platform-reqs --no-dev
+          test -f vendor/autoload.php
+          php -r "require 'vendor/autoload.php'; echo 'Autoload OK' . PHP_EOL;"
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Check production directory access
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          ssh \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            "$SSH_USER@$SSH_HOST" \
+            'test -d /opt/tfbuddy/apps/tfbuddy/kitchen && test -w /opt/tfbuddy/apps/tfbuddy/kitchen'
+
+      - name: Deploy Kitchen code
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          rsync -avz \
+            --delay-updates \
+            --no-perms \
+            --no-owner \
+            --no-group \
+            --omit-dir-times \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='.idea/' \
+            --exclude='.env*' \
+            --exclude='*.key' \
+            --exclude='*.pem' \
+            --exclude='logs/' \
+            --exclude='/vendor/' \
+            -e 'ssh -o BatchMode=yes -o StrictHostKeyChecking=yes' \
+            ./ \
+            "$SSH_USER@$SSH_HOST:/opt/tfbuddy/apps/tfbuddy/kitchen/"
+
+      - name: Deploy Composer dependencies
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          rsync -avz \
+            --delete-delay \
+            --delay-updates \
+            --no-perms \
+            --no-owner \
+            --no-group \
+            --omit-dir-times \
+            -e 'ssh -o BatchMode=yes -o StrictHostKeyChecking=yes' \
+            vendor/ \
+            "$SSH_USER@$SSH_HOST:/opt/tfbuddy/apps/tfbuddy/kitchen/vendor/"
+
+      - name: Verify deployed autoloader
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          ssh \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            "$SSH_USER@$SSH_HOST" \
+            'test -f /opt/tfbuddy/apps/tfbuddy/kitchen/vendor/autoload.php'
+
+      - name: Health check Kitchen PRODUCTION
+        run: |
+          URL="https://atelierby.tfbuddy.com/kitchen/health.php"
+
+          for attempt in 1 2 3 4 5; do
+            STATUS=$(curl -sS \
+              --max-time 10 \
+              -o /dev/null \
+              -w '%{http_code}' \
+              "$URL") || STATUS=000
+
+            if [ "$STATUS" = "204" ]; then
+              echo "Kitchen PRODUCTION is healthy (HTTP 204)"
+              exit 0
+            fi
+
+            echo "Health check attempt $attempt: HTTP $STATUS"
+            sleep 3
+          done
+
+          echo "Kitchen PRODUCTION health check FAILED"
+          exit 1
+
+      - name: Deployment summary
+        run: |
+          echo "### Kitchen production deployment" >> "$GITHUB_STEP_SUMMARY"
+          echo "Commit: $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          echo "URL: https://atelierby.tfbuddy.com/kitchen" >> "$GITHUB_STEP_SUMMARY"
+          echo "Health check: HTTP 204" >> "$GITHUB_STEP_SUMMARY"
