@@ -200,4 +200,14 @@ GlobalRegistry::set('lang_code','pl');$_GET['url']='knowledge/products';
 ob_start();$container->get(Controller::class)->view('knowledge/product/overview',['products'=>[],'catalog_unavailable'=>true]);$unavailable=ob_get_clean();
 $expect(str_contains($unavailable,'role="alert"')&&!str_contains($unavailable,'id="productsGrid"'),'Catalogue API failure is shown explicitly, not as an empty product grid');
 file_put_contents($fixtureDir.'/kitchen-product-cards-unavailable.html',$unavailable);
+$dispatcher=\FastRoute\simpleDispatcher(require __DIR__.'/../src/core/Bootstrap/routes.php');
+foreach(['/knowledge/products/101','/knowledge/product/101'] as $url)$expect($dispatcher->dispatch('GET',$url)[0]===\FastRoute\Dispatcher::FOUND,'Product detail plural and singular routes resolve');
+$catalogPhoto=$cardProducts[0]->getMainPhotoUrl();
+$detail=new \App\Kitchen\app\Models\Knowledge\Product\ProductDetailModel(['object'=>['id'=>101,'name'=>'Bread SSL','category_name'=>'Bread','webshop_image'=>['url'=>$catalogPhoto]],'photos'=>['main_photo_path'=>'https://images.example/recipe-main.jpg']]);
+foreach(['pl','en','fr','it','nl'] as $language){
+ GlobalRegistry::set('lang_code',$language);$_GET['url']='knowledge/products/101';ob_start();$container->get(Controller::class)->view('knowledge/product/detail',['product'=>$detail]);$html=ob_get_clean();
+ $dom=new DOMDocument();@$dom->loadHTML($html);$xp=new DOMXPath($dom);$hero=$xp->query('//div[contains(@class,"fiche-hero")]/img');
+ $expect($hero->length===1&&$hero->item(0)->getAttribute('src')===$catalogPhoto,'Detail main image matches its list thumbnail');
+ if($language==='pl')file_put_contents($fixtureDir.'/kitchen-product-detail.html',$html);
+}
 echo "$checks real controller navigation checks passed\n";

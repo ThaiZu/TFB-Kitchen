@@ -17,6 +17,7 @@ class TechnicalSheetController extends Controller
     #[Route('GET', '/knowledge/products/{id:\d+}')]
     public function show($id)
     {
+        header('Cache-Control: private, no-store');
         $product = $this->technicalSheetService->getById($id);
 
         if ($product === null) {

@@ -69,6 +69,7 @@ class ProductDetailModel implements JsonSerializable
 
     // Getters
     public function getObject() { return $this->object; }
+    public function getMainProductPhotoUrl(): ?string {return $this->object?->getMainPhotoUrl();}
     public function getPhotos() { return $this->photos; }
     public function getRecipe() { return $this->recipe; }
     public function getPackage() { return $this->package; }

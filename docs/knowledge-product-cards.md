@@ -30,3 +30,12 @@ Wcześniejsze podłączenie zdjęcia receptury nie odpowiadało źródłu używa
 Aktualizacja lokalnej paczki: `python bin/sync-webshop-product-images.py /sciezka/TFB-WebShop/assets/product_pictures`. Skrypt tworzy manifest i kopiuje istniejące pliki; nie przetwarza obrazów ani nie usuwa plików użytkownika. Nowe zdjęcia w API są odczytywane na bieżąco i mają pierwszeństwo. Wdrożenie tej poprawki: API przed Kitchen, bez migracji.
 
 Nieudane lub nieprawidłowe odpowiedzi katalogu nie są już zamieniane na pustą listę. Widok pokazuje komunikat błędu i link ponowienia. Poprawny pusty katalog nadal jest pusty. Jeśli katalog zawiera produkty, ale filtry (w tym domyślny SSL) nic nie pokazują, dostępny jest przycisk „Pokaż wszystkie produkty”. Bez dostępu do działającego API nie stwierdzono, który błąd upstream wystąpił u użytkownika.
+
+
+## Szczegóły produktu i otwarte filtry
+
+Widok szczegółów `/knowledge/products/{id}` pokazuje jako główne zdjęcie dokładnie to samo źródło co miniatura: istniejący odczyt `/products/{id}/webshop-image` oraz wspólny fallback `ProductModel` dla lokalnych zdjęć. Karta nie pobiera ponownie pełnego katalogu. Błąd dodatkowego odczytu zdjęcia nie blokuje informacji technicznych. Główne zdjęcie w nagłówku i galerii korzysta z nowego źródła; pozostałe fotografie techniczne pozostają bez zmian. Kliknięcie nadal otwiera istniejącą przeglądarkę powiększonego zdjęcia. Dodano alias `/knowledge/product/{id}` dla adresu w liczbie pojedynczej. Odpowiedź strony nie jest buforowana (`private, no-store`).
+
+Sekcja, kategoria i podkategoria mają domyślnie otwarte bloki `details`, zarówno nad listą na komputerze, jak i wewnątrz panelu „Filtry” na urządzeniu mobilnym. Wybranie badge’a nie zwija bloku, a czyszczenie przywraca rozwinięcie. Użytkownik nadal może sam zwinąć blok. Zależności kategorii i dotychczasowe wykluczanie produktów nie zmieniły się. Sam mobilny panel nadal otwiera się przyciskiem „Filtry”.
+
+Zmiana wyłącznie w Kitchen, bez zmian API lub migracji. Testy modelu i repozytorium obejmują identyczność zdjęć listy/szczegółów, fallback i nieudany odczyt zdjęcia; testy renderowania obejmują pięć języków i oba adresy produktu. Chromium sprawdza też kliknięcie karty, powiększanie zdjęcia i otwarte filtry w pięciu układach. Nie testowano rzeczywistego API/R2 ani fizycznych tabletów.

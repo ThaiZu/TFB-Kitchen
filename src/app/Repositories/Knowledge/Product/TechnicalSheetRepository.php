@@ -32,6 +32,12 @@ class TechnicalSheetRepository
             return null;
         }
 
+        // Same source as catalogue thumbnails; do not replace technical recipe photos.
+        try{
+            $image=$this->apiClient->get('/products/'.(int)$id.'/webshop-image');
+            if(($image['success']??false)===true)$data['object']['webshop_image']=$image['data']['image']??null;
+        }catch(\Throwable $error){error_log('Kitchen product image unavailable: '.get_class($error).' ('.$error->getCode().')');}
+
         return new ProductDetailModel($data);
     }
 
