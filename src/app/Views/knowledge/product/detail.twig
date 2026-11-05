@@ -456,6 +456,7 @@
 
     {% set obj = product.getObject() %}
     {% set photos = product.getPhotos() %}
+    {% set productPhotoUrl = product.getMainProductPhotoUrl() %}
     {% set recipe = product.getRecipe() %}
     {% set preparation = product.getPreparation() %}
     {% set package = product.getPackage() %}
@@ -473,8 +474,8 @@
            passe donc devant, en pleine largeur, bornée en hauteur pour que
            la lecture puisse commencer sans faire défiler. #}
         <div class="fiche-hero">
-            {% if photos and photos.hasMainPhoto() %}
-                <img src="{{ photos.getMainPhotoUrl() }}"
+            {% if productPhotoUrl %}
+                <img src="{{ productPhotoUrl }}"
                      alt="{{ product.getName() }}"
                      class="fiche-zoomable"
                      onclick="ficheLightboxOpen(this)"
@@ -837,7 +838,7 @@
     {% set hasPhoto1gallery = photos and photos.hasPhoto1() %}
     {% set hasPhoto2gallery = photos and photos.hasPhoto2() %}
     {% set hasPhoto3gallery = photos and photos.hasPhoto3() %}
-    {% set hasMainGallery = photos and photos.hasMainPhoto() %}
+    {% set hasMainGallery = productPhotoUrl is not empty %}
     {% if hasPhoto1gallery or hasPhoto2gallery or hasPhoto3gallery or hasMainGallery %}
     <div class="fiche-wrap mb-4">
         <div class="fiche-plano">
@@ -879,7 +880,7 @@
                 {% endif %}
                 {% if hasMainGallery %}
                     <div class="plano-photo">
-                        <img src="{{ photos.getMainPhotoUrl() }}"
+                        <img src="{{ productPhotoUrl }}"
                              alt="{{ product.getName() }} - main"
                              class="fiche-zoomable"
                              onclick="ficheLightboxOpen(this)"

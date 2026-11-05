@@ -22,7 +22,7 @@
     p starts with '/baking'     ? 'baking'     :
     p starts with '/checklists' ? 'checklists' :
     p starts with '/orders'     ? 'orders'     :
-    p starts with '/knowledge/products' ? 'production_cards' :
+    (p starts with '/knowledge/products' or p starts with '/knowledge/product/') ? 'production_cards' :
     p starts with '/knowledge/product/' ? 'production_cards' :
     p starts with '/knowledge'  ? 'knowledge'  :
     p starts with '/complaints' ? 'complaints' :
