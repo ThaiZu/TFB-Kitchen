@@ -104,5 +104,7 @@
   "carryover_empty": "No products require settlement.",
   "carryover_previous": "Left from the previous day",
   "carryover_previous_empty": "There are no recorded leftovers from the previous day.",
-  "carryover_from_previous": "Left from %date%."
+  "carryover_from_previous": "Left from %date%.",
+  "whole_product": "Whole product",
+  "portion": "Portion"
 }

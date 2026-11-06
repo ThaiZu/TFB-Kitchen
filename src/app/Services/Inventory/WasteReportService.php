@@ -109,7 +109,7 @@ final class WasteReportService
             if (!is_array($line)
                 || filter_var($line['id_product'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) === false
                 || !is_scalar($line['quantity'] ?? null) || is_bool($line['quantity'])
-                || !preg_match('/^[1-9]\d{0,7}$/D', (string) $line['quantity'])
+                || !(isset($line['portion'])?preg_match('/^(?:0|[1-9]\d{0,7})(?:\.\d{1,4})?$/D',(string)$line['quantity'])&&((float)$line['quantity']>0):preg_match('/^[1-9]\d{0,7}$/D',(string)$line['quantity']))
                 || !is_string($line['reason'] ?? null) || !array_key_exists($line['reason'], $allowed)
                 || !is_scalar($line['expected_in_stock'] ?? null) || is_bool($line['expected_in_stock'])
                 || !preg_match('/^\d{1,8}(?:\.\d{1,4})?$/D', (string) $line['expected_in_stock'])
@@ -132,6 +132,11 @@ final class WasteReportService
                 'expected_in_stock' => (string) $line['expected_in_stock'],
                 'expected_movement_id' => (string) $line['expected_movement_id'],
             ];
+            if(isset($line['portion'])) {
+                $portion=$line['portion'];
+                if(!is_array($portion)||count($portion)!==2||!is_int($portion['id_product_portion']??null)||$portion['id_product_portion']<=0||!is_string($portion['source_quantity']??null)||!preg_match('/^[1-9]\d{0,7}$/D',$portion['source_quantity']))return null;
+                $clean[$product]['portion']=$portion;
+            }
             if ($comment !== null) $clean[$product]['comment'] = $comment;
         }
 

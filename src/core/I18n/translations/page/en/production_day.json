@@ -256,5 +256,7 @@
   "day_night_pdm_empty": "No products marked PDM are available for overnight production.",
   "day_help_title": "Help for this view",
   "day_close_walk_help": "Count products one by one. All SSL stock is discarded; for MSL and LSL enter the quantity to carry over. Each product is saved separately; stock changes only when you confirm final closing.",
-  "day_plan_unavailable": "Could not load the production plan. Enter today’s production manually or reload the page."
+  "day_plan_unavailable": "Could not load the production plan. Enter today’s production manually or reload the page.",
+  "day_whole_product": "Whole product",
+  "day_portion": "Portion"
 }

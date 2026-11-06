@@ -1,6 +1,6 @@
 {% extends 'layouts/base.twig' %}
 {% block title %}{{ translations.day_title }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ ROOT }}/assets/vendors/choices.js/choices.min.css"><link rel="stylesheet" href="{{ ROOT }}/assets/css/production-day.css?v=35">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ ROOT }}/assets/css/product-portions.css?v=1"><script src="{{ ROOT }}/assets/js/product-portions.js?v=1"></script><link rel="stylesheet" href="{{ ROOT }}/assets/vendors/choices.js/choices.min.css"><link rel="stylesheet" href="{{ ROOT }}/assets/css/production-day.css?v=35">{% endblock %}
 {% block content %}
 <div id="production-day" data-root="{{ ROOT }}" data-view="{{ view }}" data-shift="{{ has_shift ? '1' : '0' }}">
 <header class="pd-header"><div class="pd-title-line"><h1>{{ translations.day_title }}</h1><details id="pd-help" class="pd-help"><summary aria-label="{{ translations.day_help_title }}" aria-controls="pd-help-content">i</summary><div id="pd-help-content" class="pd-help-content" role="note"><p>{{ translations.day_hint }}</p></div></details><time id="pd-business-date" class="pd-business-date" datetime="{{ sheet.date|default('') }}" aria-label="{{ translations.day_date }}">{{ sheet.date|default('—') }}</time></div></header>
@@ -17,5 +17,5 @@
 <script id="pd-seed" type="application/json">{{ sheet|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}</script>
 <script id="pd-translations" type="application/json">{{ translations|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}</script>
 <script src="{{ ROOT }}/assets/vendors/choices.js/choices.min.js" defer></script>
-{% endif %}<script src="{{ ROOT }}/assets/js/production-day.js?v=35" defer></script></div>
+{% endif %}<script src="{{ ROOT }}/assets/js/production-day.js?v=36" defer></script></div>
 {% endblock %}

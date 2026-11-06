@@ -104,5 +104,7 @@
   "carryover_empty": "Brak produktów wymagających rozliczenia.",
   "carryover_previous": "Pozostawiono z poprzedniego dnia",
   "carryover_previous_empty": "Nie ma zapisanych pozostałości z poprzedniego dnia.",
-  "carryover_from_previous": "Pozostawiono z dnia %date%."
+  "carryover_from_previous": "Pozostawiono z dnia %date%.",
+  "whole_product": "Cały produkt",
+  "portion": "Porcja"
 }

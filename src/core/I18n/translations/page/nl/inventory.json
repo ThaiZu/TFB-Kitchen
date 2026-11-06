@@ -104,5 +104,7 @@
   "carryover_empty": "Geen producten hoeven te worden afgerekend.",
   "carryover_previous": "Achtergelaten van de vorige dag",
   "carryover_previous_empty": "Geen geregistreerde resten van de vorige dag.",
-  "carryover_from_previous": "Achtergelaten van %date%."
+  "carryover_from_previous": "Achtergelaten van %date%.",
+  "whole_product": "Heel product",
+  "portion": "Portie"
 }

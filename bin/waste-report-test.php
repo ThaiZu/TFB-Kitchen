@@ -63,6 +63,9 @@ $multiple['idempotency_key'] = 'waste-test-key-0002';
 $multiple['lines'][] = ['id_product' => 4, 'quantity' => '1', 'reason' => 'expiration', 'expected_in_stock' => '4.0000', 'expected_movement_id' => '44'];
 $check($service->create($multiple)['success'] && count(end($api->calls)[2]['lines']) === 2, 'Several products stay in one atomic API request');
 
+$portionInput=$input;$portionInput['lines'][0]['quantity']='0.75';$portionInput['lines'][0]['portion']=['id_product_portion'=>12,'source_quantity'=>'3'];
+$check($service->create($portionInput)['success'],'Configured-portion evidence passes the Kitchen proxy');
+$check(end($api->calls)[2]['lines'][0]['portion']===$portionInput['lines'][0]['portion'],'Source portion count is forwarded without a client factor');
 $invalid = $input;
 $invalid['lines'][0]['reason'] = 'other_waste';
 $before = count(array_filter($api->calls, static fn (array $call): bool => $call[0] === 'POST'));
@@ -87,12 +90,13 @@ $loader = new Twig\Loader\ChainLoader([
     new Twig\Loader\FilesystemLoader(__DIR__ . '/../src/app/Views'),
 ]);
 $twig = new Twig\Environment($loader, ['autoescape' => 'html']);
+$screen['lines'][0]['portions']=[['id'=>12,'type'=>'ONE_QUARTER','label'=>'1/4','numerator'=>1,'denominator'=>4]];
 foreach (['pl', 'en', 'fr', 'nl', 'it'] as $language) {
     $translations = json_decode(file_get_contents(__DIR__ . '/../src/core/I18n/translations/page/' . $language . '/inventory.json'), true, 512, JSON_THROW_ON_ERROR);
     $html = $twig->render('inventory/waste.twig', array_merge($screen, ['ROOT' => '/kitchen', 'translations' => $translations, 'has_shift' => true]));
     $check(str_contains($html, $translations['tab_waste']) && str_contains($html, 'wpProductModal'), "Waste view renders $language");
     $check(!str_contains($html, '"key":"carryover"'), "No carryover reason in $language");
-    if ($language === 'pl') file_put_contents('/tmp/kitchen-waste-fixture.html', $html);
+    if ($language === 'pl') file_put_contents((getenv('KITCHEN_DAY_FIXTURE_DIR')?:sys_get_temp_dir()).'/kitchen-waste-portions.html', $html);
 }
 
 echo "Kitchen waste report: {$checks} checks passed\n";
