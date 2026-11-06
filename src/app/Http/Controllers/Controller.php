@@ -114,6 +114,9 @@ class Controller
         $mode  = DeviceMode::current();
         $rules = DeviceMode::rules();
         $shopId = (int)(GlobalRegistry::get('user')['shop_id'] ?? 0);
+        $data['device_session_active'] = $shopId > 0 && (int)(GlobalRegistry::get('user')['device_id'] ?? 0) > 0;
+        $data['session_script_version'] = substr(hash_file('sha256', __DIR__.'/../../../../public/assets/js/kitchen-session.js'), 0, 16);
+        $data['production_sector_id'] = \App\Kitchen\core\Support\ProductionSector::current($shopId);
         $data['production_sector_name']=\App\Kitchen\core\Support\ProductionSector::name($shopId);
         $shift = $shopId > 0 ? ShiftSession::current($shopId, date('Y-m-d')) : null;
 

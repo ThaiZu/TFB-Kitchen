@@ -7,16 +7,16 @@ function lock(value){list.setAttribute('aria-busy',String(value));list.querySele
 async function choose(sector){
  if(saving)return;saving=true;lock(true);error.textContent='';
  try{
-  const r=await fetch(root+'/ajax/production-sector',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},body:JSON.stringify({sector_id:sector.id})}),j=await r.json();
+  const r=await fetch(root+'/ajax/production-sector',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest','Accept':'application/json'},body:JSON.stringify({sector_id:sector.id})}),j=await r.json();
   if(!r.ok||!j.success)throw Error();
   document.getElementById('productionSectorButton').textContent=sector.name;
-  location.assign(root+'/production-day');
+  const url=new URL(location.href);location.assign(url.pathname.includes('/knowledge/product')?url.pathname:root+'/production-day');
  }catch(_){error.textContent=modal.dataset.error;saving=false;lock(false);}
 }
 modal.addEventListener('show.bs.modal',async()=>{
  const request=++loading;error.textContent='';list.replaceChildren();list.setAttribute('aria-busy','true');
  try{
-  const r=await fetch(root+'/ajax/production-sector',{credentials:'same-origin',cache:'no-store'}),j=await r.json();
+  const r=await fetch(root+'/ajax/production-sector',{credentials:'same-origin',cache:'no-store',headers:{'Accept':'application/json','X-Requested-With':'XMLHttpRequest'}}),j=await r.json();
   if(request!==loading)return;if(!r.ok||!j.success)throw Error();
   for(const sector of [{id:null,name:modal.dataset.all},...j.items]){
    const button=document.createElement('button');button.type='button';button.className='tablet-worker-badge production-sector-choice';button.dataset.sectorId=sector.id??'';

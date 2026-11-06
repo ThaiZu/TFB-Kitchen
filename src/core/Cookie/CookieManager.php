@@ -4,6 +4,7 @@ namespace App\Kitchen\core\Cookie;
 use App\Kitchen\app\Models\Auth\JWTModel;
 
 class CookieManager {
+    public const REFRESH_TTL = 60 * 60 * 24 * 60;
 
     public function setAuthCookie($accessToken, $expiryTokenDate)
     {
@@ -37,22 +38,25 @@ class CookieManager {
         return true;
     }
 
-    public function setRefreshCookie($refreshToken)
+    public function setRefreshCookie($refreshToken, int $refreshTtl = self::REFRESH_TTL)
     {
-        $refreshTtl = 60*60*24*30; // 30 dni
+        $refreshTtl = max(1, min(self::REFRESH_TTL, $refreshTtl));
 
         $expiresAt = time() + $refreshTtl;
 
-        setcookie('kitchen_refresh_token', $refreshToken, [
+        $saved = setcookie('kitchen_refresh_token', $refreshToken, [
             'expires' => $expiresAt,
             'path' => '/',
             'secure' => true,
             'httponly' => true,
             'samesite' => 'Strict',
         ]);
+
+        if (!$saved) return false;
+        $_COOKIE['kitchen_refresh_token'] = $refreshToken;
 
         // to cookie z datą jest opcjonalne — i tak możesz policzyć time()+TTL
-        setcookie('kitchen_refresh_token_expiry', date('Y-m-d H:i:s', $expiresAt), [
+        $saved = setcookie('kitchen_refresh_token_expiry', date('Y-m-d H:i:s', $expiresAt), [
             'expires' => $expiresAt,
             'path' => '/',
             'secure' => true,
@@ -60,11 +64,14 @@ class CookieManager {
             'samesite' => 'Strict',
         ]);
 
+        if (!$saved) return false;
+        $_COOKIE['kitchen_refresh_token_expiry'] = date('Y-m-d H:i:s',$expiresAt);
         return true;
     }
 
     public function unsetCookies()
     {
+        foreach(['kitchen_access_token','kitchen_access_token_expiry','kitchen_refresh_token','kitchen_refresh_token_expiry'] as $name)unset($_COOKIE[$name]);
         setcookie('kitchen_refresh_token', '', [
             'expires' => time() - 3600, // Poprawiony timestamp
             'path' => '/',

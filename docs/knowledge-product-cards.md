@@ -39,3 +39,13 @@ Widok szczegółów `/knowledge/products/{id}` pokazuje jako główne zdjęcie d
 Sekcja, kategoria i podkategoria mają domyślnie otwarte bloki `details`, zarówno nad listą na komputerze, jak i wewnątrz panelu „Filtry” na urządzeniu mobilnym. Wybranie badge’a nie zwija bloku, a czyszczenie przywraca rozwinięcie. Użytkownik nadal może sam zwinąć blok. Zależności kategorii i dotychczasowe wykluczanie produktów nie zmieniły się. Sam mobilny panel nadal otwiera się przyciskiem „Filtry”.
 
 Zmiana wyłącznie w Kitchen, bez zmian API lub migracji. Testy modelu i repozytorium obejmują identyczność zdjęć listy/szczegółów, fallback i nieudany odczyt zdjęcia; testy renderowania obejmują pięć języków i oba adresy produktu. Chromium sprawdza też kliknięcie karty, powiększanie zdjęcia i otwarte filtry w pięciu układach. Nie testowano rzeczywistego API/R2 ani fizycznych tabletów.
+
+## Tablet sector default
+
+The catalogue starts with the production sector selected in the global tablet
+header, scoped to the current shop. SSL remains the initial shelf-life filter.
+Category groups and subcategories are populated only from that sector's products;
+changing the local sector clears incompatible group/subcategory selections.
+The local catalogue filter can still be changed or cleared independently of the
+tablet preference. Choosing a new global sector on a product-card page reloads
+that page instead of navigating to production day.

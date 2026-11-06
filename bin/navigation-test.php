@@ -196,6 +196,13 @@ foreach(['pl','en','fr','it','nl'] as $language){
  $expect($xp->query('//*[@data-product-id and not(@hidden)]')->length===4,'Only SSL visible before JavaScript starts');
  if($language==='pl')file_put_contents($fixtureDir.'/kitchen-product-cards.html',$html);
 }
+GlobalRegistry::set('lang_code','pl');
+$_COOKIE[\App\Kitchen\core\Support\ProductionSector::COOKIE]=json_encode(['shop'=>2,'sector'=>1,'name'=>'Bakery']);
+ob_start();$container->get(Controller::class)->view('knowledge/product/overview',['products'=>$cardProducts]);$selectedHtml=ob_get_clean();
+$expect(str_contains($selectedHtml,'data-selected-sector="1"'),'Product cards inherit the tablet sector');
+$expect(str_contains($selectedHtml,'kitchen-session.js?v='),'Authenticated pages include session renewal');
+file_put_contents($fixtureDir.'/kitchen-product-cards-sector.html',$selectedHtml);
+unset($_COOKIE[\App\Kitchen\core\Support\ProductionSector::COOKIE]);
 GlobalRegistry::set('lang_code','pl');$_GET['url']='knowledge/products';
 ob_start();$container->get(Controller::class)->view('knowledge/product/overview',['products'=>[],'catalog_unavailable'=>true]);$unavailable=ob_get_clean();
 $expect(str_contains($unavailable,'role="alert"')&&!str_contains($unavailable,'id="productsGrid"'),'Catalogue API failure is shown explicitly, not as an empty product grid');

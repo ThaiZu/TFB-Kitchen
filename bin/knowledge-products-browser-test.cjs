@@ -30,5 +30,23 @@ try{for(const width of [1440,1280,1024,768,390]){
  for(const file of ['kitchen-runtime-navigation.html','kitchen-plan-ready.html']){const html=fs.readFileSync(path.join(dir,file),'utf8');await page.route('**/shell-check',route=>route.fulfill({contentType:'text/html',body:html}));await page.goto('http://kitchen.test/shell-check');assert.equal(await page.locator('#productionSectorButton').evaluate(n=>getComputedStyle(n).borderRadius),'10px');assert.equal(await page.locator('#tabletWorkerStatus .app-shift-status').evaluate(n=>getComputedStyle(n).borderRadius),'10px');checks+=2;}
  await page.close();
  }
+ // Global tablet sector defaults the catalogue and narrows dependent options.
+ const selected=await browser.newPage();let sectorPosts=0;
+ await selected.route('**/*',route=>{const req=route.request(),p=new URL(req.url()).pathname;
+  if(p.includes('/assets/')){const f=path.join(root,'public',p.slice(p.indexOf('/assets/')+1));return route.fulfill({contentType:p.endsWith('.js')?'application/javascript':'text/css',body:fs.existsSync(f)?fs.readFileSync(f):''});}
+  if(p.endsWith('/ajax/production-sector')){if(req.method()==='POST')sectorPosts++;return route.fulfill({json:{success:true,selected:1,items:[{id:1,name:'Bakery'},{id:2,name:'Kitchen'}]}});}
+  if(p.includes('/ajax/'))return route.fulfill({json:{success:true,items:[],count:0,total:0}});
+  return route.fulfill({contentType:'text/html',body:fs.readFileSync(path.join(dir,'kitchen-product-cards-sector.html'),'utf8')});
+ });
+ await selected.goto('http://localhost/kitchen/knowledge/products');
+ assert.deepEqual(await selected.locator('.product-item:not([hidden])').evaluateAll(nodes=>nodes.map(n=>Number(n.dataset.productId))),[101,102]);
+ assert.equal(await selected.locator('[data-card-filter="sector"][aria-pressed=true]').getAttribute('data-filter-value'),'1');
+ assert.deepEqual(await selected.locator('[data-card-options=group] button').evaluateAll(nodes=>nodes.map(n=>n.dataset.filterValue)),['','1','2']);
+ assert.deepEqual(await selected.locator('[data-card-options=category] button').evaluateAll(nodes=>nodes.map(n=>n.dataset.filterValue)),['','11','10']);
+ await selected.locator('#productionSectorModal').evaluate(node=>node.dispatchEvent(new Event('show.bs.modal')));
+ await selected.locator('#productionSectorList button[data-sector-id="2"]').evaluate(node=>node.click());
+ await selected.waitForFunction(()=>location.pathname==='/kitchen/knowledge/products'&&document.readyState==='complete');
+ await selected.waitForTimeout(100);assert.equal(sectorPosts,1);assert.ok(selected.url().endsWith('/kitchen/knowledge/products'));checks+=6;
+ await selected.close();
  console.log('Kitchen product cards: '+checks+' checks PASS (desktop/tablet/touch/mobile layouts, combined filters, default SSL, photos/fallback, compact cards and global selector corners).');
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exit(1)});

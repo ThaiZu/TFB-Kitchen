@@ -205,7 +205,8 @@
 </div>
 
 <div class="modal fade" id="productionSectorModal" data-root="{{ ROOT }}" data-all="{{ translations.production_sector_all }}" data-error="{{ translations.production_sector_error }}" tabindex="-1" aria-labelledby="productionSectorTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 id="productionSectorTitle">{{ translations.production_sector_mode }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ translations.close }}"></button></div><div class="modal-body"><p>{{ translations.production_sector_hint }}</p><div id="productionSectorList" class="tablet-worker-grid" role="group" aria-labelledby="productionSectorTitle"></div><p id="productionSectorError" role="alert"></p></div></div></div></div>
-<script src="{{ ROOT }}/assets/js/production-sector.js?v=2" defer></script>
+{% if device_session_active %}<script src="{{ ROOT }}/assets/js/kitchen-session.js?v={{ session_script_version }}" data-root="{{ ROOT }}" defer></script>{% endif %}
+<script src="{{ ROOT }}/assets/js/production-sector.js?v=3" defer></script>
 <main class="app-content">
     <div class="container py-3">
         {% block page_heading %}{% endblock %}

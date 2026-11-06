@@ -38,7 +38,13 @@ class AuthGuard
             return false;
         }
 
-        $response = $this->loginRepo->refresh($refresh); // musi zwracać ?array
+        try {
+            $response = $this->loginRepo->refresh($refresh);
+        } catch (SessionRefreshUnavailable $error) {
+            // A temporary API outage must not discard a usable device session.
+            if (isset($exp) && $exp > $now) return true;
+            throw $error;
+        }
 
         if (!$response) {
             return false;
@@ -47,10 +53,16 @@ class AuthGuard
         $newAccess  = $response['access_token'];
         $newRefresh = $response['refresh_token'];
 
+        if ($this->jwt->getExpFromToken($newAccess) <= $now) {
+            throw new SessionRefreshUnavailable('KITCHEN_SESSION_REFRESH_UNAVAILABLE');
+        }
         $newExpStr = $this->jwt->getExpiryDateStringFromToken($newAccess);
 
-        $this->cookies->setAuthCookie($newAccess, $newExpStr);
-        $this->cookies->setRefreshCookie($newRefresh);
+        $refreshTtl = (int)($response['refresh_expires_in'] ?? CookieManager::REFRESH_TTL);
+        if (!$this->cookies->setAuthCookie($newAccess, $newExpStr) ||
+            !$this->cookies->setRefreshCookie($newRefresh, $refreshTtl)) {
+            throw new SessionRefreshUnavailable('KITCHEN_SESSION_REFRESH_UNAVAILABLE');
+        }
 
         return true;
     }

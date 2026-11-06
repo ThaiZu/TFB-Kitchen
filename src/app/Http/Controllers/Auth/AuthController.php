@@ -6,6 +6,8 @@ namespace App\Kitchen\app\Http\Controllers\Auth;
 use App\Kitchen\app\Http\Controllers\Controller;
 use App\Kitchen\app\Http\Requests\LoginRequest;
 use App\Kitchen\app\Services\Auth\AuthGuard;
+use App\Kitchen\app\Services\Auth\SessionRefreshUnavailable;
+use App\Kitchen\app\Services\Auth\SessionResponse;
 use App\Kitchen\app\Services\Auth\AuthService;
 use App\Kitchen\app\Services\Shop\ShopService;
 use App\Kitchen\core\Support\DeviceMode;
@@ -28,12 +30,18 @@ class AuthController extends Controller
         // sur le tableau de bord cuisine : l'accueil dépend du mode.
         $home = DeviceMode::rules()->home(DeviceMode::current());
 
-        $data['shops'] = $this->shopService->getAll();
-        if ($this->guard->ensureAccessToken()) {
+        try {
+            $authenticated = $this->guard->ensureAccessToken();
+        } catch (SessionRefreshUnavailable) {
+            SessionResponse::create($_SERVER, true, ROOT)->send();
+            return;
+        }
+        if ($authenticated) {
             redirect($home);
             return;
         }
 
+        $data['shops']=$this->shopService->getAll();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $this->errors = LoginRequest::validateLogin($_POST);
