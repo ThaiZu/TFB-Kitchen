@@ -22,5 +22,8 @@
   "invalid": "Wybierz produkt i powód oraz podaj prawidłową ilość nie większą niż dostępny stan.",
   "conflict": "Stan produktu zmienił się w międzyczasie. Lista została odświeżona.",
   "failed": "Nie udało się zapisać odpadu. Spróbuj ponownie.",
-  "network": "Nie potwierdzono zapisu. Spróbuj ponownie bez zmieniania danych."
+  "network": "Nie potwierdzono zapisu. Spróbuj ponownie bez zmieniania danych.",
+  "whole_product": "Cały produkt",
+  "portion": "Porcja",
+  "pieces": "szt."
 }

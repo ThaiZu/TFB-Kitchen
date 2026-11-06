@@ -256,5 +256,7 @@
   "day_night_pdm_empty": "Geen producten met PDM beschikbaar voor nachtproductie.",
   "day_help_title": "Hulp bij deze weergave",
   "day_close_walk_help": "Tel producten één voor één. Alle SSL-voorraad wordt afgevoerd; vul voor MSL en LSL de over te dragen hoeveelheid in. Elk product wordt apart opgeslagen; de voorraad verandert pas bij de definitieve afsluiting.",
-  "day_plan_unavailable": "Het productieplan kon niet worden geladen. Voer de productie van vandaag handmatig in of laad de pagina opnieuw."
+  "day_plan_unavailable": "Het productieplan kon niet worden geladen. Voer de productie van vandaag handmatig in of laad de pagina opnieuw.",
+  "day_whole_product": "Heel product",
+  "day_portion": "Portie"
 }

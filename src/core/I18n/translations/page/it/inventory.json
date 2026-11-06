@@ -104,5 +104,7 @@
   "carryover_empty": "Nessun prodotto da chiudere.",
   "carryover_previous": "Lasciato dal giorno precedente",
   "carryover_previous_empty": "Nessuna rimanenza registrata dal giorno precedente.",
-  "carryover_from_previous": "Lasciato dal %date%."
+  "carryover_from_previous": "Lasciato dal %date%.",
+  "whole_product": "Prodotto intero",
+  "portion": "Porzione"
 }

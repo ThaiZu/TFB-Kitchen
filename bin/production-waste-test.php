@@ -29,9 +29,11 @@ $screen = [
     ],
 ];
 
+$screen['lines'][0]['portions']=[['id'=>12,'type'=>'ONE_QUARTER','label'=>'1/4','numerator'=>1,'denominator'=>4]];
 foreach (['pl', 'en', 'fr', 'nl', 'it'] as $language) {
     $translations = json_decode(file_get_contents(__DIR__ . '/../src/core/I18n/translations/page/' . $language . '/production_waste.json'), true, 512, JSON_THROW_ON_ERROR);
     $html = $twig->render('production_waste/index.twig', array_merge($screen, ['ROOT' => '/kitchen', 'translations' => $translations]));
+    if($language==='pl')file_put_contents((getenv('KITCHEN_DAY_FIXTURE_DIR')?:sys_get_temp_dir()).'/kitchen-production-waste-portions.html',$html);
     $check(str_contains($html, 'id="pwProductSearch"') && str_contains($html, 'id="pwProducts"') && str_contains($html, 'id="pwQuantity"') && str_contains($html, 'id="pwReasons"'), "Single-line waste form renders in $language");
     $check(str_contains($html, "/ajax/production/waste") && str_contains($html, 'idempotency_key'), "Production waste uses atomic API contract in $language");
     $check(str_contains($html, 'reportable') && str_contains($html, 'last_movement_id'), "Only reportable stock lines are selected with concurrency state in $language");
