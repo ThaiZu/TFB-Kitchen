@@ -24,10 +24,11 @@ class LoginRepository{
 
     public function refresh($refreshToken) {
         $response = $this->apiClient->login('/devices/auth/refresh', ['refresh_token' => $refreshToken]);
-
-        if (isset($response['access_token']) && isset($response['refresh_token'])) {
+        if (is_string($response['access_token'] ?? null) && $response['access_token'] !== '' &&
+            is_string($response['refresh_token'] ?? null) && $response['refresh_token'] !== '') {
             return $response;
         }
-        return null;
+        if (in_array($response['auth_http_status'] ?? null, [400, 401, 403, 422], true)) return null;
+        throw new \App\Kitchen\app\Services\Auth\SessionRefreshUnavailable('KITCHEN_SESSION_REFRESH_UNAVAILABLE');
     }
 }

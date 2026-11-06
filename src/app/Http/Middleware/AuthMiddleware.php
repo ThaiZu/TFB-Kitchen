@@ -2,6 +2,8 @@
 namespace App\Kitchen\app\Http\Middleware;
 
 use App\Kitchen\app\Services\Auth\AuthGuard;
+use App\Kitchen\app\Services\Auth\SessionRefreshUnavailable;
+use App\Kitchen\app\Services\Auth\SessionResponse;
 use App\Kitchen\app\Services\Auth\AuthService;
 use App\Kitchen\app\Services\Auth\JwtService;
 use App\Kitchen\core\Cookie\CookieManager;
@@ -21,9 +23,15 @@ class AuthMiddleware
 
     public function handle()
     {
-        if (!$this->authGuard->ensureAccessToken()) {
+        try {
+            $authenticated = $this->authGuard->ensureAccessToken();
+        } catch (SessionRefreshUnavailable) {
+            SessionResponse::create($_SERVER, true, ROOT)->send();
+            exit;
+        }
+        if (!$authenticated) {
             $this->cookieManager->unsetCookies();
-            Redirect("/auth");
+            SessionResponse::create($_SERVER, false, ROOT)->send();
             exit;
         }
 

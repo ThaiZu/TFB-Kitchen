@@ -36,7 +36,8 @@ class AuthService {
         $expiryTokenDate = $this->jwtService->getExpiryDateStringFromToken($response['access_token']);
 
         if(!$this->cookieManager->setAuthCookie($response['access_token'], $expiryTokenDate)) return false;
-        if(!$this->cookieManager->setRefreshCookie($response['refresh_token'])) return false;
+        $refreshTtl = (int)($response['refresh_expires_in'] ?? CookieManager::REFRESH_TTL);
+        if (!$this->cookieManager->setRefreshCookie($response['refresh_token'], $refreshTtl)) return false;
 
         return true;
     }

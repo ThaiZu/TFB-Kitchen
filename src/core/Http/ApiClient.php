@@ -149,20 +149,20 @@ class ApiClient
 
 
     public function login($endpoint, $data) {
-        $url = $this->baseUrl . $endpoint;
-        $headers = $this->getHeaders();
-
-        $ch = $this->initializeCurl($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array_merge($headers, ['Content-Type: application/json']));
-
-        $response = curl_exec($ch);
-
+        $ch = $this->initializeCurl($this->baseUrl . $endpoint);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_HTTPHEADER => array_merge($this->getHeaders(), ['Content-Type: application/json']),
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_TIMEOUT => 15,
+        ]);
+        $body = curl_exec($ch);
+        $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
-
-        return json_decode($response, true);
+        $decoded = is_string($body) ? json_decode($body, true) : null;
+        return array_merge(is_array($decoded) ? $decoded : [], ['auth_http_status' => $status]);
     }
 
     public function post($endpoint, $data) {

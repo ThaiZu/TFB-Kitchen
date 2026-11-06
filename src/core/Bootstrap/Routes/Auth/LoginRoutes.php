@@ -5,6 +5,10 @@ use App\Kitchen\app\Http\Controllers\Auth\AuthController;
 use FastRoute\RouteCollector;
 
 return function(RouteCollector $r) {
+    $r->addRoute('GET', '/ajax/session', [
+        'controller' => \App\Kitchen\app\Http\Controllers\Auth\SessionController::class,
+        'method' => 'status',
+    ]);
 
     $r->addRoute('GET', '/auth', [
         'controller' => AuthController::class,
