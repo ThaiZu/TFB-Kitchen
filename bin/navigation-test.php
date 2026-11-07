@@ -20,6 +20,7 @@ $expect = static function (bool $condition, string $message) use (&$checks): voi
     ++$checks;
     if (!$condition) throw new RuntimeException($message);
 };
+$expect($container->get(\App\Kitchen\app\Http\Middleware\AuthMiddleware::class) instanceof \App\Kitchen\app\Http\Middleware\AuthMiddleware,'Auth middleware clock dependency resolves through the real container');
 GlobalRegistry::set('user', ['shop_id' => 2, 'device_id' => 7]);
 DeviceMode::rules()->applyConfig(null);
 $expect(DeviceMode::rules()->navKeys('production') === \App\Kitchen\app\Services\Me\DeviceModeService::DEFAULT_NAV['production'], 'Reproduce missing runtime device configuration');
@@ -217,4 +218,13 @@ foreach(['pl','en','fr','it','nl'] as $language){
  $expect($hero->length===1&&$hero->item(0)->getAttribute('src')===$catalogPhoto,'Detail main image matches its list thumbnail');
  if($language==='pl')file_put_contents($fixtureDir.'/kitchen-product-detail.html',$html);
 }
+// Header and production must agree even when the PHP and shop dates differ.
+if(!defined('JWT_SECRET_KEY'))define('JWT_SECRET_KEY','navigation-clock-fixture');
+GlobalRegistry::set('user',['shop_id'=>2,'device_id'=>7]);GlobalRegistry::set('lang_code','pl');
+$shopDate=(new DateTimeImmutable('today'))->modify('+1 day')->format('Y-m-d');
+\App\Kitchen\core\Support\ShopClock::remember(2,$shopDate);
+$_COOKIE[\App\Kitchen\core\Support\ShiftSession::COOKIE]=\App\Kitchen\core\Support\ShiftSession::rules()->sign(24,'Clock worker',time(),time(),JWT_SECRET_KEY,2,$shopDate);
+ob_start();$container->get(Controller::class)->view('knowledge/product/overview',['products'=>[]]);$clockHtml=ob_get_clean();
+$expect(str_contains($clockHtml,'Clock worker')&&str_contains($clockHtml,'app-shift-status--active'),'Real header uses the shop day, not the PHP calendar day');
+unset($_COOKIE[\App\Kitchen\core\Support\ShiftSession::COOKIE]);
 echo "$checks real controller navigation checks passed\n";

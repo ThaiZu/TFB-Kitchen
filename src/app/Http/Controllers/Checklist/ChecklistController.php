@@ -6,6 +6,7 @@ use App\Kitchen\app\Http\Controllers\Controller;
 use App\Kitchen\app\Services\Checklist\ChecklistFocusService;
 use App\Kitchen\app\Services\Checklist\ChecklistService;
 use App\Kitchen\core\Support\ShiftSession;
+use App\Kitchen\core\Support\ShopClock;
 
 class ChecklistController extends Controller
 {
@@ -20,9 +21,11 @@ class ChecklistController extends Controller
      */
     public function index(): void
     {
-        $date        = $_GET['date']         ?? date('Y-m-d');
+        $today = ShopClock::today($this->checklistService->shopId());
+        if($today===null){$this->json(['success'=>false,'message'=>'shop_clock_unavailable'],503)->send();return;}
+        $date        = $_GET['date']         ?? $today;
         $checklistId = isset($_GET['checklist_id']) ? (int)$_GET['checklist_id'] : null;
-        $today       = date('Y-m-d');
+
 
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) || $date > $today) {
             $date = $today;
@@ -32,7 +35,7 @@ class ChecklistController extends Controller
         // Osoba przy tablecie jest globalnym kontekstem urządzenia, nie
         // kontekstem dnia. Dzięki temu także przy odczycie dnia minionego
         // widzi wyłącznie zadania swojego position-level.
-        $activeWorker = $shopId > 0 ? ShiftSession::current($shopId) : null;
+        $activeWorker = $shopId > 0 ? ShiftSession::current($shopId, $today) : null;
         // Podpis bez ponownego PIN-u pozostaje uprawnieniem wyłącznie na dziś.
         // Historyczna realizacja nadal przechodzi dotychczasową weryfikację.
         $shift = $date === $today ? $activeWorker : null;
@@ -206,8 +209,10 @@ class ChecklistController extends Controller
             return $this->json(['success' => false, 'message' => 'invalid_task'], 400);
         }
 
+        $today = ShopClock::today($this->checklistService->shopId());
+        if($today===null)return $this->json(['success'=>false,'message'=>'shop_clock_unavailable'],503);
         $body  = $_POST;
-        $date  = $body['date'] ?? date('Y-m-d');
+        $date  = $body['date'] ?? $today;
         $note  = trim($body['note'] ?? '');
         $photo = $_FILES['photo'] ?? null;
 
@@ -233,7 +238,7 @@ class ChecklistController extends Controller
            ouvert : sinon il suffirait de changer un champ pour signer sous le
            nom d'un collègue, et la prise de poste ne protégerait rien. */
         $shopId = $this->checklistService->shopId();
-        $shift = $date === date('Y-m-d') && $shopId > 0 ? ShiftSession::current($shopId, $date) : null;
+        $shift = $date === $today && $shopId > 0 ? ShiftSession::current($shopId, $date) : null;
 
         if ($shift) {
             $employeeId = (int) $shift['id'];
@@ -251,14 +256,14 @@ class ChecklistController extends Controller
         }
 
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
-            $date = date('Y-m-d');
+            $date = $today;
         }
 
         $result = $this->checklistService->completeTask(
             $taskId, $employeeId, $pin, $date, $note, $photo, $shift !== null, $taskStatus
         );
 
-        $stayLogged = !$shift && (($body['stay_logged'] ?? '') === '1');
+        $stayLogged = $date === $today && !$shift && (($body['stay_logged'] ?? '') === '1');
         if (($result['success'] ?? false) && $stayLogged) {
             $verified = $this->checklistService->verifyPin($employeeId, $pin);
             if ($verified['success'] ?? false) {
@@ -299,7 +304,8 @@ class ChecklistController extends Controller
             return $this->json($res, 422);
         }
 
-        $date = date('Y-m-d');
+        $date = ShopClock::today($this->checklistService->shopId());
+        if($date===null)return $this->json(['success'=>false,'message'=>'shop_clock_unavailable'],503);
         if (!$this->checklistService->isScheduledEmployee($employeeId, $date)) {
             return $this->json(['success' => false, 'message' => 'employee_not_scheduled'], 422);
         }
@@ -332,7 +338,9 @@ class ChecklistController extends Controller
      */
     public function tabletWorkerRoster(): \Symfony\Component\HttpFoundation\JsonResponse
     {
-        $employees = $this->checklistService->getEmployeesForShop(date('Y-m-d'));
+        $date=ShopClock::today($this->checklistService->shopId());
+        if($date===null)return $this->json(['success'=>false,'message'=>'shop_clock_unavailable'],503);
+        $employees = $this->checklistService->getEmployeesForShop($date);
         $roster = $this->checklistService->roster($employees);
 
         if ($roster['mode'] === 'missing') {
@@ -348,7 +356,8 @@ class ChecklistController extends Controller
     public function eligibleEmployees(string $taskId): \Symfony\Component\HttpFoundation\JsonResponse
     {
         $taskId = (int)$taskId;
-        $date = $_GET['date'] ?? date('Y-m-d');
+        $date = $_GET['date'] ?? ShopClock::today($this->checklistService->shopId());
+        if($date===null)return $this->json(['success'=>false,'message'=>'shop_clock_unavailable'],503);
         if ($taskId <= 0 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
             return $this->json(['success' => false, 'message' => 'invalid_request'], 400);
         }
