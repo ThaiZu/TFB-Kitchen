@@ -423,7 +423,7 @@
             var response = await fetch(ROOT + '/ajax/tablet-worker/roster', { credentials: 'same-origin' });
             var data = await response.json();
             if (!response.ok || !data.success) {
-                throw new Error(data.message || workerTranslations.rosterError);
+                throw new Error(data.message === 'shop_clock_unavailable' ? workerTranslations.rosterError : (data.message || workerTranslations.rosterError));
             }
             list.innerHTML = '';
             (data.employees || []).forEach(function (employee) {
@@ -461,7 +461,7 @@
             });
             var data = await response.json();
             if (!response.ok || !data.success) {
-                throw new Error(data.message || workerTranslations.startError);
+                throw new Error(data.message === 'shop_clock_unavailable' ? workerTranslations.startError : (data.message || workerTranslations.startError));
             }
             workerModal.hide();
             if (resumeCurrentWork) {

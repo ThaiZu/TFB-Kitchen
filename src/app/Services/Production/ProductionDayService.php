@@ -26,6 +26,7 @@ class ProductionDayService
             foreach($sheet['products'] as &$product)$product['planned_production_quantity']=$quantities[$product['id_product']]??0;
             unset($product);
         }
+        if($result['success']??false)\App\Kitchen\core\Support\ShopClock::remember($shop,$sheet['today']??null);
         return ['available'=>(bool)($result['success']??false),'view'=>$sheet['default_view']??'opening','sheet'=>$sheet,
             'has_shift'=>isset($sheet['today']) && ShiftSession::current($shop,$sheet['today'])!==null,
             'api_error'=>$result['description']??null];

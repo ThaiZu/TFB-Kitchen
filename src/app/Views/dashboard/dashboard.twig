@@ -272,7 +272,7 @@
                 body: new URLSearchParams({employee_id: employeeId.value, pin: pin.value.trim()}),
             });
             const data = await response.json();
-            if (!response.ok || !data.success) throw new Error(data.message || dashboardTranslations.startError);
+            if (!response.ok || !data.success) throw new Error(data.message === 'shop_clock_unavailable' ? dashboardTranslations.startError : (data.message || dashboardTranslations.startError));
             window.location.assign(destination || '{{ ROOT }}/dashboard');
         } catch (error) {
             alert.textContent = error.message;

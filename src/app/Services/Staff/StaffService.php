@@ -56,9 +56,7 @@ class StaffService
     /**
      * L'équipe active, chacun marqué présent ou non au planning de `$date`.
      *
-     * @param string|null $date  Jour consulté (Y-m-d). Sans date, on ne demande
-     *                           pas le planning : la question « qui est de
-     *                           service » n'a pas de sens hors d'un jour.
+     * @param string|null $date Day consulted (Y-m-d); defaults to the API shop day.
      *
      * @return array<int, array{id: mixed, name: string, initials: string, on_schedule: ?bool}>|null
      *         null = liste non servie
@@ -72,9 +70,9 @@ class StaffService
             return null;
         }
 
-        // Sans date, la question « qui est de service » n'a pas de sens : ce
-        // n'est pas une route manquante, c'est un appel qui ne la pose pas.
-        $date = ($date === null || $date === '') ? date('Y-m-d') : $date;
+        // Without an explicit historical date, use the API's shop-local day.
+        $date = ($date === null || $date === '') ? \App\Kitchen\core\Support\ShopClock::today($shopId) : $date;
+        if($date===null){$this->missing='GET /shops/{id}/business-clock';return null;}
 
         $rows = $this->staffRepository->getSchedule($shopId, $date);
         if ($rows === null) {
