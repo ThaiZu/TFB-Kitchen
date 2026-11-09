@@ -258,5 +258,7 @@
   "day_close_walk_help": "Tel producten één voor één. Alle SSL-voorraad wordt afgevoerd; vul voor MSL en LSL de over te dragen hoeveelheid in. Elk product wordt apart opgeslagen; de voorraad verandert pas bij de definitieve afsluiting.",
   "day_plan_unavailable": "Het productieplan kon niet worden geladen. Voer de productie van vandaag handmatig in of laad de pagina opnieuw.",
   "day_whole_product": "Heel product",
-  "day_portion": "Portie"
+  "day_portion": "Portie",
+  "day_worker_opening_required": "Selecteer een medewerker en bevestig de pincode om de dag te openen.",
+  "day_select_employee": "Medewerker kiezen"
 }

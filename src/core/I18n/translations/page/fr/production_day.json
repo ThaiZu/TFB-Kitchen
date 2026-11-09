@@ -258,5 +258,7 @@
   "day_close_walk_help": "Comptez les produits un par un. Tout le stock SSL est jeté ; pour MSL et LSL, indiquez la quantité à reporter. Chaque produit est enregistré séparément ; le stock ne change qu’à la confirmation finale.",
   "day_plan_unavailable": "Impossible de charger le plan. Saisissez la production du jour manuellement ou rechargez la page.",
   "day_whole_product": "Produit entier",
-  "day_portion": "Portion"
+  "day_portion": "Portion",
+  "day_worker_opening_required": "Pour ouvrir la journée, sélectionnez un employé et confirmez son PIN.",
+  "day_select_employee": "Choisir un employé"
 }

@@ -11,6 +11,12 @@ a successful production read can supply its authoritative `today` without an
 extra call. There is no browser-local-date or PHP-date fallback when issuing
 employee sessions. Clock failure is retryable and preserves the existing cookie.
 
+Production day shows a prominent, localized employee-selection message before
+its wizard when no worker is active, with a tablet-sized button opening the
+existing employee/PIN picker. After successful selection and page reload, the
+message disappears and opening actions become available. Closed read-only days
+do not show this prompt. Selecting a worker does not automatically open a day.
+
 The shared header, PIN login, worker roster, default staff schedule and checklist
 worker attribution use that date. Historical checklist completion cannot replace
 the current employee session with a historical-date cookie. Shift signatures,
@@ -27,8 +33,8 @@ Verification:
   and temporary clock outage without cookie loss.
 - Real controller/navigation: 977 checks, including real header identity on a
   different shop/PHP day and middleware DI construction.
-- Existing production day (55), staff (37), shift (27) checks pass.
-- Dedicated Chromium worker login/retry: 15 checks at 390/768/1024px.
+- Existing production day and localized guidance (85), staff (37), shift (27) checks pass.
+- Dedicated Chromium worker guidance/login/retry: 45 checks at 390/768/1024px.
 - Companion API tests cover midnight, summer/winter offsets and DST.
 - The old broad tablet selector test fails its existing department-choice touch
   target assertion; no sector CSS or control dimensions changed in this task.

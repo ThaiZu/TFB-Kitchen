@@ -258,5 +258,7 @@
   "day_close_walk_help": "Count products one by one. All SSL stock is discarded; for MSL and LSL enter the quantity to carry over. Each product is saved separately; stock changes only when you confirm final closing.",
   "day_plan_unavailable": "Could not load the production plan. Enter today’s production manually or reload the page.",
   "day_whole_product": "Whole product",
-  "day_portion": "Portion"
+  "day_portion": "Portion",
+  "day_worker_opening_required": "To open the day, select an employee and confirm their PIN.",
+  "day_select_employee": "Select employee"
 }

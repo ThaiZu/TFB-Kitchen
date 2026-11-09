@@ -63,6 +63,15 @@ $_GET=[];
 $loader=new Twig\Loader\ChainLoader([new Twig\Loader\ArrayLoader(['layouts/base.twig'=>'<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font-family:Arial;margin:0;padding:16px;box-sizing:border-box}*{box-sizing:border-box}</style>{% block head %}{% endblock %}</head><body>{% block content %}{% endblock %}</body></html>']),new Twig\Loader\FilesystemLoader(__DIR__.'/../src/app/Views')]);
 $twig=new Twig\Environment($loader,['strict_variables'=>true]);
 foreach(['pl','en','fr','it','nl'] as $lang){$t=array_merge(json_decode(file_get_contents(__DIR__.'/../src/core/I18n/translations/page/'.$lang.'/page_components.json'),true,512,JSON_THROW_ON_ERROR),json_decode(file_get_contents(__DIR__.'/../src/core/I18n/translations/page/'.$lang.'/production_day.json'),true,512,JSON_THROW_ON_ERROR));$html=$twig->render('production_day/index.twig',['ROOT'=>'/kitchen','translations'=>$t,'available'=>true,'has_shift'=>true,'view'=>'opening','sheet'=>$sheet]);$check(str_contains($html,'production-day.js') && str_contains($html,'pd-dialog'),'Three-view UI renders '.$lang);$check(!str_contains($html,'<SSL>'),'Product names encoded inside JSON seed');if($lang==='pl')file_put_contents($fixtureDir.'/ui.html',$html);}
+foreach(['pl','en','fr','it','nl'] as $lang){
+ $t=array_merge(json_decode(file_get_contents(__DIR__.'/../src/core/I18n/translations/page/'.$lang.'/page_components.json'),true,512,JSON_THROW_ON_ERROR),json_decode(file_get_contents(__DIR__.'/../src/core/I18n/translations/page/'.$lang.'/production_day.json'),true,512,JSON_THROW_ON_ERROR));
+ foreach([[false,'NOT_OPEN',true],[true,'NOT_OPEN',false],[false,'CLOSED',false]] as [$active,$status,$visible]){
+  $html=$twig->render('production_day/index.twig',['ROOT'=>'/kitchen','translations'=>$t,'available'=>true,'has_shift'=>$active,'view'=>'opening','sheet'=>array_replace($sheet,['status'=>$status])]);
+  $dom=new DOMDocument();@$dom->loadHTML($html);$xp=new DOMXPath($dom);
+  $check(($xp->query('//*[@id="pd-worker-required" and not(@hidden)]')->length===1)===$visible,'Worker guidance visibility matches employee/day state in '.$lang);
+  $check($xp->query('//*[@id="pd-worker-required"]//button[@data-shift-action="login"]')->length===1,'Guidance reuses existing employee/PIN picker in '.$lang);
+ }
+}
 $dispatcher=FastRoute\simpleDispatcher(require __DIR__.'/../src/core/Bootstrap/routes.php');
 foreach([['GET','/production-plan'],['GET','/production-day'],['GET','/production-day/data'],['GET','/production-day/windows'],['POST','/production-day/open'],['POST','/production-day/adjust'],['POST','/production-day/close'],['POST','/production-day/prepare'],['POST','/production-day/prepare_add'],['POST','/production-day/close_draft'],['POST','/production-day/count'],['POST','/production-day/photos']] as [$method,$path])$check($dispatcher->dispatch($method,$path)[0]===FastRoute\Dispatcher::FOUND,'Route '.$path);
 echo "Kitchen production day: $checks checks PASS\n";

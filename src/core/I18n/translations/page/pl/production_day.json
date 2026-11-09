@@ -258,5 +258,7 @@
   "day_close_walk_help": "Przelicz produkty kolejno. SSL trafia w całości do odpadu; dla MSL i LSL wpisz ilość do przeniesienia. Każdy produkt zapisujesz osobno, a magazyn zmienia dopiero końcowe potwierdzenie zamknięcia.",
   "day_plan_unavailable": "Nie udało się pobrać planu produkcji. Wprowadź dzisiejszą produkcję ręcznie lub odśwież stronę.",
   "day_whole_product": "Cały produkt",
-  "day_portion": "Porcja"
+  "day_portion": "Porcja",
+  "day_worker_opening_required": "Aby otworzyć dzień, wybierz pracownika i potwierdź jego PIN.",
+  "day_select_employee": "Wybierz pracownika"
 }

@@ -1,6 +1,6 @@
 {% extends 'layouts/base.twig' %}
 {% block title %}{{ translations.day_title }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ ROOT }}/assets/css/product-portions.css?v=1"><script src="{{ ROOT }}/assets/js/product-portions.js?v=1"></script><link rel="stylesheet" href="{{ ROOT }}/assets/vendors/choices.js/choices.min.css"><link rel="stylesheet" href="{{ ROOT }}/assets/css/production-day.css?v=35">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ ROOT }}/assets/css/product-portions.css?v=1"><script src="{{ ROOT }}/assets/js/product-portions.js?v=1"></script><link rel="stylesheet" href="{{ ROOT }}/assets/vendors/choices.js/choices.min.css"><link rel="stylesheet" href="{{ ROOT }}/assets/css/production-day.css?v=36">{% endblock %}
 {% block content %}
 <div id="production-day" data-root="{{ ROOT }}" data-view="{{ view }}" data-shift="{{ has_shift ? '1' : '0' }}">
 <header class="pd-header"><div class="pd-title-line"><h1>{{ translations.day_title }}</h1><details id="pd-help" class="pd-help"><summary aria-label="{{ translations.day_help_title }}" aria-controls="pd-help-content">i</summary><div id="pd-help-content" class="pd-help-content" role="note"><p>{{ translations.day_hint }}</p></div></details><time id="pd-business-date" class="pd-business-date" datetime="{{ sheet.date|default('') }}" aria-label="{{ translations.day_date }}">{{ sheet.date|default('—') }}</time></div></header>
@@ -9,6 +9,10 @@
 {% if not available %}<p role="alert">{{ translations.day_unavailable }} {% if api_error == 'KITCHEN_DAY_MIGRATION_REQUIRED' %}{{ translations.day_migration }}{% endif %}</p>
 {% else %}
 
+<section id="pd-worker-required" class="pd-worker-required" role="status"{% if has_shift or sheet.status == 'CLOSED' %} hidden{% endif %}>
+<p id="pd-worker-required-text">{{ sheet.status == 'NOT_OPEN' and view != 'prepare' ? translations.day_worker_opening_required : translations.day_shift }}</p>
+<button type="button" class="pd-primary" data-shift-action="login">{{ translations.day_select_employee }}</button>
+</section>
 <nav class="pd-tabs" aria-label="{{ translations.day_title }}"><button type="button" data-page="opening">{{ translations.day_opening }}</button><button type="button" data-page="stock">{{ translations.day_stock }}</button><button type="button" data-page="closing">{{ translations.day_closing }}</button></nav>
 <div id="pd-feedback" role="alert" hidden></div>
 <section id="pd-body"></section>
@@ -17,5 +21,5 @@
 <script id="pd-seed" type="application/json">{{ sheet|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}</script>
 <script id="pd-translations" type="application/json">{{ translations|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}</script>
 <script src="{{ ROOT }}/assets/vendors/choices.js/choices.min.js" defer></script>
-{% endif %}<script src="{{ ROOT }}/assets/js/production-day.js?v=36" defer></script></div>
+{% endif %}<script src="{{ ROOT }}/assets/js/production-day.js?v=37" defer></script></div>
 {% endblock %}

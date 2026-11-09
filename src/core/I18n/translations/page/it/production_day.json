@@ -258,5 +258,7 @@
   "day_close_walk_help": "Conta i prodotti uno alla volta. Tutte le scorte SSL vanno scartate; per MSL e LSL indica la quantità da riportare. Ogni prodotto viene salvato separatamente; le scorte cambiano solo alla conferma finale.",
   "day_plan_unavailable": "Impossibile caricare il piano. Inserisci manualmente la produzione odierna o ricarica la pagina.",
   "day_whole_product": "Prodotto intero",
-  "day_portion": "Porzione"
+  "day_portion": "Porzione",
+  "day_worker_opening_required": "Per aprire la giornata, seleziona un dipendente e conferma il suo PIN.",
+  "day_select_employee": "Scegli dipendente"
 }
