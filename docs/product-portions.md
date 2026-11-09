@@ -84,4 +84,8 @@ clamp between zero and yesterday's stock, and use the normal shortage workflow.
 `bin/production-day-carry-portions-browser-test.cjs` covers configured-only
 fractions, integral-only/weighted rows, totals, limits, non-overlapping touch
 targets and single-line button text at 1024/768/390px. Production/waste modals and
-later wizard steps retain their existing portion-choice editors.
+overnight production retains its existing portion-choice editor. Daytime production
+(step 3) now uses the same compact native field and configured fractional shortcuts
+as step 1. Its limit remains the normal production maximum, not yesterday’s stock.
+The browser scenario also verifies step 3 layouts, fraction changes and production
+above the carried quantity.
