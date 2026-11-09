@@ -40,7 +40,7 @@
    if(native<Number(input.min||0)*10000||native>Number(input.max||99999999)*10000)return true;
    count.value=String(candidate);update();return true;
   }});
-  wrap.append(badges,input,count,preview);return wrap;
+  const caption=document.createElement('span');caption.className='kp-portion-caption';caption.textContent=labels.portion||'Portion';wrap.append(caption,badges,input,count,preview);return wrap;
  }
  window.KitchenPortions={decorate,options,restore:(input,evidence)=>bindings.get(input)?.restore(evidence),evidence:input=>bindings.get(input)?.evidence()||{},change:(input,delta)=>bindings.get(input)?.change(delta)||false};
 })();

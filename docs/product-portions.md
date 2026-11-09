@@ -53,3 +53,15 @@ Tests:
 Browser API responses are mocked; the companion API also has a guarded disposable
 MySQL scenario for actual writes, closing, carryover and the following opening.
 No deployment or test against a live shop database was performed.
+
+## Tablet portion controls and contextual day filters
+
+The shared portion editor labels its choices and uses buttons at least 72 × 56 px.
+The whole-product choice occupies a full row; configured fractions use two columns.
+Production and waste share this editor, including the standalone waste forms.
+API portion validation and conversion require no additional schema or endpoint changes.
+
+Day filters are populated from the products belonging to the current opening step
+or positive current stock, then narrowed by shelf life and category group. Invalid
+child selections reset when their parent changes. The add-product picker intentionally
+retains eligible products that are not yet in the table.

@@ -49,3 +49,12 @@ changing the local sector clears incompatible group/subcategory selections.
 The local catalogue filter can still be changed or cleared independently of the
 tablet preference. Choosing a new global sector on a product-card page reloads
 that page instead of navigating to production day.
+
+## Contextual filter choices
+
+Section, category-group and category choices now reflect shelf life and the search
+query. Groups also respect the selected section, and categories respect the group.
+Shelf-life choices without matching products are hidden; choosing a section with
+no products of the selected shelf life falls back to all shelf lives. Incompatible
+child selections reset. Search with no matches retains the user's selected filters
+and displays the existing no-results state.
