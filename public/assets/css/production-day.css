@@ -190,3 +190,10 @@ body.pd-modal-open{overflow:hidden}
 
 .pd-footer .pd-add.pd-add-selection{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end}
 .pd-footer .pd-add.pd-add-selection>label:first-child{grid-column:1}.pd-footer .pd-add.pd-add-selection>button{grid-column:2}
+
+/* Carry stock uses one native field and fraction deltas instead of nested portion cards. */
+#production-day .pd-carry-stepper{gap:6px;width:max-content;min-width:208px}
+#production-day .pd-carry-stepper button{white-space:nowrap;font-size:1rem!important}
+#production-day .pd-carry-stepper input{flex:0 0 68px;width:68px!important}
+#production-day .pd-carry-stepper .pd-fraction-delta{min-width:64px;width:64px;font-size:1rem!important;white-space:nowrap}
+@media(max-width:600px){#production-day .pd-carry-stepper .pd-fraction-delta{width:64px!important}#production-day .pd-carry-stepper .pd-stepper-buttons{align-items:center;flex-basis:64px}}

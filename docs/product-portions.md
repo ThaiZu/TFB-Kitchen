@@ -69,3 +69,19 @@ Day filters are populated from the products belonging to the current opening ste
 or positive current stock, then narrowed by shelf life and category group. Invalid
 child selections reset when their parent changes. The add-product picker intentionally
 retains eligible products that are not yet in the table.
+
+## Yesterday's stock review
+
+Opening step 1 edits the canonical carried quantity directly. It does not render
+portion-selection cards inside the narrow table cell. Fractional shortcuts come
+only from actual active catalogue `portions`, ignoring generic `stock_portions`;
+weighted products keep their existing quantity controls. The smallest configured
+fraction supplies the outer decrement/increment buttons (e.g. −0.25 / +0.25).
+For those rows ±5 is omitted, leaving ±1 and ±10 between the outer buttons and
+the native quantity field. Whole-only rows retain ±1, ±5 and ±10. All changes
+clamp between zero and yesterday's stock, and use the normal shortage workflow.
+
+`bin/production-day-carry-portions-browser-test.cjs` covers configured-only
+fractions, integral-only/weighted rows, totals, limits, non-overlapping touch
+targets and single-line button text at 1024/768/390px. Production/waste modals and
+later wizard steps retain their existing portion-choice editors.
