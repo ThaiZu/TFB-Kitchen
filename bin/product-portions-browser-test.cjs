@@ -20,10 +20,11 @@ try{for(const width of [1024,768,390]){
  });
  await page.goto('http://localhost/kitchen/production-day');await page.locator('[data-stock-product="90"] button').click();
  const editor=page.locator('.pd-adjust-input .kp-portion-editor');await editor.locator('[data-portion-id="901"]').click();
+ assert.equal(await editor.locator('.kp-portion-caption').isVisible(),true);for(const button of await editor.locator('.kp-portion-options button').all()){const box=await button.boundingBox();assert.ok(box.width>=72&&box.height>=56,'Portion choice is tablet-sized');}checks+=2;
  await editor.locator('input:not([hidden])').fill('4');assert.equal(await page.locator('.pd-adjust-after strong').innerText(),'3.125 szt.');checks++;
  await page.locator('#pd-dialog-save').click();await page.waitForSelector('dialog[open]',{state:'hidden'});
  assert.equal(writes[0].lines[0].quantity,'2');assert.deepEqual(writes[0].lines[0].portion,{id_product_portion:901,source_quantity:'4'});assert.equal(sheet.products[0].in_stock,'3.125');checks+=3;
- await page.locator('[data-stock-product="90"] button').click();await page.locator('[data-adjust-mode="waste"]').click();
+ await page.locator('[data-stock-product="90"] button').click();await page.locator('[data-adjust-mode="waste"]').click();assert.equal(await editor.locator('.kp-portion-options').isVisible(),true,'Waste operation also offers configured portions');checks++;
  await editor.locator('[data-portion-id="902"]').click();await editor.locator('input:not([hidden])').fill('3');
  assert.equal(await page.locator('.pd-adjust-after strong').innerText(),'2.375 szt.');assert.equal(await page.locator('#pd-dialog-save').isDisabled(),true);checks+=2;
  await page.locator('[data-adjust-reason="tasting"]').click();

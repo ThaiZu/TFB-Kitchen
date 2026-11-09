@@ -9,7 +9,7 @@ const base=sheet.products[0];sheet.products=[
 {...base,id_product:101,name:'Alpha',stock_quantity:'2',in_stock:'2',sector_id:1,sector_name:'Bakery',category_id:10,category_name:'Bread',category_groups:[{id:1,name:'Baked'}],shelf_life_category:'SSL',is_prepared_before_sales:true},
 {...base,id_product:102,name:'Beta',stock_quantity:'3',in_stock:'3',sector_id:1,sector_name:'Bakery',category_id:20,category_name:'Cake',category_groups:[{id:2,name:'Sweet'}],shelf_life_category:'MSL',is_prepared_before_sales:true},
 {...base,id_product:103,name:'Gamma',stock_quantity:'4',in_stock:'4',sector_id:1,sector_name:'Bakery',category_id:10,category_name:'Bread',category_groups:[{id:1,name:'Baked'}],shelf_life_category:'LSL'},
-{...base,id_product:104,name:'Zero',stock_quantity:'0',in_stock:'0',sector_id:null,category_id:null,category_name:null,category_groups:[]}
+{...base,id_product:104,name:'Zero',stock_quantity:'0',in_stock:'0',sector_id:3,sector_name:'Empty sector',category_id:90,category_name:'Empty category',category_groups:[{id:99,name:'Empty group'}]}
 ];
 const errors=[],posts=[];const page=await browser.newPage({viewport:{width,height:1000},isMobile:width<1000,hasTouch:width<1000});page.on('pageerror',e=>errors.push(e.message));
 await page.route('**/*',async route=>{const req=route.request(),url=new URL(req.url());
@@ -18,10 +18,10 @@ if(req.method()==='POST'){posts.push(req.url());return route.fulfill({json:{succ
 if(url.pathname.startsWith('/kitchen/ajax/'))return route.fulfill({json:{success:true,total:0,count:0}});
 return route.fulfill({contentType:'text/html',body:fixture.replace('data-view="opening"','data-view="stock"').replace(/(<script id="pd-seed"[^>]*>)[\s\S]*?(<\/script>)/,(_,a,b)=>a+JSON.stringify(sheet)+b)});
 });
-await page.goto('http://kitchen.test/kitchen/production-day');const ids=()=>page.locator('[data-stock-product]').evaluateAll(ns=>ns.map(n=>Number(n.dataset.stockProduct)));assert.deepEqual(await ids(),[101,103,102]);checks++;
+await page.goto('http://kitchen.test/kitchen/production-day');const ids=()=>page.locator('[data-stock-product]').evaluateAll(ns=>ns.map(n=>Number(n.dataset.stockProduct)));assert.deepEqual(await ids(),[101,103,102]);assert.equal(await page.locator('[data-stock-filter=group][data-filter-value="99"],[data-stock-filter=category][data-filter-value="90"]').count(),0,'Zero-stock-only categories and groups are not offered');checks+=2;
 async function filter(key,value){const b=page.locator('[data-stock-filter="'+key+'"][data-filter-value="'+value+'"]');if(!await b.isVisible())await page.locator('[data-filter-disclosure="'+key+'"] summary').click();await b.click();}
 await filter('group','1');assert.deepEqual(await ids(),[101,103]);assert.equal(await page.locator('[data-stock-filter="category"][data-filter-value="20"]').count(),0);await filter('category','10');await filter('life','SSL');assert.deepEqual(await ids(),[101]);checks+=3;
-await filter('life','MSL');assert.deepEqual(await ids(),[]);assert.equal(await page.locator('.pd-filter-empty').isVisible(),true);checks++;
+await filter('life','MSL');assert.deepEqual(await ids(),[102]);assert.equal(await page.locator('[data-stock-filter=group][data-filter-value="1"]').count(),0,'Groups without MSL products are not offered');assert.equal(await page.locator('[data-stock-filter=category][data-filter-value="10"]').count(),0,'Subcategories without MSL products are not offered');assert.equal(await page.locator('[data-stock-filter=group][aria-pressed=true]').getAttribute('data-filter-value'),'','Invalid previous group is cleared after shelf-life changes');checks+=4;
 await filter('group','2');assert.equal(await page.locator('[data-stock-filter="category"][data-filter-value=""]').getAttribute('aria-pressed'),'true');assert.deepEqual(await ids(),[102]);checks++;
 await filter('life','');await filter('group','');assert.deepEqual(await ids(),[101,103,102]);assert.equal(await page.locator('[data-stock-sort],[data-stock-direction],.pd-stock-sort').count(),0,'Only filtering is exposed');checks++;
 await filter('category','10');await page.locator('[data-stock-product="103"] button').click();assert.ok((await page.locator('dialog').innerText()).includes('Gamma'),'Modification uses correct product after filtering');await page.locator('#pd-dialog-cancel').click();checks++;
