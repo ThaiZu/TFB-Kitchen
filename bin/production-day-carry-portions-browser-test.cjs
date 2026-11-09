@@ -29,7 +29,19 @@ try{for(const width of [1024,768,390]){
   const layout=await control.evaluate(node=>{const buttons=[...node.querySelectorAll('button')],rects=buttons.map(b=>b.getBoundingClientRect());const bounds=node.getBoundingClientRect();return {inside:rects.every(r=>r.left>=bounds.left&&r.right<=bounds.right),fits:buttons.every(b=>{const range=document.createRange();range.selectNodeContents(b);return b.scrollWidth<=b.clientWidth&&range.getClientRects().length===1;}),separate:rects.every((a,i)=>rects.every((b,j)=>i===j||a.right<=b.left||b.right<=a.left||a.bottom<=b.top||b.bottom<=a.top)),touch:rects.every(r=>r.height>=44&&r.width>=44)};});
   assert.deepEqual(layout,{inside:true,fits:true,separate:true,touch:true});checks++;
  }
+ // Advance with unchanged carry; today's production uses the same compact controls.
+ for(const p of sheet.products)await page.locator('[data-opening-product="'+p.id_product+'"]').fill('5.75');
+ await page.locator('#pd-wizard-next').click();await page.locator('#pd-wizard-next').click();
+ assert.equal(await page.locator('[data-opening-field="production_quantity"]').count(),5);assert.equal(await page.locator('.pd-carry-stepper .kp-portion-editor').count(),0);checks+=2;
+ for(const [id,step]of [[301,null],[302,'0.5'],[303,'0.25'],[304,'0.125'],[305,null]]){
+  const input=page.locator('[data-opening-product="'+id+'"]'),control=input.locator('..');
+  assert.equal(await control.locator('.pd-fraction-delta').count(),step?2:0);assert.equal(await control.locator('[data-quantity-delta="5"]').count(),step?0:1);checks+=2;
+  if(!step)continue;
+  await control.locator('[data-quantity-delta="'+step+'"]').click();assert.equal(await input.inputValue(),step);await control.locator('[data-quantity-delta="-'+step+'"]').click();assert.equal(await input.inputValue(),'0');checks+=2;
+  await input.fill('7');await control.locator('[data-quantity-delta="'+step+'"]').click();assert.equal(await input.inputValue(),String(7+Number(step)),'Production can exceed yesterday stock');checks++;
+  const layout=await control.evaluate(node=>{const bounds=node.getBoundingClientRect(),buttons=[...node.querySelectorAll('button')],rects=buttons.map(b=>b.getBoundingClientRect());return rects.every(r=>r.left>=bounds.left&&r.right<=bounds.right&&r.width>=44&&r.height>=44)&&buttons.every(b=>{const range=document.createRange();range.selectNodeContents(b);return range.getClientRects().length===1;});});assert.equal(layout,true);checks++;
+ }
  await page.locator('[data-opening-product="303"]').locator('..').screenshot({path:path.join(dir,'carry-fractions-'+width+'.png')});assert.deepEqual(errors,[]);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);checks+=2;await page.close();
 }
-console.log('Carry stock fraction controls: '+checks+' checks PASS (configured-only fractions, native totals, limits, touch layout at 1024/768/390px).');
+console.log('Carry and today production fraction controls: '+checks+' checks PASS (configured-only fractions, native totals, limits, touch layout at 1024/768/390px).');
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exit(1)});
