@@ -17,6 +17,7 @@ class AuthMiddleware
         private AuthGuard $authGuard,
         private CookieManager  $cookieManager,
         private JwtService     $jwtService,
+        private \App\Kitchen\core\Http\ApiClient $apiClient,
     )
     {
     }
@@ -34,6 +35,8 @@ class AuthMiddleware
             SessionResponse::create($_SERVER, false, ROOT)->send();
             exit;
         }
+
+        \App\Kitchen\core\Support\ShopClock::initialize($this->apiClient);
 
         // --- TU budujesz kontekst ---
         $access = $this->cookieManager->getAccessToken();
