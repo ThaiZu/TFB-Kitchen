@@ -4,8 +4,12 @@ Products configured with active portions now show tablet-sized choices such as
 Whole product, 1/2, 1/4 and 1/8 next to quantity controls. Selecting a portion
 changes the visible input to its count, with an equivalent preview such as
 `3 × 1/4 = 0.75 pcs`. +/- shortcuts increment that count. Whole product restores
-the canonical quantity editor. Products without configured portions keep the
-existing controls; weighted products keep kilograms.
+the canonical quantity editor. The production-day API also supplies standard
+stock fractions (1/2, 1/4, 1/8) for piece products without catalogue portions;
+weighted products keep kilograms. These stock choices do not create saleable portions.
+Without a catalogue portion ID the request and movement use the canonical quantity
+(e.g. three halves = 1.5), without fabricated source IDs. Deploy the companion API
+change before Kitchen to enable these additional choices.
 
 The shared editor covers opening stock, overnight/day production, opening waste
 allocations, live stock adjustments, preparation quantities and editable closing
