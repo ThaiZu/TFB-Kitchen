@@ -89,3 +89,9 @@ overnight production retains its existing portion-choice editor. Daytime product
 as step 1. Its limit remains the normal production maximum, not yesterday’s stock.
 The browser scenario also verifies step 3 layouts, fraction changes and production
 above the carried quantity.
+
+Tomorrow preparation (step 6) also uses the compact native quantity field and
+configured fractional shortcuts. Its quantities remain independent of current stock
+and are sent as canonical equivalents through the existing preparation command.
+The focused browser scenario verifies mobile/tablet layout, fractional changes,
+save/reload and unchanged current-stock quantities.
