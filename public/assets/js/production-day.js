@@ -17,7 +17,7 @@ function message(text,error=false){notice.textContent=error?text:'';notice.hidde
 const isPdm=p=>Number(p?.is_pdm)===1;
 const portionEditor=(input,p)=>window.KitchenPortions?.decorate(input,p,{whole:tr('whole_product'),portion:tr('portion'),quantity:tr('quantity'),pieces:tr('pieces')})||input;
 const portionEvidence=input=>window.KitchenPortions?.evidence(input)||{};
-const fractional=p=>weighted(p)||(p?.portions||[]).length>0||(scale(p?.in_stock??'0')||0)%10000!==0;
+const fractional=p=>weighted(p)||(p?.stock_portions||p?.portions||[]).length>0||(scale(p?.in_stock??'0')||0)%10000!==0;
 const weighted=p=>p&&(p.unit==='kg'||Number(p.is_divisible)===1||Number(p.is_piece_based)===0);
 const scale=n=>{const m=String(n).replace(',','.').match(/^(0|[1-9]\d{0,7})(?:\.(\d{1,4}))?$/);return m?Number(m[1])*10000+Number((m[2]||'').padEnd(4,'0')):null;};
 const decimal=n=>{const a=Math.abs(n);return (n<0?'-':'')+Math.floor(a/10000)+(a%10000?'.'+String(a%10000).padStart(4,'0').replace(/0+$/,''):'');};
@@ -201,7 +201,7 @@ modal(tr('adjust_title'),container=>{
  if(!summary.isConnected)return;
  const amount=scale(qty.value),max=scale(qty.max),minimum=scale(qty.min),good=valid(qty.value,p)&&amount>=minimum&&amount<=max;
  fields.hidden=mode!=='waste';photoSection.hidden=mode!=='waste';after.classList.toggle('is-waste',mode==='waste');afterValue.textContent=good?decimal(scale(p.stock_quantity)+(mode==='waste'?-amount:amount))+' '+unit(p):'—';
- const hasPortion=!!portionEvidence(qty).portion;minus.disabled=!good||(!hasPortion&&amount<=minimum);plus.disabled=!good||(!hasPortion&&amount+(weighted(p)?1000:10000)>max);increments.forEach(([b,n])=>b.disabled=!good||(!hasPortion&&(amount+n>max||amount+n<minimum)));
+ const hasPortion=window.KitchenPortions?.active(qty)||false;minus.disabled=!good||(!hasPortion&&amount<=minimum);plus.disabled=!good||(!hasPortion&&amount+(weighted(p)?1000:10000)>max);increments.forEach(([b,n])=>b.disabled=!good||(!hasPortion&&(amount+n>max||amount+n<minimum)));
  limit.hidden=mode!=='waste';limit.textContent=tr('adjust_max').replace('%s',decimal(scale(p.stock_quantity))+' '+unit(p));
  const error=!good?tr('invalid'):mode==='waste'&&!reason?tr('reason_required'):mode==='waste'&&!photosReady(evidence)?tr('adjust_missing_photo'):'';
  hint.textContent=error;hint.classList.toggle('is-error',!!error);$('pd-dialog-save').disabled=!!error||sending||!!pending;$('pd-dialog-save').textContent=tr(mode==='waste'?'adjust_save_waste':'adjust_save_produce')+' · '+(good?decimal(amount):'—')+' '+unit(p);

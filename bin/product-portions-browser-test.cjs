@@ -68,6 +68,20 @@ try{for(const width of [1024,768,390]){
  const added=writes.at(-1).lines[0];assert.equal(writes.length,beforeAdd+1);assert.equal(added.id_product,91);assert.equal(added.mode,'produce');assert.equal(added.quantity,'0.75');assert.deepEqual(added.portion,{id_product_portion:10902,source_quantity:'3'});assert.equal(abricot.in_stock,'0.75');assert.equal(await page.locator('[data-stock-product="91"]').count(),1);checks+=7;
  await page.locator('#pd-add-toggle').click();await pick('Weighted addition');await panel.getByRole('button',{name:'Ustaw ilość',exact:true}).click();assert.equal(await page.locator('.pd-adjust-input .kp-portion-editor').count(),0);
  await page.locator('.pd-adjust-input input').fill('0.125');await page.locator('#pd-dialog-save').click();await page.waitForSelector('dialog[open]',{state:'hidden'});assert.equal(writes.at(-1).lines[0].quantity,'0.125');assert.equal(writes.at(-1).lines[0].id_product,92);checks+=3;
+ // A piece product without saleable portion records still has stock fractions from API.
+ const plain=sheet.products.find(p=>p.id_product===91);plain.portions=[];plain.in_stock=plain.stock_quantity='2';plain.stock_portions=[{id:null,type:'ONE_HALF',label:'1/2',numerator:1,denominator:2},{id:null,type:'ONE_QUARTER',label:'1/4',numerator:1,denominator:4},{id:null,type:'ONE_EIGHTH',label:'1/8',numerator:1,denominator:8}];
+ await page.reload();await page.locator('[data-stock-product="91"] button').click();
+ await editor.locator('[data-portion-id="ONE_HALF"]').click();await editor.locator('input:not([hidden])').fill('3');
+ assert.equal(await page.locator('.pd-adjust-shortcuts [data-quantity-delta="-1"]').isEnabled(),true);await page.locator('.pd-adjust-shortcuts [data-quantity-delta="-1"]').click();assert.equal(await editor.locator('input:not([hidden])').inputValue(),'2');await page.locator('.pd-adjust-shortcuts [data-quantity-delta="1"]').click();checks+=2;
+ await page.screenshot({path:path.join(dir,'stock-default-portions-'+width+'.png')});
+ await page.locator('#pd-dialog-save').click();await page.waitForSelector('dialog[open]',{state:'hidden'});
+ assert.equal(writes.at(-1).lines[0].quantity,'1.5');assert.equal(writes.at(-1).lines[0].portion,undefined);checks+=2;
+ await page.locator('[data-stock-product="91"] button').click();await page.locator('[data-adjust-mode="waste"]').click();
+ await editor.locator('[data-portion-id="ONE_QUARTER"]').click();await editor.locator('input:not([hidden])').fill('2');
+ assert.equal(await page.locator('.pd-adjust-after strong').innerText(),'3 szt.');checks++;
+ await page.locator('[data-adjust-reason="tasting"]').click();await page.locator('[data-waste-photo-input="gallery"]').setInputFiles({name:'waste.png',mimeType:'image/png',buffer:Buffer.from(png,'base64')});
+ await page.waitForFunction(()=>!document.getElementById('pd-dialog-save').disabled);await page.locator('#pd-dialog-save').click();await page.waitForSelector('dialog[open]',{state:'hidden'});
+ assert.equal(writes.at(-1).lines[0].quantity,'0.5');assert.equal(writes.at(-1).lines[0].portion,undefined);assert.equal(plain.in_stock,'3');checks+=3;
  assert.deepEqual(errors,[]);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);checks+=2;await page.close();
 }
 console.log('Kitchen product portions: '+checks+' checks PASS (production, waste/photos, source evidence, limits, +/- portions, 1024/768/390px).');
