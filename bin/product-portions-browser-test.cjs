@@ -10,7 +10,7 @@ try{for(const width of [1024,768,390]){
  await page.route('**/*',route=>{const req=route.request(),p=new URL(req.url()).pathname;
   if(p.includes('/assets/')){const f=path.join(root,'public',p.slice(p.indexOf('/assets/')+1));return route.fulfill({contentType:f.endsWith('.js')?'application/javascript':'text/css',body:fs.existsSync(f)?fs.readFileSync(f):''});}
   if(req.method()==='POST'){const body=req.postDataJSON();if(p.endsWith('/photos'))return route.fulfill({json:{success:true,data:{id:body.upload_id}}});
-   writes.push(body);if(p.endsWith('/adjust')){const line=body.lines[0],product=sheet.products[0];product.in_stock=product.stock_quantity=String(Number(product.in_stock)+(line.mode==='waste'?-1:1)*Number(line.quantity));sheet.revision++;product.last_movement_id=String(Number(product.last_movement_id)+1);}
+   writes.push(body);if(p.endsWith('/adjust')){const line=body.lines[0],product=sheet.products.find(p=>p.id_product===line.id_product);product.in_stock=product.stock_quantity=String(Number(product.in_stock)+(line.mode==='waste'?-1:1)*Number(line.quantity));sheet.revision++;product.last_movement_id=String(Number(product.last_movement_id)+1);}
    if(p.endsWith('/open')){sheet.status='OPEN';sheet.revision++;}
    return route.fulfill({json:{success:true,data:sheet}});
   }
@@ -50,6 +50,23 @@ try{for(const width of [1024,768,390]){
  await page.waitForFunction(()=>document.getElementById('pd-status').textContent==='Dzień otwarty');
  const opening=writes[2].lines[0];assert.equal(opening.quantity,'1.125');assert.deepEqual(opening.opening_details.portion_details,{overnight_quantity:{id_product_portion:901,source_quantity:'1'},production_quantity:{id_product_portion:902,source_quantity:'1'}});
  assert.deepEqual(opening.waste_allocations[0].portion,{id_product_portion:902,source_quantity:'8'});assert.equal(opening.waste_allocations[0].quantity,'2');checks+=4;
+ // Adding a zero-stock product asks for product first, then quantity exactly once.
+ const abricot={...sheet.products[0],id_product:91,name:'Abricot',in_stock:'0',stock_quantity:'0',last_movement_id:'0',portions:sheet.products[0].portions.map(p=>({...p,id:p.id+10000}))};
+ sheet.products.push(abricot,{...abricot,id_product:92,name:'Weighted addition',unit:'kg',is_piece_based:0,is_divisible:1,portions:[]});await page.reload();
+ const panel=page.locator('#pd-add-panel');await page.locator('#pd-add-toggle').click();
+ assert.equal(await panel.locator('input[type=number]').count(),0);assert.equal(await panel.locator('.kp-portion-editor').count(),0);assert.equal(await panel.getByRole('button',{name:'Ustaw ilość',exact:true}).isDisabled(),true);checks+=3;
+ async function pick(name){await panel.locator('.choices__inner').click();await panel.locator('.choices__input--cloned').fill(name);await panel.locator('.choices__list--dropdown [data-choice-selectable]').filter({hasText:name}).click();}
+ const nextBounds=await panel.getByRole('button',{name:'Ustaw ilość',exact:true}).boundingBox(),selectBounds=await panel.locator('.choices__inner').boundingBox();assert.ok(nextBounds.height>=44&&nextBounds.x>=0&&nextBounds.x+nextBounds.width<=width,'Selection action fits the tablet footer');assert.ok(Math.abs(nextBounds.y+nextBounds.height-selectBounds.y-selectBounds.height)<4,'Product and next action share a row');checks+=2;
+ await page.screenshot({path:path.join(dir,'abricot-product-picker-'+width+'.png')});
+ await pick('Abricot');const beforeAdd=writes.length;await panel.getByRole('button',{name:'Ustaw ilość',exact:true}).click();
+ assert.equal(await panel.isVisible(),false);assert.equal(await page.locator('[data-adjust-mode="produce"]').count(),1);assert.equal(await page.locator('[data-adjust-mode="waste"]').count(),0);assert.equal(writes.length,beforeAdd);assert.ok((await page.locator('.pd-portion-hint').innerText()).includes('liczbę takich porcji'));checks+=5;
+ await page.locator('#pd-dialog-cancel').click();assert.equal(writes.length,beforeAdd);assert.equal(abricot.in_stock,'0');checks+=2;
+ await page.locator('#pd-add-toggle').click();await panel.getByRole('button',{name:'Ustaw ilość',exact:true}).click();
+ await editor.locator('[data-portion-id="10902"]').click();await editor.locator('input:not([hidden])').fill('3');assert.equal(await page.locator('.pd-adjust-after strong').innerText(),'0.75 szt.');checks++;
+ await page.screenshot({path:path.join(dir,'abricot-add-product-'+width+'.png')});await page.locator('#pd-dialog-save').click();await page.waitForSelector('dialog[open]',{state:'hidden'});
+ const added=writes.at(-1).lines[0];assert.equal(writes.length,beforeAdd+1);assert.equal(added.id_product,91);assert.equal(added.mode,'produce');assert.equal(added.quantity,'0.75');assert.deepEqual(added.portion,{id_product_portion:10902,source_quantity:'3'});assert.equal(abricot.in_stock,'0.75');assert.equal(await page.locator('[data-stock-product="91"]').count(),1);checks+=7;
+ await page.locator('#pd-add-toggle').click();await pick('Weighted addition');await panel.getByRole('button',{name:'Ustaw ilość',exact:true}).click();assert.equal(await page.locator('.pd-adjust-input .kp-portion-editor').count(),0);
+ await page.locator('.pd-adjust-input input').fill('0.125');await page.locator('#pd-dialog-save').click();await page.waitForSelector('dialog[open]',{state:'hidden'});assert.equal(writes.at(-1).lines[0].quantity,'0.125');assert.equal(writes.at(-1).lines[0].id_product,92);checks+=3;
  assert.deepEqual(errors,[]);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);checks+=2;await page.close();
 }
 console.log('Kitchen product portions: '+checks+' checks PASS (production, waste/photos, source evidence, limits, +/- portions, 1024/768/390px).');
