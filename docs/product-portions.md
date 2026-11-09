@@ -15,6 +15,19 @@ unchanged. Stock/count/closing/preparation totals stay in whole-product equivale
 selected adjustments, opening production and opening waste allocations also
 submit source portion evidence for the movement history.
 
+## Adding a product to current stock
+
+The footer first asks only for a product. Its **Set quantity** action opens the
+production form, where quantity and optional portion size are entered once.
+The picker contains no duplicate quantity/portion controls. New products expose
+only the production operation; cancellation writes nothing. Opening-day additions
+keep their existing inline quantity entry because they update an unsaved draft.
+
+For example, Abricot → 1/4 → 3 portions writes one production operation with a
+native delta of 0.75 and keeps the portion ID/count for history. Abricot appears
+once in the stock table. The quantity form explains that the badges choose portion
+size and that the entered number counts those portions.
+
 The original native quantity input remains the source for existing draft and
 validation handlers. Its optional count editor never sends a trusted conversion
 factor: API must verify the configured active portion and matching equivalent.
@@ -30,7 +43,8 @@ Tests:
 
 - `bin/product-portions-browser-test.cjs`: actual day templates, touch controls,
   source evidence, production, photographed waste, limits, opening shortages and
-  separate night/day production at desktop/tablet/mobile widths.
+  separate night/day production and single-entry add-product flow (Abricot and
+  weighted products) at desktop/tablet/mobile widths.
 - `bin/waste-portions-browser-test.cjs`: both standalone report forms with
   canonical native quantities and source portion counts, 390/1024px.
 - Existing day/shortage/stock-filter/wizard browser tests and PHP proxy/template/

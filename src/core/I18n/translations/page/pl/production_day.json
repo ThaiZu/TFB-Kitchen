@@ -260,5 +260,7 @@
   "day_whole_product": "Cały produkt",
   "day_portion": "Porcja",
   "day_worker_opening_required": "Aby otworzyć dzień, wybierz pracownika i potwierdź jego PIN.",
-  "day_select_employee": "Wybierz pracownika"
+  "day_select_employee": "Wybierz pracownika",
+  "day_set_quantity": "Ustaw ilość",
+  "day_portion_hint": "Wybierz wielkość porcji, a następnie podaj liczbę takich porcji. Stan produktu przeliczymy automatycznie."
 }

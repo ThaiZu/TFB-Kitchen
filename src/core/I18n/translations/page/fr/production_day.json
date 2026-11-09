@@ -260,5 +260,7 @@
   "day_whole_product": "Produit entier",
   "day_portion": "Portion",
   "day_worker_opening_required": "Pour ouvrir la journée, sélectionnez un employé et confirmez son PIN.",
-  "day_select_employee": "Choisir un employé"
+  "day_select_employee": "Choisir un employé",
+  "day_set_quantity": "Définir la quantité",
+  "day_portion_hint": "Choisissez la taille de la portion, puis indiquez le nombre de ces portions. Le stock du produit est converti automatiquement."
 }
