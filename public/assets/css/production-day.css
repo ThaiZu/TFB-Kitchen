@@ -204,3 +204,8 @@ body.pd-modal-open{overflow:hidden}
 .pd-count-dialog .pd-carry-progress{padding:12px;margin-bottom:12px}.pd-count-dialog .pd-carry-stepper{margin:16px auto}.pd-count-summary>div{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #e2d7cc}.pd-count-summary strong{flex:1;overflow-wrap:anywhere}.pd-count-dialog .pd-count-product{padding:0}.pd-count-dialog footer #pd-dialog-save{flex:1}
 
 #production-day #pd-optional-stock-count{margin-bottom:12px}
+#production-day .pd-product-photo{display:block;width:120px;height:90px;object-fit:contain;background:#faf7f3;border-radius:8px;margin:10px 0}#production-day .pd-product-photo[hidden]{display:none}#production-day .pd-table .pd-product-photo{width:88px;height:66px}.pd-count-dialog .pd-product-photo,.pd-carry-card .pd-product-photo{margin:10px auto!important}
+
+.pd-count-summary-product{flex:1;min-width:0}#production-day .pd-count-summary .pd-product-photo{width:88px;height:66px;margin:8px 0!important}
+
+#production-day .pd-stepper button{scroll-margin-top:calc(var(--pd-topbar-height,80px) + 16px);scroll-margin-bottom:calc(var(--pd-dock-height,180px) + 16px)}
