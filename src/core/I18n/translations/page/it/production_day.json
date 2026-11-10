@@ -262,5 +262,11 @@
   "day_worker_opening_required": "Per aprire la giornata, seleziona un dipendente e conferma il suo PIN.",
   "day_select_employee": "Scegli dipendente",
   "day_set_quantity": "Imposta quantità",
-  "day_portion_hint": "Scegli la dimensione della porzione, poi inserisci il numero di queste porzioni. Lo stock del prodotto viene convertito automaticamente."
+  "day_portion_hint": "Scegli la dimensione della porzione, poi inserisci il numero di queste porzioni. Lo stock del prodotto viene convertito automaticamente.",
+  "day_carry_walk_progress": "Confermati {done} prodotti su {total}",
+  "day_carry_walk_summary": "Riepilogo scorte riportate",
+  "day_carry_walk_summary_hint": "Controlla le quantità. Giustifica le differenze prima di passare alla produzione notturna.",
+  "day_carry_walk_edit": "Modifica",
+  "day_carry_walk_shortage": "Mancano: {quantity}. Indica il motivo e aggiungi le foto degli scarti prima di continuare.",
+  "day_carry_walk_next": "Conferma e prodotto successivo"
 }

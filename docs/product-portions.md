@@ -95,3 +95,29 @@ configured fractional shortcuts. Its quantities remain independent of current st
 and are sent as canonical equivalents through the existing preparation command.
 The focused browser scenario verifies mobile/tablet layout, fractional changes,
 save/reload and unchanged current-stock quantities.
+
+## Guided carryover review
+
+Opening step 1 now shows one positive-stock product at a time, ordered using the
+existing product order. A progress bar tracks explicit confirmations. Each card
+shows the previous quantity, editable native carry quantity and the same configured
+fraction shortcuts as the production/preparation controls. Validation prevents
+negative quantities and quantities above previous stock. Whole-only and weighted
+products do not gain catalogue-fraction buttons.
+
+Previous-product navigation and edit actions on the final summary retain the
+in-memory quantities. Changing a quantity invalidates that product's confirmation
+and waste evidence. Every product must be confirmed before continuing. The summary
+always includes the entire carryover scope; table filters cannot skip review items.
+An empty carryover proceeds directly from its empty summary to overnight production.
+
+Shortages still use the existing reason/photo wizard before overnight production.
+Restoring a shortage updates the carry summary immediately. Reviewing/confirming
+cards causes no stock/API writes; the normal final opening command persists the
+checked quantities and applies inventory movements atomically. Reloading resets an
+unfinished review, consistently with the existing opening draft behavior.
+
+The browser helper `bin/helpers/carry-review.cjs` follows all user-visible card
+confirmations. Tests cover back/edit retention, invalid quantities, zero stock,
+summary progress, configured fractions, mobile touch layout, shortages/restoration,
+opening writes and existing preparation/closing flows in all template languages.

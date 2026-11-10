@@ -262,5 +262,11 @@
   "day_worker_opening_required": "Aby otworzyć dzień, wybierz pracownika i potwierdź jego PIN.",
   "day_select_employee": "Wybierz pracownika",
   "day_set_quantity": "Ustaw ilość",
-  "day_portion_hint": "Wybierz wielkość porcji, a następnie podaj liczbę takich porcji. Stan produktu przeliczymy automatycznie."
+  "day_portion_hint": "Wybierz wielkość porcji, a następnie podaj liczbę takich porcji. Stan produktu przeliczymy automatycznie.",
+  "day_carry_walk_progress": "Potwierdzono {done} z {total} produktów",
+  "day_carry_walk_summary": "Podsumowanie przenoszonego zapasu",
+  "day_carry_walk_summary_hint": "Sprawdź ilości. Ewentualne braki wyjaśnisz przed przejściem do produkcji nocnej.",
+  "day_carry_walk_edit": "Zmień",
+  "day_carry_walk_shortage": "Brak: {quantity}. Przy przejściu dalej podasz powód i dodasz zdjęcie odpadu.",
+  "day_carry_walk_next": "Potwierdź i następny produkt"
 }

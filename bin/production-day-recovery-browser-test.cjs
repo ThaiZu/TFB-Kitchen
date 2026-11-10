@@ -1,3 +1,4 @@
+const reviewCarry=require('./helpers/carry-review.cjs');
 const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const fixtureDir=process.env.KITCHEN_DAY_FIXTURE_DIR||path.join(require('node:os').tmpdir(),'kitchen-day-mvp'),kitchen=path.resolve(__dirname,'..'),fixture=fs.readFileSync(path.join(fixtureDir,'kitchen-runtime-day.html'),'utf8'),seed=JSON.parse(fixture.match(/<script id="pd-seed"[^>]*>([\s\S]*?)<\/script>/)[1]);
 (async()=>{const browser=await chromium.launch({headless:true,executablePath:'/usr/bin/chromium',args:['--no-sandbox']});let checks=0;
@@ -38,7 +39,7 @@ try{for(const width of [1024,768,390]){
  await page.waitForFunction(date=>document.getElementById('pd-business-date').textContent===date,today);
  assert.equal(closed,true);assert.equal(await page.locator('#pd-wizard-next').isEnabled(),true);assert.equal(writes.filter(w=>w.op==='close').length,2);checks+=3;
  // A concurrent overdue day is resolved before the employee can continue the opening wizard.
- closed=false;blocked=false;race=true;await page.reload();await page.locator('#pd-wizard-next').click();await page.locator('#pd-wizard-next').click();await page.locator('#pd-wizard-next').click();
+ closed=false;blocked=false;race=true;await page.reload();await reviewCarry(page);await page.locator('#pd-wizard-next').click();await page.locator('#pd-wizard-next').click();
  await page.waitForFunction(date=>document.getElementById('pd-business-date').textContent===date,old);
  assert.equal(await page.locator('[data-wizard-step="4"]').getAttribute('aria-current'),'step');assert.equal(await page.locator('[data-wizard-step="5"]').isDisabled(),true);assert.equal(writes.at(-1).op,'open');assert.ok(reads.every(url=>!url.searchParams.has('date')));checks+=4;
  technicalOnly=true;await page.reload();assert.equal(await page.locator('.pd-recovery-notice').isVisible(),true);assert.match(await page.locator('.pd-recovery-notice').innerText(),/administrator/);assert.deepEqual(errors,[]);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);checks+=4;await page.close();
