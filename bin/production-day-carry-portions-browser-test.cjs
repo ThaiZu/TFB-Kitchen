@@ -16,11 +16,14 @@ try{for(const width of [1024,768,390]){
   return route.fulfill({contentType:'text/html',body:fixture.replace(/(<script id="pd-seed"[^>]*>)[\s\S]*?(<\/script>)/,'$1'+JSON.stringify(sheet)+'$2')});
  });
  await page.goto('http://kitchen.test/kitchen/production-day');
- assert.equal(await page.locator('.pd-carry-stepper').count(),5);assert.equal(await page.locator('.pd-carry-stepper .kp-portion-editor').count(),0);checks+=2;
- for(const [id,step] of [[301,null],[302,'0.5'],[303,'0.25'],[304,'0.125'],[305,null]]){
+ const firstInput=page.locator('[data-carry-card] input');const firstId=await firstInput.getAttribute('data-opening-product');await firstInput.fill('6');assert.equal(await page.locator('#pd-wizard-next').isDisabled(),true);await firstInput.fill('1.25');await page.locator('#pd-wizard-next').click();assert.equal(await page.locator('[data-carry-card]').count(),1);await page.locator('#pd-carry-back').click();assert.equal(await page.locator('[data-opening-product="'+firstId+'"]').inputValue(),'1.25');await page.locator('[data-opening-product="'+firstId+'"]').fill('5.75');assert.equal(writes.length,0);checks+=4;
+ assert.equal(await page.locator('.pd-carry-stepper').count(),1);assert.equal(await page.locator('.pd-carry-stepper .kp-portion-editor').count(),0);checks+=2;
+ while(await page.locator('[data-carry-card]').count()){
+ const id=Number(await page.locator('[data-carry-card]').getAttribute('data-carry-card')),step=({302:'0.5',303:'0.25',304:'0.125'})[id]||null;
   const input=page.locator('[data-opening-product="'+id+'"]'),control=input.locator('..');
+  if(id===303)await page.locator('.pd-carry-card').screenshot({path:path.join(dir,'carry-review-card-'+width+'.png')});
   assert.equal(await control.locator('.pd-fraction-delta').count(),step?2:0);assert.equal(await control.locator('[data-quantity-delta="5"]').count(),step?0:1);checks+=2;
-  if(!step)continue;
+  if(!step){await page.locator('#pd-wizard-next').click();continue;}
   assert.equal(await control.locator('button').first().innerText(),'−'+step);assert.equal(await control.locator('button').last().innerText(),'+'+step);checks+=2;
   await control.locator('[data-quantity-delta="-'+step+'"]').click();assert.equal(await input.inputValue(),String(5.75-Number(step)));checks++;
   await control.locator('[data-quantity-delta="'+step+'"]').click();assert.equal(await input.inputValue(),'5.75');checks++;
@@ -28,10 +31,12 @@ try{for(const width of [1024,768,390]){
   await control.locator('[data-quantity-delta="-10"]').click();await control.locator('[data-quantity-delta="-'+step+'"]').click();assert.equal(await input.inputValue(),'0','Cannot go negative');checks++;
   await control.locator('[data-quantity-delta="'+step+'"]').click();assert.equal(await input.inputValue(),step);checks++;
   const layout=await control.evaluate(node=>{const buttons=[...node.querySelectorAll('button')],rects=buttons.map(b=>b.getBoundingClientRect());const bounds=node.getBoundingClientRect();return {inside:rects.every(r=>r.left>=bounds.left&&r.right<=bounds.right),fits:buttons.every(b=>{const range=document.createRange();range.selectNodeContents(b);return b.scrollWidth<=b.clientWidth&&range.getClientRects().length===1;}),separate:rects.every((a,i)=>rects.every((b,j)=>i===j||a.right<=b.left||b.right<=a.left||a.bottom<=b.top||b.bottom<=a.top)),touch:rects.every(r=>r.height>=44&&r.width>=44)};});
-  assert.deepEqual(layout,{inside:true,fits:true,separate:true,touch:true});checks++;
+  assert.deepEqual(layout,{inside:true,fits:true,separate:true,touch:true});checks++;await input.fill('5.75');await page.locator('#pd-wizard-next').click();
  }
  // Advance with unchanged carry; today's production uses the same compact controls.
- for(const p of sheet.products)await page.locator('[data-opening-product="'+p.id_product+'"]').fill('5.75');
+ assert.equal(await page.locator('[data-carry-edit]').count(),5);assert.ok((await page.locator('.pd-carry-progress').innerText()).includes('5 z 5'));assert.equal(writes.length,0);checks+=3;
+ await page.locator('[data-carry-edit="303"]').click();assert.equal(await page.locator('[data-carry-card]').getAttribute('data-carry-card'),'303');assert.equal(await page.locator('[data-opening-product="303"]').inputValue(),'5.75');checks+=2;
+ while(await page.locator('[data-carry-card]').count())await page.locator('#pd-wizard-next').click();
  await page.locator('#pd-wizard-next').click();await page.locator('#pd-wizard-next').click();
  assert.equal(await page.locator('[data-opening-field="production_quantity"]').count(),5);assert.equal(await page.locator('.pd-carry-stepper .kp-portion-editor').count(),0);checks+=2;
  for(const [id,step]of [[301,null],[302,'0.5'],[303,'0.25'],[304,'0.125'],[305,null]]){
@@ -59,6 +64,7 @@ try{for(const width of [1024,768,390]){
  await Promise.all([page.waitForResponse(r=>r.url().endsWith('/prepare')&&r.request().method()==='POST'),page.locator('#pd-wizard-next').click()]);
  assert.equal(writes.length,1);assert.equal(writes[0].lines.find(l=>l.id_product===303).quantity,'7.25');assert.deepEqual(sheet.products.map(p=>p.in_stock),beforeStock);checks+=3;
  await page.reload();await page.locator('[data-wizard-step="5"]').click();assert.equal(await page.locator('[data-preparation-product="303"]').inputValue(),'7.25');assert.deepEqual(errors,[]);checks+=2;
+ Object.assign(sheet,{status:'NOT_OPEN',opening:null});sheet.products.forEach(p=>p.in_stock=p.stock_quantity='0');await page.reload();assert.equal(await page.locator('[data-carry-card]').count(),0);assert.equal(await page.locator('#pd-wizard-next').isEnabled(),true);await page.locator('#pd-wizard-next').click();assert.equal(await page.locator('[data-wizard-step="1"]').getAttribute('aria-current'),'step');checks+=3;
  await page.close();
 }
 console.log('Carry, today and tomorrow fraction controls: '+checks+' checks PASS (configured-only fractions, native totals, limits, touch layout at 1024/768/390px).');

@@ -262,5 +262,11 @@
   "day_worker_opening_required": "To open the day, select an employee and confirm their PIN.",
   "day_select_employee": "Select employee",
   "day_set_quantity": "Set quantity",
-  "day_portion_hint": "Choose a portion size, then enter the number of those portions. Product stock is converted automatically."
+  "day_portion_hint": "Choose a portion size, then enter the number of those portions. Product stock is converted automatically.",
+  "day_carry_walk_progress": "Confirmed {done} of {total} products",
+  "day_carry_walk_summary": "Carryover stock summary",
+  "day_carry_walk_summary_hint": "Check the quantities. Explain any shortages before continuing to overnight production.",
+  "day_carry_walk_edit": "Edit",
+  "day_carry_walk_shortage": "Shortage: {quantity}. Explain the reason and add waste photos before continuing.",
+  "day_carry_walk_next": "Confirm and next product"
 }

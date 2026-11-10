@@ -1,3 +1,4 @@
+const reviewCarry=require('./helpers/carry-review.cjs');
 const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const dir=process.env.KITCHEN_DAY_FIXTURE_DIR||'/workspace/work/kitchen-layout',root=path.resolve(__dirname,'..');
 const fixture=fs.readFileSync(path.join(dir,'kitchen-runtime-day.html'),'utf8'),seed=JSON.parse(fixture.match(/<script id="pd-seed"[^>]*>([\s\S]*?)<\/script>/)[1]);
@@ -40,7 +41,7 @@ try{for(const width of [1024,768,390]){
  await page.screenshot({path:path.join(dir,'portion-adjust-'+width+'.png')});await page.locator('#pd-dialog-cancel').click();
  // The same portions work in opening shortage allocation and both production steps.
  Object.assign(sheet,{status:'NOT_OPEN',revision:0,opening:null});sheet.products[0].is_pdm=true;sheet.products[0].default_opening=true;
- await page.reload();await page.locator('[data-opening-product="90"]').fill('0.375');await page.locator('#pd-wizard-next').click();
+ await page.reload();await reviewCarry(page,{90:'0.375'});
  const shortage=page.locator('.pd-decision');await shortage.locator('[data-waste-reason="expiration"]').click();
  const allocation=shortage.locator('[data-allocation-quantity="expiration"]').locator('..');await allocation.locator('[data-portion-id="902"]').click();await allocation.locator('input:not([hidden])').fill('8');
  await shortage.locator('[data-waste-photo-input="gallery"]').setInputFiles({name:'shortage.png',mimeType:'image/png',buffer:Buffer.from(png,'base64')});
