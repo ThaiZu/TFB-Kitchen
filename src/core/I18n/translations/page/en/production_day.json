@@ -268,5 +268,6 @@
   "day_carry_walk_summary_hint": "Check the quantities. Explain any shortages before continuing to overnight production.",
   "day_carry_walk_edit": "Edit",
   "day_carry_walk_shortage": "Shortage: {quantity}. Explain the reason and add waste photos before continuing.",
-  "day_carry_walk_next": "Confirm and next product"
+  "day_carry_walk_next": "Confirm and next product",
+  "day_count_summary": "Physical stock count summary"
 }

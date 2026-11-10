@@ -268,5 +268,6 @@
   "day_carry_walk_summary_hint": "Vérifiez les quantités. Justifiez les écarts avant de passer à la production de nuit.",
   "day_carry_walk_edit": "Modifier",
   "day_carry_walk_shortage": "Écart : {quantity}. Indiquez le motif et ajoutez les photos des déchets avant de continuer.",
-  "day_carry_walk_next": "Confirmer et produit suivant"
+  "day_carry_walk_next": "Confirmer et produit suivant",
+  "day_count_summary": "Récapitulatif du stock réel"
 }

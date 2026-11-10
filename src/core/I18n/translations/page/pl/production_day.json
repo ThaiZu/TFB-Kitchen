@@ -268,5 +268,6 @@
   "day_carry_walk_summary_hint": "Sprawdź ilości. Ewentualne braki wyjaśnisz przed przejściem do produkcji nocnej.",
   "day_carry_walk_edit": "Zmień",
   "day_carry_walk_shortage": "Brak: {quantity}. Przy przejściu dalej podasz powód i dodasz zdjęcie odpadu.",
-  "day_carry_walk_next": "Potwierdź i następny produkt"
+  "day_carry_walk_next": "Potwierdź i następny produkt",
+  "day_count_summary": "Podsumowanie rzeczywistego stanu"
 }

@@ -268,5 +268,6 @@
   "day_carry_walk_summary_hint": "Controleer de aantallen. Verklaar tekorten voordat u doorgaat naar de nachtproductie.",
   "day_carry_walk_edit": "Wijzigen",
   "day_carry_walk_shortage": "Tekort: {quantity}. Geef de reden en voeg afvalfoto’s toe voordat u verdergaat.",
-  "day_carry_walk_next": "Bevestigen en volgend product"
+  "day_carry_walk_next": "Bevestigen en volgend product",
+  "day_count_summary": "Overzicht werkelijke voorraad"
 }
