@@ -268,5 +268,6 @@
   "day_carry_walk_summary_hint": "Controlla le quantità. Giustifica le differenze prima di passare alla produzione notturna.",
   "day_carry_walk_edit": "Modifica",
   "day_carry_walk_shortage": "Mancano: {quantity}. Indica il motivo e aggiungi le foto degli scarti prima di continuare.",
-  "day_carry_walk_next": "Conferma e prodotto successivo"
+  "day_carry_walk_next": "Conferma e prodotto successivo",
+  "day_count_summary": "Riepilogo delle scorte effettive"
 }

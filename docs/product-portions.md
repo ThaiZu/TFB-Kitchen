@@ -121,3 +121,24 @@ The browser helper `bin/helpers/carry-review.cjs` follows all user-visible card
 confirmations. Tests cover back/edit retention, invalid quantities, zero stock,
 summary progress, configured fractions, mobile touch layout, shortages/restoration,
 opening writes and existing preparation/closing flows in all template languages.
+
+## Physical stock reconciliation modal
+
+The separate modal titled “Vérifiez le stock réel des produits” (`beginStockCheck`)
+now presents one physical count at a time, then an editable final summary. It uses
+the compact native-quantity control with configured-only fraction shortcuts, not
+the catalogue portion selector. Actual stock can exceed recorded stock; no carryover
+cap applies. Weighted products retain kilogram inputs. Navigation does not focus a
+number field automatically, avoiding unnecessary tablet keyboard activation.
+
+Each product requires confirmation, but per-product confirmation does not send a
+command. Only the final count confirmation submits the entire original product
+scope, token and stock/movement preconditions via the existing atomic `count`
+endpoint. Final submission retains the spinner, double-submit lock and retry/read
+handling. Counts remain inventory corrections, not production or waste; reasons and
+photos are not introduced. Back/edit retains quantities while the modal stays open;
+cancelling/reopening starts a new local review, consistent with the previous modal.
+
+`bin/production-day-physical-count-wizard-browser-test.cjs` checks the actual count
+modal at 1024/768/390px, configured-only fractional controls, limits, back/summary
+editing, zero early writes and the final full-scope native-quantity payload.
