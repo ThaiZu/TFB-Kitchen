@@ -202,3 +202,5 @@ body.pd-modal-open{overflow:hidden}
 @media(max-width:600px){.pd-carry-progress,.pd-carry-card{padding:14px}.pd-carry-card h2{font-size:1.3rem}}
 
 .pd-count-dialog .pd-carry-progress{padding:12px;margin-bottom:12px}.pd-count-dialog .pd-carry-stepper{margin:16px auto}.pd-count-summary>div{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #e2d7cc}.pd-count-summary strong{flex:1;overflow-wrap:anywhere}.pd-count-dialog .pd-count-product{padding:0}.pd-count-dialog footer #pd-dialog-save{flex:1}
+
+#production-day #pd-optional-stock-count{margin-bottom:12px}

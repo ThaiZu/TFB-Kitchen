@@ -269,5 +269,7 @@
   "day_carry_walk_edit": "Modifica",
   "day_carry_walk_shortage": "Mancano: {quantity}. Indica il motivo e aggiungi le foto degli scarti prima di continuare.",
   "day_carry_walk_next": "Conferma e prodotto successivo",
-  "day_count_summary": "Riepilogo delle scorte effettive"
+  "day_count_summary": "Riepilogo delle scorte effettive",
+  "day_optional_count_title": "Conta gli altri prodotti",
+  "day_optional_count_hint": "Conteggio facoltativo dei prodotti fuori dalla produzione giornaliera. Inserisci la quantità effettiva; non è produzione né scarto."
 }

@@ -269,5 +269,7 @@
   "day_carry_walk_edit": "Edit",
   "day_carry_walk_shortage": "Shortage: {quantity}. Explain the reason and add waste photos before continuing.",
   "day_carry_walk_next": "Confirm and next product",
-  "day_count_summary": "Physical stock count summary"
+  "day_count_summary": "Physical stock count summary",
+  "day_optional_count_title": "Count other stock",
+  "day_optional_count_hint": "Optional count of products outside daily production. Enter actual stock; this records neither production nor waste."
 }

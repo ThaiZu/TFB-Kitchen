@@ -68,7 +68,7 @@ class ProductionDayService
         $shop=(int)(GlobalRegistry::get('user')['shop_id']??0);
         $shift=$shop>0?ShiftSession::current($shop):null;
         if ($shift===null) return ['success'=>false,'code'=>403,'description'=>'KITCHEN_SHIFT_REQUIRED'];
-        if (!in_array($operation,['open','adjust','close','prepare','prepare_add','close_draft','count'],true)) return ['success'=>false,'code'=>422];
+        if (!in_array($operation,['open','adjust','close','prepare','prepare_add','close_draft','count','stock_count'],true)) return ['success'=>false,'code'=>422];
         if(in_array($operation,['prepare','prepare_add'],true)){
             $screen=$this->screen();
             if(!$screen['available'])return ['success'=>false,'code'=>503,'description'=>'KITCHEN_DAY_UNAVAILABLE'];

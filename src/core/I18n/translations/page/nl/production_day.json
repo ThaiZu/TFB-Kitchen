@@ -269,5 +269,7 @@
   "day_carry_walk_edit": "Wijzigen",
   "day_carry_walk_shortage": "Tekort: {quantity}. Geef de reden en voeg afvalfoto’s toe voordat u verdergaat.",
   "day_carry_walk_next": "Bevestigen en volgend product",
-  "day_count_summary": "Overzicht werkelijke voorraad"
+  "day_count_summary": "Overzicht werkelijke voorraad",
+  "day_optional_count_title": "Overige voorraad tellen",
+  "day_optional_count_hint": "Vrijwillige telling van producten buiten de dagelijkse productie. Vul de werkelijke voorraad in; dit is geen productie of afval."
 }

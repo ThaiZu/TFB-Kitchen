@@ -142,3 +142,18 @@ cancelling/reopening starts a new local review, consistent with the previous mod
 `bin/production-day-physical-count-wizard-browser-test.cjs` checks the actual count
 modal at 1024/768/390px, configured-only fractional controls, limits, back/summary
 editing, zero early writes and the final full-scope native-quantity payload.
+
+## Optional non-production stock
+
+Products with `production_planning_enabled = 0` do not appear in the daily opening,
+production, preparation or closing lists. Existing state remains untouched. On
+current open days, “Count other stock” opens a searchable picker backed by the
+API's separate `stock_products` catalogue, including zero-stock products. The
+employee enters actual native stock and confirms one audited stock correction,
+with the existing spinner/retry behavior; no production/waste operation or photo
+is requested. API scope, revision and stock preconditions remain authoritative.
+
+The regular physical-reconciliation modal still shows products explicitly required
+by API even when they have planning disabled. The planning filter never removes
+those repair items. No migration is needed; disable the existing product setting
+in Admin for assortment that should be excluded from daily production.
