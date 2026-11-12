@@ -142,3 +142,17 @@ cancelling/reopening starts a new local review, consistent with the previous mod
 `bin/production-day-physical-count-wizard-browser-test.cjs` checks the actual count
 modal at 1024/768/390px, configured-only fractional controls, limits, back/summary
 editing, zero early writes and the final full-scope native-quantity payload.
+
+## Fraction labels and storefront images
+
+Configured fractional shortcuts now display rational labels such as −1/4 / +1/4,
+−1/2 / +1/2 and −1/8 / +1/8. Their numeric data attributes and exact scaled arithmetic
+remain unchanged; native quantity fields and API payloads still use decimals.
+
+Production-day product rows and product cards in carry review, physical count,
+stock adjustment, opening shortage, preparation batch and closing use the API's
+`webshop_image.url`. Images are the same public R2 storefront images as product
+knowledge cards. Thumbnails are bounded, lazy-loaded, and disappear on load failure;
+missing images do not block editing. Count summaries include compact thumbnails.
+Quantity buttons reserve scroll margins for the fixed header and action dock.
+Deploy the companion API enrichment before Kitchen. No migration is required.

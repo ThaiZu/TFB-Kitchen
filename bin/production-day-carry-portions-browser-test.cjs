@@ -7,8 +7,10 @@ try{for(const width of [1024,768,390]){
  const half={id:1,type:'ONE_HALF',label:'1/2',numerator:1,denominator:2},quarter={id:2,type:'ONE_QUARTER',label:'1/4',numerator:1,denominator:4},eighth={id:3,type:'ONE_EIGHTH',label:'1/8',numerator:1,denominator:8};
  sheet.products=[[],[half],[half,quarter],[eighth]].map((portions,i)=>({...sheet.products[0],id_product:301+i,name:['Whole only','Half portions','Quarter portions','Eighth portions'][i],unit:'piece',is_piece_based:1,is_divisible:0,stock_quantity:'5.75',in_stock:'5.75',supported:true,default_opening:true,portions,stock_portions:[half,quarter,eighth]}));
  sheet.products.push({...sheet.products[0],id_product:305,name:'Weighted product',unit:'kg',is_piece_based:0,is_divisible:1,portions:[quarter],stock_portions:[]});
+ sheet.products.forEach(p=>p.webshop_image={url:'https://images.example/product-'+p.id_product+'.svg'});
  const writes=[],errors=[],page=await browser.newPage({viewport:{width,height:1050},isMobile:width<1000,hasTouch:width<1000});page.on('pageerror',e=>errors.push(e.message));
- await page.route('**/*',route=>{const req=route.request(),p=new URL(req.url()).pathname;
+ await page.route('**/*',route=>{const req=route.request(),url=new URL(req.url()),p=url.pathname;
+  if(url.hostname==='images.example')return route.fulfill({contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" width="120" height="90"><rect width="120" height="90" fill="#e9d6b3"/></svg>'});
   if(p.includes('/assets/')){const f=path.join(root,'public',p.slice(p.indexOf('/assets/')+1));return route.fulfill({contentType:f.endsWith('.js')?'application/javascript':'text/css',body:fs.existsSync(f)?fs.readFileSync(f):''});}
   if(req.method()==='POST'&&p.endsWith('/prepare')){const input=req.postDataJSON();writes.push(input);sheet.preparation.lines=input.lines;sheet.revision++;sheet.preparation_revision++;return route.fulfill({json:{success:true,data:sheet}});}
   if(p.endsWith('/production-day/data'))return route.fulfill({json:{success:true,data:sheet}});
@@ -21,10 +23,10 @@ try{for(const width of [1024,768,390]){
  while(await page.locator('[data-carry-card]').count()){
  const id=Number(await page.locator('[data-carry-card]').getAttribute('data-carry-card')),step=({302:'0.5',303:'0.25',304:'0.125'})[id]||null;
   const input=page.locator('[data-opening-product="'+id+'"]'),control=input.locator('..');
-  if(id===303)await page.locator('.pd-carry-card').screenshot({path:path.join(dir,'carry-review-card-'+width+'.png')});
+  if(id===303){await page.waitForFunction(()=>document.querySelector('.pd-carry-card img')?.naturalWidth>0);assert.equal(await page.locator('.pd-carry-card img').getAttribute('src'),'https://images.example/product-303.svg');checks++;}if(id===303)await page.locator('.pd-carry-card').screenshot({path:path.join(dir,'carry-review-card-'+width+'.png')});
   assert.equal(await control.locator('.pd-fraction-delta').count(),step?2:0);assert.equal(await control.locator('[data-quantity-delta="5"]').count(),step?0:1);checks+=2;
   if(!step){await page.locator('#pd-wizard-next').click();continue;}
-  assert.equal(await control.locator('button').first().innerText(),'−'+step);assert.equal(await control.locator('button').last().innerText(),'+'+step);checks+=2;
+  assert.equal(await control.locator('button').first().innerText(),'−'+({'0.5':'1/2','0.25':'1/4','0.125':'1/8'})[step]);assert.equal(await control.locator('button').last().innerText(),'+'+({'0.5':'1/2','0.25':'1/4','0.125':'1/8'})[step]);checks+=2;
   await control.locator('[data-quantity-delta="-'+step+'"]').click();assert.equal(await input.inputValue(),String(5.75-Number(step)));checks++;
   await control.locator('[data-quantity-delta="'+step+'"]').click();assert.equal(await input.inputValue(),'5.75');checks++;
   await control.locator('[data-quantity-delta="'+step+'"]').click();assert.equal(await input.inputValue(),'5.75','Cannot exceed previous stock');checks++;
@@ -47,7 +49,7 @@ try{for(const width of [1024,768,390]){
   await input.fill('7');await control.locator('[data-quantity-delta="'+step+'"]').click();assert.equal(await input.inputValue(),String(7+Number(step)),'Production can exceed yesterday stock');checks++;
   const layout=await control.evaluate(node=>{const bounds=node.getBoundingClientRect(),buttons=[...node.querySelectorAll('button')],rects=buttons.map(b=>b.getBoundingClientRect());return rects.every(r=>r.left>=bounds.left&&r.right<=bounds.right&&r.width>=44&&r.height>=44)&&buttons.every(b=>{const range=document.createRange();range.selectNodeContents(b);return range.getClientRects().length===1;});});assert.equal(layout,true);checks++;
  }
- await page.locator('[data-opening-product="303"]').locator('..').screenshot({path:path.join(dir,'carry-fractions-'+width+'.png')});assert.deepEqual(errors,[]);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);checks+=2;// Step 6 reuses native controls and persists only preparation quantities.
+ assert.equal(await page.locator('tr').filter({has:page.locator('[data-opening-product="303"]')}).locator('img').getAttribute('src'),'https://images.example/product-303.svg');checks++;await page.locator('[data-opening-product="303"]').locator('..').screenshot({path:path.join(dir,'carry-fractions-'+width+'.png')});assert.deepEqual(errors,[]);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);checks+=2;// Step 6 reuses native controls and persists only preparation quantities.
  Object.assign(sheet,{status:'OPEN',default_view:'stock',can_prepare:true,preparation_revision:0,preparation:{target_date:'2026-11-10',lines:[]}});
  sheet.products.forEach(p=>{p.is_pdm=true;p.is_active=1;p.sale_enabled=1;});sheet.preparation_products=sheet.products;
  const beforeStock=sheet.products.map(p=>p.in_stock);await page.reload();await page.locator('[data-wizard-step="5"]').click();
@@ -60,7 +62,7 @@ try{for(const width of [1024,768,390]){
   await input.fill('7');await control.locator('[data-quantity-delta="'+step+'"]').click();assert.equal(await input.inputValue(),String(7+Number(step)),'Tomorrow preparation is independent of current stock');checks++;
   const layout=await control.evaluate(node=>{const bounds=node.getBoundingClientRect(),buttons=[...node.querySelectorAll('button')],rects=buttons.map(b=>b.getBoundingClientRect());return rects.every(r=>r.left>=bounds.left&&r.right<=bounds.right&&r.width>=44&&r.height>=44)&&rects.every((a,i)=>rects.every((b,j)=>i===j||a.right<=b.left||b.right<=a.left||a.bottom<=b.top||b.bottom<=a.top))&&buttons.every(b=>{const range=document.createRange();range.selectNodeContents(b);return range.getClientRects().length===1;});});assert.equal(layout,true);checks++;
  }
- await page.locator('[data-preparation-product="303"]').locator('..').screenshot({path:path.join(dir,'tomorrow-fractions-'+width+'.png')});
+ assert.equal(await page.locator('tr').filter({has:page.locator('[data-preparation-product="303"]')}).locator('img').getAttribute('src'),'https://images.example/product-303.svg');checks++;await page.locator('[data-preparation-product="303"]').locator('..').screenshot({path:path.join(dir,'tomorrow-fractions-'+width+'.png')});
  await Promise.all([page.waitForResponse(r=>r.url().endsWith('/prepare')&&r.request().method()==='POST'),page.locator('#pd-wizard-next').click()]);
  assert.equal(writes.length,1);assert.equal(writes[0].lines.find(l=>l.id_product===303).quantity,'7.25');assert.deepEqual(sheet.products.map(p=>p.in_stock),beforeStock);checks+=3;
  await page.reload();await page.locator('[data-wizard-step="5"]').click();assert.equal(await page.locator('[data-preparation-product="303"]').inputValue(),'7.25');assert.deepEqual(errors,[]);checks+=2;
