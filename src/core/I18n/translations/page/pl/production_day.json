@@ -269,5 +269,7 @@
   "day_carry_walk_edit": "Zmień",
   "day_carry_walk_shortage": "Brak: {quantity}. Przy przejściu dalej podasz powód i dodasz zdjęcie odpadu.",
   "day_carry_walk_next": "Potwierdź i następny produkt",
-  "day_count_summary": "Podsumowanie rzeczywistego stanu"
+  "day_count_summary": "Podsumowanie rzeczywistego stanu",
+  "day_optional_count_title": "Przelicz pozostały asortyment",
+  "day_optional_count_hint": "Dobrowolne przeliczenie produktów spoza codziennej produkcji. Wpisz rzeczywistą ilość — zapis nie oznacza produkcji ani odpadu."
 }

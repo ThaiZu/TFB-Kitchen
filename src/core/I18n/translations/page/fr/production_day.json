@@ -269,5 +269,7 @@
   "day_carry_walk_edit": "Modifier",
   "day_carry_walk_shortage": "Écart : {quantity}. Indiquez le motif et ajoutez les photos des déchets avant de continuer.",
   "day_carry_walk_next": "Confirmer et produit suivant",
-  "day_count_summary": "Récapitulatif du stock réel"
+  "day_count_summary": "Récapitulatif du stock réel",
+  "day_optional_count_title": "Compter les autres produits",
+  "day_optional_count_hint": "Comptage facultatif des produits hors production quotidienne. Saisissez le stock réel ; ce n’est ni une production ni un déchet."
 }
