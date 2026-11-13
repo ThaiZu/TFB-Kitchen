@@ -10,7 +10,9 @@ Opening pins the selected date/checklist ID and `wizard=1` in the URL. One task
 card is visible, with previous-task navigation and an answered-task progress bar.
 The back button returns to the checklist overview for the same date. A fresh
 selection with no pending tasks reopens a failed task if present; a completed
-execution shows its summary after the last save. Pending tasks are handled with the existing Done or Failed actions. Done still
+execution shows its summary after the last save. Each task immediately includes the evidence form: camera/photo, description and
+a Confirm and continue button. Done/Failed actions select the outcome without
+opening another dialog; Done is selected by default. Done still
 requires a photograph where configured; Failed still requires a reason. Existing
 Skipped results are readable. The final summary shows each saved status and can
 reopen an individual card for inspection/correction. Failed responses count as
@@ -23,7 +25,7 @@ server render automatically resumes at the first pending task of the same select
 checklist. Reloading also refreshes the verified employee context, including a
 newly opened shift and the employee's allowed task scope. There is no client-side
 completion cache or batch save. Errors keep the current task available. Busy state
-locks task/wizard/modal actions, shows a spinner, and prevents duplicate submissions
+locks task/wizard/form actions, shows a spinner, and prevents duplicate submissions
 or closing the modal during a write/refresh transition.
 
 The existing API upserts `todo_task_completion` occurrences and stores notes,

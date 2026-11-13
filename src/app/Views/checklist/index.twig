@@ -3,7 +3,7 @@
 {% block title %}{{ translations.checklists_title }}{% endblock %}
 
 {% block head %}
-<link rel="stylesheet" href="{{ ROOT }}/assets/css/checklist-wizard.css?v=2">
+<link rel="stylesheet" href="{{ ROOT }}/assets/css/checklist-wizard.css?v=3">
 <style>
     .task-badge {
         display: inline-block;
@@ -448,13 +448,7 @@
                         {% endif %}
 
                         {% if status != 'DONE' and status != 'SKIPPED' %}
-                            {# « Effectuer » ouvre une fenêtre uniquement quand
-                               il reste quelque chose à saisir : une photo
-                               exigée, ou le nom et le code de la première tâche
-                               du service. Sans photo et le poste ouvert, la
-                               tâche se valide d'un seul geste — c'était le
-                               reproche principal fait à cet écran.
-                               Le script lit ces deux attributs pour trancher. #}
+                            {# Outcome selection; evidence and save are always inline. #}
                             <div class="tk-acts">
                                 <button type="button"
                                         class="tk-do btn-complete-task"
@@ -462,7 +456,7 @@
                                         data-task-name="{{ task.name }}"
                                         data-date="{{ selected_date }}"
                                         data-requires-photo="{{ task.requires_photo ? '1' : '0' }}">
-                                    <i class="bi bi-check2"></i>{{ translations.btn_complete }}
+                                    <i class="bi bi-check2"></i>{{ translations.status_done }}
                                 </button>
                                 {# Le refus, lui, passe TOUJOURS par la fenêtre :
                                    il exige une raison écrite. #}
@@ -539,7 +533,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ ROOT }}/assets/js/checklist-wizard.js?v=2"></script>
+<script src="{{ ROOT }}/assets/js/checklist-wizard.js?v=3"></script>
 
 {# ── Modal potwierdzenia wykonania zadania ── #}
 {# ── La prise de poste ──
@@ -786,7 +780,10 @@
     let SHIFT_OPEN = {{ shift ? 'true' : 'false' }};
 
     const modal          = document.getElementById('completeTaskModal');
-    const bsModal        = modal ? new bootstrap.Modal(modal) : null;
+    const wizardRoot = document.getElementById('checklist-wizard');
+    const inlineForm = !!wizardRoot;
+    const bsModal = inlineForm ? {show() { modal.hidden=false; }} : (modal ? new bootstrap.Modal(modal) : null);
+    if (inlineForm) { modal.className='cw-task-form'; modal.removeAttribute('aria-hidden'); modal.removeAttribute('tabindex'); modal.querySelectorAll('[data-bs-dismiss]').forEach(button=>button.hidden=true); }
     const taskNameEl     = document.getElementById('modalTaskName');
     const titleEl        = document.getElementById('completeTaskModalLabel');
     const noteLabel      = document.getElementById('modalNoteLabel');
@@ -946,7 +943,7 @@
         const inModal = !opts.button;
         const oldLabel = opts.button?.innerHTML;
         if (opts.button) { opts.button.disabled = true; const busy = document.createElement('span'); busy.className = 'spinner-border spinner-border-sm me-1'; busy.setAttribute('aria-hidden','true'); opts.button.prepend(busy); opts.button.setAttribute('aria-busy','true'); }
-        const modalButtons = [...modal.querySelectorAll('button')];
+        const modalButtons = [...modal.querySelectorAll('button,input,textarea,select')];
         const previousDisabled = modalButtons.map(button=>button.disabled);
         modalButtons.forEach(button=>button.disabled=true);
 
@@ -1030,13 +1027,15 @@
     }
 
     async function openModal(btn, mode) {
+        const sameTask = currentTaskId === btn.dataset.taskId;
         currentTaskId        = btn.dataset.taskId;
         currentTaskDate      = btn.dataset.date;
         currentStatus        = mode === 'fail' ? 'FAILED' : 'DONE';
+        btn.closest('[data-cw-task-id]')?.querySelectorAll('.btn-complete-task,.btn-fail-task').forEach(action=>action.setAttribute('aria-pressed', String(action === btn)));
         currentRequiresPhoto = mode !== 'fail' && btn.dataset.requiresPhoto === '1';
 
         if (taskNameEl) taskNameEl.textContent = btn.dataset.taskName || '';
-        resetModal();
+        if (!inlineForm || !sameTask) { resetModal(); noteInput.value = btn.closest('[data-cw-task-id]')?.querySelector('.tk-note')?.textContent.trim() || ''; }
 
         if (titleEl) {
             titleEl.textContent = mode === 'fail'
@@ -1044,7 +1043,8 @@
                 : (titleEl.dataset.titleDone || titleEl.textContent);
         }
         // Une tâche non faite n'a pas de photo à montrer : le bloc disparaît.
-        if (photoSection) photoSection.classList.toggle('d-none', !currentRequiresPhoto);
+        photoSection?.querySelector('.text-danger')?.classList.toggle('d-none', !currentRequiresPhoto);
+        if (photoSection) photoSection.classList.toggle('d-none', !inlineForm && !currentRequiresPhoto);
         // La raison, elle, devient obligatoire — et le dit.
         if (noteLabel && noteInput) {
             noteLabel.textContent = mode === 'fail'
@@ -1056,18 +1056,20 @@
             confirmBtn.classList.toggle('btn-danger', mode === 'fail');
             confirmBtn.classList.toggle('btn-success', mode !== 'fail');
             if (confirmLabel) {
-                confirmLabel.textContent = mode === 'fail'
+                confirmLabel.textContent = inlineForm ? {{ translations.wizard_save_next | json_encode | raw }} : mode === 'fail'
                     ? (confirmBtn.dataset.labelFail || confirmLabel.textContent)
                     : (confirmBtn.dataset.labelDone || confirmLabel.textContent);
             }
         }
 
-        if (!SHIFT_OPEN) {
+        if (!SHIFT_OPEN && (!inlineForm || !sameTask)) {
             renderEligibleEmployees([]);
             bsModal.show();
+            const requestedTaskId = currentTaskId;
             try {
                 const response = await fetch(ROOT + '/ajax/checklists/tasks/' + currentTaskId + '/eligible-employees?date=' + encodeURIComponent(currentTaskDate), { credentials: 'same-origin' });
                 const data = await response.json();
+                if (currentTaskId !== requestedTaskId || modal.hidden) return;
                 if (!data.success || !Array.isArray(data.employees)) {
                     showAlert(translations.complete_error_generic, 'danger');
                     return;
@@ -1094,7 +1096,7 @@
         if (!btn) return;
 
         const needsPhoto = btn.dataset.requiresPhoto === '1';
-        if (!needsPhoto && SHIFT_OPEN) {
+        if (!inlineForm && !needsPhoto && SHIFT_OPEN) {
             submitTask({
                 button: btn,
                 taskId: btn.dataset.taskId,
@@ -1108,6 +1110,21 @@
 
         openModal(btn, 'done');
     });
+
+    if (inlineForm) {
+        let displayedTask = null;
+        const showTask = card => {
+            const button = card?.querySelector('.btn-complete-task');
+            if (!button) { displayedTask=null; modal.hidden=true; stopCamera(); return; }
+            if (displayedTask === card) return;
+            displayedTask = card;
+            card.append(modal);
+            modal.hidden=false;
+            openModal(button, 'done');
+        };
+        wizardRoot.addEventListener('checklist:task', event=>showTask(event.detail.card));
+        showTask([...wizardRoot.querySelectorAll('[data-cw-task-id]')].find(card=>!card.hidden));
+    }
 
     // Zmiana pliku przez file input
     if (photoInput) {

@@ -73,5 +73,6 @@
     "wizard_previous": "Previous task",
     "wizard_next": "Next task",
     "wizard_exit": "Back to checklists",
-    "no_pending_checklists": "No pending checklists."
+    "no_pending_checklists": "No pending checklists.",
+    "wizard_save_next": "Confirm and continue"
 }
