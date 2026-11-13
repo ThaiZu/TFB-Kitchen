@@ -90,6 +90,36 @@ class StaffService
             $this->missing = 'GET /shops/{id}/schedule — réponse sans nom d\'employé';
         }
 
+        if ($people !== []) {
+            try {
+                $details = $this->staffRepository->getEmployeesWithPositions($shopId) ?? [];
+                $people = self::withResponsibilities($people, $details);
+            } catch (\Throwable $e) {
+                // Optional labels must not prevent selecting a scheduled employee.
+            }
+        }
+        return $people;
+    }
+
+    /** Enrich scheduled people only; position metadata never grants access. */
+    public static function withResponsibilities(array $people, array $details): array
+    {
+        $labels = [];
+        foreach ($details as $employee) {
+            if (!is_array($employee)) continue;
+            $names = [];
+            foreach (($employee['positions'] ?? []) as $position) {
+                if (!is_array($position)) continue;
+                $name = trim((string) ($position['name'] ?? ''));
+                $level = trim((string) ($position['level_name'] ?? ''));
+                if ($name !== '') $names[] = $name . ($level !== '' ? ' · ' . $level : '');
+            }
+            $labels[(string) ($employee['id'] ?? '')] = implode(', ', array_unique($names));
+        }
+        foreach ($people as &$person) {
+            $person['responsibility'] = $labels[(string) $person['id']] ?? '';
+        }
+        unset($person);
         return $people;
     }
 
