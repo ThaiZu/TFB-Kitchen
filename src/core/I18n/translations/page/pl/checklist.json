@@ -73,5 +73,6 @@
     "wizard_previous": "Poprzednie zadanie",
     "wizard_next": "Następne zadanie",
     "wizard_exit": "Wróć do checklist",
-    "no_pending_checklists": "Brak oczekujących checklist."
+    "no_pending_checklists": "Brak oczekujących checklist.",
+    "wizard_save_next": "Zatwierdź i przejdź do następnego"
 }

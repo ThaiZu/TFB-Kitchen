@@ -1,3 +1,21 @@
 #checklist-wizard [hidden]{display:none!important}.cw-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}.cw-toolbar h2{font-size:1.3rem;margin:0;overflow-wrap:anywhere}#checklist-wizard button{min-height:48px;border-radius:8px;touch-action:manipulation}#cw-progress{background:var(--c-surface,#fff);border:1px solid var(--c-line,#dfd4c9);padding:14px;border-radius:12px;margin-bottom:16px}#cw-progress p{margin:0 0 8px}#cw-progress-bar{width:100%;height:12px;accent-color:var(--c-primary,#8d1d2c)}#cw-navigation{display:flex;gap:10px;flex-wrap:wrap;position:sticky;bottom:90px;background:var(--c-surface,#fff);padding:12px;border:1px solid var(--c-line,#dfd4c9);border-radius:12px;margin-top:16px;z-index:5}#cw-navigation button{flex:1}#checklist-wizard.cw-active .tk-list{max-width:900px;margin:auto}#cw-summary{padding:16px;background:var(--c-surface,#fff);border-radius:12px}.cw-summary-task{display:block;width:100%;text-align:left;padding:12px;border:1px solid var(--c-line,#dfd4c9);background:#fff;margin-top:8px;overflow-wrap:anywhere}.cw-active .tk-item{scroll-margin-block:110px 190px}@media(max-width:600px){.cw-toolbar{align-items:stretch;flex-direction:column}#cw-navigation{bottom:78px}#cw-navigation button{flex-basis:calc(50% - 10px)}#cw-exit{flex-basis:100%!important}.cw-active .tk-head{flex-wrap:wrap}}
 
 .cw-active .tk-title{overflow-wrap:anywhere}.cw-summary-task.is-done{border-left:4px solid #2d7a3e}.cw-summary-task.is-failed{border-left:4px solid #8d1d2c}.cw-summary-task.is-skipped{border-left:4px solid #c17a2a}
+
+/* Task evidence is available immediately inside the wizard card. */
+.cw-task-form { margin-top:1rem; }
+.cw-task-form .modal-dialog { margin:0; max-width:none; }
+.cw-task-form .modal-content { border:0; box-shadow:none; }
+.cw-task-form .modal-header, .cw-task-form #modalTaskName { display:none; }
+.cw-task-form .modal-body { padding:1rem 0; }
+.cw-task-form .modal-footer { padding:1rem 0 0; }
+.cw-task-form #modalConfirmBtn { width:100%; min-height:48px; }
+.cw-task-form #modalPhotoPreviewImg { max-height:220px; object-fit:contain; }
+
+#checklist-wizard .tk-do[aria-pressed="true"],
+#checklist-wizard .tk-fail[aria-pressed="true"] { outline:2px solid currentColor; outline-offset:2px; }
+
+#checklist-wizard .tk-acts { display:flex; gap:12px; }
+#checklist-wizard .tk-acts .tk-do,
+#checklist-wizard .tk-acts .tk-fail { flex:1; width:auto; min-height:48px; }
+#checklist-wizard .tk-acts .tk-fail span { display:inline; }

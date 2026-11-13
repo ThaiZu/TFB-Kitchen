@@ -73,5 +73,6 @@
     "wizard_previous": "Attività precedente",
     "wizard_next": "Attività successiva",
     "wizard_exit": "Torna alle checklist",
-    "no_pending_checklists": "Nessuna checklist in attesa."
+    "no_pending_checklists": "Nessuna checklist in attesa.",
+    "wizard_save_next": "Conferma e continua"
 }

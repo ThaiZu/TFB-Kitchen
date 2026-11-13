@@ -73,5 +73,6 @@
     "wizard_previous": "Vorige taak",
     "wizard_next": "Volgende taak",
     "wizard_exit": "Terug naar checklists",
-    "no_pending_checklists": "Geen openstaande checklists."
+    "no_pending_checklists": "Geen openstaande checklists.",
+    "wizard_save_next": "Bevestigen en doorgaan"
 }
