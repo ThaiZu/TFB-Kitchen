@@ -72,5 +72,6 @@
     "wizard_navigation": "Checklist navigation",
     "wizard_previous": "Previous task",
     "wizard_next": "Next task",
-    "wizard_exit": "Return to task list"
+    "wizard_exit": "Back to checklists",
+    "no_pending_checklists": "No pending checklists."
 }

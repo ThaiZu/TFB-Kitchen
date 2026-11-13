@@ -1,13 +1,16 @@
 # Checklist execution wizard
 
-Each selected `/checklists?date=...&checklist_id=...` page offers its own
-Start/Resume button. The all-checklists overview remains a set of separate links;
+`/checklists` opens the pending checklist overview (nonempty checklists with
+less DONE tasks than their total). No checklist is automatically selected. Clicking
+a checklist opens its wizard immediately, without a Start button or task-list mode;
 the wizard never concatenates task lists. Existing employee-position filtering,
 PIN/shift verification and date rules stay authoritative on the server.
 
-Starting pins the selected date/checklist ID and `wizard=1` in the URL. One task
+Opening pins the selected date/checklist ID and `wizard=1` in the URL. One task
 card is visible, with previous-task navigation and an answered-task progress bar.
-Pending tasks are handled with the existing Done or Failed actions. Done still
+The back button returns to the checklist overview for the same date. A fresh
+selection with no pending tasks reopens a failed task if present; a completed
+execution shows its summary after the last save. Pending tasks are handled with the existing Done or Failed actions. Done still
 requires a photograph where configured; Failed still requires a reason. Existing
 Skipped results are readable. The final summary shows each saved status and can
 reopen an individual card for inspection/correction. Failed responses count as

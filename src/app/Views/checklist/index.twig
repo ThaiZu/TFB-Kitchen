@@ -3,7 +3,7 @@
 {% block title %}{{ translations.checklists_title }}{% endblock %}
 
 {% block head %}
-<link rel="stylesheet" href="{{ ROOT }}/assets/css/checklist-wizard.css?v=1">
+<link rel="stylesheet" href="{{ ROOT }}/assets/css/checklist-wizard.css?v=2">
 <style>
     .task-badge {
         display: inline-block;
@@ -308,20 +308,12 @@
 
 {% block content %}
 
-    {# ── Panel filtrów ──
-       Ce bloc occupait la totalité du premier écran : date, bouton, bandeau
-       « toutes », puis trois tuiles. Le premier bouton « Exécuter » tombait
-       vers 1 045 px, sous la ligne de flottaison d'une tablette de 768 px —
-       alors que l'écran n'a qu'un usage, enchaîner les tâches du moment.
-
-       Il se replie donc dès qu'une checklist est ouverte, et reste déplié quand
-       on regarde l'ensemble. Le résumé du <summary> dit ce qui est filtré, pour
-       qu'on n'ait pas à déplier pour le savoir. #}
-    <details class="cl-filters mb-4" {{ selected_checklist_id ? '' : 'open' }}>
+    {# Date selection is secondary; checklist cards are the only entry into execution. #}
+    <details class="cl-filters mb-4">
         <summary class="cl-filters-sum">
             <span class="cl-filters-ic" aria-hidden="true"><i class="bi bi-funnel"></i></span>
             <span class="cl-filters-txt">
-                <b>{{ translations.filter_title }}</b>
+                <b>{{ translations.filter_date }}</b>
                 <small>
                     {{ selected_date }}{% if focused_name %} · {{ focused_name }}{% endif %}
                     {%- if auto_focus %} · {{ translations.filter_auto }}{% endif -%}
@@ -356,53 +348,6 @@
                             </div>
                         </div>
 
-                        {# ── Checklista ──
-                           Une liste déroulante cachait les checklists derrière un
-                           tap et n'en montrait qu'une à la fois : impossible de
-                           comparer l'avancement d'un coup d'œil. Des tuiles, deux
-                           par ligne, montrent tout — nom, heure, avancement.
-                           Chaque tuile porte un radio, donc le formulaire et son
-                           bouton continuent de fonctionner sans JavaScript ; le
-                           script ne fait qu'éviter le second tap. #}
-                        <fieldset class="cl-pick-set">
-                            <legend class="form-label fw-semibold">
-                                {{ translations.filter_checklist }}
-                            </legend>
-
-                            <div class="cl-pick">
-                                {# « Toutes » n'a ni heure ni avancement à montrer : en tuile
-                                   carrée elle laissait un grand vide à côté des autres. Elle
-                                   prend la ligne entière, en bandeau fin. #}
-                                <label class="cl-pick-tile cl-pick-all {{ selected_checklist_id is empty ? 'is-active' : '' }}">
-                                    <input type="radio" name="checklist_id" value=""
-                                           {{ selected_checklist_id is empty ? 'checked' : '' }}>
-                                    <span class="cl-pick-name">
-                                        {{ translations.filter_checklist_all }}
-                                    </span>
-                                </label>
-
-                                {% for cl in checklists %}
-                                    {% set done = cl.tasks_total > 0 ? (cl.tasks_done / cl.tasks_total * 100)|round : 0 %}
-                                    <label class="cl-pick-tile {{ selected_checklist_id == cl.id ? 'is-active' : '' }}">
-                                        <input type="radio" name="checklist_id" value="{{ cl.id }}"
-                                               {{ selected_checklist_id == cl.id ? 'checked' : '' }}>
-                                        <span class="cl-pick-name">{{ cl.name }}</span>
-                                        {% if cl.execution_time %}
-                                            <span class="cl-pick-time">
-                                                <i class="bi bi-clock"></i> {{ cl.execution_time|slice(0,5) }}
-                                            </span>
-                                        {% endif %}
-                                        <span class="cl-pick-bar" aria-hidden="true">
-                                            <span style="width:{{ done }}%"></span>
-                                        </span>
-                                        <span class="cl-pick-count">
-                                            {{ cl.tasks_done }}/{{ cl.tasks_total }}
-                                            {{ translations.tasks_done_of }}
-                                        </span>
-                                    </label>
-                                {% endfor %}
-                            </div>
-                        </fieldset>
                     </form>
                 </div>
         </div>
@@ -425,13 +370,12 @@
                tronqué et le reste sortait de l'écran. Chaque tâche est une
                tuile : ce qu'il y a à faire en tête, l'état sur le côté, les
                horaires en dessous, et le bouton d'exécution à portée du pouce. #}
-            <section id="checklist-wizard" data-checklist-id="{{ selected_checklist_id }}" data-date="{{ selected_date }}"
-                     data-start="{{ translations.wizard_start }}" data-resume="{{ translations.wizard_resume }}" data-review="{{ translations.wizard_review }}"
+            <section id="checklist-wizard" class="cw-active" data-back-url="{{ ROOT }}/checklists?date={{ selected_date }}" data-checklist-id="{{ selected_checklist_id }}" data-date="{{ selected_date }}"
                      data-progress="{{ translations.wizard_progress }}" data-summary="{{ translations.wizard_summary }}" data-pending="{{ translations.wizard_pending }}">
-                <div class="cw-toolbar"><h2>{{ progress.checklist.name }}</h2><button type="button" id="cw-start" class="btn btn-primary">{{ translations.wizard_start }}</button></div>
+                <div class="cw-toolbar"><h2>{{ progress.checklist.name }}</h2></div>
                 <div id="cw-progress" hidden><p id="cw-progress-text" role="status" aria-live="polite"></p><progress id="cw-progress-bar"></progress></div>
                 <div id="cw-summary" hidden></div>
-            <div class="tk-list">
+            <div class="tk-list" id="cw-task-list" hidden>
                 {% for task in progress.tasks %}
                     {% set status = task.status ?? 'PENDING' %}
                     <div class="tk-item is-{{ status|lower }}" data-cw-task-id="{{ task.task_id }}" data-cw-status="{{ status }}">
@@ -586,7 +530,7 @@
                 {% if employee_mode and employee_no_tasks %}
                     {{ translations.no_employee_tasks }}
                 {% else %}
-                    {{ translations.no_checklists }}
+                    {{ translations.no_pending_checklists }}
                 {% endif %}
             </p>
         </div>
@@ -595,19 +539,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ ROOT }}/assets/js/checklist-wizard.js?v=1"></script>
-
-{# Choisir une tuile envoie le formulaire : un tap au lieu de deux. Sans
-   JavaScript, le bouton « Pokaż » reste la voie normale — rien n'est perdu. #}
-<script>
-(function () {
-    var form = document.getElementById('filterForm');
-    if (!form) return;
-    form.querySelectorAll('.cl-pick-tile input[type="radio"]').forEach(function (r) {
-        r.addEventListener('change', function () { form.submit(); });
-    });
-})();
-</script>
+<script src="{{ ROOT }}/assets/js/checklist-wizard.js?v=2"></script>
 
 {# ── Modal potwierdzenia wykonania zadania ── #}
 {# ── La prise de poste ──

@@ -72,5 +72,6 @@
     "wizard_navigation": "Navigazione checklist",
     "wizard_previous": "Attività precedente",
     "wizard_next": "Attività successiva",
-    "wizard_exit": "Torna alla lista delle attività"
+    "wizard_exit": "Torna alle checklist",
+    "no_pending_checklists": "Nessuna checklist in attesa."
 }

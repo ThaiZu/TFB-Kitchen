@@ -19,7 +19,7 @@ foreach(['pl','en','fr','nl','it'] as $lang)foreach([true,false] as $shift){
  GlobalRegistry::set('lang_code',$lang);
  $data=['selected_date'=>'2026-11-13','selected_checklist_id'=>101,'checklists'=>[['id'=>101,'name'=>'Opening checklist','tasks_done'=>1,'tasks_total'=>4,'execution_time'=>'06:00:00'],['id'=>102,'name'=>'Closing checklist','tasks_done'=>0,'tasks_total'=>1,'execution_time'=>'17:00:00']],'progress'=>['checklist'=>['id'=>101,'name'=>'Opening checklist'],'tasks'=>$tasks,'summary'=>['total'=>4,'done'=>1,'not_done'=>3]],'today'=>'2026-11-13','employees'=>[['id'=>7,'name'=>'Anna','initials'=>'A','on_schedule'=>true]],'roster_mode'=>'scheduled','missing_api'=>null,'auto_focus'=>false,'focused_name'=>'Opening checklist','shift'=>$shift?['name'=>'Anna','initials'=>'A','remaining'=>3600]:null,'employee_mode'=>$shift,'employee_no_tasks'=>false,'shift_entry_required'=>false];
  ob_start();$controller->view('checklist/index',$data);$html=ob_get_clean();
- $expect(str_contains($html,'id="checklist-wizard"'),'Selected checklist has a wizard');$expect(substr_count($html,'data-cw-task-id=')===4,'Only selected checklist tasks are in this wizard');$expect(str_contains($html,'Clean counter &lt;test&gt;'),'Task names are escaped');$expect(!str_contains($html,'wizard_progress"'),'New labels are translated');
+ $expect(str_contains($html,'id="checklist-wizard"'),'Selected checklist has a wizard');$expect(!str_contains($html,'id="cw-start"'),'No extra start decision');$expect(str_contains($html,'id="cw-task-list" hidden'),'Full task list is hidden before initialization');$expect(substr_count($html,'data-cw-task-id=')===4,'Only selected checklist tasks are in this wizard');$expect(str_contains($html,'Clean counter &lt;test&gt;'),'Task names are escaped');$expect(!str_contains($html,'wizard_progress"'),'New labels are translated');
  file_put_contents($dir.'/checklist-'.$lang.'-'.($shift?'shift':'pin').'.html',$html);
  $data['selected_checklist_id']=null;$data['progress']=null;ob_start();$controller->view('checklist/index',$data);$all=ob_get_clean();$expect(!str_contains($all,'id="checklist-wizard"'),'All-checklists page never combines tasks into a wizard');$expect(str_contains($all,'checklist_id=101')&&str_contains($all,'checklist_id=102'),'Separate checklist links remain');
  $data['selected_checklist_id']=101;$data['progress']=['checklist'=>['id'=>101,'name'=>'Opening'],'tasks'=>[]];ob_start();$controller->view('checklist/index',$data);$empty=ob_get_clean();$expect(!str_contains($empty,'id="checklist-wizard"'),'Empty checklist has no blank wizard');
@@ -34,4 +34,25 @@ foreach(['initial','done11','done12','reported13'] as $variant)foreach([true,fal
 }
 $data['selected_checklist_id']=102;$data['progress']=['checklist'=>['id'=>102,'name'=>'Closing checklist'],'tasks'=>[array_merge($tasks[1],['task_id'=>30,'name'=>'Close the store'])],'summary'=>['total'=>1,'done'=>0,'not_done'=>1]];
 ob_start();$controller->view('checklist/index',$data);file_put_contents($dir.'/runtime-other.html',ob_get_clean());
+$data['selected_checklist_id']=null;$data['progress']=null;ob_start();$controller->view('checklist/index',$data);file_put_contents($dir.'/runtime-overview.html',ob_get_clean());
+// Exercise entry routing and pending filtering through the real controller.
+$service = new class extends \App\Kitchen\app\Services\Checklist\ChecklistService {
+ public function __construct() {}
+ public function shopId(): int { return 2; }
+ public function getChecklistsForShop(string $date): array { return [
+  ['id'=>101,'name'=>'Pending','tasks_done'=>1,'tasks_total'=>2,'execution_time'=>'06:00'],
+  ['id'=>103,'name'=>'Completed','tasks_done'=>2,'tasks_total'=>2,'execution_time'=>'07:00'],
+  ['id'=>104,'name'=>'Empty','tasks_done'=>0,'tasks_total'=>0,'execution_time'=>'08:00']
+ ]; }
+ public function getEmployeesForShop(?string $date=null): array { return []; }
+ public function roster(array $employees): array { return ['list'=>[],'mode'=>'scheduled','missing'=>null]; }
+ public function getChecklistProgress(int $checklistId,string $date): array { return ['checklist'=>['id'=>$checklistId,'name'=>'Selected'],'tasks'=>[]]; }
+};
+$entry = new \App\Kitchen\app\Http\Controllers\Checklist\ChecklistController($service);
+$_GET=[];ob_start();$entry->index();$overview=ob_get_clean();
+$expect(!str_contains($overview,'id="checklist-wizard"'),'Entry never auto-selects a checklist');
+$expect(str_contains($overview,'checklist_id=101'),'Pending checklist is available');
+$expect(!str_contains($overview,'checklist_id=103')&&!str_contains($overview,'checklist_id=104'),'Completed and empty checklists are omitted');
+$_GET=['checklist_id'=>999];ob_start();$entry->index();$invalid=ob_get_clean();
+$expect(str_contains($invalid,'checklist_id=101'),'Unknown checklist returns to pending overview');
 echo "Checklist wizard rendering: $checks checks PASS (five languages, shift/PIN, separate checklists, empty state).\n";
