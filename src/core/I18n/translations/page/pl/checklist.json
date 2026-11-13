@@ -62,5 +62,15 @@
     "modal_photo_close": "Zamknij",
     "modal_btn_fail": "Zgłoś jako niewykonane",
     "col_reported_at": "Zgłoszone o",
-    "roster_api_missing": "Nie udało się pobrać listy pracowników. Spróbuj ponownie."
+    "roster_api_missing": "Nie udało się pobrać listy pracowników. Spróbuj ponownie.",
+    "wizard_start": "Rozpocznij checklistę",
+    "wizard_resume": "Wznów checklistę",
+    "wizard_review": "Zobacz podsumowanie",
+    "wizard_progress": "Zapisane odpowiedzi: {done} z {total}",
+    "wizard_summary": "Podsumowanie zapisanych odpowiedzi",
+    "wizard_pending": "Oczekuje",
+    "wizard_navigation": "Nawigacja checklisty",
+    "wizard_previous": "Poprzednie zadanie",
+    "wizard_next": "Następne zadanie",
+    "wizard_exit": "Wróć do listy zadań"
 }
