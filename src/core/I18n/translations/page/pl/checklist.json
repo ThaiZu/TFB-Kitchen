@@ -72,5 +72,6 @@
     "wizard_navigation": "Nawigacja checklisty",
     "wizard_previous": "Poprzednie zadanie",
     "wizard_next": "Następne zadanie",
-    "wizard_exit": "Wróć do listy zadań"
+    "wizard_exit": "Wróć do checklist",
+    "no_pending_checklists": "Brak oczekujących checklist."
 }

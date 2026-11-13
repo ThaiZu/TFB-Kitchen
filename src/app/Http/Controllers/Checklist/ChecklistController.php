@@ -3,7 +3,6 @@
 namespace App\Kitchen\app\Http\Controllers\Checklist;
 
 use App\Kitchen\app\Http\Controllers\Controller;
-use App\Kitchen\app\Services\Checklist\ChecklistFocusService;
 use App\Kitchen\app\Services\Checklist\ChecklistService;
 use App\Kitchen\core\Support\ShiftSession;
 use App\Kitchen\core\Support\ShopClock;
@@ -11,8 +10,7 @@ use App\Kitchen\core\Support\ShopClock;
 class ChecklistController extends Controller
 {
     public function __construct(
-        private ChecklistService $checklistService,
-        private ChecklistFocusService $focus
+        private ChecklistService $checklistService
     ) {}
 
     /**
@@ -85,23 +83,15 @@ class ChecklistController extends Controller
             }
         }
 
-        // ── Ouvrir la checklist du moment, plutôt que de la demander ──
-        // Le paramètre ABSENT et le paramètre VIDE ne veulent pas dire la même
-        // chose : absent, c'est une arrivée sur l'écran, et on peut décider
-        // pour l'équipe ; vide, c'est « — toutes — » choisi à la main, et on ne
-        // repasse pas par-dessus. La règle ne vaut qu'aujourd'hui : sur une
-        // date passée on vient relire, pas exécuter.
+        // Entry always shows the pending checklist overview; selection is explicit.
         $autoFocus = false;
-        if (!array_key_exists('checklist_id', $_GET) && $date === $today && $checklists) {
-            $picked = $this->focus->pick($checklists, date('H:i'));
-            if ($picked !== null) {
-                $checklistId = $picked;
-                $autoFocus   = true;
-            }
-        }
-
-        if ($checklistId !== null && $activeWorker && !$this->containsChecklist($checklists, $checklistId)) {
+        if ($checklistId !== null && !$this->containsChecklist($checklists, $checklistId)) {
             $checklistId = null;
+        }
+        if ($checklistId === null) {
+            $checklists = array_values(array_filter($checklists, static fn(array $cl): bool =>
+                (int) ($cl['tasks_total'] ?? 0) > (int) ($cl['tasks_done'] ?? 0)
+            ));
         }
 
         $progress = null;
@@ -133,9 +123,6 @@ class ChecklistController extends Controller
             ] : null,
             'selected_date'         => $date,
             'selected_checklist_id' => $checklistId,
-            // La vue s'en sert pour deux choses : replier les filtres, et dire
-            // que c'est elle qui a choisi. Une sélection qu'on n'a pas faite et
-            // qu'on ne voit pas expliquée passe pour un bug.
             'auto_focus'            => $autoFocus,
             // Le nom de la checklist retenue, pour que le bandeau replié dise
             // ce qu'il cache.
