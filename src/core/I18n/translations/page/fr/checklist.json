@@ -62,5 +62,15 @@
     "modal_photo_close": "Fermer",
     "modal_btn_fail": "Déclarer non effectuée",
     "col_reported_at": "Signalée à",
-    "roster_api_missing": "Impossible de charger la liste des employés. Réessayez."
+    "roster_api_missing": "Impossible de charger la liste des employés. Réessayez.",
+    "wizard_start": "Démarrer la checklist",
+    "wizard_resume": "Reprendre la checklist",
+    "wizard_review": "Voir le récapitulatif",
+    "wizard_progress": "Réponses enregistrées : {done} sur {total}",
+    "wizard_summary": "Récapitulatif des réponses enregistrées",
+    "wizard_pending": "En attente",
+    "wizard_navigation": "Navigation de la checklist",
+    "wizard_previous": "Tâche précédente",
+    "wizard_next": "Tâche suivante",
+    "wizard_exit": "Retour à la liste des tâches"
 }

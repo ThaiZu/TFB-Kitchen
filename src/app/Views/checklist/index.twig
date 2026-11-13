@@ -3,6 +3,7 @@
 {% block title %}{{ translations.checklists_title }}{% endblock %}
 
 {% block head %}
+<link rel="stylesheet" href="{{ ROOT }}/assets/css/checklist-wizard.css?v=1">
 <style>
     .task-badge {
         display: inline-block;
@@ -424,10 +425,16 @@
                tronqué et le reste sortait de l'écran. Chaque tâche est une
                tuile : ce qu'il y a à faire en tête, l'état sur le côté, les
                horaires en dessous, et le bouton d'exécution à portée du pouce. #}
+            <section id="checklist-wizard" data-checklist-id="{{ selected_checklist_id }}" data-date="{{ selected_date }}"
+                     data-start="{{ translations.wizard_start }}" data-resume="{{ translations.wizard_resume }}" data-review="{{ translations.wizard_review }}"
+                     data-progress="{{ translations.wizard_progress }}" data-summary="{{ translations.wizard_summary }}" data-pending="{{ translations.wizard_pending }}">
+                <div class="cw-toolbar"><h2>{{ progress.checklist.name }}</h2><button type="button" id="cw-start" class="btn btn-primary">{{ translations.wizard_start }}</button></div>
+                <div id="cw-progress" hidden><p id="cw-progress-text" role="status" aria-live="polite"></p><progress id="cw-progress-bar"></progress></div>
+                <div id="cw-summary" hidden></div>
             <div class="tk-list">
                 {% for task in progress.tasks %}
                     {% set status = task.status ?? 'PENDING' %}
-                    <div class="tk-item is-{{ status|lower }}">
+                    <div class="tk-item is-{{ status|lower }}" data-cw-task-id="{{ task.task_id }}" data-cw-status="{{ status }}">
 
                         <div class="tk-head">
                             <span class="tk-num">{{ loop.index }}</span>
@@ -528,6 +535,12 @@
                     </div>
                 {% endfor %}
             </div>
+                <nav id="cw-navigation" aria-label="{{ translations.wizard_navigation }}" hidden>
+                    <button type="button" id="cw-previous" class="btn btn-outline-secondary">{{ translations.wizard_previous }}</button>
+                    <button type="button" id="cw-next" class="btn btn-primary">{{ translations.wizard_next }}</button>
+                    <button type="button" id="cw-exit" class="btn btn-outline-secondary">{{ translations.wizard_exit }}</button>
+                </nav>
+            </section>
         {% endif %}
 
     {% elseif checklists is not empty and selected_checklist_id is empty %}
@@ -582,6 +595,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ ROOT }}/assets/js/checklist-wizard.js?v=1"></script>
 
 {# Choisir une tuile envoie le formulaire : un tap au lieu de deux. Sans
    JavaScript, le bouton « Pokaż » reste la voie normale — rien n'est perdu. #}
@@ -826,6 +840,7 @@
         complete_error_no_eligible:        {{ (translations.complete_error_no_eligible) | json_encode | raw }},
     };
 
+    let taskSaving = false, taskNavigating = false;
     let currentTaskId       = null;
     let currentTaskDate     = null;
     let currentRequiresPhoto = false;
@@ -993,8 +1008,15 @@
      * envoyé et ce qu'on fait d'un échec.
      */
     async function submitTask(opts) {
+        if (taskSaving || taskNavigating) return false;
+        taskSaving = true;
+        window.ChecklistWizard?.setBusy(true);
         const inModal = !opts.button;
-        if (opts.button) opts.button.disabled = true;
+        const oldLabel = opts.button?.innerHTML;
+        if (opts.button) { opts.button.disabled = true; const busy = document.createElement('span'); busy.className = 'spinner-border spinner-border-sm me-1'; busy.setAttribute('aria-hidden','true'); opts.button.prepend(busy); opts.button.setAttribute('aria-busy','true'); }
+        const modalButtons = [...modal.querySelectorAll('button')];
+        const previousDisabled = modalButtons.map(button=>button.disabled);
+        modalButtons.forEach(button=>button.disabled=true);
 
         const formData = new FormData();
         formData.append('employee_id', opts.employeeId || '');
@@ -1012,8 +1034,8 @@
             });
             const data = await response.json();
 
-            if (data.success) {
-                if (inModal) bsModal.hide();
+            if (response.ok && data.success === true) {
+                taskNavigating = true;
                 window.location.reload();
                 return true;
             }
@@ -1037,7 +1059,12 @@
             else if (typeof showSnack === 'function') { showSnack(false, m); }
             return false;
         } finally {
-            if (opts.button) opts.button.disabled = false;
+            taskSaving = false;
+            if (!taskNavigating) {
+                if (opts.button) { opts.button.disabled = false; opts.button.innerHTML = oldLabel; opts.button.removeAttribute('aria-busy'); }
+                modalButtons.forEach((button,index)=>button.disabled=previousDisabled[index]);
+                window.ChecklistWizard?.setBusy(false);
+            }
         }
     }
 
@@ -1127,6 +1154,7 @@
     }
 
     document.addEventListener('click', function (e) {
+        if (taskSaving || taskNavigating) return;
         const fail = e.target.closest('.btn-fail-task');
         if (fail) { openModal(fail, 'fail'); return; }
 
@@ -1226,6 +1254,7 @@
     }
 
     confirmBtn.addEventListener('click', async function () {
+        if (taskSaving || taskNavigating) return;
         hideAlert();
 
         const employeeId = employeeSel.value;
@@ -1273,13 +1302,13 @@
                 stayLogged: !SHIFT_OPEN && stayLoggedInput && stayLoggedInput.checked,
             });
         } finally {
-            spinner.classList.add('d-none');
-            confirmBtn.disabled = false;
+            if (!taskNavigating) { spinner.classList.add('d-none'); confirmBtn.disabled = false; }
         }
     });
 
     // Reset modalu po zamknięciu
     if (modal) {
+        modal.addEventListener('hide.bs.modal', function(event) { if(taskSaving || taskNavigating) event.preventDefault(); });
         modal.addEventListener('hidden.bs.modal', function () {
             stopCamera();
             resetModal();

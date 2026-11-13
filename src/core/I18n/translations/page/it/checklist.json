@@ -62,5 +62,15 @@
     "modal_photo_close": "Chiudi",
     "modal_btn_fail": "Segnala non eseguita",
     "col_reported_at": "Segnalata alle",
-    "roster_api_missing": "Impossibile caricare l’elenco dei dipendenti. Riprova."
+    "roster_api_missing": "Impossibile caricare l’elenco dei dipendenti. Riprova.",
+    "wizard_start": "Avvia checklist",
+    "wizard_resume": "Riprendi checklist",
+    "wizard_review": "Visualizza riepilogo",
+    "wizard_progress": "Risposte salvate: {done} di {total}",
+    "wizard_summary": "Riepilogo delle risposte salvate",
+    "wizard_pending": "In attesa",
+    "wizard_navigation": "Navigazione checklist",
+    "wizard_previous": "Attività precedente",
+    "wizard_next": "Attività successiva",
+    "wizard_exit": "Torna alla lista delle attività"
 }

@@ -62,5 +62,15 @@
     "modal_photo_close": "Sluiten",
     "modal_btn_fail": "Melden als niet gedaan",
     "col_reported_at": "Gemeld om",
-    "roster_api_missing": "De medewerkerslijst kon niet worden geladen. Probeer opnieuw."
+    "roster_api_missing": "De medewerkerslijst kon niet worden geladen. Probeer opnieuw.",
+    "wizard_start": "Checklist starten",
+    "wizard_resume": "Checklist hervatten",
+    "wizard_review": "Overzicht bekijken",
+    "wizard_progress": "Opgeslagen antwoorden: {done} van {total}",
+    "wizard_summary": "Overzicht opgeslagen antwoorden",
+    "wizard_pending": "In afwachting",
+    "wizard_navigation": "Checklistnavigatie",
+    "wizard_previous": "Vorige taak",
+    "wizard_next": "Volgende taak",
+    "wizard_exit": "Terug naar takenlijst"
 }

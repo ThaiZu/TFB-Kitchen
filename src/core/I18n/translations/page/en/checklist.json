@@ -62,5 +62,15 @@
     "modal_photo_close": "Close",
     "modal_btn_fail": "Report as not done",
     "col_reported_at": "Reported at",
-    "roster_api_missing": "Could not load the employee list. Try again."
+    "roster_api_missing": "Could not load the employee list. Try again.",
+    "wizard_start": "Start checklist",
+    "wizard_resume": "Resume checklist",
+    "wizard_review": "View summary",
+    "wizard_progress": "Saved responses: {done} of {total}",
+    "wizard_summary": "Saved response summary",
+    "wizard_pending": "Pending",
+    "wizard_navigation": "Checklist navigation",
+    "wizard_previous": "Previous task",
+    "wizard_next": "Next task",
+    "wizard_exit": "Return to task list"
 }
