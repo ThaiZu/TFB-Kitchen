@@ -26,13 +26,17 @@ class ChecklistRepository
         return ($res['success'] ?? false) && isset($res['data']) ? $res['data'] : [];
     }
 
-    /**
-     * Pobiera pracowników sklepu (z polem pin do weryfikacji po stronie serwera).
-     */
-    public function getEmployeesForShop(int $shopId): array
+    /** Verify on API: neither plaintext PIN nor hash may be returned to Kitchen. */
+    public function verifyEmployeePin(int $employeeId, string $pin): array
     {
-        $res = $this->apiClient->get("/shops/{$shopId}/employees");
-        return ($res['success'] ?? false) && isset($res['data']) ? $res['data'] : [];
+        $res = $this->apiClient->post('/kitchen/employees/verify-pin', ['employee_id'=>$employeeId,'pin'=>$pin]);
+        $data = $res['data'] ?? [];
+        if (($res['success'] ?? false) && ($data['success'] ?? false) === true) {
+            return ['success'=>true,'message'=>'ok','name'=>(string)($data['name'] ?? '')];
+        }
+        $reason = $data['message'] ?? null;
+        return ['success'=>false,'message'=>in_array($reason,['invalid_pin','pin_locked','employee_not_in_shop'],true)
+            ? $reason : 'verification_unavailable'];
     }
 
     /** @return array<int, array{employee_id:int,name:string}>|null */

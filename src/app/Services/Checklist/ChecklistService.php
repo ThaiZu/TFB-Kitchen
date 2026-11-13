@@ -165,20 +165,7 @@ class ChecklistService
             return ['success' => false, 'message' => 'shop_not_found'];
         }
 
-        foreach ($this->checklistRepository->getEmployeesForShop($shopId) as $e) {
-            if ((int) $e['id'] !== $employeeId) {
-                continue;
-            }
-            // hash_equals : comparer deux codes courts caractère par caractère
-            // laisse la durée de la réponse renseigner sur les chiffres justes.
-            if (!hash_equals((string) ($e['pin'] ?? ''), $pin)) {
-                return ['success' => false, 'message' => 'invalid_pin'];
-            }
-
-            return ['success' => true, 'message' => 'ok', 'name' => (string) ($e['name'] ?? '')];
-        }
-
-        return ['success' => false, 'message' => 'employee_not_found'];
+        return $this->checklistRepository->verifyEmployeePin($employeeId, $pin);
     }
 
     private function getShopId(): int

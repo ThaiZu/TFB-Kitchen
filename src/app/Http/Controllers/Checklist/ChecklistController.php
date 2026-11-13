@@ -279,7 +279,7 @@ class ChecklistController extends Controller
             ShiftSession::touch($shift);
         }
 
-        $status = ($result['success'] ?? false) ? 200 : 422;
+        $status = ($result['success'] ?? false) ? 200 : (($result['message'] ?? '') === 'verification_unavailable' ? 503 : (($result['message'] ?? '') === 'pin_locked' ? 429 : 422));
         return $this->json($result, $status);
     }
 
@@ -301,7 +301,7 @@ class ChecklistController extends Controller
 
         $res = $this->checklistService->verifyPin($employeeId, $pin);
         if (!($res['success'] ?? false)) {
-            return $this->json($res, 422);
+            return $this->json($res, ($res['message'] ?? '') === 'verification_unavailable' ? 503 : (($res['message'] ?? '') === 'pin_locked' ? 429 : 422));
         }
 
         $date = ShopClock::today($this->checklistService->shopId());
