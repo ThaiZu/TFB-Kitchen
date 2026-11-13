@@ -148,7 +148,7 @@
                         {% for employee in entry_employees %}
                             <button type="button" class="tablet-worker-badge" data-employee-id="{{ employee.id }}">
                                 <span class="tablet-worker-initials">{{ employee.initials ?: '—' }}</span>
-                                <span class="tablet-worker-name">{{ employee.name }}</span>
+                                <span class="tablet-worker-name">{{ employee.name }}{% if employee.responsibility %}<small class="tablet-worker-responsibility">{{ employee.responsibility }}</small>{% endif %}</span>
                             </button>
                         {% endfor %}
                     </div>

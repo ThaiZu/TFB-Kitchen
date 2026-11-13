@@ -12,11 +12,8 @@ use App\Kitchen\core\Http\ApiClient;
  * porte les personnes : c'est donc lui, et lui seul, qui dit qui peut signer
  * une tâche ce jour-là.
  *
- * `/franchisee-employees` a été retiré. Il servait à obtenir les noms, que le
- * planning devait ensuite désigner par identifiant — deux appels, un
- * croisement, et un point de panne de plus pour une question à laquelle une
- * seule route sait répondre. Et la bonne : quelqu'un qui n'est pas au planning
- * ne travaille pas, sa fiche existât-elle.
+ * The shop employee endpoint only supplies optional position labels.
+ * It never supplies additional selectable people: eligibility remains schedule-only.
  *
  * Le même endpoint sert les checklists et la cuisson : savoir qui est en
  * atelier n'appartient à aucun des deux modules.
@@ -42,6 +39,12 @@ class StaffRepository
     public function getSchedule(int $shopId, string $date): ?array
     {
         return $this->rows($this->apiClient->where("/shops/{$shopId}/schedule", ['date' => $date]));
+    }
+
+    /** Optional display metadata; never changes schedule eligibility. */
+    public function getEmployeesWithPositions(int $shopId): ?array
+    {
+        return $this->rows($this->apiClient->where("/shops/{$shopId}/employees", ['include' => 'positions']));
     }
 
     /**

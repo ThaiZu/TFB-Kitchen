@@ -436,6 +436,12 @@
                 button.innerHTML = '<span class="tablet-worker-initials"></span><span class="tablet-worker-name"></span>';
                 button.querySelector('.tablet-worker-initials').textContent = initials || '—';
                 button.querySelector('.tablet-worker-name').textContent = name;
+                if (employee.responsibility) {
+                    var responsibility = document.createElement('small');
+                    responsibility.className = 'tablet-worker-responsibility';
+                    responsibility.textContent = employee.responsibility;
+                    button.querySelector('.tablet-worker-name').appendChild(responsibility);
+                }
                 button.addEventListener('click', function () { selectWorker(button); });
                 list.appendChild(button);
             });

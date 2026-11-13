@@ -194,6 +194,18 @@ check('liste absente → mode',      $s->roster(null)['mode'], 'none');
 // Rien n'a ete appele : aucune route n'est signalee a tort.
 check('rien à signaler au départ', $s->missingApi(), null);
 
+// Display metadata cannot introduce unscheduled employees or change identity.
+$enriched = StaffService::withResponsibilities([
+ ['id'=>'7','name'=>'Anna','initials'=>'A','on_schedule'=>true],
+ ['id'=>'8','name'=>'Lucas','initials'=>'L','on_schedule'=>true],
+], [
+ ['id'=>7,'positions'=>[['name'=>'Bakery','level_name'=>'Opening'],['name'=>'Bakery','level_name'=>'Opening'],['name'=>'Quality','level_name'=>'']]],
+ ['id'=>99,'positions'=>[['name'=>'Not scheduled']]],
+]);
+check('multiple responsibility labels deduplicated', $enriched[0]['responsibility'], 'Bakery · Opening, Quality');
+check('missing position leaves label empty', $enriched[1]['responsibility'], '');
+check('metadata never adds employees', array_column($enriched,'id'), ['7','8']);
+
 // ── Verdict ────────────────────────────────────────────────────────────────
 if ($ko) {
     echo implode("\n", $ko) . "\n\n✗ " . count($ko) . " échec(s), $ok passées\n";

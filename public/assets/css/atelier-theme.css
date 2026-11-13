@@ -430,3 +430,5 @@ a .card:active,.card.is-tappable:active { transform:scale(.985); }
 
 /* Shared tablet controls use the same compact corners on every Kitchen page. */
 .app-topbar #tabletWorkerStatus .app-shift-status,#productionSectorButton.app-shift-status,#tabletWorkerModal .tablet-worker-badge,#productionSectorModal .tablet-worker-badge{border-radius:10px!important}
+
+.tablet-worker-responsibility { display:block; margin-top:4px; font-size:.78rem; font-weight:400; line-height:1.35; color:var(--c-muted, #7a7168); overflow-wrap:anywhere; }
