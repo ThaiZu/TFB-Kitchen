@@ -21,9 +21,18 @@ try{
    return route.fulfill({json:[]});
   });
   await page.goto('http://kitchen.test/kitchen/deliveries');
-  assert.equal(await page.locator('.dl-order').count(),1);await page.locator('.dl-order').click();
-  assert.equal(await page.locator('.dl-line').count(),2);assert.equal(await page.locator('.dl-line input').first().inputValue(),'2');checks+=3;
+  assert.equal(await page.locator('.dl-order').count(),1);await page.locator('.dl-order').click();await page.locator('.dl-line').first().waitFor();
+  assert.equal(await page.locator('.dl-line').count(),2);assert.equal(await page.locator('.dl-line input').first().inputValue(),'3');checks+=3;
   assert.equal(await page.locator('.dl-stepper button').first().evaluate(e=>e.getBoundingClientRect().height>=48),true);checks++;
+  const difference=page.locator('.dl-line output').first();
+  assert.equal(await difference.textContent(),'0');
+  assert.equal(await page.locator('.dl-ordered strong').first().textContent(),'3');
+  await page.locator('.dl-stepper [data-step="-1"]').first().click();assert.equal(await difference.textContent(),'-1');
+  await page.locator('.dl-stepper [data-step="1"]').first().click();assert.equal(await difference.textContent(),'0');
+  await page.locator('.dl-line input').first().fill('5');assert.equal(await difference.textContent(),'+2');
+  await page.locator('.dl-line input').first().fill('0');assert.equal(await difference.textContent(),'-3');
+  assert.equal(await page.locator('.dl-product').first().textContent().then(t=>t.includes('12')),false);checks+=7;
+
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);checks++;
   await page.locator('#dlDate').fill('2026-11-03');await page.locator('#dlTime').fill('08:35');
   await page.locator('.dl-line input').first().fill('2.5');await page.locator('#dlSave').click();assert.equal(writes.length,0);await page.locator('#dlCancel').click();assert.equal(writes.length,0);checks+=2;

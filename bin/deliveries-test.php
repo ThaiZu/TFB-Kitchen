@@ -17,7 +17,7 @@ $order=['id'=>40,'supplier_name'=>'Supplier <script>alert(1)</script>','delivery
 $repository=new class($order) extends DeliveryRepository {
     public array $writes=[];public bool $fail=false;public bool $networkFailure=false;
     public function __construct(public array $order){}
-    public function recent(int $shop):array{return ['success'=>!$this->fail,'data'=>[['id'=>40,'supplier_name'=>'Supplier','delivery_date'=>'2026-11-05','status'=>'IN_TRANSIT','product_count'=>1,'pack_count'=>3]]];}
+    public function recent(int $shop):array{return ['success'=>!$this->fail,'data'=>[['id'=>40,'supplier_name'=>'Supplier','delivery_date'=>'2026-11-05','status'=>'IN_TRANSIT','product_count'=>1,'pack_count'=>'10.0000']]];}
     public function detail(int $shop,int $order):array{return ['success'=>!$this->fail,'data'=>$this->order];}
     public function receive(int $shop,int $order,array $payload):array{$this->writes[]=[$shop,$order,$payload];if($this->networkFailure)return ['success'=>false,'code'=>0];return ['success'=>true,'data'=>['success_insert_delivery'=>true,'success_recalculate_costs'=>true]];}
 };
@@ -46,6 +46,13 @@ foreach(['pl','en','fr','nl','it'] as $lang){
         $expect(!preg_match('/<h1>\s*<\/h1>/',$html),'Localized title');
         $expect(!str_contains($html,'quantity_hint')&&!str_contains($html,'recent_hint'),'Removed introductory descriptions');
         if($view==='receive')$expect($xpath->query('//input[@id="dlDate" and @type="date"] | //input[@id="dlTime" and @type="time"]')->length===2,'Separate editable date and time controls');
+        if($view==='index')$expect(str_contains($html,'10 ')&&!str_contains($html,'10,00'),'Package count has no trailing decimals');
+        if($view==='receive'){
+            $expect($xpath->query('//div[@class="dl-columns"]/span')->length===4,'Product plus three quantity columns');
+            $expect($xpath->query('//input[starts-with(@id,"qty-") and @value="3"]')->length===1,'Receipt defaults to ordered, not supplier-declared quantity');
+            $expect(!str_contains($html,' = 12 '),'Pack contents removed from receipt');
+        }
+
         if($lang==='pl')file_put_contents($dir.'/'.$view.'.html',$html);
     }
 }

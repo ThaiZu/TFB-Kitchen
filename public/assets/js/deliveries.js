@@ -9,7 +9,7 @@
     const rows=[...document.querySelectorAll('.dl-line')], format=n=>Number(n).toLocaleString(undefined,{maximumFractionDigits:4});
     let pending=null, busy=false, confirmedExclusion=false, uncertain=false, dirty=false;
     const show=(text,success=false)=>{notice.hidden=false;notice.textContent=text;notice.classList.toggle('is-success',success);notice.scrollIntoView({block:'nearest'});};
-    function summary(){let packs=0,different=0;rows.forEach(row=>{const qty=Number(row.querySelector('input').value),diff=qty-Number(row.dataset.ordered);packs+=Number.isFinite(qty)?qty:0;if(diff!==0)different++;const output=row.querySelector('output');output.textContent=`${m.difference}: ${diff>0?'+':''}${format(diff)}`;output.classList.toggle('is-different',diff!==0);});document.getElementById('dlSummary').textContent=`${format(packs)} ${m.packs} · ${different} ${m.differing_lines}`;return {packs,different};}
+    function summary(){let packs=0,different=0;rows.forEach(row=>{const qty=Number(row.querySelector('input').value),diff=qty-Number(row.dataset.ordered);packs+=Number.isFinite(qty)?qty:0;if(diff!==0)different++;const output=row.querySelector('output');output.textContent=`${diff>0?'+':''}${format(diff)}`;output.classList.toggle('is-different',diff!==0);});document.getElementById('dlSummary').textContent=`${format(packs)} ${m.packs} · ${different} ${m.differing_lines}`;return {packs,different};}
     rows.forEach(row=>{const input=row.querySelector('input');input.addEventListener('input',()=>{dirty=true;summary();});row.querySelectorAll('[data-step]').forEach(button=>button.addEventListener('click',()=>{input.value=String(Math.round(Math.max(0,Math.min(99999999,Number(input.value||0)+Number(button.dataset.step)))*10000)/10000);input.dispatchEvent(new Event('input',{bubbles:true}));}));});
     summary();
     for(const id of ['dlDate','dlTime']) document.getElementById(id).addEventListener('input',()=>{dirty=true;});
@@ -21,7 +21,7 @@
         rows.forEach((row,index)=>{
             if(excludedIndexes.has(index)){row.remove();return;}
             const input=row.querySelector('input'),label=row.querySelector('.dl-quantity-label');
-            const value=document.createElement('strong');value.className='dl-received';value.textContent=`${format(input.value)} ${m.packs}`;
+            const value=document.createElement('strong');value.className='dl-received';value.textContent=format(input.value);
             row.querySelector('.dl-stepper').replaceWith(value);
             const caption=document.createElement('span');caption.className=label.className;caption.textContent=m.received;label.replaceWith(caption);
         });

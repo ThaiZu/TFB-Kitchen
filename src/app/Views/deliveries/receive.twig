@@ -1,6 +1,6 @@
 {% extends 'layouts/base.twig' %}
 {% block title %}{{ translations.receive_title }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ ROOT }}/assets/css/deliveries.css?v=2">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ ROOT }}/assets/css/deliveries.css?v=3">{% endblock %}
 {% block content %}
 <a class="dl-back" href="{{ ROOT }}/deliveries">← {{ translations.back_to_deliveries }}</a>
 {% if not available or not order %}<p class="dl-notice" role="alert">{{ translations.unavailable }}</p><a class="dl-button" href="">{{ translations.check_status }}</a>
@@ -17,13 +17,17 @@
 <div class="dl-date"><span>{{ translations.actual_delivery_date }}</span><strong>{{ order.delivered_on ? order.delivered_on|date('d.m.Y H:i') : '—' }}</strong></div>
 {% endif %}
 <div class="dl-lines">
+<div class="dl-columns" aria-hidden="true"><span></span><span>{{ translations.ordered }}</span><span>{{ order.can_receive or order.delivered_on or order.status == 'DELIVERED' ? translations.received : translations.declared }}</span><span>{{ translations.difference }}</span></div>
 {% for line in order.lines %}
+{% set quantity = order.can_receive ? line.ordered : line.quantity %}
 <section class="dl-line" data-key="{{ line.key }}" data-ordered="{{ line.ordered }}">
-    <div><strong>{{ line.name }}</strong><small>{{ line.sku }} · {{ translations.ordered }}: {{ line.ordered }} {{ translations.packs }}</small><small>1 {{ translations.pack }} = {{ line.pack_size }} {{ line.unit }}</small>{% if order.can_receive and not line.mapped %}<small class="dl-warning">{{ translations.unmapped_line }}</small>{% endif %}</div>
+    <div class="dl-product"><strong>{{ line.name }}</strong><small>{{ line.sku }}</small>{% if order.can_receive and not line.mapped %}<small class="dl-warning">{{ translations.unmapped_line }}</small>{% endif %}</div>
+    <div class="dl-ordered"><span class="dl-cell-label">{{ translations.ordered }}</span><strong>{{ line.ordered|number_format(4, ',', ' ')|trim('0', 'right')|trim(',', 'right') }}</strong></div>
     <div class="dl-count">
-    {% if order.can_receive %}<label class="dl-quantity-label" for="qty-{{ loop.index }}">{{ translations.received }}<span class="visually-hidden"> {{ line.name }}</span></label><div class="dl-stepper"><button type="button" data-step="-1" aria-label="{{ translations.decrease }} {{ line.name }}">−</button><input id="qty-{{ loop.index }}" name="{{ line.key }}" aria-label="{{ translations.received }} {{ line.name }}" type="number" inputmode="decimal" min="0" max="99999999" step="0.0001" value="{{ line.quantity }}" required><button type="button" data-step="1" aria-label="{{ translations.increase }} {{ line.name }}">+</button></div><output class="dl-difference" for="qty-{{ loop.index }}"></output>
-    {% else %}<span class="dl-quantity-label">{{ order.delivered_on or order.status == 'DELIVERED' ? translations.received : translations.declared }}</span><strong class="dl-received">{{ line.quantity }} {{ translations.packs }}</strong><span class="dl-difference">{{ translations.difference }}: {{ line.quantity - line.ordered }}</span>{% endif %}
+    {% if order.can_receive %}<label class="dl-quantity-label" for="qty-{{ loop.index }}">{{ translations.received }}<span class="visually-hidden"> {{ line.name }}</span></label><div class="dl-stepper"><button type="button" data-step="-1" aria-label="{{ translations.decrease }} {{ line.name }}">−</button><input id="qty-{{ loop.index }}" name="{{ line.key }}" aria-label="{{ translations.received }} {{ line.name }}" type="number" inputmode="decimal" min="0" max="99999999" step="0.0001" value="{{ quantity|number_format(4, '.', '')|trim('0', 'right')|trim('.', 'right') }}" required><button type="button" data-step="1" aria-label="{{ translations.increase }} {{ line.name }}">+</button></div>
+    {% else %}<span class="dl-quantity-label">{{ order.delivered_on or order.status == 'DELIVERED' ? translations.received : translations.declared }}</span><strong class="dl-received">{{ quantity|number_format(4, ',', ' ')|trim('0', 'right')|trim(',', 'right') }}</strong>{% endif %}
     </div>
+    <div class="dl-diff-cell"><span class="dl-cell-label">{{ translations.difference }}</span>{% if order.can_receive %}<output class="dl-difference" for="qty-{{ loop.index }}">0</output>{% else %}{% set difference = quantity - line.ordered %}<span class="dl-difference{{ difference != 0 ? ' is-different' : '' }}">{{ difference > 0 ? '+' : '' }}{{ difference|number_format(4, ',', ' ')|trim('0', 'right')|trim(',', 'right') }}</span>{% endif %}</div>
 </section>
 {% endfor %}
 </div>
@@ -36,4 +40,4 @@
 {% endif %}
 {% endif %}
 {% endblock %}
-{% block scripts %}{% if available and order and order.can_receive and has_shift %}<script src="{{ ROOT }}/assets/js/deliveries.js?v=2"></script>{% endif %}{% endblock %}
+{% block scripts %}{% if available and order and order.can_receive and has_shift %}<script src="{{ ROOT }}/assets/js/deliveries.js?v=3"></script>{% endif %}{% endblock %}
