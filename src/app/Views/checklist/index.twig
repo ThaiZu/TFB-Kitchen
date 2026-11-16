@@ -3,7 +3,7 @@
 {% block title %}{{ translations.checklists_title }}{% endblock %}
 
 {% block head %}
-<link rel="stylesheet" href="{{ ROOT }}/assets/css/checklist-wizard.css?v=3">
+<link rel="stylesheet" href="{{ ROOT }}/assets/css/checklist-wizard.css?v=4">
 <style>
     .task-badge {
         display: inline-block;
@@ -643,7 +643,15 @@
                 {# La note passe AVANT le PIN : on écrit ce qu'on a constaté,
                    puis on signe. Le PIN en dernier, juste avant le bouton de
                    validation, fait de la saisie du code le geste qui conclut. #}
-                <div class="mb-3">
+                <div id="checklistFailureReasons" class="mb-3 d-none">
+                    <p class="form-label fw-semibold">{{ translations.modal_reason_label }} <span class="text-danger">*</span></p>
+                    <div class="cw-failure-reasons" role="group" aria-label="{{ translations.modal_reason_label }}">
+                        {% for reason in ['time', 'materials', 'equipment', 'not_applicable', 'other'] %}
+                            <button type="button" class="btn btn-outline-primary" data-failure-reason="{{ reason }}" aria-pressed="false">{{ attribute(translations, 'failure_reason_' ~ reason) }}</button>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="mb-3" id="checklistNoteSection">
                     <label for="modalNoteInput" class="form-label fw-semibold">
                         <span id="modalNoteLabel">{{ translations.modal_note_label }}</span>
                         <span class="text-danger d-none" id="modalNoteRequired">*</span>
@@ -916,7 +924,28 @@
         showPhotoPreview(file);
     }
 
+    let selectedFailureReason = '';
+    const failureReasons = document.getElementById('checklistFailureReasons');
+    const reasonButtons = [...failureReasons.querySelectorAll('[data-failure-reason]')];
+    const noteSection = document.getElementById('checklistNoteSection');
+    function updateFailureReason() {
+        const failed = currentStatus === 'FAILED';
+        failureReasons.classList.toggle('d-none', !failed);
+        noteSection.classList.toggle('d-none', failed && selectedFailureReason !== 'other');
+        reasonButtons.forEach(button=>button.setAttribute('aria-pressed', String(button.dataset.failureReason === selectedFailureReason)));
+        const otherLabel = reasonButtons.find(button=>button.dataset.failureReason==='other').textContent.trim();
+        noteInput.maxLength = failed && selectedFailureReason==='other' ? 255-otherLabel.length-2 : 255;
+        confirmBtn.disabled = taskSaving || taskNavigating || (failed && (!selectedFailureReason || (selectedFailureReason==='other' && !noteInput.value.trim())));
+    }
+    reasonButtons.forEach(button=>button.addEventListener('click',()=>{
+        if (taskSaving || taskNavigating) return;
+        selectedFailureReason=button.dataset.failureReason;
+        updateFailureReason();
+    }));
+    noteInput.addEventListener('input',updateFailureReason);
+
     function resetModal() {
+        selectedFailureReason = '';
         employeeSel.value = '';
         pinInput.value    = '';
         noteInput.value   = '';
@@ -1061,6 +1090,15 @@
                     : (confirmBtn.dataset.labelDone || confirmLabel.textContent);
             }
         }
+
+        if (!selectedFailureReason && currentStatus==='FAILED' && noteInput.value.trim()) {
+            const saved = noteInput.value.trim();
+            const matching = reasonButtons.find(button=>button.textContent.trim()===saved);
+            selectedFailureReason = matching?.dataset.failureReason || 'other';
+            const prefix = reasonButtons.find(button=>button.dataset.failureReason==='other').textContent.trim()+': ';
+            if (!matching && saved.startsWith(prefix)) noteInput.value=saved.slice(prefix.length);
+        }
+        updateFailureReason();
 
         if (!SHIFT_OPEN && (!inlineForm || !sameTask)) {
             renderEligibleEmployees([]);
@@ -1208,7 +1246,10 @@
 
         const employeeId = employeeSel.value;
         const pin        = pinInput.value.trim();
-        const note       = noteInput.value.trim();
+        const selectedReason = reasonButtons.find(button=>button.dataset.failureReason===selectedFailureReason);
+        const note = currentStatus==='FAILED'
+            ? (selectedReason ? selectedReason.textContent.trim() + (selectedFailureReason==='other' ? ': '+noteInput.value.trim() : '') : '')
+            : noteInput.value.trim();
         const photoFile  = photoInput && photoInput.files && photoInput.files[0]
                             ? photoInput.files[0] : null;
 
@@ -1231,7 +1272,7 @@
         // Déclarer une tâche non faite sans dire pourquoi n'apprend rien à
         // celui qui relira la checklist : c'est le seul cas où la note est
         // exigée, et le serveur le refuse aussi de son côté.
-        if (currentStatus === 'FAILED' && !note) {
+        if (currentStatus === 'FAILED' && (!selectedFailureReason || (selectedFailureReason==='other' && !noteInput.value.trim()))) {
             showAlert(translations.complete_error_note_required, 'warning');
             return;
         }
@@ -1251,7 +1292,7 @@
                 stayLogged: !SHIFT_OPEN && stayLoggedInput && stayLoggedInput.checked,
             });
         } finally {
-            if (!taskNavigating) { spinner.classList.add('d-none'); confirmBtn.disabled = false; }
+            if (!taskNavigating) { spinner.classList.add('d-none'); updateFailureReason(); }
         }
     });
 

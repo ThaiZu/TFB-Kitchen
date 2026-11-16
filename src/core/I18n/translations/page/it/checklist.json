@@ -74,5 +74,10 @@
     "wizard_next": "Attività successiva",
     "wizard_exit": "Torna alle checklist",
     "no_pending_checklists": "Nessuna checklist in attesa.",
-    "wizard_save_next": "Conferma e continua"
+    "wizard_save_next": "Conferma e continua",
+    "failure_reason_time": "Mancanza di tempo / troppa affluenza",
+    "failure_reason_materials": "Materiali o forniture mancanti",
+    "failure_reason_equipment": "Guasto alle attrezzature",
+    "failure_reason_not_applicable": "Attività non applicabile oggi",
+    "failure_reason_other": "Altro motivo"
 }

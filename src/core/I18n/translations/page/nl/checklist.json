@@ -74,5 +74,10 @@
     "wizard_next": "Volgende taak",
     "wizard_exit": "Terug naar checklists",
     "no_pending_checklists": "Geen openstaande checklists.",
-    "wizard_save_next": "Bevestigen en doorgaan"
+    "wizard_save_next": "Bevestigen en doorgaan",
+    "failure_reason_time": "Geen tijd / te druk",
+    "failure_reason_materials": "Materialen of middelen ontbreken",
+    "failure_reason_equipment": "Defecte apparatuur",
+    "failure_reason_not_applicable": "Taak is vandaag niet van toepassing",
+    "failure_reason_other": "Andere reden"
 }

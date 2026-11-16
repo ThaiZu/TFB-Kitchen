@@ -74,5 +74,10 @@
     "wizard_next": "Next task",
     "wizard_exit": "Back to checklists",
     "no_pending_checklists": "No pending checklists.",
-    "wizard_save_next": "Confirm and continue"
+    "wizard_save_next": "Confirm and continue",
+    "failure_reason_time": "Not enough time / too busy",
+    "failure_reason_materials": "Missing materials or supplies",
+    "failure_reason_equipment": "Equipment failure",
+    "failure_reason_not_applicable": "Task does not apply today",
+    "failure_reason_other": "Other reason"
 }

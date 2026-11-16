@@ -74,5 +74,10 @@
     "wizard_next": "Następne zadanie",
     "wizard_exit": "Wróć do checklist",
     "no_pending_checklists": "Brak oczekujących checklist.",
-    "wizard_save_next": "Zatwierdź i przejdź do następnego"
+    "wizard_save_next": "Zatwierdź i przejdź do następnego",
+    "failure_reason_time": "Brak czasu / zbyt duży ruch",
+    "failure_reason_materials": "Brak materiałów lub środków",
+    "failure_reason_equipment": "Awaria sprzętu",
+    "failure_reason_not_applicable": "Zadanie nie dotyczy dzisiejszej sytuacji",
+    "failure_reason_other": "Inny powód"
 }

@@ -45,3 +45,11 @@ Validation:
   and server-side PIN/multipart completion contract.
 
 Browser API responses are mocked; no live shop data is read or changed.
+
+Failure reasons use five translated tablet buttons: time/traffic, missing supplies,
+equipment failure, not applicable today and other. Only Other reveals a required
+comment. Confirm is disabled until a reason (and any required comment) is present.
+The existing multipart `note` stores the selected translated label, or
+`Other reason: comment`. The API still validates a nonempty note for FAILED; no
+migration is needed. These labels are human-readable text, not stable reporting
+codes. Existing free-text reasons remain readable and editable as Other.
