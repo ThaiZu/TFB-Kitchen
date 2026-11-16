@@ -45,6 +45,13 @@ foreach(['pl','en','fr','nl','it'] as $lang){
         $expect(!str_contains($html,'<script>alert(1)</script>'),'Escaped supplier and product names');
         $expect(!preg_match('/<h1>\s*<\/h1>/',$html),'Localized title');
         $expect(!str_contains($html,'quantity_hint')&&!str_contains($html,'recent_hint'),'Removed introductory descriptions');
+        if($view==='index')$expect(!str_contains($html,'3,00'),'Package total has no decimal zeros');
+        if($view==='receive') {
+            $expect($xpath->query('//*[contains(@class,"dl-ordered")]')->length===2,'Ordered quantities have their own column');
+            $expect($xpath->query('//input[starts-with(@id,"qty-") and @step="1"]')->length===2,'Whole packages only');
+            $expect($xpath->query('//input[@id="qty-1" and @value="3"]')->length===1,'Receipt defaults to ordered quantity, not shipment declaration');
+            $expect(!str_contains($html,'1 opakowanie ='),'Pack contents removed');
+        }
         if($view==='receive')$expect($xpath->query('//input[@id="dlDate" and @type="date"] | //input[@id="dlTime" and @type="time"]')->length===2,'Separate editable date and time controls');
         if($lang==='pl')file_put_contents($dir.'/'.$view.'.html',$html);
     }

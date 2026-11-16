@@ -21,15 +21,19 @@ try{
    return route.fulfill({json:[]});
   });
   await page.goto('http://kitchen.test/kitchen/deliveries');
-  assert.equal(await page.locator('.dl-order').count(),1);await page.locator('.dl-order').click();
-  assert.equal(await page.locator('.dl-line').count(),2);assert.equal(await page.locator('.dl-line input').first().inputValue(),'2');checks+=3;
+  assert.equal(await page.locator('.dl-order').count(),1);await page.locator('.dl-order').click();await page.locator('.dl-line').first().waitFor();
+  assert.equal(await page.locator('.dl-line').count(),2);assert.equal(await page.locator('.dl-line input').first().inputValue(),'3');checks+=3;
   assert.equal(await page.locator('.dl-stepper button').first().evaluate(e=>e.getBoundingClientRect().height>=48),true);checks++;
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);checks++;
+  assert.equal(await page.locator('.dl-ordered strong').first().textContent(),'3');assert.equal(await page.locator('output.dl-difference').first().textContent(),'0');checks+=2;
+  await page.locator('.dl-line input').first().fill('4');assert.equal(await page.locator('output.dl-difference').first().textContent(),'+1');
+  await page.locator('.dl-line input').first().fill('2');assert.equal(await page.locator('output.dl-difference').first().textContent(),'-1');
+  await page.locator('.dl-line input').first().fill('2.5');assert.equal(await page.locator('.dl-line input').first().evaluate(el=>el.validity.stepMismatch),true);checks+=3;
   await page.locator('#dlDate').fill('2026-11-03');await page.locator('#dlTime').fill('08:35');
-  await page.locator('.dl-line input').first().fill('2.5');await page.locator('#dlSave').click();assert.equal(writes.length,0);await page.locator('#dlCancel').click();assert.equal(writes.length,0);checks+=2;
+  await page.locator('.dl-line input').first().fill('2');await page.locator('#dlSave').click();assert.equal(writes.length,0);await page.locator('#dlCancel').click();assert.equal(writes.length,0);checks+=2;
   await page.screenshot({path:path.join(dir,`delivery-${width}.png`),fullPage:true});
   await page.locator('#dlSave').click();await page.locator('#dlConfirmSave').click();await page.waitForFunction(()=>!document.getElementById('dlSave'));
-  assert.equal(writes.length,1);assert.equal(Object.values(writes[0].quantities)[0],'2.5');assert.equal(writes[0].shipment_revision,3);assert.equal(writes[0].delivered_on,'2026-11-03T08:35');assert.equal(await page.locator('#dlForm input, #dlForm button').count(),0);assert.match(await page.locator('#dlForm .dl-date').textContent(),/03.11.2026 08:35/);checks+=3;assert.equal('materials' in writes[0],false);assert.equal(await page.locator('fieldset').evaluate(e=>e.disabled),true);checks+=5;
+  assert.equal(writes.length,1);assert.equal(Object.values(writes[0].quantities)[0],'2');assert.equal(writes[0].shipment_revision,3);assert.equal(writes[0].delivered_on,'2026-11-03T08:35');assert.equal(await page.locator('#dlForm input, #dlForm button').count(),0);assert.match(await page.locator('#dlForm .dl-date').textContent(),/03.11.2026 08:35/);checks+=3;assert.equal('materials' in writes[0],false);assert.equal(await page.locator('fieldset').evaluate(e=>e.disabled),true);checks+=5;
   for(const scenario of ['mapping','unknown','stale','costs','shift']){
    mode=scenario;writes=[];await page.goto('http://kitchen.test/kitchen/deliveries/40');await page.locator('#dlSave').click();await page.locator('#dlConfirmSave').click();
    if(scenario==='mapping'){

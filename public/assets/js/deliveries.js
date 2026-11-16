@@ -6,11 +6,11 @@
     const form=document.getElementById('dlForm'), fieldset=form.querySelector('fieldset'), save=document.getElementById('dlSave');
     if (!save) return;
     const notice=document.getElementById('dlNotice'), check=document.getElementById('dlCheck'), dialog=document.getElementById('dlConfirm'), issues=document.getElementById('dlIssues'), confirmText=document.getElementById('dlConfirmText'), confirmSave=document.getElementById('dlConfirmSave');
-    const rows=[...document.querySelectorAll('.dl-line')], format=n=>Number(n).toLocaleString(undefined,{maximumFractionDigits:4});
+    const rows=[...document.querySelectorAll('.dl-line')], format=n=>Number(n).toLocaleString(undefined,{maximumFractionDigits:0});
     let pending=null, busy=false, confirmedExclusion=false, uncertain=false, dirty=false;
     const show=(text,success=false)=>{notice.hidden=false;notice.textContent=text;notice.classList.toggle('is-success',success);notice.scrollIntoView({block:'nearest'});};
-    function summary(){let packs=0,different=0;rows.forEach(row=>{const qty=Number(row.querySelector('input').value),diff=qty-Number(row.dataset.ordered);packs+=Number.isFinite(qty)?qty:0;if(diff!==0)different++;const output=row.querySelector('output');output.textContent=`${m.difference}: ${diff>0?'+':''}${format(diff)}`;output.classList.toggle('is-different',diff!==0);});document.getElementById('dlSummary').textContent=`${format(packs)} ${m.packs} · ${different} ${m.differing_lines}`;return {packs,different};}
-    rows.forEach(row=>{const input=row.querySelector('input');input.addEventListener('input',()=>{dirty=true;summary();});row.querySelectorAll('[data-step]').forEach(button=>button.addEventListener('click',()=>{input.value=String(Math.round(Math.max(0,Math.min(99999999,Number(input.value||0)+Number(button.dataset.step)))*10000)/10000);input.dispatchEvent(new Event('input',{bubbles:true}));}));});
+    function summary(){let packs=0,different=0;rows.forEach(row=>{const qty=Number(row.querySelector('input').value),diff=qty-Number(row.dataset.ordered);packs+=Number.isFinite(qty)?qty:0;if(diff!==0)different++;const output=row.querySelector('output');output.textContent=`${diff>0?'+':''}${format(diff)}`;output.classList.toggle('is-different',diff!==0);});document.getElementById('dlSummary').textContent=`${format(packs)} ${m.packs} · ${different} ${m.differing_lines}`;return {packs,different};}
+    rows.forEach(row=>{const input=row.querySelector('input');input.addEventListener('input',()=>{dirty=true;summary();});row.querySelectorAll('[data-step]').forEach(button=>button.addEventListener('click',()=>{input.value=String(Math.round(Math.max(0,Math.min(99999999,Number(input.value||0)+Number(button.dataset.step)))));input.dispatchEvent(new Event('input',{bubbles:true}));}));});
     summary();
     for(const id of ['dlDate','dlTime']) document.getElementById(id).addEventListener('input',()=>{dirty=true;});
     form.addEventListener('submit',event=>{event.preventDefault();if(busy||uncertain||!form.reportValidity())return;const quantities=Object.fromEntries(rows.map(row=>[row.dataset.key,row.querySelector('input').value]));pending={shipment_revision:order.shipment_revision,delivered_on:document.getElementById('dlDate').value+'T'+document.getElementById('dlTime').value,quantities};confirmedExclusion=false;issues.replaceChildren();const total=summary();confirmText.textContent=`${m.confirm_hint} ${format(total.packs)} ${m.packs}; ${total.different} ${m.differing_lines}.`;confirmSave.textContent=m.confirm_receipt;dialog.showModal();});
@@ -20,8 +20,8 @@
         const excludedIndexes=new Set(excluded.map(line=>line.line_index));
         rows.forEach((row,index)=>{
             if(excludedIndexes.has(index)){row.remove();return;}
-            const input=row.querySelector('input'),label=row.querySelector('.dl-quantity-label');
-            const value=document.createElement('strong');value.className='dl-received';value.textContent=`${format(input.value)} ${m.packs}`;
+            const input=row.querySelector('input'),label=row.querySelector('.dl-count .dl-quantity-label');
+            const value=document.createElement('strong');value.className='dl-received';value.textContent=format(input.value);
             row.querySelector('.dl-stepper').replaceWith(value);
             const caption=document.createElement('span');caption.className=label.className;caption.textContent=m.received;label.replaceWith(caption);
         });
