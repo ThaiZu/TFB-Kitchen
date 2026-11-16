@@ -19,3 +19,8 @@
 #checklist-wizard .tk-acts .tk-do,
 #checklist-wizard .tk-acts .tk-fail { flex:1; width:auto; min-height:48px; }
 #checklist-wizard .tk-acts .tk-fail span { display:inline; }
+
+.cw-failure-reasons { display:flex; flex-wrap:wrap; gap:10px; }
+.cw-failure-reasons .btn { min-height:48px; white-space:normal; text-align:left; }
+.cw-failure-reasons .btn[aria-pressed="true"] { background:var(--c-primary, #8d1d2c); color:#fff; border-color:var(--c-primary, #8d1d2c); }
+@media(max-width:575px) { .cw-failure-reasons .btn { flex:1 1 100%; } }

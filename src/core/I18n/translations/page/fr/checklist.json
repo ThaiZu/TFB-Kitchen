@@ -74,5 +74,10 @@
     "wizard_next": "Tâche suivante",
     "wizard_exit": "Retour aux checklists",
     "no_pending_checklists": "Aucune checklist en attente.",
-    "wizard_save_next": "Valider et passer à la suite"
+    "wizard_save_next": "Valider et passer à la suite",
+    "failure_reason_time": "Manque de temps / forte affluence",
+    "failure_reason_materials": "Matériel ou fournitures manquants",
+    "failure_reason_equipment": "Panne d’équipement",
+    "failure_reason_not_applicable": "Tâche non applicable aujourd’hui",
+    "failure_reason_other": "Autre raison"
 }
