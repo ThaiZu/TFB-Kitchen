@@ -188,6 +188,8 @@ foreach(['pl','en','fr','it','nl'] as $language){
  GlobalRegistry::set('lang_code',$language);$_GET['url']='knowledge/products';
  ob_start();$container->get(Controller::class)->view('knowledge/product/overview',['products'=>$cardProducts]);$html=ob_get_clean();
  $dom=new DOMDocument();@$dom->loadHTML($html);$xp=new DOMXPath($dom);
+ $expect($xp->query('//details[@data-card-disclosure and @open]')->length===0,'Compact filters start collapsed');
+ $expect($xp->query('//*[@id="kpFilterDialog"]')->length===0,'No extra mobile filter dialog');
  $expect($xp->query('//*[@data-product-id]')->length===6,'Product models and filters render in every language');
  $cardCss=substr(hash_file('sha256',__DIR__.'/../public/assets/css/knowledge-products.css'),0,16);$cardJs=substr(hash_file('sha256',__DIR__.'/../public/assets/js/knowledge-products.js'),0,16);
  $expect(str_contains($html,'knowledge-products.css?v='.$cardCss)&&str_contains($html,'knowledge-products.js?v='.$cardJs),'Catalogue assets use content hashes to invalidate cache');
