@@ -1,0 +1,14 @@
+{% extends 'layouts/base.twig' %}
+{% block title %}{{ translations.lp_title }}{% endblock %}
+{% block head %}<style>.labels-page{max-width:1100px;margin:auto}.labels-card{padding:20px;margin:16px 0;background:white;border:1px solid #ddd;border-radius:16px}.labels-fields{display:flex;gap:12px;flex-wrap:wrap;align-items:end}.labels-fields label{display:flex;flex-direction:column;gap:6px;flex:1;min-width:130px}.labels-page input,.labels-page select,.labels-page button{min-height:44px;padding:8px;border:1px solid #bbb;border-radius:8px}.labels-page button{background:#97182c;color:white;cursor:pointer}.labels-page button:disabled{opacity:.5}.labels-page table{width:100%;border-collapse:collapse}.labels-page th,.labels-page td{padding:10px;text-align:left;border-bottom:1px solid #ddd}.labels-scroll{overflow:auto}</style>{% endblock %}
+{% block content %}
+<div class="labels-page" id="product-labels" data-root="{{ ROOT }}"><h1>{{ translations.lp_title }}</h1><p>{{ translations.lp_intro }}</p>
+<script type="application/json" data-messages>{{ translations|json_encode(constant('JSON_HEX_TAG'))|raw }}</script>
+<p role="status" aria-live="polite" data-notice></p>
+<section class="labels-card"><form data-add><div class="labels-fields"><label>{{ translations.lp_search }}<input type="search" data-search></label><label>{{ translations.lp_product }}<select data-product required disabled></select></label><label>{{ translations.lp_portion }}<select data-portion disabled></select></label><label>{{ translations.lp_count }}<input type="number" data-count value="1" min="1" max="300" step="1" required></label><button type="submit" disabled data-add-button>{{ translations.lp_add }}</button></div></form>
+<div class="labels-scroll"><table><thead><tr><th>{{ translations.lp_product }}</th><th>{{ translations.lp_portion }}</th><th>{{ translations.lp_count }}</th><th></th></tr></thead><tbody data-lines></tbody></table></div>
+<form data-submit><div class="labels-fields" style="margin-top:16px"><label>{{ translations.lp_prepared }}<input type="datetime-local" data-prepared required step="1"></label><button type="submit" data-send disabled>{{ translations.lp_send }}</button></div></form></section>
+<section class="labels-card"><div class="labels-fields"><h2>{{ translations.lp_history }}</h2><button type="button" data-refresh>{{ translations.lp_refresh }}</button></div><div class="labels-scroll"><table><thead><tr><th>{{ translations.lp_product }}</th><th>{{ translations.lp_status }}</th><th>{{ translations.lp_created }}</th><th></th></tr></thead><tbody data-jobs></tbody></table></div></section>
+</div>
+{% endblock %}
+{% block scripts %}{{ parent() }}<script src="{{ ROOT }}/assets/js/product-labels.js?v=20261116" defer></script>{% endblock %}

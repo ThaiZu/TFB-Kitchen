@@ -121,5 +121,6 @@
   "production_sector_save": "Apply",
   "production_sector_error": "Could not save the department.",
   "nav_production_plan": "Production plan",
-  "nav_deliveries": "Deliveries"
+  "nav_deliveries": "Deliveries",
+  "lp_title": "Product labels"
 }

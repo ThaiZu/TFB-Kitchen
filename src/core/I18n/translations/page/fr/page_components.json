@@ -121,5 +121,6 @@
   "production_sector_save": "Appliquer",
   "production_sector_error": "Impossible d’enregistrer l’atelier.",
   "nav_production_plan": "Plan de production",
-  "nav_deliveries": "Livraisons"
+  "nav_deliveries": "Livraisons",
+  "lp_title": "Étiquettes produits"
 }

@@ -121,5 +121,6 @@
   "production_sector_save": "Zastosuj",
   "production_sector_error": "Nie udało się zapisać działu.",
   "nav_production_plan": "Plan produkcji",
-  "nav_deliveries": "Dostawy"
+  "nav_deliveries": "Dostawy",
+  "lp_title": "Etykiety produktów"
 }
