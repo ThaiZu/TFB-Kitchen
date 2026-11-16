@@ -1,0 +1,6 @@
+<?php
+require __DIR__.'/../vendor/autoload.php';
+$layout='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>*{box-sizing:border-box}body{font-family:Arial;padding:16px}</style>{% block head %}{% endblock %}</head><body>{% block content %}{% endblock %}{% block scripts %}{% endblock %}</body></html>';
+$twig=new Twig\Environment(new Twig\Loader\ChainLoader([new Twig\Loader\ArrayLoader(['layouts/base.twig'=>$layout]),new Twig\Loader\FilesystemLoader(__DIR__.'/../src/app/Views')]),['strict_variables'=>true,'autoescape'=>'html']);$checks=0;$out=$argv[1]??sys_get_temp_dir();
+foreach(['pl','en','fr','nl','it'] as $lang){$t=json_decode(file_get_contents(__DIR__.'/../src/core/I18n/translations/page/'.$lang.'/product_labels.json'),true,512,JSON_THROW_ON_ERROR);foreach($t as $value){if(!is_string($value)||trim($value)==='')throw new RuntimeException('Missing label');$checks++;}$html=$twig->render('product_labels/index.twig',['ROOT'=>'/kitchen','translations'=>$t]);if(!str_contains($html,'data-prepared')||!str_contains($html,'data-jobs'))throw new RuntimeException('Missing workflow');file_put_contents($out.'/product-labels-'.$lang.'.html',$html);$checks++;}
+echo "PASS: $checks Kitchen label render/translation checks\n";

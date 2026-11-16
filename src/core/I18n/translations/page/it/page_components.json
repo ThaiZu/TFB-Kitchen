@@ -121,5 +121,6 @@
   "production_sector_save": "Applica",
   "production_sector_error": "Impossibile salvare il reparto.",
   "nav_production_plan": "Piano di produzione",
-  "nav_deliveries": "Consegne"
+  "nav_deliveries": "Consegne",
+  "lp_title": "Etichette prodotto"
 }
