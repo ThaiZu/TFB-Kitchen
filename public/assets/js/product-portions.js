@@ -3,14 +3,14 @@
  'use strict';
  const bindings=new WeakMap(),scale=value=>{const m=String(value).replace(',','.').match(/^(0|[1-9]\d{0,7})(?:\.(\d{1,4}))?$/);return m?Number(m[1])*10000+Number((m[2]||'').padEnd(4,'0')):null;};
  const decimal=value=>String(Math.floor(value/10000))+(value%10000?'.'+String(value%10000).padStart(4,'0').replace(/0+$/,''):'');
- const options=p=>p&&p.unit!=='kg'&&!Number(p.is_divisible)&&Number(p.is_piece_based)!==0?(p.stock_portions||p.portions||[]):[];
+ const options=p=>p&&p.unit!=='kg'&&!Number(p.is_divisible)&&Number(p.is_piece_based)!==0?(p.stock_portions?.length?p.stock_portions:(p.portions||[])):[];
  function decorate(input,product,labels={}) {
   bindings.get(input)?.dispose();bindings.delete(input);input.hidden=false;
   const p=typeof product==='function'?product():product;
   if(input.readOnly||!options(p).length)return input;
   const wrap=document.createElement('fieldset'),badges=document.createElement('div'),count=document.createElement('input'),preview=document.createElement('small');
   wrap.className='kp-portion-editor';badges.className='kp-portion-options';badges.setAttribute('role','group');badges.setAttribute('aria-label',labels.portion||'Portion');
-  count.type='number';count.min='0';count.max='99999999';count.step='1';count.inputMode='numeric';count.hidden=true;count.required=true;preview.hidden=true;preview.setAttribute('aria-live','polite');
+  count.type='number';count.min='0';count.max='99999999';count.step='1';count.inputMode='numeric';count.hidden=true;count.disabled=true;count.required=false;preview.hidden=true;preview.setAttribute('aria-live','polite');
   let selected=null;
   function update(){
    if(selected){const n=scale(count.value);input.value=n!==null&&n%10000===0?decimal(Math.floor((n*selected.numerator+selected.denominator/2)/selected.denominator)):'';}
@@ -23,7 +23,7 @@
     const value=selected?count.value:input.value;selected=part;
     if(selected){const amount=scale(value);count.value=amount!==null&&amount%10000===0?value:'1';count.setAttribute('aria-label',(labels.quantity||'Quantity')+' × '+selected.label+' — '+(p.name||''));}
     else input.value=preview.dataset.native||input.value;
-    input.hidden=!!selected;count.hidden=!selected;preview.hidden=!selected;
+    input.hidden=!!selected;count.hidden=!selected;count.disabled=!selected;count.required=!!selected;preview.hidden=!selected;
     badges.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
     if(selected)update();else input.dispatchEvent(new Event('input',{bubbles:true}));
    });badges.append(button);
