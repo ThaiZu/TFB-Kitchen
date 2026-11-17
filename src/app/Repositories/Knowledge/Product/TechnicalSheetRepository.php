@@ -38,6 +38,21 @@ class TechnicalSheetRepository
             if(($image['success']??false)===true)$data['object']['webshop_image']=$image['data']['image']??null;
         }catch(\Throwable $error){error_log('Kitchen product image unavailable: '.get_class($error).' ('.$error->getCode().')');}
 
+        $data['baking_available'] = false;
+        $shop=(int)(\App\Kitchen\core\Support\GlobalRegistry::get('user')['shop_id'] ?? 0);
+        if ($shop>0) {
+            try {
+                $baking=$this->apiClient->get('/shops/'.$shop.'/products/'.(int)$id.'/baking-parameters');
+                $payload=$baking['data'] ?? null;
+                if (($baking['success']??false)===true && is_array($payload)
+                    && (int)($payload['shop_id']??0)===$shop && (int)($payload['product_id']??0)===(int)$id
+                    && is_array($payload['stages']??null) && is_array($payload['local']??null)) {
+                    $data['baking']=$payload;
+                    $data['baking_available']=true;
+                }
+            } catch (\Throwable $error) { error_log('Kitchen baking parameters unavailable'); }
+        }
+
         return new ProductDetailModel($data);
     }
 

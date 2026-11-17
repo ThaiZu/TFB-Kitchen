@@ -12,6 +12,8 @@ use JsonSerializable;
  */
 class ProductDetailModel implements JsonSerializable
 {
+    private array $baking = [];
+    private bool $bakingAvailable = false;
     private $object; // ProductModel with extended data
     private $photos; // ProductPhotoModel
     private $recipe; // RecipeModel
@@ -21,6 +23,8 @@ class ProductDetailModel implements JsonSerializable
 
     public function __construct($data)
     {
+        $this->baking = is_array($data['baking'] ?? null) ? $data['baking'] : [];
+        $this->bakingAvailable = ($data['baking_available'] ?? false) === true;
         // Parse object (product basic info + required_competences)
         if (isset($data['object'])) {
             $this->object = new ProductModel($data['object']);
@@ -58,6 +62,8 @@ class ProductDetailModel implements JsonSerializable
     public function jsonSerialize(): mixed
     {
         return [
+            'baking' => $this->baking,
+            'baking_available' => $this->bakingAvailable,
             'object' => $this->object,
             'photos' => $this->photos,
             'recipe' => $this->recipe,
@@ -68,6 +74,8 @@ class ProductDetailModel implements JsonSerializable
     }
 
     // Getters
+    public function getBaking(): array { return $this->baking; }
+    public function isBakingAvailable(): bool { return $this->bakingAvailable; }
     public function getObject() { return $this->object; }
     public function getMainProductPhotoUrl(): ?string {return $this->object?->getMainPhotoUrl();}
     public function getPhotos() { return $this->photos; }
