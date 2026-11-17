@@ -36,17 +36,15 @@
     .fiche-hero {
         position: relative;
         width: 100%;
-        aspect-ratio: 16 / 9;
-        /* Bornée : en 16/9 pleine largeur sur une tablette en paysage, elle
-           ferait 600 px et repousserait la fiche entière sous la ligne de
-           flottaison. On veut voir l'image ET commencer à lire. */
-        max-height: 42vh;
+        max-width: 480px;
+        margin-inline: auto;
+        aspect-ratio: 1 / 1;
         background: repeating-linear-gradient(45deg, #f2ece4 0 14px, #ece5da 14px 28px);
         border-bottom: 1px solid #dee2e6;
         overflow: hidden;
         display: flex; align-items: center; justify-content: center;
     }
-    .fiche-hero img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: zoom-in; }
+    .fiche-hero img { width: 100%; height: 100%; object-fit: contain; display: block; cursor: zoom-in; }
     .fiche-hero-empty {
         display: flex; flex-direction: column; align-items: center; gap: 8px;
         color: #b9ada0;
@@ -351,7 +349,7 @@
     @media (max-width: 768px) {
         .fiche-main { flex-direction: column; }
         .fiche-header { flex-direction: column; }
-        .fiche-hero { aspect-ratio: 4 / 3; max-height: 38vh; }
+        .fiche-hero { aspect-ratio: 1 / 1; }
         .plano-photos { flex-direction: column; }
     }
 
@@ -435,6 +433,17 @@
     .fiche-zoomable {
         cursor: zoom-in;
     }
+
+    .fiche-tabs{display:flex;gap:10px;padding:12px 20px;border-bottom:1px solid var(--c-line,#dee2e6)}
+    .fiche-tabs button{flex:1;min-height:48px;padding:10px;border:1px solid var(--c-line-2,#cfc5bb);border-radius:10px;background:#fff;color:var(--c-primary,#8d1d2c);font:inherit;cursor:pointer}
+    .fiche-tabs button[aria-selected=true]{background:var(--c-primary,#8d1d2c);color:#fff;border-color:var(--c-primary,#8d1d2c)}
+    .fiche-tabs button:focus-visible{outline:3px solid var(--c-ambre,#b88c48);outline-offset:2px}
+    .bk-card{margin:16px 20px;padding:16px;border:1px solid var(--c-line,#ded7cf);border-radius:10px;background:var(--c-surface,#fff)}
+    .bk-card h3{font-size:1.3rem}.bk-values{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:12px 0}
+    .bk-values div{min-width:0}.bk-values dt{font-size:.8rem;color:var(--c-muted,#70665d);font-weight:400}.bk-values dd{font-weight:600;margin:4px 0;overflow-wrap:anywhere}
+    .bk-instructions{white-space:pre-wrap;overflow-wrap:anywhere}.bk-note{padding:16px 20px;margin:0}.bk-source{font-size:.85rem;color:var(--c-muted,#70665d)}
+    #ficheBakingPanel[hidden],[data-fiche-general][hidden]{display:none!important}
+    @media(max-width:480px){.fiche-tabs{padding:10px;gap:8px}.bk-card{margin:12px;padding:12px}.bk-values{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 {% endblock %}
 
@@ -552,6 +561,11 @@
 
         </div>
 
+        <div class="fiche-tabs" role="tablist" aria-label="{{ translations.product_info }}">
+            <button type="button" role="tab" id="ficheGeneralTab" aria-controls="ficheGeneralPanel" aria-selected="true" tabindex="0">{{ translations.bk_tab_general }}</button>
+            <button type="button" role="tab" id="ficheBakingTab" aria-controls="ficheBakingPanel" aria-selected="false" tabindex="-1">{{ translations.bk_tab_baking }}</button>
+        </div>
+        <div id="ficheGeneralPanel" role="tabpanel" aria-labelledby="ficheGeneralTab" data-fiche-general>
         {# ---- MAIN 2 KOLUMNY ---- #}
         <div class="fiche-main">
             <div class="fiche-sec">
@@ -831,6 +845,10 @@
             </div>
         </div>
 
+        </div>{# /general panel #}
+        <div id="ficheBakingPanel" role="tabpanel" aria-labelledby="ficheBakingTab" hidden>
+            {% include 'knowledge/product/_baking.twig' %}
+        </div>
     </div>{# /fiche-wrap #}
 
 
@@ -840,7 +858,7 @@
     {% set hasPhoto3gallery = photos and photos.hasPhoto3() %}
     {% set hasMainGallery = productPhotoUrl is not empty %}
     {% if hasPhoto1gallery or hasPhoto2gallery or hasPhoto3gallery or hasMainGallery %}
-    <div class="fiche-wrap mb-4">
+    <div class="fiche-wrap mb-4" data-fiche-general>
         <div class="fiche-plano">
             <div class="fiche-plano-header">
                 <span class="fiche-plano-title">
@@ -904,6 +922,11 @@
 
 {% block scripts %}
 <script>
+(function(){
+    const tabs=[...document.querySelectorAll('.fiche-tabs [role=tab]')];
+    function select(tab){const baking=tab.id==='ficheBakingTab';tabs.forEach(button=>{button.setAttribute('aria-selected',String(button===tab));button.tabIndex=button===tab?0:-1;});document.querySelectorAll('[data-fiche-general]').forEach(panel=>panel.hidden=baking);document.getElementById('ficheBakingPanel').hidden=!baking;}
+    tabs.forEach(tab=>{tab.addEventListener('click',()=>select(tab));tab.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const next=event.key==='Home'?tabs[0]:event.key==='End'?tabs[1]:tabs[1-tabs.indexOf(tab)];select(next);next.focus();});});
+})();
 function ficheImgError(img) {
     var p = img.parentElement;
     img.remove();

@@ -1,0 +1,44 @@
+{% set baking = product.getBaking() %}
+{% if not product.isBakingAvailable() %}
+    <p class="bk-note" role="alert">{{ translations.bk_unavailable }}</p>
+{% else %}
+    {% if baking.stages is empty and baking.local is empty %}<p class="bk-note">{{ translations.bk_empty }}</p>{% endif %}
+    {% for stage in baking.stages %}
+    <section class="bk-card" data-baking-stage="{{ stage.id }}">
+        <span class="bk-source">{{ translations.bk_central }}</span>
+        <h3>{{ translations.bk_stage }} {{ stage.sort_order ?? loop.index }}</h3>
+        <p class="bk-instructions">{{ stage.description }}</p>
+        <dl class="bk-values">
+        {% for key in ['duration_seconds','products_per_tray','trays_per_oven','batch_capacity'] %}
+            {% set value = attribute(stage,key)|default(null) %}{% if value is not null %}<div><dt>{{ attribute(translations,'bk_'~key) }}</dt><dd>{{ value }}</dd></div>{% endif %}
+        {% endfor %}
+        {% for key in ['temperature_c','preheat_temperature_c','humidity_pct','steam_seconds','cooling_minutes','program','mode','fan_setting'] %}
+            {% set value = attribute(stage.baking_settings|default({}),key) ?? null %}{% if value is not null and value is not same as('') %}<div><dt>{{ attribute(translations,'bk_'~key) }}</dt><dd>{{ value }}</dd></div>{% endif %}
+        {% endfor %}
+        </dl>
+        {% if stage.baking_settings is empty %}<p class="bk-source">{{ translations.bk_not_set }}</p>{% endif %}
+        {% for key in ['before_baking','loading_instructions','readiness_instructions','after_baking'] %}
+            {% set value = attribute(stage.baking_settings|default({}),key) ?? null %}{% if value %}<h4 class="fiche-section-title">{{ attribute(translations,'bk_'~key) }}</h4><p class="bk-instructions">{{ value }}</p>{% endif %}
+        {% endfor %}
+        {% for slot in 1..3 %}{% set photo = attribute(stage,'photo_'~slot~'_url') ?? null %}{% if photo %}<img src="{{ photo }}" alt="{{ translations.bk_stage }} {{ loop.parent.loop.index }}" loading="lazy" class="fiche-zoomable" onclick="ficheLightboxOpen(this)" style="max-width:160px;aspect-ratio:1;object-fit:contain;margin:4px" onerror="this.hidden=true">{% endif %}{% endfor %}
+    </section>
+    {% endfor %}
+    {% if baking.local is not empty %}<p class="bk-note bk-source">{{ translations.bk_local_hint }}</p>{% endif %}
+    {% for kind in ['categories','products'] %}{% set local = attribute(baking.local,kind) ?? null %}{% if local is not null %}
+    <section class="bk-card" data-baking-local="{{ kind }}">
+        <h3>{{ kind == 'products' ? translations.bk_local_product : translations.bk_local_category }}</h3>
+        <dl class="bk-values">{% for key in ['temperature_c','bake_minutes','pieces_per_tray'] %}{% set value = attribute(local,key) ?? null %}{% if value is not null %}<div><dt>{{ attribute(translations,'bk_'~key) }}</dt><dd>{{ value }}</dd></div>{% endif %}{% endfor %}</dl>
+        <h4 class="fiche-section-title">{{ translations.bk_ovens }}</h4>
+        {% for oven in local.ovens %}
+            <strong>{{ oven.name }}</strong>
+            <dl class="bk-values">{% for key in ['capacity_trays','heat_minutes','change_minutes'] %}{% set value = attribute(oven,key) ?? null %}{% if value is not null %}<div><dt>{{ attribute(translations,'bk_'~key) }}</dt><dd>{{ value }}</dd></div>{% endif %}{% endfor %}<div><dt>{{ translations.bk_available }}</dt><dd>{{ oven.available_from }}–{{ oven.available_until }}</dd></div></dl>
+        {% else %}<p>{{ translations.bk_none }}</p>{% endfor %}
+        <h4 class="fiche-section-title">{{ translations.bk_steps }}</h4>
+        {% if local.steps is null %}<p>{{ translations.bk_inherited }}</p>{% else %}
+        {% for step in local.steps %}<div class="bk-card">
+            <strong>{{ step.name }}</strong><span class="bk-source"> · {{ attribute(translations,'bk_phase_'~step.phase) }}</span>
+            <dl class="bk-values"><div><dt>{{ translations.bk_duration_seconds }}</dt><dd>{{ step.duration_seconds }} · {{ attribute(translations,'bk_basis_'~step.duration_basis) }}</dd></div><div><dt>{{ translations.bk_operators }}</dt><dd>{% for operator in step.operators %}{{ operator.name }}{% if not loop.last %}, {% endif %}{% else %}{{ translations.bk_none }}{% endfor %}</dd></div></dl>
+        </div>{% else %}<p>{{ translations.bk_none }}</p>{% endfor %}{% endif %}
+    </section>
+    {% endif %}{% endfor %}
+{% endif %}
