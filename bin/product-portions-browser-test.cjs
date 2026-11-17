@@ -36,8 +36,8 @@ try{for(const width of [1024,768,390]){
  assert.equal(writes[1].lines[0].quantity,'0.75');assert.equal(writes[1].lines[0].portion,undefined);assert.equal(writes[1].lines[0].photo_ids.length,1);assert.equal(sheet.products[0].in_stock,'2.375');checks+=4;
  // Fraction endpoints increment canonical whole-product quantities directly.
  await page.locator('[data-stock-product="90"] button').click();await editor.locator('input').fill('1');
- await editor.locator('[data-quantity-delta="0.125"]').click();assert.equal(await editor.locator('input').inputValue(),'1.125');assert.equal(await page.locator('.pd-adjust-after strong').innerText(),'3.5 szt.');checks+=2;
- await editor.locator('[data-quantity-delta="-0.125"]').click();assert.equal(await editor.locator('input').inputValue(),'1');checks++;
+ await editor.locator('[data-quantity-delta="0.25"]').click();assert.equal(await editor.locator('input').inputValue(),'1.25');assert.equal(await page.locator('.pd-adjust-after strong').innerText(),'3.625 szt.');checks+=2;
+ await editor.locator('[data-quantity-delta="-0.25"]').click();assert.equal(await editor.locator('input').inputValue(),'1');checks++;
  await page.screenshot({path:path.join(dir,'portion-adjust-'+width+'.png')});await page.locator('#pd-dialog-cancel').click();
  // The same portions work in opening shortage allocation and both production steps.
  Object.assign(sheet,{status:'NOT_OPEN',revision:0,opening:null});sheet.products[0].is_pdm=true;sheet.products[0].default_opening=true;

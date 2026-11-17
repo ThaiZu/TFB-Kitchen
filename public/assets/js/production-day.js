@@ -239,22 +239,30 @@ modal(tr('adjust_title'),container=>{
  for(const item of [...sheet.waste_reasons].sort((a,b)=>['expiration','damage','quality','tasting','other_waste'].indexOf(a.key)-['expiration','damage','quality','tasting','other_waste'].indexOf(b.key))){const badge=btn('',()=>{reason=item.key;badges.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b===badge)));update();});badge.append(adjustIcon(item.key),el('span',item.label));badge.dataset.adjustReason=item.key;badge.setAttribute('aria-pressed','false');badges.append(badge);}
  const photoSection=el('section',undefined,'pd-adjust-photo-section'),photoTitle=el('h3','4. '+tr('adjust_photo'));photoTitle.append(el('small',' • '+tr('adjust_required')));photoSection.append(photoTitle);const photos=wastePhotos(photoSection,p,evidence,()=>update?.());photos.querySelector('.pd-photo-controls').prepend(adjustIcon('camera'));
  const qlabel=el('section',undefined,'pd-modal-quantity'),caption=el('label','2. '+tr('adjust_quantity')+' ('+unit(p)+')'),limit=el('p',undefined,'pd-adjust-limit');
- qty=quantity(weighted(p)?'0.1':1,false,p);qty.min=fractional(p)?'0.0001':'1';caption.htmlFor=qty.id;
- const control=carryStepper(qty,{...p,portions:window.KitchenPortions?.options(p)||p.portions||[]},{weightStep:true});control.classList.add('pd-adjust-native-stepper');
+ qty=quantity(weighted(p)?'0.1':1,false,p);caption.htmlFor=qty.id;
+ const control=el('div',undefined,'pd-stepper pd-carry-stepper pd-adjust-native-stepper');
+ const quarterProduction=!weighted(p)&&fractional(p);
+ function refreshQuantity(){
+  const quarter=mode==='produce'&&quarterProduction;
+  qty.min=quarter?'0.25':fractional(p)?'0.0001':'1';qty.step=quarter?'0.25':fractional(p)?'0.0001':'1';
+  const portions=quarter?[{numerator:1,denominator:4}]:(window.KitchenPortions?.options(p)||p.portions||[]);
+  const stepper=carryStepper(qty,{...p,portions},{weightStep:true});control.replaceChildren(...stepper.childNodes);
+ }
+ refreshQuantity();
  qlabel.append(caption,control,limit);qty.addEventListener('input',()=>update());
  const footer=el('div',undefined,'pd-adjust-footer'),hint=el('p',undefined,'pd-adjust-validation'),cancel=btn(tr('cancel'),()=>{if(!sending&&!loading&&!navigating&&!photoTasks)dialog.close();});hint.setAttribute('role','status');footer.append(hint,cancel);dialog.querySelector('footer').prepend(footer);
  update=()=>{
  if(!summary.isConnected)return;
- const amount=scale(qty.value),max=scale(qty.max),minimum=scale(qty.min),good=valid(qty.value,p)&&amount>=minimum&&amount<=max;
+ const amount=scale(qty.value),max=scale(qty.max),minimum=scale(qty.min),good=valid(qty.value,p)&&qty.checkValidity()&&amount>=minimum&&amount<=max;
  fields.hidden=mode!=='waste';photoSection.hidden=mode!=='waste';after.classList.toggle('is-waste',mode==='waste');afterValue.textContent=good?decimal(scale(p.stock_quantity)+(mode==='waste'?-amount:amount))+' '+unit(p):'—';
  control.querySelectorAll('[data-quantity-delta]').forEach(button=>{const delta=Math.round(Number(button.dataset.quantityDelta)*10000);button.disabled=!good||amount+delta<minimum||amount+delta>max;});
  limit.hidden=mode!=='waste';limit.textContent=tr('adjust_max').replace('%s',decimal(scale(p.stock_quantity))+' '+unit(p));
  const error=!good?tr('invalid'):mode==='waste'&&!reason?tr('reason_required'):mode==='waste'&&!photosReady(evidence)?tr('adjust_missing_photo'):'';
  hint.textContent=error;hint.classList.toggle('is-error',!!error);$('pd-dialog-save').disabled=!!error||sending||!!pending;$('pd-dialog-save').textContent=tr(mode==='waste'?'adjust_save_waste':'adjust_save_produce')+' · '+(good?decimal(amount):'—')+' '+unit(p);
  };
- for(const value of addOnly?['produce']:['produce','waste']){const badge=btn('',()=>{mode=value;operations.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b===badge)));qty.max=mode==='waste'?String(stock(p)):'99999999';update();});const text=el('span');text.append(el('strong',tr('adjust_'+value)),el('small',tr('adjust_'+value+'_help')));badge.append(adjustIcon(value),text);badge.dataset.adjustMode=value;badge.setAttribute('aria-pressed',String(value===mode));operations.append(badge);}
+ for(const value of addOnly?['produce']:['produce','waste']){const badge=btn('',()=>{mode=value;operations.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b===badge)));qty.max=mode==='waste'?String(stock(p)):'99999999';refreshQuantity();update();});const text=el('span');text.append(el('strong',tr('adjust_'+value)),el('small',tr('adjust_'+value+'_help')));badge.append(adjustIcon(value),text);badge.dataset.adjustMode=value;badge.setAttribute('aria-pressed',String(value===mode));operations.append(badge);}
  container.append(el('h3','1. '+tr('adjust_operation')),operations,qlabel,fields,photoSection);update();
-},async()=>{if(!valid(qty.value,p)||Number(qty.value)===0||(mode==='waste'&&Number(qty.value)>stock(p)))throw Error(tr('invalid'));if(mode==='waste'&&!reason)throw Error(tr('reason_required'));if(mode==='waste'&&!photosReady(evidence))throw Error(tr('photos_required'));await write('adjust',[{...pre(p),mode,...portionEvidence(qty),quantity:String(qty.value).replace(',','.'),reason:mode==='waste'?reason:null,comment:null,photo_ids:mode==='waste'?evidence.photo_ids:[],discard_confirmed:mode==='waste'}]);});}
+},async()=>{if(!qty.checkValidity()||!valid(qty.value,p)||Number(qty.value)===0||(mode==='waste'&&Number(qty.value)>stock(p)))throw Error(tr('invalid'));if(mode==='waste'&&!reason)throw Error(tr('reason_required'));if(mode==='waste'&&!photosReady(evidence))throw Error(tr('photos_required'));await write('adjust',[{...pre(p),mode,...portionEvidence(qty),quantity:String(qty.value).replace(',','.'),reason:mode==='waste'?reason:null,comment:null,photo_ids:mode==='waste'?evidence.photo_ids:[],discard_confirmed:mode==='waste'}]);});}
 
 function wasteTotal(){const totals={piece:0,kg:0};for(const [id,d]of closing){const key=weighted(product(id))?'kg':'piece';totals[key]+=scale(d.quantity)||0;}return tr('waste_total')+': '+decimal(totals.piece)+' '+tr('pieces')+' · '+decimal(totals.kg)+' kg';}
 function closingView(){pageHelp(closingWizard()?'close_walk_help':'closing_hint');if(!closingWizard()||sheet.can_confirm_empty_close)return closingViewLegacy();if(sheet.status!=='OPEN'||sheet.closing_blocked)return closingViewLegacy();const box=el('div',undefined,'pd-close-start'),start=btn(tr('close_walk_start'),()=>beginClose(),!writable());start.id='pd-close-start';start.classList.add('pd-primary');box.append(start);body.append(box);}
