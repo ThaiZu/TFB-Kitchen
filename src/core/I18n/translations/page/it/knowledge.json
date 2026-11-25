@@ -127,5 +127,7 @@
   "bk_notes_2": "Note 2",
   "bk_gallery_correct": "Risultato corretto",
   "bk_gallery_incorrect": "Risultato non corretto",
-  "bk_photo_preview": "Anteprima della foto"
+  "bk_photo_preview": "Anteprima della foto",
+  "bk_preparation_stage": "Fase di preparazione",
+  "bk_program_inactive": "Programma ritirato"
 }

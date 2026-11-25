@@ -4,48 +4,43 @@
 {% else %}
     {% set instructions = baking.instructions ?? {} %}
     {% set galleries = instructions.galleries ?? {} %}
-    {% set programs = instructions.programs ?? [] %}
-    {% set piecesPerTray = instructions.pieces_per_tray ?? null %}
-    {% set hasInstructions = piecesPerTray is not null or instructions.notes_1 is not empty
-        or instructions.notes_2 is not empty or programs is not empty
+    {% set steps = baking.preparation_steps ?? baking.stages ?? [] %}
+    {% set hasInstructions = instructions.notes_1 is not empty or instructions.notes_2 is not empty
         or galleries.correct is not empty or galleries.incorrect is not empty %}
-    {% if not hasInstructions and baking.stages is empty and baking.local is empty %}
+    {% if not hasInstructions and steps is empty and baking.local is empty %}
         <p class="bk-note">{{ translations.bk_empty }}</p>
     {% endif %}
+    {% for stage in steps %}
+    <section class="bk-card" data-baking-stage="{{ stage.id }}">
+        <span class="bk-source">{{ translations.bk_central }}</span>
+        <h3>{{ (stage.uses_oven ?? true) ? translations.bk_stage : translations.bk_preparation_stage }} {{ stage.sort_order ?? loop.index }}</h3>
+        <p class="bk-instructions">{{ stage.description }}</p>
+        {% if stage.baking_program is not empty %}
+            <div class="mb-2" data-baking-program>
+                <strong>{{ stage.baking_program.oven_name }} · {{ translations.bk_program }} {{ stage.baking_program.number }}</strong>
+                {% if not stage.baking_program.active %}<span class="bk-source"> · {{ translations.bk_program_inactive }}</span>{% endif %}
+                <p class="bk-instructions">{{ stage.baking_program.description }}</p>
+            </div>
+        {% endif %}
+        <dl class="bk-values">
+        {% for key in ['duration_seconds','products_per_tray','trays_per_oven','batch_capacity'] %}
+            {% set value = attribute(stage,key)|default(null) %}{% if value is not null %}<div><dt>{{ attribute(translations,'bk_'~key) }}</dt><dd>{{ value }}</dd></div>{% endif %}
+        {% endfor %}
+        {% for key in ['temperature_c','preheat_temperature_c','humidity_pct','steam_seconds','cooling_minutes','program','mode','fan_setting'] %}
+            {% set value = key == 'program' and stage.baking_program is not empty ? null : (attribute(stage.baking_settings|default({}),key) ?? null) %}{% if value is not null and value is not same as('') %}<div><dt>{{ attribute(translations,'bk_'~key) }}</dt><dd>{{ value }}</dd></div>{% endif %}
+        {% endfor %}
+        </dl>
+        {% if (stage.uses_oven ?? true) and stage.baking_settings is empty and stage.baking_program is empty %}<p class="bk-source">{{ translations.bk_not_set }}</p>{% endif %}
+        {% for key in ['before_baking','loading_instructions','readiness_instructions','after_baking'] %}
+            {% set value = attribute(stage.baking_settings|default({}),key) ?? null %}{% if value %}<h4 class="fiche-section-title">{{ attribute(translations,'bk_'~key) }}</h4><p class="bk-instructions">{{ value }}</p>{% endif %}
+        {% endfor %}
+        {% for slot in 1..3 %}{% set photo = attribute(stage,'photo_'~slot~'_url') ?? null %}{% if photo %}<img src="{{ photo }}" alt="{{ translations.bk_stage }} {{ loop.parent.loop.index }}" loading="lazy" class="fiche-zoomable" onclick="ficheLightboxOpen(this)" style="max-width:160px;aspect-ratio:1;object-fit:contain;margin:4px" onerror="this.hidden=true">{% endif %}{% endfor %}
+    </section>
+    {% endfor %}
     {% if hasInstructions %}
         <section class="bk-card" data-baking-instructions aria-labelledby="bk-instructions-title">
             <span class="bk-source">{{ translations.bk_central }}</span>
             <h3 id="bk-instructions-title">{{ translations.bk_product_instructions }}</h3>
-            {% if piecesPerTray is not null %}
-                <dl class="bk-values">
-                    <div><dt>{{ translations.bk_pieces_per_tray }}</dt><dd data-baking-pieces>{{ piecesPerTray }}</dd></div>
-                </dl>
-            {% endif %}
-
-            <h4 class="fiche-section-title">{{ translations.bk_shop_programs }}</h4>
-            {% if programs is empty %}
-                <p class="bk-source" data-baking-no-program>{{ translations.bk_no_shop_program }}</p>
-            {% else %}
-                <ul class="bk-programs">
-                    {% for program in programs %}
-                        <li data-baking-program>
-                            <strong>{{ program.oven_name }} · {{ translations.bk_program }} {{ program.number }}</strong>
-                            {% if program.description is not empty %}<p class="bk-instructions">{{ program.description }}</p>{% endif %}
-                            {% if program.temperature_c is not null or program.capacity_trays is not null %}
-                                <dl class="bk-values">
-                                    {% for key in ['temperature_c', 'capacity_trays'] %}
-                                        {% set value = attribute(program, key) ?? null %}
-                                        {% if value is not null %}
-                                            <div><dt>{{ attribute(translations, 'bk_' ~ key) }}</dt><dd>{{ value }}</dd></div>
-                                        {% endif %}
-                                    {% endfor %}
-                                </dl>
-                            {% endif %}
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-
             {% for key in ['notes_1', 'notes_2'] %}
                 {% set note = attribute(instructions, key) ?? null %}
                 {% if note is not empty %}
@@ -75,26 +70,6 @@
             {% endfor %}
         </section>
     {% endif %}
-    {% for stage in baking.stages %}
-    <section class="bk-card" data-baking-stage="{{ stage.id }}">
-        <span class="bk-source">{{ translations.bk_central }}</span>
-        <h3>{{ translations.bk_stage }} {{ stage.sort_order ?? loop.index }}</h3>
-        <p class="bk-instructions">{{ stage.description }}</p>
-        <dl class="bk-values">
-        {% for key in ['duration_seconds','products_per_tray','trays_per_oven','batch_capacity'] %}
-            {% set value = attribute(stage,key)|default(null) %}{% if value is not null %}<div><dt>{{ attribute(translations,'bk_'~key) }}</dt><dd>{{ value }}</dd></div>{% endif %}
-        {% endfor %}
-        {% for key in ['temperature_c','preheat_temperature_c','humidity_pct','steam_seconds','cooling_minutes','program','mode','fan_setting'] %}
-            {% set value = attribute(stage.baking_settings|default({}),key) ?? null %}{% if value is not null and value is not same as('') %}<div><dt>{{ attribute(translations,'bk_'~key) }}</dt><dd>{{ value }}</dd></div>{% endif %}
-        {% endfor %}
-        </dl>
-        {% if stage.baking_settings is empty %}<p class="bk-source">{{ translations.bk_not_set }}</p>{% endif %}
-        {% for key in ['before_baking','loading_instructions','readiness_instructions','after_baking'] %}
-            {% set value = attribute(stage.baking_settings|default({}),key) ?? null %}{% if value %}<h4 class="fiche-section-title">{{ attribute(translations,'bk_'~key) }}</h4><p class="bk-instructions">{{ value }}</p>{% endif %}
-        {% endfor %}
-        {% for slot in 1..3 %}{% set photo = attribute(stage,'photo_'~slot~'_url') ?? null %}{% if photo %}<img src="{{ photo }}" alt="{{ translations.bk_stage }} {{ loop.parent.loop.index }}" loading="lazy" class="fiche-zoomable" onclick="ficheLightboxOpen(this)" style="max-width:160px;aspect-ratio:1;object-fit:contain;margin:4px" onerror="this.hidden=true">{% endif %}{% endfor %}
-    </section>
-    {% endfor %}
     {% if baking.local is not empty %}<p class="bk-note bk-source">{{ translations.bk_local_hint }}</p>{% endif %}
     {% for kind in ['categories','products'] %}{% set local = attribute(baking.local,kind) ?? null %}{% if local is not null %}
     <section class="bk-card" data-baking-local="{{ kind }}">
