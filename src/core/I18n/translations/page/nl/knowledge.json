@@ -119,5 +119,13 @@
   "bk_available": "Beschikbaarheid",
   "bk_none": "Geen",
   "bk_inherited": "Overgenomen van de categorie of het centrale bereidingsproces.",
-  "bk_not_set": "Aanvullende oveninstellingen zijn niet ingevuld."
+  "bk_not_set": "Aanvullende oveninstellingen zijn niet ingevuld.",
+  "bk_product_instructions": "Bakinstructies voor dit product",
+  "bk_shop_programs": "Ovenprogramma’s voor deze winkel",
+  "bk_no_shop_program": "Er is geen programma toegewezen voor deze winkel.",
+  "bk_notes_1": "Opmerkingen 1",
+  "bk_notes_2": "Opmerkingen 2",
+  "bk_gallery_correct": "Correct resultaat",
+  "bk_gallery_incorrect": "Onjuist resultaat",
+  "bk_photo_preview": "Fotovoorbeeld"
 }

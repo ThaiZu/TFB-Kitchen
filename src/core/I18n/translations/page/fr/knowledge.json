@@ -119,5 +119,13 @@
   "bk_available": "Disponibilité",
   "bk_none": "Aucun",
   "bk_inherited": "Hérité de la catégorie ou du parcours central de préparation.",
-  "bk_not_set": "Les paramètres supplémentaires du four ne sont pas renseignés."
+  "bk_not_set": "Les paramètres supplémentaires du four ne sont pas renseignés.",
+  "bk_product_instructions": "Consignes de cuisson du produit",
+  "bk_shop_programs": "Programmes des fours de ce magasin",
+  "bk_no_shop_program": "Aucun programme n’est associé à ce magasin.",
+  "bk_notes_1": "Remarques 1",
+  "bk_notes_2": "Remarques 2",
+  "bk_gallery_correct": "Réalisation correcte",
+  "bk_gallery_incorrect": "Réalisation incorrecte",
+  "bk_photo_preview": "Aperçu de la photo"
 }

@@ -119,5 +119,13 @@
   "bk_available": "Disponibilità",
   "bk_none": "Nessuno",
   "bk_inherited": "Ereditato dalla categoria o dal percorso centrale di preparazione.",
-  "bk_not_set": "Le impostazioni aggiuntive del forno non sono configurate."
+  "bk_not_set": "Le impostazioni aggiuntive del forno non sono configurate.",
+  "bk_product_instructions": "Istruzioni di cottura del prodotto",
+  "bk_shop_programs": "Programmi dei forni di questo negozio",
+  "bk_no_shop_program": "Nessun programma è stato assegnato per questo negozio.",
+  "bk_notes_1": "Note 1",
+  "bk_notes_2": "Note 2",
+  "bk_gallery_correct": "Risultato corretto",
+  "bk_gallery_incorrect": "Risultato non corretto",
+  "bk_photo_preview": "Anteprima della foto"
 }
