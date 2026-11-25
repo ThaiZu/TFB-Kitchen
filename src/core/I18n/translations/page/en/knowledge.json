@@ -119,5 +119,13 @@
   "bk_available": "Availability",
   "bk_none": "None",
   "bk_inherited": "Inherited from category or central preparation path.",
-  "bk_not_set": "Additional oven settings have not been configured."
+  "bk_not_set": "Additional oven settings have not been configured.",
+  "bk_product_instructions": "Product baking instructions",
+  "bk_shop_programs": "Oven programs for this shop",
+  "bk_no_shop_program": "No program has been assigned for this shop.",
+  "bk_notes_1": "Notes 1",
+  "bk_notes_2": "Notes 2",
+  "bk_gallery_correct": "Correct result",
+  "bk_gallery_incorrect": "Incorrect result",
+  "bk_photo_preview": "Photo preview"
 }

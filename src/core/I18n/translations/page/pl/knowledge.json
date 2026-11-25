@@ -119,5 +119,13 @@
   "bk_available": "Dostępność",
   "bk_none": "Brak",
   "bk_inherited": "Dziedziczone z kategorii lub ścieżki centralnej.",
-  "bk_not_set": "Dodatkowe ustawienia pieca nie zostały uzupełnione."
+  "bk_not_set": "Dodatkowe ustawienia pieca nie zostały uzupełnione.",
+  "bk_product_instructions": "Instrukcje wypieku produktu",
+  "bk_shop_programs": "Programy pieców w tym sklepie",
+  "bk_no_shop_program": "Nie przypisano programu dla tego sklepu.",
+  "bk_notes_1": "Uwagi 1",
+  "bk_notes_2": "Uwagi 2",
+  "bk_gallery_correct": "Prawidłowe wykonanie",
+  "bk_gallery_incorrect": "Nieprawidłowe wykonanie",
+  "bk_photo_preview": "Podgląd zdjęcia"
 }
