@@ -17,14 +17,14 @@ $baking=['shop_id'=>2,'product_id'=>101,'stages'=>[
  'categories'=>['temperature_c'=>175,'bake_minutes'=>20,'pieces_per_tray'=>6,'ovens'=>[],'steps'=>null],
  'products'=>['temperature_c'=>190,'bake_minutes'=>18,'pieces_per_tray'=>8,'ovens'=>[['name'=>'Shop oven','capacity_trays'=>6,'heat_minutes'=>0,'change_minutes'=>2,'available_from'=>'06:00','available_until'=>'18:00']], 'steps'=>[['name'=>'Prepare tray','phase'=>'before','duration_seconds'=>0,'duration_basis'=>'tray','operators'=>[['name'=>'Baker']]]]],
 ]];
+$baking['stages'][0]['baking_program'] = ['id'=>1, 'oven_name'=>'Main oven', 'number'=>7, 'description'=>"Steam at start\nOpen flap at end", 'active'=>true];
+$baking['preparation_steps'] = [
+    ['id'=>5, 'uses_oven'=>false, 'description'=>'Defrost before baking', 'duration_seconds'=>3600],
+    ...$baking['stages'],
+];
 $baking['instructions'] = [
-    'pieces_per_tray' => 12,
     'notes_1' => "Leave a gap\nKeep trays even",
     'notes_2' => "Check <script>example()</script>\nCool on rack",
-    'programs' => [
-        ['id' => 1, 'oven_id' => 'main', 'shop_id' => 2, 'oven_name' => 'Main oven', 'number' => 7, 'description' => "Steam at start\nOpen flap at end", 'temperature_c' => 185, 'capacity_trays' => 6],
-        ['id' => 2, 'oven_id' => 'spare', 'shop_id' => 2, 'oven_name' => 'Spare oven', 'number' => 7, 'description' => 'Lower fan', 'temperature_c' => null, 'capacity_trays' => null],
-    ],
     'galleries' => [
         'correct' => [
             ['id' => 1, 'url' => 'https://images.example/correct-1.jpg', 'original_name' => 'Correct 1.jpg'],
@@ -42,16 +42,16 @@ foreach(['pl','en','fr','nl','it'] as $lang){
  $dom=new DOMDocument();@$dom->loadHTML($html);$xp=new DOMXPath($dom);
  $check($xp->query('//*[@role="tab" and @aria-selected="true" and @id="ficheGeneralTab"]')->length===1,'General selected by default');
  $check($xp->query('//*[@id="ficheBakingPanel" and @hidden]')->length===1,'Baking starts hidden');
- $check($xp->query('//*[@data-baking-stage]')->length===2,'Multiple oven stages and legacy settings');
+ $check($xp->query('//*[@data-baking-stage]')->length===3,'Ordered preparation and oven stages');
  $check($xp->query('//*[@data-baking-local]')->length===2,'Category and product settings separated');
- $check($xp->evaluate('string(//*[@data-baking-pieces])')==='12','Configured tray count visible');
- $check($xp->query('//*[@data-baking-program]')->length===2,'Same program number on two named ovens');
+ $check(str_contains($xp->evaluate('string(//*[@data-baking-stage="11"])'), '8'), 'Canonical tray count visible');
+ $check($xp->query('//*[@data-baking-program]')->length===1,'Program resolved on its oven stage');
  $check(str_contains($xp->evaluate('string((//*[@data-baking-program])[1])'),"Steam at start\nOpen flap at end"),'Program description and line breaks preserved');
  $check($xp->evaluate('string(//*[@data-baking-note="notes_1"])')===$baking['instructions']['notes_1'],'First note preserves line breaks');
  $check($xp->evaluate('string(//*[@data-baking-note="notes_2"])')===$baking['instructions']['notes_2']&&!str_contains($html,'<script>example()</script>'),'Second note is independent and escaped');
  $check($xp->query('//*[@data-baking-gallery="correct"]//button')->length===2,'Correct gallery images');
  $check($xp->query('//*[@data-baking-gallery="incorrect"]//button')->length===2,'Incorrect gallery images');
- $check(!str_contains($html,'<script>bad()</script>')&&str_contains($html,'P2 &lt;script&gt;'),'Baking descriptions escaped');
+ $check(!str_contains($html,'<script>bad()</script>')&&!str_contains($html,'P2 &lt;script&gt;'),'Catalogue program replaces legacy text');
  $json=json_decode(file_get_contents(__DIR__.'/../src/core/I18n/translations/page/'.$lang.'/knowledge.json'),true);
  foreach($json as $key=>$label)if(str_starts_with($key,'bk_'))$check($label!=='','Baking label translated');
  $check(str_contains($html,$json['bk_humidity_pct'].'</dt><dd>0</dd>'),'Zero humidity remains visible');

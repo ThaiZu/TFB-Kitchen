@@ -127,5 +127,7 @@
   "bk_notes_2": "Uwagi 2",
   "bk_gallery_correct": "Prawidłowe wykonanie",
   "bk_gallery_incorrect": "Nieprawidłowe wykonanie",
-  "bk_photo_preview": "Podgląd zdjęcia"
+  "bk_photo_preview": "Podgląd zdjęcia",
+  "bk_preparation_stage": "Etap przygotowania",
+  "bk_program_inactive": "Program wycofany"
 }

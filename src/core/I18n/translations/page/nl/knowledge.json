@@ -127,5 +127,7 @@
   "bk_notes_2": "Opmerkingen 2",
   "bk_gallery_correct": "Correct resultaat",
   "bk_gallery_incorrect": "Onjuist resultaat",
-  "bk_photo_preview": "Fotovoorbeeld"
+  "bk_photo_preview": "Fotovoorbeeld",
+  "bk_preparation_stage": "Voorbereidingsstap",
+  "bk_program_inactive": "Programma buiten gebruik"
 }
